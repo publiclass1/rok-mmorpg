@@ -1,0 +1,120 @@
+{
+  "id": "prontera",
+  "width": 40,
+  "height": 28,
+  "legend": {
+    "W": {
+      "gid": 1,
+      "ground": 1,
+      "decor": 0,
+      "collision": 1,
+      "preview": "#4b5563"
+    },
+    "G": {
+      "gid": 2,
+      "ground": "checker",
+      "decor": 0,
+      "collision": 0,
+      "preview": "#22c55e"
+    },
+    "P": {
+      "gid": 4,
+      "ground": 4,
+      "decor": 0,
+      "collision": 0,
+      "preview": "#c4a574"
+    },
+    "B": {
+      "gid": 5,
+      "ground": 5,
+      "decor": 0,
+      "collision": 1,
+      "preview": "#b45309"
+    },
+    "T": {
+      "gid": 2,
+      "ground": "checker",
+      "decor": 6,
+      "collision": 1,
+      "preview": "#166534"
+    },
+    "F": {
+      "gid": 7,
+      "ground": 7,
+      "decor": 0,
+      "collision": 0,
+      "preview": "#38bdf8"
+    },
+    "O": {
+      "gid": 8,
+      "ground": 8,
+      "decor": 0,
+      "collision": 0,
+      "preview": "#818cf8"
+    }
+  },
+  "rows": [
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGGGGGW",
+    "WGTTTTTTTTTTTGGGGGGPPGGGGGGTTTTTTTTTTTGW",
+    "WGTTTTTTTTTTTGGGGGGPPGGGGGGTTTTTTTTTTTGW",
+    "WGTTTTTTTTTTTGGGGGGPPGGGGGGTTTTTTTTTTTGW",
+    "WGTTTTTTTTTTTGGGGGGPPGGGGGGTTTTTTTTTTTGW",
+    "WGTTTGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGTTTGW",
+    "WGTTTGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGTTTGW",
+    "WGTTTGGGGGGGGGGGGBBBBGGGGGGGGGGGGGGTTTGW",
+    "WGTTTGGGGGGGGGGGGBBBBGGGGGGGGGGGGGGTTTGW",
+    "WGGGGBBBGGGGGGGGGBBBBGGGBBBBGGGGBBBTTTGW",
+    "WGGGGBBBGGGGGGGGGFFFFFFGBBBBGGGGBBBGGGGW",
+    "WGGGGBBBGGGGGGGGGFFFFFFGBBBBGGGGBBBGGGGW",
+    "WPPPPBBBPPPPPPPPPFFFFFFPPPPPPPPPBBBPPPPW",
+    "WPPPPPPPPPPPPPPPPFFFFFFPPPPPPPPPPPPPPPPW",
+    "WGGGGGGGGGGGGBBBGFFFFFFGBBBBGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGBBBGFFFFFFGBBBBGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGBBBGGGPPGGGBBBBGGGGGGGGGGGW",
+    "WGGGGGGGBBBBGGGGGGGPPGGGGGGGBBBBGGGGGGGW",
+    "WGGGGGGGBBBBGGGGGGGPPGGGGGGGBBBBGGGGGGGW",
+    "WGGTTTTGBBBBGGGGGGGPPGGGGGGGBBBBGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGTTTTGGW",
+    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGOOOOGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGOOOOGGGGGGGGGGGGGGGGGW",
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+  ],
+  "npcAnchors": {
+    "prontera_kafra": {
+      "tileX": 16,
+      "tileY": 14
+    },
+    "prontera_save": {
+      "tileX": 19,
+      "tileY": 9
+    },
+    "prontera_warp": {
+      "tileX": 22,
+      "tileY": 23
+    },
+    "prontera_job_master": {
+      "tileX": 24,
+      "tileY": 16
+    },
+    "prontera_tool_dealer": {
+      "tileX": 25,
+      "tileY": 11
+    },
+    "prontera_healer": {
+      "tileX": 14,
+      "tileY": 15
+    },
+    "field_return_landing": {
+      "tileX": 19,
+      "tileY": 24
+    },
+    "default_spawn": {
+      "tileX": 20,
+      "tileY": 14
+    }
+  }
+}

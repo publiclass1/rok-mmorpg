@@ -74,10 +74,17 @@ npm run dev
 
 ## Maps
 
-- `prontera` — hub town (Kafra, save, warp to field)
-- `field_01` — field with return warp, rock obstacles, roaming Porings
+- `prontera` — 40×28 hub town (plaza, roads, buildings, trees, south gate warps; layout in `content/ro/maps/prontera.layout.json`)
+- `prt_fild01` — Prontera field with Kafra, return warp to Prontera south gate
+- `field_01` — dev field with return warp, rock obstacles, roaming Porings
 
-Tile graphics are generated at runtime for dev; you can replace them with `client/public/tiles.png` and edit maps in [Tiled](https://www.mapeditor.org/), exporting JSON to `client/public/maps/`.
+Regenerate Prontera from the layout file:
+
+```bash
+npm run maps:prontera
+```
+
+Preview: `docs/maps/prontera-preview.svg`. Tile art source: `client/public/tiles/city-tileset.svg` (runtime procedural strip in `client/src/game/textures.ts`). Edit maps in [Tiled](https://www.mapeditor.org/) using exported JSON in `client/public/maps/`.
 
 ## Deploy on Netlify
 

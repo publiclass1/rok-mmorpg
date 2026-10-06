@@ -60,7 +60,7 @@ import {
 } from '../realtime/remotePlayers'
 import { clampToMap } from '../world/clampToMap'
 import { setDepthByFeet } from '../world/depthSort'
-import { ensureMobTexture, ensureTilesTexture } from '../textures'
+import { ensureMobTexture, ensureTilesTexture, TILESET_TILE_COUNT } from '../textures'
 import { persistCharacterWorld, saveCharacterSession } from '../../lib/characterProgress'
 import type { CharacterRow, NpcRow } from '../../types/database'
 
@@ -125,11 +125,13 @@ export class WorldScene extends Phaser.Scene {
     ensureMobTexture(this)
 
     const map = this.make.tilemap({ key: 'map' })
-    const tileset = map.addTilesetImage('tiles', 'tiles', 32, 32, 0, 0)
+    const tileset = map.addTilesetImage('tiles', 'tiles', 32, 32, 0, 0, TILESET_TILE_COUNT)
     if (!tileset) throw new Error('Failed to load tileset')
 
     const ground = map.createLayer('ground', tileset, 0, 0)
     ground?.setDepth(0)
+    const decor = map.createLayer('decor', tileset, 0, 0)
+    decor?.setDepth(2)
     const collision = map.createLayer('collision', tileset, 0, 0)
     collision?.setVisible(false)
     collision?.setCollisionByExclusion([-1, 0])

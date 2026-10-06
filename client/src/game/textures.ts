@@ -35,7 +35,57 @@ function drawWallTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.strokeRect(x + 3, 7, 26, 16)
 }
 
-/** Procedural 128×32 tile strip (gid 1–4): wall, grass A, grass B, path */
+function drawBuildingTile(g: Phaser.GameObjects.Graphics, x: number) {
+  g.fillStyle(0x0f172a, 0.35)
+  g.fillRect(x, 26, 32, 6)
+  g.fillStyle(0x78716c, 1)
+  g.fillRect(x + 1, 14, 30, 16)
+  g.fillStyle(0xb45309, 1)
+  g.fillTriangle(x + 16, 4, x + 30, 14, x + 2, 14)
+  g.fillStyle(0x44403c, 1)
+  g.fillRect(x + 12, 18, 8, 10)
+}
+
+function drawTreeTile(g: Phaser.GameObjects.Graphics, x: number) {
+  g.fillStyle(0x15803d, 1)
+  g.fillRect(x + 1, 22, 30, 8)
+  g.fillStyle(0x78350f, 1)
+  g.fillRect(x + 14, 18, 4, 8)
+  g.fillStyle(0x166534, 1)
+  g.fillCircle(x + 16, x + 12, 11)
+  g.fillStyle(0x22c55e, 1)
+  g.fillCircle(x + 12, x + 10, 6)
+  g.fillStyle(0x16a34a, 1)
+  g.fillCircle(x + 20, x + 11, 5)
+}
+
+function drawFountainTile(g: Phaser.GameObjects.Graphics, x: number) {
+  g.fillStyle(0x94a3b8, 1)
+  g.fillRect(x, 0, 32, 32)
+  g.fillStyle(0xcbd5e1, 0.5)
+  g.fillRect(x + 2, 2, 28, 28)
+  g.fillStyle(0x38bdf8, 0.85)
+  g.fillCircle(x + 16, x + 16, 8)
+  g.fillStyle(0x0ea5e9, 1)
+  g.fillCircle(x + 16, x + 16, 4)
+}
+
+function drawPortalTile(g: Phaser.GameObjects.Graphics, x: number) {
+  g.fillStyle(0x1e1b4b, 1)
+  g.fillRect(x, 0, 32, 32)
+  g.fillStyle(0x6366f1, 0.5)
+  g.fillEllipse(x + 16, x + 18, 24, 12)
+  g.fillStyle(0x818cf8, 0.9)
+  g.fillCircle(x + 16, x + 16, 8)
+  g.fillStyle(0xc4b5fd, 1)
+  g.fillCircle(x + 16, x + 16, 4)
+}
+
+/** Tile strip width in px (8 tiles × 32). Gids 1–8: wall, grass A/B, path, building, tree, fountain, portal */
+export const TILESET_TILE_COUNT = 8
+export const TILESET_WIDTH_PX = TILESET_TILE_COUNT * 32
+
+/** Procedural tile strip matching client/public/tiles/city-tileset.svg */
 export function ensureTilesTexture(scene: Phaser.Scene) {
   if (scene.textures.exists('tiles')) return
 
@@ -44,7 +94,11 @@ export function ensureTilesTexture(scene: Phaser.Scene) {
   drawGrassTile(g, 32, 0x22c55e, 0x16a34a)
   drawGrassTile(g, 64, 0x16a34a, 0x15803d)
   drawPathTile(g, 96)
-  g.generateTexture('tiles', 128, 32)
+  drawBuildingTile(g, 128)
+  drawTreeTile(g, 160)
+  drawFountainTile(g, 192)
+  drawPortalTile(g, 224)
+  g.generateTexture('tiles', TILESET_WIDTH_PX, 32)
   g.destroy()
 }
 
