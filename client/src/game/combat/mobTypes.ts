@@ -22,4 +22,6 @@ export type MobInstance = {
   roamTargetY: number
   lastAttackAt: number
   lastWanderAt: number
+  provokedByPlayer: boolean
+  skillCooldownUntil: Record<string, number>
 }

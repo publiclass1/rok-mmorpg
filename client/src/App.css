@@ -695,6 +695,7 @@ button:disabled {
 .game-hud-overlay .game-hud-panel,
 .game-hud-overlay .game-hud-bottom,
 .game-hud-overlay .skill-bar-panel,
+.game-hud-overlay .game-hud-minimap,
 .game-hud-overlay .game-hud-menu button,
 .game-hud-overlay .game-hud-nearby button,
 .game-hud-overlay .hud-log-toggle {
@@ -727,11 +728,7 @@ button:disabled {
 }
 
 .game-hud-minimap {
-  position: absolute;
-  top: 0.65rem;
-  right: 0.65rem;
   z-index: 12;
-  pointer-events: none;
   background: rgba(15, 23, 42, 0.88);
   border: 1px solid rgba(55, 65, 81, 0.9);
   border-radius: 8px;
@@ -739,14 +736,44 @@ button:disabled {
   backdrop-filter: blur(4px);
 }
 
+.game-hud-minimap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.2rem;
+  padding: 0.05rem 0.1rem 0.15rem;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.55);
+}
+
 .game-hud-minimap-title {
-  display: block;
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #9ca3af;
-  margin-bottom: 0.2rem;
-  padding-left: 0.15rem;
+  padding-left: 0.05rem;
+  flex: 1;
+}
+
+.game-hud-minimap-toggle {
+  flex-shrink: 0;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  background: rgba(30, 41, 59, 0.9);
+  color: #d1d5db;
+  border-radius: 4px;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  font-size: 0.7rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-hud-minimap-toggle:hover {
+  background: rgba(51, 65, 85, 0.95);
+  color: #f3f4f6;
 }
 
 .game-hud-minimap-svg {

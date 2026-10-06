@@ -23,10 +23,15 @@ import {
   playMobHitShake,
   showFloatingText,
 } from '../combat/combatFx'
-import { colliderWithObstacles, spawnObstacles, spawnObstaclesFromTilemap } from '../combat/mapObstacles'
-import { initMobAiFields, updateMob } from '../combat/mobAi'
+import {
+  colliderWithObstacles,
+  obstacleRectsForMap,
+  spawnObstacles,
+  spawnObstaclesFromTilemap,
+} from '../combat/mapObstacles'
+import { initMobAiFields, provokeMob, updateMob } from '../combat/mobAi'
 import { logActivity } from '../activityLog'
-import { calcMobVsPlayerDamage, calcPlayerVsMobDamage } from '../combat/damage'
+import { calcMobSkillVsPlayerDamage, calcMobVsPlayerDamage, calcPlayerVsMobDamage } from '../combat/damage'
 import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
 import { scaleMobExp } from '../combat/gameConfig'
@@ -83,7 +88,8 @@ import { clampToMap } from '../world/clampToMap'
 import { findPortalAtPoint } from '../world/mapPortals'
 import { preloadMapDecor, spawnMapDecor } from '../world/spawnMapDecor'
 import { setDepthByFeet } from '../world/depthSort'
-import type { MinimapPayload } from '../world/minimapTypes'
+import { pointInRect, rectsIntersect } from '../world/minimapGeometry'
+import type { MinimapPayload, MinimapWorldRect } from '../world/minimapTypes'
 import {
   entityInView,
   setDecorViewportVisible,
@@ -164,6 +170,11 @@ export class WorldScene extends Phaser.Scene {
   private worldHeight = 0
   private mapDecorSprites: Phaser.GameObjects.Image[] = []
   private lastMinimapEmitAt = 0
+  private minimapObstacleRects: MinimapWorldRect[] = []
+  private mapTileWidth = 32
+  private mapTileHeight = 32
+  private mapTilesWide = 0
+  private mapTilesHigh = 0
 
   constructor() {
     super('WorldScene')
@@ -201,6 +212,10 @@ export class WorldScene extends Phaser.Scene {
     const worldH = map.heightInPixels
     this.worldWidth = worldW
     this.worldHeight = worldH
+    this.mapTileWidth = map.tileWidth
+    this.mapTileHeight = map.tileHeight
+    this.mapTilesWide = map.width
+    this.mapTilesHigh = map.height
     this.physics.world.setBounds(0, 0, worldW, worldH)
     this.cameras.main.setBounds(0, 0, worldW, worldH)
 
@@ -219,6 +234,7 @@ export class WorldScene extends Phaser.Scene {
 
     const fromTmj = spawnObstaclesFromTilemap(this, map)
     this.obstacles = fromTmj.length > 0 ? fromTmj : spawnObstacles(this, this.character.map_id)
+    this.minimapObstacleRects = obstacleRectsForMap(this.character.map_id, map)
     colliderWithObstacles(this, this.obstacles, this.playerDisplay.container)
 
     const boot = this.registry.get('bootSession') as ReturnType<typeof getCharacterSession> | undefined
@@ -500,6 +516,7 @@ export class WorldScene extends Phaser.Scene {
       if (def) {
         updateMob(mob, def, this.playerDisplay.container.x, this.playerDisplay.container.y, playerAlive, now, {
           onMobHitPlayer: (m) => this.onMobHitPlayer(m),
+          onMobUseSkill: (m, skillId, level) => this.onMobSkillOnPlayer(m, skillId, level),
         })
       }
       this.updateMobHpBar(mob)
@@ -574,24 +591,57 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  private collectBlockedTilesInView(view: MinimapWorldRect): MinimapWorldRect[] {
+    const layer = this.collisionLayer
+    if (!layer || view.width <= 0 || view.height <= 0) return []
+
+    const tw = this.mapTileWidth
+    const th = this.mapTileHeight
+    const tx0 = Math.max(0, Math.floor(view.x / tw))
+    const ty0 = Math.max(0, Math.floor(view.y / th))
+    const tx1 = Math.min(this.mapTilesWide - 1, Math.floor((view.x + view.width) / tw))
+    const ty1 = Math.min(this.mapTilesHigh - 1, Math.floor((view.y + view.height) / th))
+    const tileCount = (tx1 - tx0 + 1) * (ty1 - ty0 + 1)
+    if (tileCount <= 0 || tileCount > 500) return []
+
+    const tiles: MinimapWorldRect[] = []
+    for (let ty = ty0; ty <= ty1; ty++) {
+      for (let tx = tx0; tx <= tx1; tx++) {
+        const tile = layer.getTileAt(tx, ty)
+        if (!tile || tile.index <= 0) continue
+        tiles.push({ x: tx * tw, y: ty * th, width: tw, height: th })
+      }
+    }
+    return tiles
+  }
+
   private emitMinimap(now: number) {
     if (now - this.lastMinimapEmitAt < 120) return
     this.lastMinimapEmitAt = now
 
     const px = this.playerDisplay.container.x
     const py = this.playerDisplay.container.y
+    const view = cameraWorldViewRect(this.cameras.main)
     const payload: MinimapPayload = {
       mapId: this.character.map_id,
       worldWidth: this.worldWidth,
       worldHeight: this.worldHeight,
-      view: cameraWorldViewRect(this.cameras.main),
+      view,
       localPlayer: { x: px, y: py },
       remotes: [],
       mobs: [],
+      obstacles: [],
+      blockedTiles: [],
     }
+
+    for (const rect of this.minimapObstacleRects) {
+      if (rectsIntersect(rect, view)) payload.obstacles.push(rect)
+    }
+    payload.blockedTiles = this.collectBlockedTilesInView(view)
 
     for (const entity of this.remotePlayers.values()) {
       const c = entity.display.container
+      if (!pointInRect(c.x, c.y, view)) continue
       payload.remotes.push({
         characterId: entity.lastPayload.characterId,
         x: c.x,
@@ -601,6 +651,7 @@ export class WorldScene extends Phaser.Scene {
 
     for (const mob of this.mobs) {
       if (!mob.alive) continue
+      if (!pointInRect(mob.sprite.x, mob.sprite.y, view)) continue
       payload.mobs.push({
         spawnIndex: mob.spawnIndex,
         x: mob.sprite.x,
@@ -907,6 +958,7 @@ export class WorldScene extends Phaser.Scene {
     skillLabel: string,
   ) {
     target.hp -= damage
+    provokeMob(target)
     playMobHitShake(this, target.sprite, def.color)
     this.sfx.playHit()
     showFloatingText(this, target.sprite.x, target.sprite.y - 40, `-${damage}`, 'hit')
@@ -1080,6 +1132,7 @@ export class WorldScene extends Phaser.Scene {
     )
     flashPlayerHit(this, this.playerDisplay)
     if (!enduring) {
+      this.isAttacking = false
       playPlayerFlinch(
         this,
         this.playerDisplay,
@@ -1099,6 +1152,57 @@ export class WorldScene extends Phaser.Scene {
       playMobHitShake(this, mob.sprite, def.color)
     }
     logActivity('combat', `Took ${damage} damage from Lv ${mob.level} ${mob.name}.`)
+    this.emitCharacterSheet()
+  }
+
+  private onMobSkillOnPlayer(mob: MobInstance, skillId: string, skillLevel: number) {
+    if (this.session.hp <= 0) return
+    const skillDef = SKILLS[skillId]
+    const skillLabel = skillDef?.name ?? skillId
+    const enduring = hasStatus(this.activeBuffs, 'endure')
+    if (this.isSitting && !enduring) this.standUp()
+    const def = MOB_DEFS[mob.defId]
+    const damage = def ? calcMobSkillVsPlayerDamage(def, skillId, skillLevel, this.session) : 0
+    if (damage <= 0) {
+      const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
+      showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
+      this.sfx.playMiss()
+      logActivity('combat', `${mob.name}'s ${skillLabel} missed you.`)
+      return
+    }
+    this.session = { ...this.session, hp: Math.max(0, this.session.hp - damage) }
+    showFloatingText(
+      this,
+      this.playerDisplay.container.x,
+      this.playerDisplay.container.y - 36,
+      `-${damage}`,
+      'mobHitPlayer',
+    )
+    flashPlayerHit(this, this.playerDisplay)
+    if (!enduring) {
+      this.isAttacking = false
+      playPlayerFlinch(
+        this,
+        this.playerDisplay,
+        this.facing,
+        this.playerDisplay.container.x - mob.sprite.x,
+        this.playerDisplay.container.y - mob.sprite.y,
+      )
+    }
+    this.sfx.playHit()
+    if (def) {
+      playMobAttackLunge(
+        this,
+        mob.sprite,
+        this.playerDisplay.container.x,
+        this.playerDisplay.container.y,
+      )
+      playMobHitShake(this, mob.sprite, def.color)
+    }
+    logActivity(
+      'combat',
+      `Took ${damage} damage from Lv ${mob.level} ${mob.name}'s ${skillLabel}.`,
+    )
     this.emitCharacterSheet()
   }
 
@@ -1157,6 +1261,8 @@ export class WorldScene extends Phaser.Scene {
       roamTargetY: y,
       lastAttackAt: 0,
       lastWanderAt: 0,
+      provokedByPlayer: false,
+      skillCooldownUntil: {},
     }
     initMobAiFields(mob, def)
     return mob

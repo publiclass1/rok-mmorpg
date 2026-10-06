@@ -1,64 +1,114 @@
+import { useRef, useState } from 'react'
 import type { MinimapPayload } from '../game/world/minimapTypes'
+import { worldRectToMinimap, worldToMinimap } from '../game/world/minimapGeometry'
+import { useModalDrag } from './motion/useModalDrag'
 
-const SIZE = 136
 const PAD = 6
+const COMPACT_SIZE = 136
+const EXPANDED_SIZE = 280
+const HUD_MARGIN = 10
 
 type Props = {
   data: MinimapPayload | null
 }
 
-function layout(data: MinimapPayload) {
-  const inner = SIZE - PAD * 2
-  const scale = inner / Math.max(data.worldWidth, data.worldHeight, 1)
-  const mapW = data.worldWidth * scale
-  const mapH = data.worldHeight * scale
-  const offX = PAD + (inner - mapW) / 2
-  const offY = PAD + (inner - mapH) / 2
-  const toMap = (wx: number, wy: number) => ({
-    x: offX + wx * scale,
-    y: offY + wy * scale,
-  })
-  return { scale, offX, offY, mapW, mapH, toMap }
+function minimapInitialPosition(panel: HTMLElement) {
+  const w = panel.offsetWidth
+  return {
+    x: Math.max(HUD_MARGIN, window.innerWidth - w - HUD_MARGIN),
+    y: HUD_MARGIN,
+  }
+}
+
+function MinimapRadar({ data, size }: { data: MinimapPayload; size: number }) {
+  const inner = size - PAD * 2
+  const view = data.view
+  const expanded = size > COMPACT_SIZE
+  const toMap = (wx: number, wy: number) => worldToMinimap(wx, wy, view, inner, PAD)
+  const rectToMap = (rect: { x: number; y: number; width: number; height: number }) =>
+    worldRectToMinimap(rect, view, inner, PAD)
+  const local = toMap(data.localPlayer.x, data.localPlayer.y)
+  const mobR = expanded ? 4 : 2.5
+  const remoteR = expanded ? 4.5 : 3
+  const playerR = expanded ? 6 : 4
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="game-hud-minimap-svg">
+      <rect x={PAD} y={PAD} width={inner} height={inner} rx={4} fill="#0b1220" stroke="#334155" strokeWidth={1} />
+      {data.blockedTiles.map((t, i) => {
+        const r = rectToMap(t)
+        return (
+          <rect
+            key={`w-${i}`}
+            x={r.x}
+            y={r.y}
+            width={Math.max(0.5, r.width)}
+            height={Math.max(0.5, r.height)}
+            fill="#475569"
+            opacity={0.85}
+          />
+        )
+      })}
+      {data.obstacles.map((o, i) => {
+        const r = rectToMap(o)
+        return (
+          <rect
+            key={`o-${i}`}
+            x={r.x}
+            y={r.y}
+            width={Math.max(0.5, r.width)}
+            height={Math.max(0.5, r.height)}
+            fill="#78716c"
+            stroke="#44403c"
+            strokeWidth={0.5}
+          />
+        )
+      })}
+      {data.mobs.map((m) => {
+        const p = toMap(m.x, m.y)
+        return <circle key={`m-${m.spawnIndex}`} cx={p.x} cy={p.y} r={mobR} fill="#f472b6" />
+      })}
+      {data.remotes.map((r) => {
+        const p = toMap(r.x, r.y)
+        return <circle key={r.characterId} cx={p.x} cy={p.y} r={remoteR} fill="#60a5fa" />
+      })}
+      <circle cx={local.x} cy={local.y} r={playerR} fill="#4ade80" stroke="#14532d" strokeWidth={1} />
+    </svg>
+  )
 }
 
 export function Minimap({ data }: Props) {
-  if (!data || data.worldWidth <= 0 || data.worldHeight <= 0) return null
+  const [expanded, setExpanded] = useState(false)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const pos = useModalDrag(panelRef, true, minimapInitialPosition)
+  const size = expanded ? EXPANDED_SIZE : COMPACT_SIZE
 
-  const { offX, offY, mapW, mapH, toMap } = layout(data)
-  const view = data.view
-  const viewX = offX + view.x * (mapW / data.worldWidth)
-  const viewY = offY + view.y * (mapH / data.worldHeight)
-  const viewW = view.width * (mapW / data.worldWidth)
-  const viewH = view.height * (mapH / data.worldHeight)
-  const local = toMap(data.localPlayer.x, data.localPlayer.y)
+  if (!data || data.view.width <= 0 || data.view.height <= 0) return null
+
+  const panelStyle = pos
+    ? { position: 'fixed' as const, left: pos.x, top: pos.y, margin: 0, visibility: 'visible' as const }
+    : { position: 'fixed' as const, left: 0, top: 0, margin: 0, visibility: 'hidden' as const }
 
   return (
-    <div className="game-hud-minimap" aria-label="Minimap">
-      <span className="game-hud-minimap-title">Map</span>
-      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="game-hud-minimap-svg">
-        <rect x={PAD} y={PAD} width={SIZE - PAD * 2} height={SIZE - PAD * 2} rx={4} fill="#0b1220" />
-        <rect x={offX} y={offY} width={mapW} height={mapH} fill="#1e293b" stroke="#334155" strokeWidth={1} />
-        <rect
-          x={viewX}
-          y={viewY}
-          width={Math.max(2, viewW)}
-          height={Math.max(2, viewH)}
-          fill="none"
-          stroke="#f8fafc"
-          strokeWidth={1.25}
-          strokeDasharray="3 2"
-          opacity={0.9}
-        />
-        {data.mobs.map((m) => {
-          const p = toMap(m.x, m.y)
-          return <circle key={`m-${m.spawnIndex}`} cx={p.x} cy={p.y} r={2.5} fill="#f472b6" />
-        })}
-        {data.remotes.map((r) => {
-          const p = toMap(r.x, r.y)
-          return <circle key={r.characterId} cx={p.x} cy={p.y} r={3} fill="#60a5fa" />
-        })}
-        <circle cx={local.x} cy={local.y} r={4} fill="#4ade80" stroke="#14532d" strokeWidth={1} />
-      </svg>
+    <div
+      ref={panelRef}
+      className={`game-hud-minimap${expanded ? ' game-hud-minimap--expanded' : ''}`}
+      style={panelStyle}
+      aria-label="Minimap"
+    >
+      <div className="game-hud-minimap-header modal-drag-handle" title="Drag to move minimap">
+        <span className="game-hud-minimap-title">Map</span>
+        <button
+          type="button"
+          className="game-hud-minimap-toggle"
+          onClick={() => setExpanded((v) => !v)}
+          aria-label={expanded ? 'Restore minimap size' : 'Maximize minimap'}
+          title={expanded ? 'Restore size' : 'Maximize'}
+        >
+          {expanded ? '▢' : '⤢'}
+        </button>
+      </div>
+      <MinimapRadar data={data} size={size} />
     </div>
   )
 }

@@ -1,13 +1,28 @@
 import Phaser from 'phaser'
+import type { RoMobSkill } from '../../content/ro/types'
+import { SKILLS } from '../character/skillsConfig'
 import type { MobDefinition } from './mobConfig'
 import type { MobInstance, MobState } from './mobTypes'
 
 export type MobAiCallbacks = {
   onMobHitPlayer: (mob: MobInstance) => void
+  onMobUseSkill: (mob: MobInstance, skillId: string, level: number) => void
 }
 
 function dist(ax: number, ay: number, bx: number, by: number) {
   return Math.hypot(bx - ax, by - ay)
+}
+
+function deaggroDistance(def: MobDefinition): number {
+  return Math.max(def.aggroRange * 1.25, def.roamRadius * 2)
+}
+
+function spawnLeashDistance(def: MobDefinition): number {
+  return def.roamRadius * 2.5
+}
+
+export function provokeMob(mob: MobInstance) {
+  mob.provokedByPlayer = true
 }
 
 function pickRoamTarget(mob: MobInstance, def: MobDefinition) {
@@ -34,6 +49,33 @@ function moveToward(
   sprite.setVelocity((dx / len) * speed, (dy / len) * speed)
 }
 
+function pickMobSkill(
+  mob: MobInstance,
+  def: MobDefinition,
+  dPlayer: number,
+  now: number,
+): RoMobSkill | null {
+  const ready: RoMobSkill[] = []
+  for (const entry of def.skills) {
+    const skillDef = SKILLS[entry.skillId]
+    if (!skillDef || skillDef.type !== 'active' || skillDef.target !== 'enemy') continue
+    const range = skillDef.range > 0 ? skillDef.range : def.attackRange
+    if (dPlayer > range) continue
+    const until = mob.skillCooldownUntil[entry.skillId] ?? 0
+    if (now < until) continue
+    if (entry.chance != null && Math.random() > entry.chance) continue
+    ready.push(entry)
+  }
+  if (ready.length === 0) return null
+  return ready[Math.floor(Math.random() * ready.length)]
+}
+
+function clearProvoke(mob: MobInstance) {
+  mob.provokedByPlayer = false
+  mob.roamTargetX = mob.spawnX
+  mob.roamTargetY = mob.spawnY
+}
+
 export function updateMob(
   mob: MobInstance,
   def: MobDefinition,
@@ -46,21 +88,29 @@ export function updateMob(
   if (!mob.alive) return
 
   const dPlayer = dist(mob.sprite.x, mob.sprite.y, playerX, playerY)
-  const deaggroRange = def.aggroRange * 1.25
+  const dSpawn = dist(mob.sprite.x, mob.sprite.y, mob.spawnX, mob.spawnY)
+  const deaggroRange = deaggroDistance(def)
+  const leash = spawnLeashDistance(def)
+  const inCombatRange = mob.provokedByPlayer || dPlayer <= def.aggroRange
 
   let state: MobState = mob.state
 
   if (!playerAlive) {
     state = 'wander'
+    mob.provokedByPlayer = false
+  } else if (mob.provokedByPlayer && (dPlayer > deaggroRange || dSpawn > leash)) {
+    state = 'wander'
+    clearProvoke(mob)
   } else if (dPlayer <= def.attackRange) {
     state = 'attack'
-  } else if (dPlayer <= def.aggroRange) {
+  } else if (inCombatRange) {
     state = 'chase'
   } else if (state !== 'wander' && dPlayer > deaggroRange) {
     state = 'wander'
     mob.roamTargetX = mob.spawnX
     mob.roamTargetY = mob.spawnY
-  } else if (state === 'wander' && dPlayer > def.aggroRange) {
+    mob.provokedByPlayer = false
+  } else if (state === 'wander' && !inCombatRange) {
     state = 'wander'
   }
 
@@ -70,7 +120,14 @@ export function updateMob(
     mob.sprite.setVelocity(0, 0)
     if (now - mob.lastAttackAt >= def.attackCooldownMs) {
       mob.lastAttackAt = now
-      callbacks.onMobHitPlayer(mob)
+      const skill = pickMobSkill(mob, def, dPlayer, now)
+      if (skill) {
+        const cooldownMs = skill.cooldownMs ?? def.attackCooldownMs
+        mob.skillCooldownUntil[skill.skillId] = now + cooldownMs
+        callbacks.onMobUseSkill(mob, skill.skillId, skill.level)
+      } else {
+        callbacks.onMobHitPlayer(mob)
+      }
     }
     return
   }
@@ -97,6 +154,8 @@ export function initMobAiFields(mob: MobInstance, def: MobDefinition) {
   mob.state = 'wander'
   mob.lastAttackAt = 0
   mob.lastWanderAt = 0
+  mob.provokedByPlayer = false
+  mob.skillCooldownUntil = {}
   mob.roamTargetX = mob.spawnX
   mob.roamTargetY = mob.spawnY
   pickRoamTarget(mob, def)

@@ -49,8 +49,9 @@ export function startPlayerAttackAnim(
   })
 
   scene.time.delayedCall(END_MS, () => {
-    if (display.pose.anim !== 'attack') return
-    setPlayerToIdle(display, facing)
+    if (display.pose.anim === 'attack') {
+      setPlayerToIdle(display, facing)
+    }
     options.onComplete?.()
   })
 }

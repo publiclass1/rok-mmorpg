@@ -155,7 +155,10 @@
         "wanderPauseMs": 2000,
         "baseExp": 17,
         "jobExp": 5
-      }
+      },
+      "skills": [
+        { "skillId": "bash", "level": 2, "chance": 0.35, "cooldownMs": 4000 }
+      ]
     },
     {
       "id": "tarou",

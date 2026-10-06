@@ -1,6 +1,6 @@
 import { loadRoContent } from '../../content/ro/loadContent'
 import { parseLayerColor } from '../../content/ro/parseColor'
-import type { RoMob, RoMobDrop } from '../../content/ro/types'
+import type { RoMob, RoMobDrop, RoMobSkill } from '../../content/ro/types'
 
 export type MobDefinition = {
   id: string
@@ -25,6 +25,7 @@ export type MobDefinition = {
   wikiBaseExp: number
   wikiJobExp: number
   drops: RoMobDrop[]
+  skills: RoMobSkill[]
 }
 
 function mobDefinitionFromContent(mob: RoMob): MobDefinition {
@@ -52,6 +53,7 @@ function mobDefinitionFromContent(mob: RoMob): MobDefinition {
     wikiBaseExp: mob.wikiBaseExp,
     wikiJobExp: mob.wikiJobExp,
     drops: mob.drops,
+    skills: mob.skills ?? [],
   }
 }
 

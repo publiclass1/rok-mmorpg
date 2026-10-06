@@ -104,6 +104,13 @@ export type RoMobRuntime = {
   jobExp: number
 }
 
+export type RoMobSkill = {
+  skillId: string
+  level: number
+  chance?: number
+  cooldownMs?: number
+}
+
 export type RoMob = {
   id: string
   name: string
@@ -119,6 +126,7 @@ export type RoMob = {
   wikiJobExp: number
   drops: RoMobDrop[]
   runtime: RoMobRuntime
+  skills?: RoMobSkill[]
 }
 
 export type RoMap = {

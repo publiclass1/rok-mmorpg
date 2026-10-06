@@ -103,6 +103,26 @@ export function calcMobVsPlayerDamage(mob: MobDefinition, state: CharacterSessio
   return Math.max(1, damage)
 }
 
+/** Mob skill damage on player; returns 0 on miss or unsupported placeholder skills. */
+export function calcMobSkillVsPlayerDamage(
+  mob: MobDefinition,
+  skillId: string,
+  skillLevel: number,
+  state: CharacterSessionState,
+  rng = Math.random,
+): number {
+  if (skillId === 'provoke') return 0
+
+  const base = calcMobVsPlayerDamage(mob, state, rng)
+  if (base <= 0) return 0
+
+  if (skillId === 'bash') {
+    return Math.max(1, Math.floor(base * (1 + skillLevel * 0.15)) + skillLevel * 3)
+  }
+
+  return base
+}
+
 export function previewPlayerAttack(state: CharacterSessionState): number {
   const stats = effectiveStats(state)
   const weapon = state.equipment.weapon ? getItemCombatStats(state.equipment.weapon) : null

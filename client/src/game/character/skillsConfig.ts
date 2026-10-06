@@ -10,6 +10,9 @@ export type SkillDefinition = {
   description: string
   mpCost: number
   type: 'active' | 'passive'
+  target: 'enemy' | 'self' | 'ally' | 'ground'
+  range: number
+  castTimeMs: number
   prerequisites: SkillPrerequisite[]
   iconFile?: string | null
   selfBuff?: RoSkillSelfBuff
@@ -29,6 +32,9 @@ export const SKILLS: Record<string, SkillDefinition> = Object.fromEntries(
       description: s.description,
       mpCost: s.mpCost,
       type: s.type,
+      target: s.target,
+      range: s.range,
+      castTimeMs: s.castTimeMs,
       prerequisites: s.prerequisites,
       iconFile: s.iconFile ?? null,
       selfBuff: s.selfBuff,

@@ -1,6 +1,33 @@
 import Phaser from 'phaser'
+import type { MinimapWorldRect } from '../world/minimapTypes'
 
 export type ObstacleDef = { x: number; y: number; width: number; height: number }
+
+/** Top-left world rects for minimap / shared spawn source. */
+export function obstacleRectsForMap(
+  mapId: string,
+  tilemap?: Phaser.Tilemaps.Tilemap,
+): MinimapWorldRect[] {
+  const layer = tilemap?.getObjectLayer('obstacles')
+  if (layer?.objects?.length) {
+    const rects: MinimapWorldRect[] = []
+    for (const obj of layer.objects) {
+      const w = obj.width ?? 0
+      const h = obj.height ?? 0
+      if (w <= 0 || h <= 0) continue
+      rects.push({ x: obj.x ?? 0, y: obj.y ?? 0, width: w, height: h })
+    }
+    return rects
+  }
+
+  const defs = OBSTACLES_BY_MAP[mapId] ?? []
+  return defs.map((d) => ({
+    x: d.x - d.width / 2,
+    y: d.y - d.height / 2,
+    width: d.width,
+    height: d.height,
+  }))
+}
 
 export const OBSTACLES_BY_MAP: Record<string, ObstacleDef[]> = {
   prt_fild01: [

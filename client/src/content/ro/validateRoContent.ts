@@ -56,6 +56,21 @@ export function validateRoContent(pack: RoContentPack): void {
       assert(itemIds.has(drop.itemId), `mob ${mob.id} drop references unknown item ${drop.itemId}`)
     }
     assert(mob.runtime.maxHp > 0, `mob ${mob.id} runtime.maxHp must be > 0`)
+    if (mob.skills) {
+      for (const entry of mob.skills) {
+        const skill = pack.skills.find((s) => s.id === entry.skillId)
+        assert(skill != null, `mob ${mob.id} skill references unknown skill ${entry.skillId}`)
+        assert(entry.level >= 1, `mob ${mob.id} skill ${entry.skillId} level must be >= 1`)
+        assert(skill.type === 'active', `mob ${mob.id} skill ${entry.skillId} must be active`)
+        assert(skill.target === 'enemy', `mob ${mob.id} skill ${entry.skillId} must target enemy`)
+        if (entry.chance != null) {
+          assert(entry.chance >= 0 && entry.chance <= 1, `mob ${mob.id} skill ${entry.skillId} chance must be 0–1`)
+        }
+        if (entry.cooldownMs != null) {
+          assert(entry.cooldownMs > 0, `mob ${mob.id} skill ${entry.skillId} cooldownMs must be > 0`)
+        }
+      }
+    }
   }
 
   assert(pack.expTables.baseExpToNext.length === pack.expTables.baseLevelCap, 'baseExpToNext length must match baseLevelCap')

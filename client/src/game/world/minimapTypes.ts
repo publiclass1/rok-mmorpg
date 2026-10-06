@@ -26,4 +26,6 @@ export type MinimapPayload = {
   localPlayer: MinimapPoint
   remotes: MinimapRemote[]
   mobs: MinimapMob[]
+  obstacles: MinimapWorldRect[]
+  blockedTiles: MinimapWorldRect[]
 }
