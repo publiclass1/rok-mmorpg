@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Phaser from 'phaser'
 import { savePoint, teleport } from '../lib/api'
+import { loadCharacterSession, saveCharacterSession } from '../lib/characterProgress'
 import { supabase } from '../lib/supabase'
 import { registerCharacterActionContext } from '../game/character/characterActionDispatch'
 import { sessionFromSheetPayload, toCharacterSheetPayload } from '../game/character/characterSheet'
@@ -48,6 +49,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   } | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const sessionRef = useRef(createInitialCharacterState())
+  const [sessionReady, setSessionReady] = useState(false)
   const [sheet, setSheet] = useState<CharacterSheetPayload>(() =>
     toCharacterSheetPayload(sessionRef.current),
   )
@@ -62,8 +64,18 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     statsOpen || skillsOpen || inventoryOpen || equipmentOpen || !!storageNpc || !!tradePartner
 
   useEffect(() => {
-    emitGameEvent('uiPointerLock', modalOpen)
-  }, [modalOpen])
+    setSessionReady(false)
+    let cancelled = false
+    void loadCharacterSession(character.id).then((loaded) => {
+      if (cancelled) return
+      sessionRef.current = loaded
+      setSheet(toCharacterSheetPayload(loaded))
+      setSessionReady(true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [character.id])
 
   useEffect(() => {
     setNpcsReady(false)
@@ -106,6 +118,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [character.id])
 
   useEffect(() => {
+    emitGameEvent('uiPointerLock', modalOpen)
+  }, [modalOpen])
+
+  useEffect(() => {
     registerCharacterActionContext({
       getSession: () => sessionRef.current,
       setSession: (state) => {
@@ -138,7 +154,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [])
 
   useEffect(() => {
-    if (!hostRef.current || !npcsReady) return
+    if (!hostRef.current || !npcsReady || !sessionReady) return
 
     const game = createPhaserGame(hostRef.current, character, npcs, sessionRef.current)
     gameRef.current = game
@@ -150,7 +166,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       game.destroy(true)
       gameRef.current = null
     }
-  }, [character.id, character.map_id, npcsReady, npcs])
+  }, [character.id, character.map_id, npcsReady, npcs, sessionReady])
+
+  async function leaveWorld() {
+    try {
+      await saveCharacterSession(character.id, sessionRef.current)
+    } catch (err) {
+      console.warn('Failed to save character progress', err)
+    }
+    onExit()
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -251,11 +276,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           <button type="button" className="secondary" onClick={() => setEquipmentOpen(true)}>Equip</button>
           <button type="button" className="secondary" onClick={() => setSkillsOpen(true)}>Skills</button>
           <span className="muted">{status}</span>
-          <button type="button" className="secondary" onClick={onExit}>Leave world</button>
+          <button type="button" className="secondary" onClick={() => void leaveWorld()}>Leave world</button>
         </div>
       </header>
 
       <div className="game-stage">
+        {!sessionReady && <p className="muted game-loading">Loading character…</p>}
         <div ref={hostRef} className="game-canvas" />
         <div className="game-bottom-dock">
           <SkillBar sheet={sheet} />

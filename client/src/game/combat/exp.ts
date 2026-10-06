@@ -26,6 +26,23 @@ function jobExpToNext(level: number): number {
   return 50 + (level - 1) * 25
 }
 
+/** Rebuild progress slice from persisted level/exp (recomputes exp-to-next thresholds). */
+export function progressFromLevels(
+  baseLevel: number,
+  baseExp: number,
+  jobLevel: number,
+  jobExp: number,
+): PlayerProgressState {
+  return {
+    baseLevel,
+    baseExp,
+    baseExpToNext: baseExpToNext(baseLevel),
+    jobLevel,
+    jobExp,
+    jobExpToNext: jobExpToNext(jobLevel),
+  }
+}
+
 export function addBaseExp(
   state: PlayerProgressState,
   amount: number,

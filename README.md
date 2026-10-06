@@ -12,6 +12,7 @@ A simple browser MMORPG inspired by Ragnarok Online — for fun and game-dev lea
 - NPCs: storage, save point, teleport
 - Player trading with lock + dual confirm (Edge Functions)
 - Shared maps with realtime position broadcast
+- Character progression (levels, stats, skills, equipment, session gear bag, HP/MP) persisted to Supabase
 
 ## Tech stack
 
@@ -28,7 +29,7 @@ See [docs/DECISIONS.md](docs/DECISIONS.md) for v1 choices (React + Phaser, WASD 
 ### 1. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Install [Supabase CLI](https://supabase.com/docs/guides/cli) and link the project, or paste SQL from `supabase/migrations/` in the SQL editor.
+2. Install [Supabase CLI](https://supabase.com/docs/guides/cli) and link the project, or paste SQL from `supabase/migrations/` in the SQL editor (include `20260323140000_character_progress.sql` for progression save).
 3. Deploy Edge Functions:
 
 ```bash
@@ -62,7 +63,7 @@ npm run dev
 - **Alt+E** / **Equip** — equipment slots; unequip per slot
 - **Alt+K** / **Skills** — job skills (skill points from job level)
 - **E** — interact with nearby NPC (storage / save / warp)
-- On `field_01`, mobs roam, aggro, and fight back; kill for Base/Job EXP (session)
+- On `field_01`, mobs roam, aggro, and fight back; kill for Base/Job EXP (saved to your character)
 - **Trade** — use sidebar when another player is on the same map
 
 ## Project layout
@@ -76,7 +77,7 @@ npm run dev
 - `prontera` — hub town (Kafra, save, warp to field)
 - `field_01` — field with return warp, rock obstacles, roaming Porings
 
-Tile graphics are generated at runtime for dev; you can replace them with `client/public/tiles.png` and edit maps in [Tiled](https://www.mapeditor.org/), exporting JSON to `client/public/maps/`. HP/MP are session-only in the client for now.
+Tile graphics are generated at runtime for dev; you can replace them with `client/public/tiles.png` and edit maps in [Tiled](https://www.mapeditor.org/), exporting JSON to `client/public/maps/`.
 
 ## Deploy on Netlify
 

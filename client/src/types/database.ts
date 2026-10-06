@@ -40,6 +40,44 @@ export type ItemRow = {
   id: string
   name: string
   stack_max: number
+  item_type?: string | null
+  weight?: number | null
+  equip_slot?: string | null
+  metadata?: Record<string, unknown>
+}
+
+export type CharacterProgressRow = {
+  character_id: string
+  job_id: string
+  base_level: number
+  base_exp: number
+  job_level: number
+  job_exp: number
+  str: number
+  agi: number
+  vit: number
+  stat_int: number
+  dex: number
+  luk: number
+  stat_points_unspent: number
+  skill_points_unspent: number
+  hp: number | null
+  mp: number | null
+  skill_bar: unknown
+  session_inventory: unknown
+  updated_at: string
+}
+
+export type CharacterSkillRow = {
+  character_id: string
+  skill_id: string
+  level: number
+}
+
+export type CharacterEquipmentRow = {
+  character_id: string
+  slot: string
+  item_id: string
 }
 
 export type TradeSessionRow = {
@@ -82,6 +120,21 @@ export type Database = {
       character_inventory: { Row: InventoryRow; Insert: Partial<InventoryRow>; Update: Partial<InventoryRow> }
       account_storage: { Row: StorageRow; Insert: Partial<StorageRow>; Update: Partial<StorageRow> }
       items: { Row: ItemRow; Insert: ItemRow; Update: Partial<ItemRow> }
+      character_progress: {
+        Row: CharacterProgressRow
+        Insert: Partial<CharacterProgressRow> & { character_id: string }
+        Update: Partial<CharacterProgressRow>
+      }
+      character_skills: {
+        Row: CharacterSkillRow
+        Insert: Partial<CharacterSkillRow> & { character_id: string; skill_id: string; level: number }
+        Update: Partial<CharacterSkillRow>
+      }
+      character_equipment: {
+        Row: CharacterEquipmentRow
+        Insert: Partial<CharacterEquipmentRow> & { character_id: string; slot: string; item_id: string }
+        Update: Partial<CharacterEquipmentRow>
+      }
       trade_sessions: { Row: TradeSessionRow; Insert: Partial<TradeSessionRow>; Update: Partial<TradeSessionRow> }
       trade_offers: { Row: TradeOfferRow; Insert: Partial<TradeOfferRow>; Update: Partial<TradeOfferRow> }
     }

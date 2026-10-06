@@ -46,6 +46,7 @@ import {
 import { MapPresenceChannel } from '../realtime/mapChannel'
 import { ensureMobTexture, ensureTilesTexture } from '../textures'
 import { supabase } from '../../lib/supabase'
+import { saveCharacterSession } from '../../lib/characterProgress'
 import type { CharacterRow, NpcRow } from '../../types/database'
 
 const INTERACT_RANGE = 64
@@ -63,6 +64,7 @@ export class WorldScene extends Phaser.Scene {
   private remoteSprites = new Map<string, Phaser.GameObjects.Container>()
   private facing: Facing = 'down'
   private persistTimer: number | null = null
+  private progressSaveTimer: number | null = null
   private nearestNpc: NpcRow | null = null
 
   private session: CharacterSessionState = createInitialCharacterState()
@@ -178,6 +180,7 @@ export class WorldScene extends Phaser.Scene {
         if (this.playerDisplay) {
           updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
         }
+        this.scheduleProgressSave()
       }),
       onGameEvent('uiPointerLock', (locked) => {
         this.uiPointerLocked = locked
@@ -229,7 +232,7 @@ export class WorldScene extends Phaser.Scene {
     })
 
     this.persistTimer = window.setInterval(() => {
-      void this.persistPosition()
+      void this.persistWorldState()
     }, 3000)
 
     this.emitCharacterSheet()
@@ -630,6 +633,31 @@ export class WorldScene extends Phaser.Scene {
       jobExp: sheet.jobExp,
       jobExpToNext: sheet.jobExpToNext,
     })
+    this.scheduleProgressSave()
+  }
+
+  private scheduleProgressSave() {
+    if (this.progressSaveTimer) window.clearTimeout(this.progressSaveTimer)
+    this.progressSaveTimer = window.setTimeout(() => {
+      this.progressSaveTimer = null
+      void saveCharacterSession(this.character.id, this.session).catch((err) => {
+        console.warn('Progress save failed', err)
+      })
+    }, 2000)
+  }
+
+  private async persistWorldState() {
+    await Promise.all([
+      supabase
+        .from('characters')
+        .update({
+          x: this.playerDisplay.container.x,
+          y: this.playerDisplay.container.y,
+          map_id: this.character.map_id,
+        })
+        .eq('id', this.character.id),
+      saveCharacterSession(this.character.id, this.session),
+    ])
   }
 
   getNearestNpc() {
@@ -644,22 +672,12 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  private async persistPosition() {
-    await supabase
-      .from('characters')
-      .update({
-        x: this.playerDisplay.container.x,
-        y: this.playerDisplay.container.y,
-        map_id: this.character.map_id,
-      })
-      .eq('id', this.character.id)
-  }
-
   shutdown() {
     this.eventUnsubs.forEach((u) => u())
     this.eventUnsubs = []
     if (this.persistTimer) window.clearInterval(this.persistTimer)
+    if (this.progressSaveTimer) window.clearTimeout(this.progressSaveTimer)
     void this.presence?.leave()
-    void this.persistPosition()
+    void this.persistWorldState()
   }
 }

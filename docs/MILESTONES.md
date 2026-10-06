@@ -5,7 +5,7 @@ Execute in order unless noted. **Ruleset:** Pre-Renewal / Classic per [iRO Wiki]
 | # | Milestone | Status |
 |---|-----------|--------|
 | M1 | iRO Wiki reference + content layer | **Done** |
-| M2 | Persist core | Not started |
+| M2 | Persist core | **Done** |
 | M3 | Pre-Renewal combat & economy (data-driven) | Not started |
 | M4 | Job change + first job tree | Not started |
 | M5 | World & NPC services | Not started |
@@ -39,18 +39,17 @@ Update the **Status** column as you finish each milestone.
 
 **Prerequisites:** M1.
 
-**Tasks:**
+**HP/MP policy:** Persist current HP/MP on save; restore on login and clamp to derived max. New characters use `NULL` HP/MP in DB until first save → client fills to max on load.
 
-- [ ] Design HP/MP policy (e.g. persist current values vs full heal on login)
-- [ ] Migration: `character_progress` (base/job level, EXP, stats, `job_id`, unspent stat/skill points)
-- [ ] Migration: `character_skills` (`skill_id`, `level`) and/or JSONB on progress row
-- [ ] Migration: `character_equipment` (slot → `item_id`) aligned with `EquipSlot` in code
-- [ ] RLS: owner can read/write own characters only
-- [ ] Client: load progress + skills + equip on character select
-- [ ] Client: hydrate `CharacterSessionState` from DB (replace pure `createInitialCharacterState()` defaults for persisted fields)
-- [ ] Client: save on logout, periodic debounced save, and/or after stat/skill/equip/level-up
-- [ ] Optional: extend `public.items` from `content/ro/items.json` (`item_type`, `weight`, `equip_slot`, `metadata`)
-- [ ] Update [IRO_REFERENCE.md](IRO_REFERENCE.md) persistence row and README
+**Delivered:**
+
+- [x] HP/MP policy documented above and in [IRO_REFERENCE.md](IRO_REFERENCE.md)
+- [x] Migration `character_progress`, `character_skills`, `character_equipment` — [`20260323140000_character_progress.sql`](../supabase/migrations/20260323140000_character_progress.sql)
+- [x] RLS: owner read/write on progress, skills, equipment
+- [x] Client [`characterProgress.ts`](../client/src/lib/characterProgress.ts) load/save
+- [x] Client: load on enter world; debounced + periodic save; save on leave world
+- [x] Extended `public.items` columns + equippable item seeds from content
+- [x] Docs updated
 
 **Verify:** Level up, allocate stat, equip item, refresh — state matches. Second device/login sees same progress.
 
