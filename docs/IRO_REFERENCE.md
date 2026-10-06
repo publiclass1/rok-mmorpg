@@ -11,6 +11,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Topic | Choice |
 |-------|--------|
 | Client | Vite + React UI, Phaser 4 world, Netlify static host |
+| Combat visuals | Procedural avatar rig + Phaser tweens (attack/bash, flinch, mob death); skill bar uses `/skills/*.svg` icons only — not in-world casts |
 | Movement | Click-to-walk + jump (not classic RO keyboard-only) |
 | Progression persistence | Base/job/stats/skills/equip/session bag/HP/MP saved in Postgres (`character_progress`, `character_skills`, `character_equipment`); position/zeny/stack inventory as before |
 | Equipment slots | RO-style slots in data (`headTop`, `offhand`, etc.); UI may show a subset |

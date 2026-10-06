@@ -9,6 +9,7 @@ import type { Facing } from '../movement/clickToMove'
 import {
   applyCharacterPose,
   createCharacterRig,
+  defaultCharacterPose,
   type CharacterPose,
   type CharacterRig,
 } from './playerCharacterRig'
@@ -45,8 +46,38 @@ export type PlayerDisplay = {
   appearance: CharacterAppearance
 }
 
+function syncWeaponLayerForPose(display: PlayerDisplay) {
+  const weapon = display.layers.weapon
+  if (!weapon?.visible) return
+  const { pose } = display
+  if (pose.anim === 'attack') {
+    const reach = pose.attackPhase === 1 ? (pose.bash ? 16 : 12) : pose.attackPhase === 0 ? 4 : 8
+    weapon.setPosition(reach, pose.bash ? 2 : 4)
+    weapon.setAngle(pose.bash ? -30 : pose.attackPhase === 1 ? -15 : 0)
+  } else {
+    weapon.setPosition(8, 4)
+    weapon.setAngle(0)
+  }
+}
+
 function redrawPose(display: PlayerDisplay) {
   applyCharacterPose(display.rig, display.pose, display.appearance)
+  syncWeaponLayerForPose(display)
+}
+
+export function setPlayerAttackPhase(display: PlayerDisplay, attackPhase: 0 | 1 | 2) {
+  display.pose = { ...display.pose, attackPhase }
+  redrawPose(display)
+}
+
+export function setPlayerHitFlash(display: PlayerDisplay, hitFlash: boolean) {
+  display.pose = { ...display.pose, hitFlash }
+  redrawPose(display)
+}
+
+export function setPlayerToIdle(display: PlayerDisplay, facing: Facing) {
+  display.pose = { ...defaultCharacterPose(facing) }
+  redrawPose(display)
 }
 
 export function createPlayerDisplay(
@@ -61,7 +92,7 @@ export function createPlayerDisplay(
   body.setVisible(false)
 
   const rig = createCharacterRig(scene)
-  const pose: CharacterPose = { facing: 'down', anim: 'idle', walkFrame: 0 }
+  const pose: CharacterPose = defaultCharacterPose('down')
 
   const layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Rectangle>> = {}
   const weapon = scene.add.rectangle(8, 4, 10, 4, 0xc0c0c0).setVisible(false)
@@ -137,10 +168,22 @@ export function updatePlayerEquipmentLayers(
 
 export function playPlayerAnim(display: PlayerDisplay, key: string, facing: Facing) {
   const anim = key === 'sit' ? 'sit' : (key as CharacterPose['anim'])
+  const resolved =
+    anim === 'walk' ||
+    anim === 'attack' ||
+    anim === 'jump' ||
+    anim === 'sit' ||
+    anim === 'idle' ||
+    anim === 'flinch'
+      ? anim
+      : 'idle'
   display.pose = {
     ...display.pose,
     facing,
-    anim: anim === 'walk' || anim === 'attack' || anim === 'jump' || anim === 'sit' || anim === 'idle' ? anim : 'idle',
+    anim: resolved,
+    attackPhase: resolved === 'attack' ? display.pose.attackPhase : 0,
+    bash: resolved === 'attack' ? display.pose.bash : false,
+    hitFlash: resolved === 'flinch' ? display.pose.hitFlash : false,
   }
   redrawPose(display)
 }
@@ -153,9 +196,8 @@ export function setPlayerWalkFrame(display: PlayerDisplay, walkFrame: 0 | 1) {
 
 export function setPlayerSitting(display: PlayerDisplay, sitting: boolean, facing: Facing) {
   display.pose = {
-    facing,
+    ...defaultCharacterPose(facing),
     anim: sitting ? 'sit' : 'idle',
-    walkFrame: 0,
   }
   redrawPose(display)
 }

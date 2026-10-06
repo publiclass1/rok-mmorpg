@@ -2,6 +2,7 @@ import type { CharacterAppearance } from './character/characterAppearance'
 import type { CharacterSessionState, EquipSlot, PrimaryStat, SessionInventorySlot } from './character/characterState'
 import type { CharacterPose } from './player/playerCharacterRig'
 import type { NpcRow } from '../types/database'
+import type { MinimapPayload } from './world/minimapTypes'
 
 export type PositionPayload = {
   characterId: string
@@ -145,6 +146,7 @@ export type GameEvents = {
   activityLog: ActivityLogEntry
   sessionSync: CharacterSessionState
   worldReady: { mapId: string }
+  minimap: MinimapPayload
   portalWarpRequest: {
     portalId: string
     mapId: string

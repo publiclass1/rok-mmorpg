@@ -43,6 +43,9 @@ import { EquipmentWindow } from './EquipmentWindow'
 import { InventoryWindow } from './InventoryWindow'
 import { StatsWindow } from './StatsWindow'
 import { StorageModal } from './StorageModal'
+import { LowHpVignette } from './LowHpVignette'
+import { Minimap } from './Minimap'
+import type { MinimapPayload } from '../game/world/minimapTypes'
 import { JobMasterModal } from './JobMasterModal'
 import { ShopModal } from './ShopModal'
 import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
@@ -99,6 +102,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [selectedMob, setSelectedMob] = useState<SelectedMobPayload | null>(null)
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([])
   const [mapLoading, setMapLoading] = useState<{ mapId: string; label: string } | null>(null)
+  const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
   const [logOpen, setLogOpen] = useState(false)
   const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
   const [selectedPlayerAnchor, setSelectedPlayerAnchor] = useState<{ x: number; y: number } | null>(null)
@@ -359,6 +363,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       onGameEvent('worldReady', ({ mapId }) => {
         setMapLoading((current) => (current?.mapId === mapId ? null : current))
       }),
+      onGameEvent('minimap', setMinimap),
     ]
     return () => unsubs.forEach((u) => u())
   }, [])
@@ -621,6 +626,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     <div className={`game-shell game-shell--fullscreen${skillsOpen ? ' skills-assign-mode' : ''}`}>
       <div className="game-stage game-stage--fullscreen" aria-label="Game world">
         <div ref={hostRef} className="game-canvas" />
+        <LowHpVignette hp={sheet.hp} hpMax={sheet.hpMax} />
         <AnimatePresence>
           {mapLoading && (
             <MapLoadingOverlay key={mapLoading.mapId} label={mapLoading.label} mapId={mapLoading.mapId} />
@@ -645,6 +651,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         )}
 
         <div className="game-hud-overlay" aria-label="Game HUD">
+          <Minimap data={minimap} />
           <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>
             <p className="game-hud-name">
               <strong>

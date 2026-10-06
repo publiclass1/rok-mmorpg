@@ -10,7 +10,7 @@ import {
   updatePlayerEquipmentLayers,
   type PlayerDisplay,
 } from '../player/playerSprites'
-import { playPlayerAttack } from '../combat/combatFx'
+import { startPlayerAttackAnim } from '../player/playerCombatAnim'
 import type { MapCombatSkillId } from './mapCombatTypes'
 import type { SfxPlayer } from '../combat/sfx'
 
@@ -121,17 +121,18 @@ export function playRemotePlayerAction(
   scene: Phaser.Scene,
   entity: RemotePlayerEntity,
   facing: PlayerPresencePayload['facing'],
-  _skillId: MapCombatSkillId,
+  skillId: MapCombatSkillId,
   listenerX: number,
   listenerY: number,
   sfx: SfxPlayer,
 ) {
-  const body = entity.display.body
   const cx = entity.display.container.x
   const cy = entity.display.container.y
-  playPlayerAnim(entity.display, 'attack', facing)
-  playPlayerAttack(scene, body, facing, () => {
-    playPlayerAnim(entity.display, entity.lastPayload.anim, entity.lastPayload.facing)
+  startPlayerAttackAnim(scene, entity.display, facing, {
+    variant: skillId === 'bash' ? 'bash' : 'basic',
+    onComplete: () => {
+      playPlayerAnim(entity.display, entity.lastPayload.anim, entity.lastPayload.facing)
+    },
   })
   sfx.playAttackNearby(listenerX, listenerY, cx, cy)
 }

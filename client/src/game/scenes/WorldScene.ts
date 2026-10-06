@@ -8,10 +8,11 @@ import {
 } from '../character/characterState'
 import { SKILLS, skillUsableByJob } from '../character/skillsConfig'
 import {
-  flashPlayer,
+  flashPlayerHit,
   missTextPosition,
+  playMobAttackLunge,
+  playMobDeath,
   playMobHitShake,
-  playPlayerAttack,
   showFloatingText,
 } from '../combat/combatFx'
 import { colliderWithObstacles, spawnObstacles, spawnObstaclesFromTilemap } from '../combat/mapObstacles'
@@ -49,6 +50,7 @@ import {
   type MoveTarget,
 } from '../movement/clickToMove'
 import { tryJump } from '../movement/jump'
+import { playPlayerFlinch, startPlayerAttackAnim } from '../player/playerCombatAnim'
 import {
   createPlayerDisplay,
   playPlayerAnim,
@@ -72,6 +74,15 @@ import { clampToMap } from '../world/clampToMap'
 import { findPortalAtPoint } from '../world/mapPortals'
 import { preloadMapDecor, spawnMapDecor } from '../world/spawnMapDecor'
 import { setDepthByFeet } from '../world/depthSort'
+import type { MinimapPayload } from '../world/minimapTypes'
+import {
+  entityInView,
+  setDecorViewportVisible,
+  setMobViewportVisible,
+  setNpcViewportVisible,
+  setRemoteViewportVisible,
+} from '../world/syncWorldViewport'
+import { cameraWorldViewRect, viewBoundsWithMargin } from '../world/viewportCull'
 import { ensureMobTexture, ensureTilesTexture, TILESET_TILE_COUNT } from '../textures'
 import { persistCharacterWorld, saveCharacterSession } from '../../lib/characterProgress'
 import type { CharacterRow, NpcRow } from '../../types/database'
@@ -132,6 +143,10 @@ export class WorldScene extends Phaser.Scene {
   private selectedRemoteId: string | null = null
   private playerSelectionRing: Phaser.GameObjects.Ellipse | null = null
   private vendingOpen = false
+  private worldWidth = 0
+  private worldHeight = 0
+  private mapDecorSprites: Phaser.GameObjects.Image[] = []
+  private lastMinimapEmitAt = 0
 
   constructor() {
     super('WorldScene')
@@ -159,7 +174,7 @@ export class WorldScene extends Phaser.Scene {
     ground?.setDepth(0)
     const decorTiles = map.createLayer('decor', tileset, 0, 0)
     decorTiles?.setDepth(2)
-    spawnMapDecor(this, map)
+    this.mapDecorSprites = spawnMapDecor(this, map)
     const collision = map.createLayer('collision', tileset, 0, 0)
     collision?.setVisible(false)
     collision?.setCollisionByExclusion([-1, 0])
@@ -167,6 +182,8 @@ export class WorldScene extends Phaser.Scene {
 
     const worldW = map.widthInPixels
     const worldH = map.heightInPixels
+    this.worldWidth = worldW
+    this.worldHeight = worldH
     this.physics.world.setBounds(0, 0, worldW, worldH)
     this.cameras.main.setBounds(0, 0, worldW, worldH)
 
@@ -434,7 +451,7 @@ export class WorldScene extends Phaser.Scene {
     this.playerLabel.setPosition(this.playerDisplay.container.x, this.playerDisplay.container.y - 28)
 
     if (!this.isSitting && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-      const jumped = tryJump(this, this.playerDisplay.body, () => this.isJumping, (v) => {
+      const jumped = tryJump(this, this.playerDisplay.container, () => this.isJumping, (v) => {
         this.isJumping = v
       })
       if (jumped) playPlayerAnim(this.playerDisplay, 'jump', this.facing)
@@ -495,6 +512,67 @@ export class WorldScene extends Phaser.Scene {
 
     this.syncPlayerSelectionRing()
     this.syncWorldDepth()
+    this.syncViewportVisibility()
+    this.emitMinimap(now)
+  }
+
+  private syncViewportVisibility() {
+    const bounds = viewBoundsWithMargin(this.cameras.main)
+
+    for (const mob of this.mobs) {
+      if (!mob.alive && !mob.sprite.visible) continue
+      setMobViewportVisible(mob, entityInView(bounds, mob.sprite.x, mob.sprite.y))
+    }
+
+    for (const entity of this.remotePlayers.values()) {
+      const c = entity.display.container
+      setRemoteViewportVisible(entity, entityInView(bounds, c.x, c.y))
+    }
+
+    for (const npc of this.npcVisuals) {
+      setNpcViewportVisible(npc, entityInView(bounds, npc.rect.x, npc.feetY))
+    }
+
+    for (const decor of this.mapDecorSprites) {
+      setDecorViewportVisible(decor, entityInView(bounds, decor.x, decor.y))
+    }
+  }
+
+  private emitMinimap(now: number) {
+    if (now - this.lastMinimapEmitAt < 120) return
+    this.lastMinimapEmitAt = now
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    const payload: MinimapPayload = {
+      mapId: this.character.map_id,
+      worldWidth: this.worldWidth,
+      worldHeight: this.worldHeight,
+      view: cameraWorldViewRect(this.cameras.main),
+      localPlayer: { x: px, y: py },
+      remotes: [],
+      mobs: [],
+    }
+
+    for (const entity of this.remotePlayers.values()) {
+      const c = entity.display.container
+      payload.remotes.push({
+        characterId: entity.lastPayload.characterId,
+        x: c.x,
+        y: c.y,
+      })
+    }
+
+    for (const mob of this.mobs) {
+      if (!mob.alive) continue
+      payload.mobs.push({
+        spawnIndex: mob.spawnIndex,
+        x: mob.sprite.x,
+        y: mob.sprite.y,
+      })
+    }
+
+    emitGameEvent('minimap', payload)
   }
 
   private buildPlayerPresencePayload(): PlayerPresencePayload {
@@ -672,41 +750,50 @@ export class WorldScene extends Phaser.Scene {
 
     this.sfx.playAttack()
     this.broadcastPlayerAction('bash')
-    playPlayerAnim(this.playerDisplay, 'attack', this.facing)
-    playPlayerAttack(this, this.playerDisplay.body, this.facing, () => {
-      this.isAttacking = false
-      playPlayerAnim(this.playerDisplay, 'idle', this.facing)
+    startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
+      variant: 'bash',
+      onStrike: () => {
+        const target = this.findMobInAttackCone()
+        if (!target) {
+          const pos = missTextPosition(
+            this.playerDisplay.container.x,
+            this.playerDisplay.container.y,
+            this.facing,
+          )
+          showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
+          this.sfx.playMiss()
+          this.broadcastMobMissAt(undefined, pos.x, pos.y)
+          logActivity('combat', 'Bash missed.')
+          this.emitCharacterSheet()
+          return
+        }
+
+        const def = MOB_DEFS[target.defId]
+        if (!def) {
+          this.emitCharacterSheet()
+          return
+        }
+        const { damage: baseDamage, hit } = calcPlayerVsMobDamage(this.session, def)
+        const damage =
+          hit && baseDamage > 0
+            ? Math.max(1, Math.floor(baseDamage * (1 + skillLevel * 0.15)) + skillLevel * 3)
+            : 0
+        if (!hit || damage <= 0) {
+          showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
+          this.sfx.playMiss()
+          this.broadcastMobMissAt(target.spawnIndex, target.sprite.x, target.sprite.y - 40)
+          logActivity('combat', `Bash missed Lv ${target.level} ${target.name}.`)
+          this.emitCharacterSheet()
+          return
+        }
+
+        this.applyDamageToMob(target, damage, def, 'Bash')
+        this.emitCharacterSheet()
+      },
+      onComplete: () => {
+        this.isAttacking = false
+      },
     })
-
-    const target = this.findMobInAttackCone()
-    if (!target) {
-      const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
-      showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
-      this.sfx.playMiss()
-      this.broadcastMobMissAt(undefined, pos.x, pos.y)
-      logActivity('combat', 'Bash missed.')
-      this.emitCharacterSheet()
-      return
-    }
-
-    const def = MOB_DEFS[target.defId]
-    if (!def) {
-      this.emitCharacterSheet()
-      return
-    }
-    const { damage: baseDamage, hit } = calcPlayerVsMobDamage(this.session, def)
-    const damage = hit && baseDamage > 0 ? Math.max(1, Math.floor(baseDamage * (1 + skillLevel * 0.15)) + skillLevel * 3) : 0
-    if (!hit || damage <= 0) {
-      showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
-      this.sfx.playMiss()
-      this.broadcastMobMissAt(target.spawnIndex, target.sprite.x, target.sprite.y - 40)
-      logActivity('combat', `Bash missed Lv ${target.level} ${target.name}.`)
-      this.emitCharacterSheet()
-      return
-    }
-
-    this.applyDamageToMob(target, damage, def, 'Bash')
-    this.emitCharacterSheet()
   }
 
   private applyDamageToMob(
@@ -886,9 +973,24 @@ export class WorldScene extends Phaser.Scene {
       `-${damage}`,
       'mobHitPlayer',
     )
-    flashPlayer(this, this.playerDisplay.body)
+    flashPlayerHit(this, this.playerDisplay)
+    playPlayerFlinch(
+      this,
+      this.playerDisplay,
+      this.facing,
+      this.playerDisplay.container.x - mob.sprite.x,
+      this.playerDisplay.container.y - mob.sprite.y,
+    )
     this.sfx.playHit()
-    if (def) playMobHitShake(this, mob.sprite, def.color)
+    if (def) {
+      playMobAttackLunge(
+        this,
+        mob.sprite,
+        this.playerDisplay.container.x,
+        this.playerDisplay.container.y,
+      )
+      playMobHitShake(this, mob.sprite, def.color)
+    }
     logActivity('combat', `Took ${damage} damage from Lv ${mob.level} ${mob.name}.`)
     this.emitCharacterSheet()
   }
@@ -1093,34 +1195,40 @@ export class WorldScene extends Phaser.Scene {
 
     this.sfx.playAttack()
     this.broadcastPlayerAction('basic_attack')
-    playPlayerAnim(this.playerDisplay, 'attack', this.facing)
-    playPlayerAttack(this, this.playerDisplay.body, this.facing, () => {
-      this.isAttacking = false
-      playPlayerAnim(this.playerDisplay, 'idle', this.facing)
+    startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
+      variant: 'basic',
+      onStrike: () => {
+        const target = this.findMobInAttackCone()
+        if (!target) {
+          const pos = missTextPosition(
+            this.playerDisplay.container.x,
+            this.playerDisplay.container.y,
+            this.facing,
+          )
+          showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
+          this.sfx.playMiss()
+          this.broadcastMobMissAt(undefined, pos.x, pos.y)
+          logActivity('combat', 'Attack missed.')
+          return
+        }
+
+        const def = MOB_DEFS[target.defId]
+        if (!def) return
+        const { damage, hit } = calcPlayerVsMobDamage(this.session, def)
+        if (!hit || damage <= 0) {
+          showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
+          this.sfx.playMiss()
+          this.broadcastMobMissAt(target.spawnIndex, target.sprite.x, target.sprite.y - 40)
+          logActivity('combat', `Attack missed Lv ${target.level} ${target.name}.`)
+          return
+        }
+
+        this.applyDamageToMob(target, damage, def, 'Attack')
+      },
+      onComplete: () => {
+        this.isAttacking = false
+      },
     })
-
-    const target = this.findMobInAttackCone()
-    if (!target) {
-      const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
-      showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
-      this.sfx.playMiss()
-      this.broadcastMobMissAt(undefined, pos.x, pos.y)
-      logActivity('combat', 'Attack missed.')
-      return
-    }
-
-    const def = MOB_DEFS[target.defId]
-    if (!def) return
-    const { damage, hit } = calcPlayerVsMobDamage(this.session, def)
-    if (!hit || damage <= 0) {
-      showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
-      this.sfx.playMiss()
-      this.broadcastMobMissAt(target.spawnIndex, target.sprite.x, target.sprite.y - 40)
-      logActivity('combat', `Attack missed Lv ${target.level} ${target.name}.`)
-      return
-    }
-
-    this.applyDamageToMob(target, damage, def, 'Attack')
   }
 
   private findMobInAttackCone(): MobInstance | null {
@@ -1191,11 +1299,15 @@ export class WorldScene extends Phaser.Scene {
 
     mob.alive = false
     mob.state = 'wander'
-    mob.sprite.setVisible(false)
     mob.sprite.body.enable = false
     mob.hpBarBg.setVisible(false)
     mob.hpBarFill.setVisible(false)
     mob.label.setVisible(false)
+
+    const tint = def?.color ?? 0xffffff
+    playMobDeath(this, mob.sprite, tint, () => {
+      mob.sprite.setVisible(false)
+    })
 
     this.time.delayedCall(MOB_RESPAWN_MS, () => {
       if (!def) return

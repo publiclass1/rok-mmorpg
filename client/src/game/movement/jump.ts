@@ -2,21 +2,21 @@ import Phaser from 'phaser'
 
 export function tryJump(
   scene: Phaser.Scene,
-  sprite: Phaser.GameObjects.Sprite,
+  target: Phaser.GameObjects.GameObject & { y: number },
   isJumping: () => boolean,
   setJumping: (v: boolean) => void,
 ): boolean {
   if (isJumping()) return false
   setJumping(true)
-  const startY = sprite.y
+  const startY = target.y
   scene.tweens.add({
-    targets: sprite,
+    targets: target,
     y: startY - 12,
     duration: 140,
     yoyo: true,
     ease: 'Quad.easeOut',
     onComplete: () => {
-      sprite.y = startY
+      target.y = startY
       setJumping(false)
     },
   })

@@ -646,6 +646,34 @@ button:disabled {
   border: none;
 }
 
+.low-hp-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 35%,
+    rgba(120, 0, 0, calc(0.35 * var(--low-hp-intensity, 0.7))) 70%,
+    rgba(80, 0, 0, var(--low-hp-intensity, 0.7)) 100%
+  );
+  animation: low-hp-pulse 1.6s ease-in-out infinite;
+}
+
+.low-hp-vignette--critical {
+  animation-duration: 0.9s;
+}
+
+@keyframes low-hp-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .game-shell--fullscreen .game-canvas,
 .game-shell--fullscreen .game-stage--fullscreen .game-canvas {
   min-height: 0;
@@ -695,6 +723,34 @@ button:disabled {
   left: 0.65rem;
   min-width: min(280px, 55vw);
   max-width: min(320px, 70vw);
+}
+
+.game-hud-minimap {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  z-index: 12;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  border-radius: 8px;
+  padding: 0.35rem 0.4rem 0.45rem;
+  backdrop-filter: blur(4px);
+}
+
+.game-hud-minimap-title {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin-bottom: 0.2rem;
+  padding-left: 0.15rem;
+}
+
+.game-hud-minimap-svg {
+  display: block;
+  border-radius: 4px;
 }
 
 .game-hud-name {

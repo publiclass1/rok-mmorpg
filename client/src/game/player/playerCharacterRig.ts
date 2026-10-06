@@ -1,4 +1,3 @@
-import Phaser from 'phaser'
 import {
   DEFAULT_CHARACTER_APPEARANCE,
   resolveAppearanceColors,
@@ -25,8 +24,22 @@ export type CharacterRig = {
 
 export type CharacterPose = {
   facing: Facing
-  anim: 'idle' | 'walk' | 'attack' | 'jump' | 'sit'
+  anim: 'idle' | 'walk' | 'attack' | 'jump' | 'sit' | 'flinch'
   walkFrame: 0 | 1
+  attackPhase: 0 | 1 | 2
+  bash: boolean
+  hitFlash: boolean
+}
+
+export function defaultCharacterPose(facing: Facing = 'down'): CharacterPose {
+  return {
+    facing,
+    anim: 'idle',
+    walkFrame: 0,
+    attackPhase: 0,
+    bash: false,
+    hitFlash: false,
+  }
 }
 
 function clear(g: Phaser.GameObjects.Graphics) {
@@ -54,7 +67,7 @@ export function createCharacterRig(scene: Phaser.Scene): CharacterRig {
     children.push(g)
   }
   const root = scene.add.container(0, 0, children)
-  applyCharacterPose({ root, parts }, { facing: 'down', anim: 'idle', walkFrame: 0 })
+  applyCharacterPose({ root, parts }, defaultCharacterPose())
   return { root, parts }
 }
 
@@ -72,8 +85,17 @@ export function applyCharacterPose(
 
   const sitting = pose.anim === 'sit'
   const walk = pose.anim === 'walk'
+  const jumping = pose.anim === 'jump'
+  const attacking = pose.anim === 'attack'
+  const flinching = pose.anim === 'flinch'
   const frame = pose.walkFrame
   const flip = pose.facing === 'left' ? -1 : 1
+  const attackPhase = pose.attackPhase
+
+  const shirtColor = pose.hitFlash ? 0xf87171 : colors.shirt
+  const skinColor = pose.hitFlash ? 0xfca5a5 : colors.skin
+
+  rig.root.setPosition(0, jumping ? -6 : 0)
 
   clear(parts.feet)
   clear(parts.legs)
@@ -86,9 +108,18 @@ export function applyCharacterPose(
   clear(parts.nose)
   clear(parts.mouth)
 
-  const legSpread = sitting ? 10 : walk ? (frame === 0 ? 4 : -4) : 3
-  const legY = sitting ? 6 : 8
-  const legH = sitting ? 8 : 10
+  let legSpread = sitting ? 10 : walk ? (frame === 0 ? 4 : -4) : 3
+  let legY = sitting ? 6 : 8
+  let legH = sitting ? 8 : 10
+
+  if (jumping) {
+    legSpread = 6
+    legY = 10
+    legH = 6
+  } else if (flinching) {
+    legSpread = 5
+    legY = 9
+  }
 
   parts.legs.fillStyle(colors.pants, 1)
   parts.legs.fillRoundedRect(-8 - legSpread, legY, 6, legH, 2)
@@ -99,25 +130,47 @@ export function applyCharacterPose(
   parts.feet.fillRoundedRect(-9 - legSpread, footY, 7, 4, 1)
   parts.feet.fillRoundedRect(2 + legSpread, footY, 7, 4, 1)
 
-  parts.body.fillStyle(colors.shirt, 1)
+  parts.body.fillStyle(shirtColor, 1)
   if (sitting) {
     parts.body.fillRoundedRect(-bodyHalfW - 1, -2, bodyW + 2, 12, 3)
+  } else if (jumping) {
+    parts.body.fillRoundedRect(-bodyHalfW, 2, bodyW, 11, 3)
   } else {
-    parts.body.fillRoundedRect(-bodyHalfW, 0, bodyW, 14, 3)
+    const bodyY = attacking && attackPhase === 0 ? 1 : 0
+    parts.body.fillRoundedRect(-bodyHalfW, bodyY, bodyW, 14, 3)
   }
 
-  parts.arms.fillStyle(colors.skin, 1)
-  const armSwing = walk ? (frame === 0 ? -3 : 3) : 0
+  parts.arms.fillStyle(skinColor, 1)
+  let armSwing = walk ? (frame === 0 ? -3 : 3) : 0
+
   if (sitting) {
     parts.arms.fillRoundedRect(-12, 2, 5, 8, 2)
     parts.arms.fillRoundedRect(7, 2, 5, 8, 2)
+  } else if (flinching) {
+    parts.arms.fillRoundedRect(-11, 0, 5, 9, 2)
+    parts.arms.fillRoundedRect(6, 0, 5, 9, 2)
+  } else if (attacking) {
+    const strikeReach = pose.bash ? 16 : 12
+    if (attackPhase === 0) {
+      parts.arms.fillRoundedRect(-15 + armSwing * flip, 4, 5, 8, 2)
+      parts.arms.fillRoundedRect(6 - armSwing * flip, 1, 5, 10, 2)
+    } else if (attackPhase === 1) {
+      parts.arms.fillRoundedRect(-14, 3, 5, 9, 2)
+      parts.arms.fillRoundedRect(strikeReach - 2, -1, 6, 12, 2)
+    } else {
+      parts.arms.fillRoundedRect(-13 + armSwing * flip, 2, 5, 10, 2)
+      parts.arms.fillRoundedRect(8 - armSwing * flip, 2, 5, 10, 2)
+    }
   } else {
     parts.arms.fillRoundedRect(-13 + armSwing * flip, 2, 5, 10, 2)
     parts.arms.fillRoundedRect(8 - armSwing * flip, 2, 5, 10, 2)
   }
 
-  const headY = sitting ? -10 : -8
-  parts.head.fillStyle(colors.skin, 1)
+  let headY = sitting ? -10 : -8
+  if (flinching) headY = -6
+  if (jumping) headY = -5
+
+  parts.head.fillStyle(skinColor, 1)
   parts.head.fillCircle(0, headY, 7)
   parts.head.fillStyle(colors.hair, 1)
   if (female) {
@@ -126,8 +179,8 @@ export function applyCharacterPose(
     parts.head.fillEllipse(0, headY - 4, hairW, 6)
   }
 
-  parts.earLeft.fillStyle(colors.skin, 1)
-  parts.earRight.fillStyle(colors.skin, 1)
+  parts.earLeft.fillStyle(skinColor, 1)
+  parts.earRight.fillStyle(skinColor, 1)
   parts.earLeft.fillCircle(-7, headY, 2)
   parts.earRight.fillCircle(7, headY, 2)
 
@@ -142,6 +195,8 @@ export function applyCharacterPose(
   parts.mouth.lineStyle(1, 0x7c2d12, 0.9)
   if (sitting) {
     parts.mouth.strokeCircle(0, headY + 5, 2)
+  } else if (flinching) {
+    parts.mouth.strokeCircle(0, headY + 5, 1.5)
   } else {
     parts.mouth.beginPath()
     parts.mouth.arc(0, headY + 5, 3, 0.1 * Math.PI, 0.9 * Math.PI, false)
