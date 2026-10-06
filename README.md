@@ -84,6 +84,8 @@ Replace tile graphics via `client/public/tiles.png` and edit maps in [Tiled](htt
 
 5. Deploy. After each push to your production branch, Netlify rebuilds the client.
 
+Build uses **Node 22** and **Vite 6** (see `netlify.toml`) so Netlify installs native bundler deps reliably.
+
 Supabase (database, auth, Realtime, Edge Functions) stays on [supabase.com](https://supabase.com) — Netlify only hosts the browser app.
 
 **Local vs Netlify:** use `client/.env` for `npm run dev`; use Netlify env vars for live builds (Vite bakes `VITE_*` in at build time).
