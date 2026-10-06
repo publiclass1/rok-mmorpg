@@ -1,0 +1,136 @@
+{
+  "items": [
+    {
+      "id": "red_potion",
+      "name": "Red Potion",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": "https://irowiki.org/wiki/Red_Potion"
+    },
+    {
+      "id": "knife",
+      "name": "Knife",
+      "type": "weapon",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0xc0c0c0",
+      "bonuses": { "str": 1, "agi": 0, "vit": 0, "int": 0, "dex": 1, "luk": 0 },
+      "sourceUrl": "https://irowiki.org/wiki/Knife"
+    },
+    {
+      "id": "cotton_shirt",
+      "name": "Cotton Shirt",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0xf5f5dc",
+      "bonuses": { "str": 0, "agi": 0, "vit": 1, "int": 0, "dex": 0, "luk": 0 },
+      "sourceUrl": "https://irowiki.org/wiki/Cotton_Shirt"
+    },
+    {
+      "id": "cap",
+      "name": "Cap",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headTop",
+      "layerColor": "0x8b4513",
+      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 1 },
+      "sourceUrl": "https://irowiki.org/wiki/Cap"
+    },
+    {
+      "id": "goggles",
+      "name": "Goggles",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headMiddle",
+      "layerColor": "0x374151",
+      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 1, "luk": 0 },
+      "sourceUrl": "https://irowiki.org/wiki/Goggles"
+    },
+    {
+      "id": "flu_mask",
+      "name": "Flu Mask",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headLower",
+      "layerColor": "0xe5e7eb",
+      "bonuses": { "str": 0, "agi": 0, "vit": 1, "int": 0, "dex": 0, "luk": 0 },
+      "sourceUrl": "https://irowiki.org/wiki/Flu_Mask"
+    },
+    {
+      "id": "wooden_shield",
+      "name": "Wooden Shield",
+      "type": "armor",
+      "weight": 50,
+      "stackMax": 1,
+      "equipSlot": "offhand",
+      "layerColor": "0xa16207",
+      "bonuses": { "str": 0, "agi": 0, "vit": 2, "int": 0, "dex": 0, "luk": 0 },
+      "sourceUrl": "https://irowiki.org/wiki/Wooden_Shield"
+    },
+    {
+      "id": "hooded_mantle",
+      "name": "Hooded Mantle",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "garment",
+      "layerColor": "0x4c1d95",
+      "bonuses": { "str": 0, "agi": 1, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "sourceUrl": null
+    },
+    {
+      "id": "sandals",
+      "name": "Sandals",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "boots",
+      "layerColor": "0x92400e",
+      "bonuses": { "str": 0, "agi": 1, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "sourceUrl": "https://irowiki.org/wiki/Sandals"
+    },
+    {
+      "id": "clip",
+      "name": "Clip",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accLeft",
+      "layerColor": "0xf59e0b",
+      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 1 },
+      "sourceUrl": "https://irowiki.org/wiki/Clip"
+    },
+    {
+      "id": "glove",
+      "name": "Glove",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accRight",
+      "layerColor": "0x78716c",
+      "bonuses": { "str": 1, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "sourceUrl": null
+    },
+    {
+      "id": "jellopy",
+      "name": "Jellopy",
+      "type": "etc",
+      "weight": 1,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": "https://irowiki.org/wiki/Jellopy"
+    }
+  ]
+}

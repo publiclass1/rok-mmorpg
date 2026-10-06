@@ -1,0 +1,34 @@
+{
+  "mobs": [
+    {
+      "id": "poring",
+      "name": "Poring",
+      "sourceUrl": "https://irowiki.org/wiki/Poring",
+      "level": 1,
+      "hp": 50,
+      "atk": 7,
+      "def": 0,
+      "mdef": 5,
+      "size": "medium",
+      "element": "water",
+      "wikiBaseExp": 27,
+      "wikiJobExp": 20,
+      "drops": [
+        { "itemId": "jellopy", "rate": 7000, "note": "per-mille; not implemented in combat yet" }
+      ],
+      "runtime": {
+        "maxHp": 30,
+        "color": "0xf472b6",
+        "aggroRange": 140,
+        "attackRange": 36,
+        "attackDamage": 4,
+        "attackCooldownMs": 1200,
+        "roamRadius": 96,
+        "moveSpeed": 55,
+        "wanderPauseMs": 2000,
+        "baseExp": 15,
+        "jobExp": 5
+      }
+    }
+  ]
+}

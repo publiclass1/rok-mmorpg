@@ -1,0 +1,24 @@
+{
+  "maps": [
+    {
+      "id": "prontera",
+      "displayName": "Prontera",
+      "fieldType": "town",
+      "sourceUrl": "https://irowiki.org/wiki/Prontera"
+    },
+    {
+      "id": "field_01",
+      "displayName": "Field (dev)",
+      "fieldType": "field",
+      "sourceUrl": null
+    }
+  ],
+  "mobSpawns": {
+    "field_01": [
+      { "x": 400, "y": 280, "defId": "poring" },
+      { "x": 560, "y": 240, "defId": "poring" },
+      { "x": 720, "y": 400, "defId": "poring" },
+      { "x": 480, "y": 480, "defId": "poring" }
+    ]
+  }
+}

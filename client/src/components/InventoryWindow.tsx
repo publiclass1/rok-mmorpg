@@ -17,6 +17,7 @@ type InvCell = {
   itemId: string
   quantity: number
   source: 'session' | 'db'
+  sessionIndex?: number
 }
 
 export function InventoryWindow({ characterId, sheet, onClose }: Props) {
@@ -33,7 +34,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
   const cells = useMemo(() => {
     const list: InvCell[] = []
     sheet.sessionInventory.forEach((itemId, i) => {
-      list.push({ key: `s-${itemId}-${i}`, itemId, quantity: 1, source: 'session' })
+      list.push({ key: `s-${itemId}-${i}`, itemId, quantity: 1, source: 'session', sessionIndex: i })
     })
     for (const row of dbRows) {
       list.push({
@@ -47,16 +48,21 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
   }, [sheet.sessionInventory, dbRows])
 
   function onDoubleClick(cell: InvCell) {
+    if (cell.source !== 'session') {
+      emitGameEvent('status', 'Cannot equip from account storage yet.')
+      return
+    }
     const def = EQUIPMENT[cell.itemId]
     if (!def) {
       emitGameEvent('status', `Cannot equip ${getItemDisplayName(cell.itemId)}.`)
       return
     }
-    dispatchCharacterAction({ type: 'equip', slot: def.slot, itemId: cell.itemId })
-  }
-
-  function isEquipped(itemId: string) {
-    return Object.values(sheet.equipment).includes(itemId)
+    dispatchCharacterAction({
+      type: 'equip',
+      slot: def.slot,
+      itemId: cell.itemId,
+      sessionInventoryIndex: cell.sessionIndex,
+    })
   }
 
   return (
@@ -66,17 +72,16 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
           <h2 style={{ margin: 0 }}>Inventory</h2>
           <button type="button" className="secondary" onClick={onClose}>Close</button>
         </div>
-        <p className="muted small">Double-click gear to equip. Session items + account inventory.</p>
+        <p className="muted small">Double-click session gear to equip (moves to equipment). Account storage is view-only.</p>
         <div className="inv-grid">
           {cells.map((cell) => {
             const equippable = isEquippable(cell.itemId)
-            const equipped = isEquipped(cell.itemId)
             const color = getEquipColor(cell.itemId)
             return (
               <button
                 key={cell.key}
                 type="button"
-                className={`inv-slot ${equipped ? 'equipped' : ''} ${equippable ? 'equippable' : ''}`}
+                className={`inv-slot ${equippable ? 'equippable' : ''}`}
                 style={
                   equippable
                     ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
@@ -87,7 +92,6 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
               >
                 <span className="inv-slot-label">{getItemDisplayName(cell.itemId).slice(0, 4)}</span>
                 {cell.quantity > 1 && <span className="inv-slot-qty">{cell.quantity}</span>}
-                {equipped && <span className="inv-equipped-badge">E</span>}
               </button>
             )
           })}

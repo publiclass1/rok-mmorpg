@@ -2,7 +2,7 @@ import { logActivity } from '../activityLog'
 import type { CharacterActionPayload } from '../events'
 import { syncDerivedVitals, toCharacterSheetPayload } from './characterSheet'
 import {
-  equipItem,
+  equipItemWithInventoryTransfer,
   learnOrLevelSkill,
   raiseStat,
   type CharacterSessionState,
@@ -50,7 +50,16 @@ export function applyCharacterAction(
         return { state, changed: false, message: 'Cannot equip item in that slot.' }
       }
     }
-    const next = syncDerivedVitals(equipItem(state, action.slot, action.itemId))
+    const transfer = equipItemWithInventoryTransfer(state, action.slot, action.itemId, {
+      sessionInventoryIndex: action.sessionInventoryIndex,
+    })
+    if (transfer.ok === false) {
+      return { state, changed: false, message: transfer.reason }
+    }
+    if (transfer.state === state) {
+      return { state, changed: false }
+    }
+    const next = syncDerivedVitals(transfer.state)
     const label = action.itemId ? EQUIPMENT[action.itemId]?.name ?? action.itemId : 'empty'
     logActivity(
       'character',

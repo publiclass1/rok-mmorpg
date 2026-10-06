@@ -11,6 +11,7 @@
     "build": "npm run build -w client",
     "lint": "npm run lint -w client",
     "preview": "npm run preview -w client",
+    "content:validate": "npm run content:validate -w client",
     "supabase:login": "supabase login",
     "supabase:link": "supabase link",
     "supabase:push": "supabase db push",

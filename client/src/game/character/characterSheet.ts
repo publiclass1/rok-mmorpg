@@ -73,7 +73,7 @@ export function toCharacterSheetPayload(state: CharacterSessionState): Character
 export type CharacterAction =
   | { type: 'raiseStat'; stat: PrimaryStat }
   | { type: 'learnSkill'; skillId: string }
-  | { type: 'equip'; slot: EquipSlot; itemId: string | null }
+  | { type: 'equip'; slot: EquipSlot; itemId: string | null; sessionInventoryIndex?: number }
 
 /** Rebuild session from Phaser-emitted sheet (combat/EXP) while keeping inventory arrays. */
 export function sessionFromSheetPayload(

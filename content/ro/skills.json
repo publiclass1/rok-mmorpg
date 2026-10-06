@@ -1,0 +1,64 @@
+{
+  "skills": [
+    {
+      "id": "basic_attack",
+      "name": "Basic Attack",
+      "jobId": "novice",
+      "maxLevel": 1,
+      "requiredJobLevel": 1,
+      "type": "active",
+      "target": "enemy",
+      "mpCost": 0,
+      "castTimeMs": 0,
+      "range": 56,
+      "prerequisites": [],
+      "description": "Melee strike toward facing direction.",
+      "sourceUrl": null
+    },
+    {
+      "id": "bash",
+      "name": "Bash",
+      "jobId": "novice",
+      "maxLevel": 5,
+      "requiredJobLevel": 5,
+      "type": "active",
+      "target": "enemy",
+      "mpCost": 8,
+      "castTimeMs": 0,
+      "range": 56,
+      "prerequisites": [],
+      "description": "Powerful blow (placeholder).",
+      "sourceUrl": "https://irowiki.org/wiki/Bash"
+    },
+    {
+      "id": "magnum",
+      "name": "Magnum Break",
+      "jobId": "novice",
+      "maxLevel": 3,
+      "requiredJobLevel": 8,
+      "type": "active",
+      "target": "self",
+      "mpCost": 15,
+      "castTimeMs": 0,
+      "range": 0,
+      "prerequisites": [],
+      "description": "Fire splash (placeholder).",
+      "sourceUrl": "https://irowiki.org/wiki/Magnum_Break"
+    },
+    {
+      "id": "heal",
+      "name": "Heal",
+      "jobId": "novice",
+      "maxLevel": 5,
+      "requiredJobLevel": 3,
+      "type": "active",
+      "target": "self",
+      "mpCost": 12,
+      "castTimeMs": 0,
+      "range": 0,
+      "prerequisites": [],
+      "description": "Restore HP (placeholder).",
+      "sourceUrl": "https://irowiki.org/wiki/Heal"
+    }
+  ]
+}

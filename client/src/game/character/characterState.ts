@@ -91,7 +91,18 @@ export function createInitialCharacterState(): CharacterSessionState {
     skills: { basic_attack: 1 },
     equipment: createDefaultEquipment(),
     skillBar: ['basic_attack', null, null, null, null, null, null, null, null],
-    sessionInventory: ['knife', 'cotton_shirt', 'cap'],
+    sessionInventory: [
+      'knife',
+      'cotton_shirt',
+      'cap',
+      'goggles',
+      'flu_mask',
+      'wooden_shield',
+      'hooded_mantle',
+      'sandals',
+      'clip',
+      'glove',
+    ],
     hp: 50,
     mp: 30,
   }
@@ -157,6 +168,60 @@ export function equipItem(state: CharacterSessionState, slot: EquipSlot, itemId:
   return {
     ...state,
     equipment: { ...state.equipment, [slot]: itemId },
+  }
+}
+
+export type EquipTransferResult =
+  | { ok: true; state: CharacterSessionState }
+  | { ok: false; reason: string }
+
+/** Equip/unequip while moving items between session bag and equipment slots. */
+export function equipItemWithInventoryTransfer(
+  state: CharacterSessionState,
+  slot: EquipSlot,
+  itemId: string | null,
+  options?: { sessionInventoryIndex?: number },
+): EquipTransferResult {
+  if (itemId === null) {
+    const current = state.equipment[slot]
+    if (!current) return { ok: true, state }
+    return {
+      ok: true,
+      state: {
+        ...state,
+        equipment: { ...state.equipment, [slot]: null },
+        sessionInventory: [...state.sessionInventory, current],
+      },
+    }
+  }
+
+  const inv = [...state.sessionInventory]
+  let removeIndex: number
+
+  if (options?.sessionInventoryIndex !== undefined) {
+    const idx = options.sessionInventoryIndex
+    if (idx < 0 || idx >= inv.length || inv[idx] !== itemId) {
+      return { ok: false, reason: 'Item not found in inventory at that slot.' }
+    }
+    removeIndex = idx
+  } else {
+    removeIndex = inv.indexOf(itemId)
+    if (removeIndex < 0) {
+      return { ok: false, reason: 'Item is not in your session inventory.' }
+    }
+  }
+
+  inv.splice(removeIndex, 1)
+  const displaced = state.equipment[slot]
+  if (displaced) inv.push(displaced)
+
+  return {
+    ok: true,
+    state: {
+      ...state,
+      sessionInventory: inv,
+      equipment: { ...state.equipment, [slot]: itemId },
+    },
   }
 }
 

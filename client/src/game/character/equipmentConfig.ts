@@ -1,3 +1,5 @@
+import { loadRoContent } from '../../content/ro/loadContent'
+import { parseLayerColor } from '../../content/ro/parseColor'
 import type { EquipSlot } from './characterState'
 import type { StatBonuses } from './statFormulas'
 
@@ -9,29 +11,23 @@ export type EquipmentDefinition = {
   bonuses: StatBonuses
 }
 
-export const EQUIPMENT: Record<string, EquipmentDefinition> = {
-  knife: {
-    id: 'knife',
-    name: 'Knife',
-    slot: 'weapon',
-    layerColor: 0xc0c0c0,
-    bonuses: { str: 1, agi: 0, vit: 0, int: 0, dex: 1, luk: 0 },
-  },
-  cotton_shirt: {
-    id: 'cotton_shirt',
-    name: 'Cotton Shirt',
-    slot: 'armor',
-    layerColor: 0xf5f5dc,
-    bonuses: { str: 0, agi: 0, vit: 1, int: 0, dex: 0, luk: 0 },
-  },
-  cap: {
-    id: 'cap',
-    name: 'Cap',
-    slot: 'headTop',
-    layerColor: 0x8b4513,
-    bonuses: { str: 0, agi: 0, vit: 0, int: 0, dex: 0, luk: 1 },
-  },
+function buildEquipment(): Record<string, EquipmentDefinition> {
+  const { items } = loadRoContent()
+  const out: Record<string, EquipmentDefinition> = {}
+  for (const item of items) {
+    if (!item.equipSlot || !item.bonuses || !item.layerColor) continue
+    out[item.id] = {
+      id: item.id,
+      name: item.name,
+      slot: item.equipSlot as EquipSlot,
+      layerColor: parseLayerColor(item.layerColor),
+      bonuses: item.bonuses,
+    }
+  }
+  return out
 }
+
+export const EQUIPMENT: Record<string, EquipmentDefinition> = buildEquipment()
 
 export function equipmentBonusesFromState(equipment: Record<EquipSlot, string | null>): StatBonuses {
   const total: StatBonuses = { str: 0, agi: 0, vit: 0, int: 0, dex: 0, luk: 0 }

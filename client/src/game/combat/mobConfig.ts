@@ -1,3 +1,7 @@
+import { loadRoContent } from '../../content/ro/loadContent'
+import { parseLayerColor } from '../../content/ro/parseColor'
+import type { RoMob } from '../../content/ro/types'
+
 export type MobDefinition = {
   id: string
   name: string
@@ -15,37 +19,37 @@ export type MobDefinition = {
   jobExp: number
 }
 
-export const PORING: MobDefinition = {
-  id: 'poring',
-  name: 'Poring',
-  level: 1,
-  maxHp: 30,
-  color: 0xf472b6,
-  aggroRange: 140,
-  attackRange: 36,
-  attackDamage: 4,
-  attackCooldownMs: 1200,
-  roamRadius: 96,
-  moveSpeed: 55,
-  wanderPauseMs: 2000,
-  baseExp: 15,
-  jobExp: 5,
+function mobDefinitionFromContent(mob: RoMob): MobDefinition {
+  const r = mob.runtime
+  return {
+    id: mob.id,
+    name: mob.name,
+    level: mob.level,
+    maxHp: r.maxHp,
+    color: parseLayerColor(r.color),
+    aggroRange: r.aggroRange,
+    attackRange: r.attackRange,
+    attackDamage: r.attackDamage,
+    attackCooldownMs: r.attackCooldownMs,
+    roamRadius: r.roamRadius,
+    moveSpeed: r.moveSpeed,
+    wanderPauseMs: r.wanderPauseMs,
+    baseExp: r.baseExp,
+    jobExp: r.jobExp,
+  }
 }
+
+const ro = loadRoContent()
+
+export const MOB_DEFS: Record<string, MobDefinition> = Object.fromEntries(
+  ro.mobs.map((mob) => [mob.id, mobDefinitionFromContent(mob)]),
+)
+
+export const PORING = MOB_DEFS.poring
 
 export type MobSpawnPoint = { x: number; y: number; defId: string }
 
-export const MOB_SPAWNS_BY_MAP: Record<string, MobSpawnPoint[]> = {
-  field_01: [
-    { x: 400, y: 280, defId: 'poring' },
-    { x: 560, y: 240, defId: 'poring' },
-    { x: 720, y: 400, defId: 'poring' },
-    { x: 480, y: 480, defId: 'poring' },
-  ],
-}
-
-export const MOB_DEFS: Record<string, MobDefinition> = {
-  poring: PORING,
-}
+export const MOB_SPAWNS_BY_MAP: Record<string, MobSpawnPoint[]> = ro.mobSpawns
 
 export const PLAYER_DEFAULT_HP = 50
 export const PLAYER_DEFAULT_MP = 30

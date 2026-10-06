@@ -1,3 +1,5 @@
+import { loadRoContent } from '../../content/ro/loadContent'
+
 export type SkillDefinition = {
   id: string
   name: string
@@ -8,48 +10,24 @@ export type SkillDefinition = {
   mpCost: number
 }
 
-export const SKILLS: Record<string, SkillDefinition> = {
-  basic_attack: {
-    id: 'basic_attack',
-    name: 'Basic Attack',
-    jobId: 'novice',
-    maxLevel: 1,
-    requiredJobLevel: 1,
-    description: 'Melee strike toward facing direction.',
-    mpCost: 0,
-  },
-  bash: {
-    id: 'bash',
-    name: 'Bash',
-    jobId: 'novice',
-    maxLevel: 5,
-    requiredJobLevel: 5,
-    description: 'Powerful blow (placeholder).',
-    mpCost: 8,
-  },
-  magnum: {
-    id: 'magnum',
-    name: 'Magnum Break',
-    jobId: 'novice',
-    maxLevel: 3,
-    requiredJobLevel: 8,
-    description: 'Fire splash (placeholder).',
-    mpCost: 15,
-  },
-  heal: {
-    id: 'heal',
-    name: 'Heal',
-    jobId: 'novice',
-    maxLevel: 5,
-    requiredJobLevel: 3,
-    description: 'Restore HP (placeholder).',
-    mpCost: 12,
-  },
-}
+const ro = loadRoContent()
 
-export const JOB_NAMES: Record<string, string> = {
-  novice: 'Novice',
-}
+export const SKILLS: Record<string, SkillDefinition> = Object.fromEntries(
+  ro.skills.map((s) => [
+    s.id,
+    {
+      id: s.id,
+      name: s.name,
+      jobId: s.jobId,
+      maxLevel: s.maxLevel,
+      requiredJobLevel: s.requiredJobLevel,
+      description: s.description,
+      mpCost: s.mpCost,
+    },
+  ]),
+)
+
+export const JOB_NAMES: Record<string, string> = Object.fromEntries(ro.jobs.map((j) => [j.id, j.name]))
 
 export function skillsForJob(jobId: string): SkillDefinition[] {
   return Object.values(SKILLS).filter((s) => s.jobId === jobId)

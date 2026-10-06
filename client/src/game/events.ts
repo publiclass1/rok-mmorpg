@@ -49,7 +49,7 @@ export type CharacterSheetPayload = PlayerStatsPayload & {
 export type CharacterActionPayload =
   | { type: 'raiseStat'; stat: PrimaryStat }
   | { type: 'learnSkill'; skillId: string }
-  | { type: 'equip'; slot: EquipSlot; itemId: string | null }
+  | { type: 'equip'; slot: EquipSlot; itemId: string | null; sessionInventoryIndex?: number }
 
 export type SelectedMobPayload = {
   defId: string
