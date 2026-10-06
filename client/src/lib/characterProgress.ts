@@ -1,4 +1,4 @@
-import { progressFromLevels } from '../game/combat/exp'
+import { createInitialProgress, progressFromLevels, type PlayerProgressState } from '../game/combat/exp'
 import { syncDerivedVitals, toCharacterSheetPayload } from '../game/character/characterSheet'
 import {
   createDefaultEquipment,
@@ -8,6 +8,7 @@ import {
   type CharacterSessionState,
   type EquipSlot,
 } from '../game/character/characterState'
+import type { CharacterRow } from '../types/database'
 import { supabase } from './supabase'
 
 const EQUIP_SLOTS: EquipSlot[] = [
@@ -45,7 +46,17 @@ type ProgressRow = {
 }
 
 type SkillRow = { skill_id: string; level: number }
-type EquipRow = { slot: string; item_id: string }
+type EquipRow = { slot: string; item_id: string; character_id?: string }
+
+function equipmentFromRows(rows: EquipRow[]): Record<EquipSlot, string | null> {
+  const equipment = createDefaultEquipment()
+  for (const row of rows) {
+    if (EQUIP_SLOTS.includes(row.slot as EquipSlot)) {
+      equipment[row.slot as EquipSlot] = row.item_id
+    }
+  }
+  return normalizeEquipment(equipment)
+}
 
 function parseSkillBar(raw: unknown): (string | null)[] {
   const fallback = createInitialCharacterState().skillBar
@@ -58,12 +69,7 @@ function rowToSession(
   skills: SkillRow[],
   equipmentRows: EquipRow[],
 ): CharacterSessionState {
-  const equipment = createDefaultEquipment()
-  for (const row of equipmentRows) {
-    if (EQUIP_SLOTS.includes(row.slot as EquipSlot)) {
-      equipment[row.slot as EquipSlot] = row.item_id
-    }
-  }
+  const equipment = equipmentFromRows(equipmentRows)
 
   const skillsMap: Record<string, number> = {}
   for (const row of skills) {
@@ -134,6 +140,95 @@ export async function loadCharacterSession(characterId: string): Promise<Charact
   }
 
   return rowToSession(progress, (skillsRes.data ?? []) as SkillRow[], (equipRes.data ?? []) as EquipRow[])
+}
+
+export type CharacterSelectEntry = {
+  character: CharacterRow
+  jobId: string
+  progress: PlayerProgressState
+  equipment: Record<EquipSlot, string | null>
+}
+
+type SelectProgressRow = {
+  character_id: string
+  job_id: string
+  base_level: number
+  base_exp: number
+  job_level: number
+  job_exp: number
+}
+
+export async function loadCharactersForSelect(
+  userId: string,
+): Promise<{ entries: CharacterSelectEntry[]; error: string | null }> {
+  const { data: characters, error: charError } = await supabase
+    .from('characters')
+    .select('*')
+    .eq('user_id', userId)
+    .order('slot', { ascending: true })
+
+  if (charError) {
+    return { entries: [], error: charError.message }
+  }
+
+  const list = (characters ?? []) as CharacterRow[]
+  if (list.length === 0) {
+    return { entries: [], error: null }
+  }
+
+  const ids = list.map((c) => c.id)
+  const [progressRes, equipRes] = await Promise.all([
+    supabase
+      .from('character_progress')
+      .select('character_id, job_id, base_level, base_exp, job_level, job_exp')
+      .in('character_id', ids),
+    supabase.from('character_equipment').select('character_id, slot, item_id').in('character_id', ids),
+  ])
+
+  if (progressRes.error) {
+    return { entries: [], error: progressRes.error.message }
+  }
+  if (equipRes.error) {
+    return { entries: [], error: equipRes.error.message }
+  }
+
+  const progressByChar = new Map<string, SelectProgressRow>()
+  for (const row of (progressRes.data ?? []) as SelectProgressRow[]) {
+    progressByChar.set(row.character_id, row)
+  }
+
+  const equipByChar = new Map<string, EquipRow[]>()
+  for (const row of (equipRes.data ?? []) as EquipRow[]) {
+    const cid = row.character_id
+    if (!cid) continue
+    const bucket = equipByChar.get(cid) ?? []
+    bucket.push(row)
+    equipByChar.set(cid, bucket)
+  }
+
+  const fallbackProgress = createInitialProgress()
+  const entries: CharacterSelectEntry[] = list.map((character) => {
+    const progressRow = progressByChar.get(character.id)
+    const jobId = progressRow?.job_id ?? 'novice'
+    const progress = progressRow
+      ? progressFromLevels(
+          progressRow.base_level,
+          progressRow.base_exp,
+          progressRow.job_level,
+          progressRow.job_exp,
+          jobId,
+        )
+      : { ...fallbackProgress }
+
+    return {
+      character,
+      jobId,
+      progress,
+      equipment: equipmentFromRows(equipByChar.get(character.id) ?? []),
+    }
+  })
+
+  return { entries, error: null }
 }
 
 export type CharacterWorldPosition = {

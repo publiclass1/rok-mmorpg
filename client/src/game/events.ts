@@ -1,3 +1,4 @@
+import type { CharacterAppearance } from './character/characterAppearance'
 import type { CharacterSessionState, EquipSlot, PrimaryStat, SessionInventorySlot } from './character/characterState'
 import type { CharacterPose } from './player/playerCharacterRig'
 import type { NpcRow } from '../types/database'
@@ -15,6 +16,7 @@ export type PlayerPresencePayload = PositionPayload & {
   anim: CharacterPose['anim']
   walkFrame: 0 | 1
   equipment: Record<EquipSlot, string | null>
+  appearance: CharacterAppearance
 }
 
 export type PlayerStatsPayload = {
@@ -98,6 +100,14 @@ export type GameEvents = {
   activityLog: ActivityLogEntry
   sessionSync: CharacterSessionState
   worldReady: { mapId: string }
+  portalWarpRequest: {
+    portalId: string
+    mapId: string
+    x: number
+    y: number
+    label: string
+    destinationMapId: string
+  }
 }
 
 type Listener = (payload: unknown) => void

@@ -45,6 +45,16 @@ export function teleport(payload: {
   return invoke<{ character: import('../types/database').CharacterRow }>('teleport', payload)
 }
 
+export function portalWarp(payload: {
+  characterId: string
+  mapId: string
+  x: number
+  y: number
+  portalId: string
+}) {
+  return invoke<{ character: import('../types/database').CharacterRow }>('portal-warp', payload)
+}
+
 export function tradeManage(payload: Record<string, unknown>) {
   return invoke<{ ok?: boolean; trade?: import('../types/database').TradeSessionRow }>(
     'trade-manage',

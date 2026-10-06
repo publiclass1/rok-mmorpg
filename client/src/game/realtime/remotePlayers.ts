@@ -1,9 +1,11 @@
 import Phaser from 'phaser'
 import type { EquipSlot } from '../character/characterState'
 import type { PlayerPresencePayload } from '../events'
+import { appearanceKey } from '../character/characterAppearance'
 import {
   createPlayerDisplay,
   playPlayerAnim,
+  setPlayerAppearance,
   setPlayerWalkFrame,
   updatePlayerEquipmentLayers,
   type PlayerDisplay,
@@ -29,6 +31,7 @@ export type RemotePlayerEntity = {
   targetY: number
   lastPayload: PlayerPresencePayload
   equipmentKey: string
+  appearanceKey: string
 }
 
 function equipmentKey(equipment: Record<EquipSlot, string | null>): string {
@@ -36,7 +39,7 @@ function equipmentKey(equipment: Record<EquipSlot, string | null>): string {
 }
 
 export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePayload): RemotePlayerEntity {
-  const display = createPlayerDisplay(scene, payload.x, payload.y)
+  const display = createPlayerDisplay(scene, payload.x, payload.y, payload.appearance)
   const body = display.container.body as Phaser.Physics.Arcade.Body | null
   if (body) {
     body.enable = false
@@ -60,6 +63,7 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
     targetY: payload.y,
     lastPayload: payload,
     equipmentKey: eqKey,
+    appearanceKey: appearanceKey(payload.appearance),
   }
 }
 
@@ -72,6 +76,12 @@ export function applyRemotePresence(entity: RemotePlayerEntity, payload: PlayerP
   if (nextKey !== entity.equipmentKey) {
     entity.equipmentKey = nextKey
     updatePlayerEquipmentLayers(entity.display, payload.equipment)
+  }
+
+  const nextAppearanceKey = appearanceKey(payload.appearance)
+  if (nextAppearanceKey !== entity.appearanceKey) {
+    entity.appearanceKey = nextAppearanceKey
+    setPlayerAppearance(entity.display, payload.appearance)
   }
 }
 

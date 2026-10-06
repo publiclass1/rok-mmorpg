@@ -1,4 +1,8 @@
 import Phaser from 'phaser'
+import {
+  DEFAULT_CHARACTER_APPEARANCE,
+  type CharacterAppearance,
+} from '../character/characterAppearance'
 import { resolveHeadItemId, type EquipSlot } from '../character/characterState'
 import { EQUIPMENT } from '../character/equipmentConfig'
 import type { Facing } from '../movement/clickToMove'
@@ -38,12 +42,18 @@ export type PlayerDisplay = {
   rig: CharacterRig
   layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Rectangle>>
   pose: CharacterPose
+  appearance: CharacterAppearance
+}
+
+function redrawPose(display: PlayerDisplay) {
+  applyCharacterPose(display.rig, display.pose, display.appearance)
 }
 
 export function createPlayerDisplay(
   scene: Phaser.Scene,
   x: number,
   y: number,
+  appearance: CharacterAppearance = DEFAULT_CHARACTER_APPEARANCE,
 ): PlayerDisplay {
   ensurePlayerAnimationTextures(scene)
   const body = scene.add.sprite(0, 0, 'player_body', '0')
@@ -69,7 +79,21 @@ export function createPlayerDisplay(
   bodyPhys.setSize(18, 14)
   bodyPhys.setOffset(-9, -12)
 
-  return { container, body, rig, layers, pose }
+  const display: PlayerDisplay = {
+    container,
+    body,
+    rig,
+    layers,
+    pose,
+    appearance: { ...appearance },
+  }
+  redrawPose(display)
+  return display
+}
+
+export function setPlayerAppearance(display: PlayerDisplay, appearance: CharacterAppearance) {
+  display.appearance = { ...appearance }
+  redrawPose(display)
 }
 
 export function syncPlayerDisplayPosition(display: PlayerDisplay, x: number, y: number) {
@@ -118,13 +142,13 @@ export function playPlayerAnim(display: PlayerDisplay, key: string, facing: Faci
     facing,
     anim: anim === 'walk' || anim === 'attack' || anim === 'jump' || anim === 'sit' || anim === 'idle' ? anim : 'idle',
   }
-  applyCharacterPose(display.rig, display.pose)
+  redrawPose(display)
 }
 
 export function setPlayerWalkFrame(display: PlayerDisplay, walkFrame: 0 | 1) {
   if (display.pose.anim !== 'walk') return
   display.pose = { ...display.pose, walkFrame }
-  applyCharacterPose(display.rig, display.pose)
+  redrawPose(display)
 }
 
 export function setPlayerSitting(display: PlayerDisplay, sitting: boolean, facing: Facing) {
@@ -133,7 +157,7 @@ export function setPlayerSitting(display: PlayerDisplay, sitting: boolean, facin
     anim: sitting ? 'sit' : 'idle',
     walkFrame: 0,
   }
-  applyCharacterPose(display.rig, display.pose)
+  redrawPose(display)
 }
 
 export function getPlayerPhysicsSprite(display: PlayerDisplay): Phaser.Types.Physics.Arcade.GameObjectWithBody {

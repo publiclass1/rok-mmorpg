@@ -17,22 +17,71 @@
       "displayName": "Field (dev)",
       "fieldType": "field",
       "sourceUrl": null
+    },
+    {
+      "id": "new_map_rfpp",
+      "displayName": "Gold Room",
+      "fieldType": "dungeon",
+      "sourceUrl": null
     }
   ],
   "mobSpawns": {
     "prt_fild01": [
-      { "x": 320, "y": 260, "defId": "lunatic" },
-      { "x": 480, "y": 220, "defId": "lunatic" },
-      { "x": 640, "y": 320, "defId": "fabre" },
-      { "x": 520, "y": 420, "defId": "fabre" },
-      { "x": 400, "y": 360, "defId": "poring" },
-      { "x": 720, "y": 480, "defId": "poring" }
+      {
+        "x": 320,
+        "y": 260,
+        "defId": "lunatic"
+      },
+      {
+        "x": 480,
+        "y": 220,
+        "defId": "lunatic"
+      },
+      {
+        "x": 640,
+        "y": 320,
+        "defId": "fabre"
+      },
+      {
+        "x": 520,
+        "y": 420,
+        "defId": "fabre"
+      },
+      {
+        "x": 400,
+        "y": 360,
+        "defId": "poring"
+      },
+      {
+        "x": 720,
+        "y": 480,
+        "defId": "poring"
+      }
     ],
     "field_01": [
-      { "x": 400, "y": 280, "defId": "poring" },
-      { "x": 560, "y": 240, "defId": "poring" },
-      { "x": 720, "y": 400, "defId": "poring" },
-      { "x": 480, "y": 480, "defId": "poring" }
+      {
+        "x": 400,
+        "y": 280,
+        "defId": "poring"
+      },
+      {
+        "x": 560,
+        "y": 240,
+        "defId": "poring"
+      },
+      {
+        "x": 720,
+        "y": 400,
+        "defId": "poring"
+      },
+      {
+        "x": 480,
+        "y": 480,
+        "defId": "poring"
+      }
     ]
+  },
+  "portals": {
+    "new_map_rfpp": []
   }
 }

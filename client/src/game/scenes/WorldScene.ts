@@ -14,7 +14,7 @@ import {
   playPlayerAttack,
   showFloatingText,
 } from '../combat/combatFx'
-import { colliderWithObstacles, spawnObstacles } from '../combat/mapObstacles'
+import { colliderWithObstacles, spawnObstacles, spawnObstaclesFromTilemap } from '../combat/mapObstacles'
 import { initMobAiFields, updateMob } from '../combat/mobAi'
 import { logActivity } from '../activityLog'
 import { calcMobVsPlayerDamage, calcPlayerVsMobDamage } from '../combat/damage'
@@ -27,6 +27,7 @@ import {
   MOB_RESPAWN_MS,
   MOB_SPAWNS_BY_MAP,
 } from '../combat/mobConfig'
+import { appearanceFromCharacterRow } from '../character/characterAppearance'
 import { getItemDisplayName } from '../character/itemCatalog'
 import { addItemsToSessionInventory } from '../character/sessionInventory'
 import type { MobInstance } from '../combat/mobTypes'
@@ -59,6 +60,8 @@ import {
   type RemotePlayerEntity,
 } from '../realtime/remotePlayers'
 import { clampToMap } from '../world/clampToMap'
+import { findPortalAtPoint } from '../world/mapPortals'
+import { preloadMapDecor, spawnMapDecor } from '../world/spawnMapDecor'
 import { setDepthByFeet } from '../world/depthSort'
 import { ensureMobTexture, ensureTilesTexture, TILESET_TILE_COUNT } from '../textures'
 import { persistCharacterWorld, saveCharacterSession } from '../../lib/characterProgress'
@@ -105,6 +108,7 @@ export class WorldScene extends Phaser.Scene {
   private mobs: MobInstance[] = []
   private obstacles: Phaser.GameObjects.Rectangle[] = []
   private collisionLayer: Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer | null = null
+  private portalWarpCooldownUntil = 0
   private sfx = new SfxPlayer()
 
   constructor() {
@@ -117,6 +121,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   preload() {
+    preloadMapDecor(this)
     this.load.tilemapTiledJSON('map', `/maps/${this.character.map_id}.tmj`)
   }
 
@@ -130,8 +135,9 @@ export class WorldScene extends Phaser.Scene {
 
     const ground = map.createLayer('ground', tileset, 0, 0)
     ground?.setDepth(0)
-    const decor = map.createLayer('decor', tileset, 0, 0)
-    decor?.setDepth(2)
+    const decorTiles = map.createLayer('decor', tileset, 0, 0)
+    decorTiles?.setDepth(2)
+    spawnMapDecor(this, map)
     const collision = map.createLayer('collision', tileset, 0, 0)
     collision?.setVisible(false)
     collision?.setCollisionByExclusion([-1, 0])
@@ -148,14 +154,15 @@ export class WorldScene extends Phaser.Scene {
       .ellipse(spawn.x, spawn.y + PLAYER_FEET_OFFSET, 22, 8, 0x000000, 0.28)
       .setDepth(0.5)
 
-    this.playerDisplay = createPlayerDisplay(this, spawn.x, spawn.y)
+    this.playerDisplay = createPlayerDisplay(this, spawn.x, spawn.y, appearanceFromCharacterRow(this.character))
     const playerBody = this.playerDisplay.container.body as Phaser.Physics.Arcade.Body
     playerBody.setCollideWorldBounds(true)
     if (collision) {
       this.physics.add.collider(this.playerDisplay.container, collision)
     }
 
-    this.obstacles = spawnObstacles(this, this.character.map_id)
+    const fromTmj = spawnObstaclesFromTilemap(this, map)
+    this.obstacles = fromTmj.length > 0 ? fromTmj : spawnObstacles(this, this.character.map_id)
     colliderWithObstacles(this, this.obstacles, this.playerDisplay.container)
 
     const boot = this.registry.get('bootSession') as CharacterSessionState | undefined
@@ -381,6 +388,23 @@ export class WorldScene extends Phaser.Scene {
       mapId: this.character.map_id,
     })
 
+    if (now >= this.portalWarpCooldownUntil) {
+      const px = this.playerDisplay.container.x
+      const py = this.playerDisplay.container.y
+      const portal = findPortalAtPoint(this.character.map_id, px, py)
+      if (portal) {
+        this.portalWarpCooldownUntil = now + 1500
+        emitGameEvent('portalWarpRequest', {
+          portalId: portal.id,
+          mapId: this.character.map_id,
+          x: px,
+          y: py,
+          label: portal.label,
+          destinationMapId: portal.targetMapId,
+        })
+      }
+    }
+
     this.nearestNpc = null
     let best = INTERACT_RANGE
     for (const npc of this.npcs) {
@@ -422,6 +446,7 @@ export class WorldScene extends Phaser.Scene {
       anim,
       walkFrame,
       equipment: this.session.equipment,
+      appearance: appearanceFromCharacterRow(this.character),
     }
   }
 

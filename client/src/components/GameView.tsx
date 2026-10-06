@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Phaser from 'phaser'
-import { savePoint, teleport } from '../lib/api'
+import { portalWarp, savePoint, teleport } from '../lib/api'
 import {
   loadCharacterSession,
   persistCharacterWorld,
@@ -186,6 +186,34 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     ]
     return () => unsubs.forEach((u) => u())
   }, [])
+
+  useEffect(() => {
+    const unsub = onGameEvent('portalWarpRequest', (payload) => {
+      void (async () => {
+        try {
+          setMapLoading({
+            mapId: payload.destinationMapId,
+            label: payload.label || mapDisplayName(payload.destinationMapId),
+          })
+          const res = await portalWarp({
+            characterId: character.id,
+            mapId: payload.mapId,
+            x: payload.x,
+            y: payload.y,
+            portalId: payload.portalId,
+          })
+          onCharacterUpdated(res.character)
+          emitGameEvent('status', `Warped to ${payload.label}`)
+        } catch (err) {
+          setMapLoading(null)
+          setMessage(err instanceof Error ? err.message : 'Portal warp failed')
+        }
+      })()
+    })
+    return () => {
+      unsub()
+    }
+  }, [character.id, onCharacterUpdated])
 
   useEffect(() => {
     if (!sessionReady || !npcsReady) return

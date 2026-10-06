@@ -121,6 +121,19 @@ export type RoMap = {
   sourceUrl?: string | null
 }
 
+export type MapPortalDef = {
+  id: string
+  x: number
+  y: number
+  width: number
+  height: number
+  targetMapId: string
+  targetX: number
+  targetY: number
+  label: string
+  mode: 'walk' | 'npc' | 'both'
+}
+
 export type MobSpawnPointJson = { x: number; y: number; defId: string }
 
 export type RoContentPack = {
@@ -131,5 +144,6 @@ export type RoContentPack = {
   mobs: RoMob[]
   maps: RoMap[]
   mobSpawns: Record<string, MobSpawnPointJson[]>
+  portals: Record<string, MapPortalDef[]>
   expTables: RoExpTables
 }

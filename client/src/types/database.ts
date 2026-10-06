@@ -1,3 +1,5 @@
+export type CharacterGender = 'male' | 'female'
+
 export type CharacterRow = {
   id: string
   user_id: string
@@ -7,6 +9,11 @@ export type CharacterRow = {
   x: number
   y: number
   zeny: number
+  gender?: CharacterGender
+  body_color?: number
+  hair_color?: number
+  eye_color?: number
+  clothes_color?: number
   created_at: string
 }
 
@@ -123,8 +130,27 @@ export type Database = {
           x?: number
           y?: number
           zeny?: number
+          gender?: CharacterGender
+          body_color?: number
+          hair_color?: number
+          eye_color?: number
+          clothes_color?: number
         }
-        Update: Partial<Pick<CharacterRow, 'map_id' | 'x' | 'y' | 'zeny' | 'name'>>
+        Update: Partial<
+          Pick<
+            CharacterRow,
+            | 'map_id'
+            | 'x'
+            | 'y'
+            | 'zeny'
+            | 'name'
+            | 'gender'
+            | 'body_color'
+            | 'hair_color'
+            | 'eye_color'
+            | 'clothes_color'
+          >
+        >
       }
       npc_definitions: { Row: NpcRow; Insert: NpcRow; Update: Partial<NpcRow> }
       character_inventory: { Row: InventoryRow; Insert: Partial<InventoryRow>; Update: Partial<InventoryRow> }

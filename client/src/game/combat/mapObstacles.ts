@@ -18,6 +18,28 @@ export const OBSTACLES_BY_MAP: Record<string, ObstacleDef[]> = {
   ],
 }
 
+export function spawnObstaclesFromTilemap(
+  scene: Phaser.Scene,
+  tilemap: Phaser.Tilemaps.Tilemap,
+): Phaser.GameObjects.Rectangle[] {
+  const layer = tilemap.getObjectLayer('obstacles')
+  if (!layer?.objects?.length) return []
+
+  const bodies: Phaser.GameObjects.Rectangle[] = []
+  for (const obj of layer.objects) {
+    const w = obj.width ?? 0
+    const h = obj.height ?? 0
+    if (w <= 0 || h <= 0) continue
+    const cx = (obj.x ?? 0) + w / 2
+    const cy = (obj.y ?? 0) + h / 2
+    const rect = scene.add.rectangle(cx, cy, w, h, 0x78716c, 0.95)
+    rect.setStrokeStyle(2, 0x44403c)
+    scene.physics.add.existing(rect, true)
+    bodies.push(rect)
+  }
+  return bodies
+}
+
 export function spawnObstacles(scene: Phaser.Scene, mapId: string): Phaser.GameObjects.Rectangle[] {
   const defs = OBSTACLES_BY_MAP[mapId] ?? []
   const bodies: Phaser.GameObjects.Rectangle[] = []

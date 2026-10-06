@@ -1,11 +1,24 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
+import { DEFAULT_CHARACTER_APPEARANCE, type CharacterAppearance } from '../character/characterAppearance'
 import { createDefaultEquipment } from '../character/characterState'
 import type { PlayerPresencePayload } from '../events'
 
 const BROADCAST_MS = 50
 const STALE_MS = 5000
 const PRUNE_MS = 1000
+
+function normalizeAppearance(raw: Partial<CharacterAppearance> | undefined): CharacterAppearance {
+  if (!raw) return { ...DEFAULT_CHARACTER_APPEARANCE }
+  return {
+    gender: raw.gender === 'female' ? 'female' : 'male',
+    bodyColor: typeof raw.bodyColor === 'number' ? raw.bodyColor : DEFAULT_CHARACTER_APPEARANCE.bodyColor,
+    hairColor: typeof raw.hairColor === 'number' ? raw.hairColor : DEFAULT_CHARACTER_APPEARANCE.hairColor,
+    eyeColor: typeof raw.eyeColor === 'number' ? raw.eyeColor : DEFAULT_CHARACTER_APPEARANCE.eyeColor,
+    clothesColor:
+      typeof raw.clothesColor === 'number' ? raw.clothesColor : DEFAULT_CHARACTER_APPEARANCE.clothesColor,
+  }
+}
 
 function normalizePresence(raw: Partial<PlayerPresencePayload>): PlayerPresencePayload | null {
   if (!raw.characterId || !raw.name) return null
@@ -18,6 +31,7 @@ function normalizePresence(raw: Partial<PlayerPresencePayload>): PlayerPresenceP
     anim: raw.anim ?? 'idle',
     walkFrame: raw.walkFrame === 1 ? 1 : 0,
     equipment: raw.equipment ?? createDefaultEquipment(),
+    appearance: normalizeAppearance(raw.appearance),
   }
 }
 

@@ -5,7 +5,17 @@ import itemsJson from '../../../../content/ro/items.json'
 import mobsJson from '../../../../content/ro/mobs.json'
 import mapsJson from '../../../../content/ro/maps.json'
 import expTablesJson from '../../../../content/ro/expTables.json'
-import type { RoContentPack, RoJob, RoMob, RoSkill, RoItem, RoMap, MobSpawnPointJson, RoExpTables } from './types'
+import type {
+  RoContentPack,
+  RoJob,
+  RoMob,
+  RoSkill,
+  RoItem,
+  RoMap,
+  MobSpawnPointJson,
+  MapPortalDef,
+  RoExpTables,
+} from './types'
 import { validateRoContent } from './validateRoContent'
 
 let cached: RoContentPack | null = null
@@ -26,17 +36,24 @@ function asMobs(raw: { mobs: RoMob[] }): RoMob[] {
   return raw.mobs
 }
 
-function asMaps(raw: { maps: RoMap[]; mobSpawns: Record<string, MobSpawnPointJson[]> }): {
+function asMaps(raw: {
   maps: RoMap[]
   mobSpawns: Record<string, MobSpawnPointJson[]>
+  portals?: Record<string, MapPortalDef[]>
+}): {
+  maps: RoMap[]
+  mobSpawns: Record<string, MobSpawnPointJson[]>
+  portals: Record<string, MapPortalDef[]>
 } {
-  return { maps: raw.maps, mobSpawns: raw.mobSpawns }
+  return { maps: raw.maps, mobSpawns: raw.mobSpawns, portals: raw.portals ?? {} }
 }
 
 export function loadRoContent(): RoContentPack {
   if (cached) return cached
 
-  const { maps, mobSpawns } = asMaps(mapsJson as { maps: RoMap[]; mobSpawns: Record<string, MobSpawnPointJson[]> })
+  const { maps, mobSpawns, portals } = asMaps(
+    mapsJson as { maps: RoMap[]; mobSpawns: Record<string, MobSpawnPointJson[]>; portals?: Record<string, MapPortalDef[]> },
+  )
 
   const pack: RoContentPack = {
     manifest: manifestJson as RoContentPack['manifest'],
@@ -46,6 +63,7 @@ export function loadRoContent(): RoContentPack {
     mobs: asMobs(mobsJson as { mobs: RoMob[] }),
     maps,
     mobSpawns,
+    portals,
     expTables: expTablesJson as RoExpTables,
   }
 

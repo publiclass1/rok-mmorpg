@@ -70,4 +70,18 @@ export function validateRoContent(pack: RoContentPack): void {
       assert(false, `mobSpawns key ${mapId} has no matching map entry`)
     }
   }
+
+  for (const [mapId, portalList] of Object.entries(pack.portals)) {
+    if (mapIds.size > 0 && !mapIds.has(mapId)) {
+      assert(false, `portals key ${mapId} has no matching map entry`)
+    }
+    const seen = new Set<string>()
+    for (const portal of portalList) {
+      assert(Boolean(portal.id), `portal on ${mapId} missing id`)
+      assert(!seen.has(portal.id), `duplicate portal id on ${mapId}: ${portal.id}`)
+      seen.add(portal.id)
+      assert(mapIds.has(portal.targetMapId), `portal ${portal.id} on ${mapId} targets unknown map ${portal.targetMapId}`)
+      assert(portal.width > 0 && portal.height > 0, `portal ${portal.id} on ${mapId} must have positive size`)
+    }
+  }
 }
