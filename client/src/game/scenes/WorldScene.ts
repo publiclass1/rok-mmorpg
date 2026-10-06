@@ -37,11 +37,16 @@ import { LOOT_CONFIG } from '../combat/lootConfig'
 import { scaleMobExp } from '../combat/gameConfig'
 import {
   ATTACK_COOLDOWN_MS,
-  ATTACK_RANGE,
   MOB_DEFS,
   MOB_RESPAWN_MS,
   MOB_SPAWNS_BY_MAP,
 } from '../combat/mobConfig'
+import {
+  getEquippedWeaponClass,
+  getPlayerAttackRangePx,
+  resolvePlayerAttackTarget,
+  usesTargetedAttack,
+} from '../combat/playerAttackRange'
 import { appearanceFromCharacterRow } from '../character/characterAppearance'
 import { getItemDisplayName } from '../character/itemCatalog'
 import { addItemsToSessionInventory } from '../character/sessionInventory'
@@ -510,7 +515,7 @@ export class WorldScene extends Phaser.Scene {
           this.chaseMob.sprite.x,
           this.chaseMob.sprite.y,
         )
-        if (dist <= ATTACK_RANGE) {
+        if (dist <= this.playerAttackRangePx()) {
           clearMoveTarget(this.moveTarget)
           this.stopPlayerMotion()
           this.faceToward(this.chaseMob.sprite.x, this.chaseMob.sprite.y)
@@ -945,10 +950,15 @@ export class WorldScene extends Phaser.Scene {
 
     this.sfx.playAttack()
     this.broadcastPlayerAction('bash')
+    const weaponClass = getEquippedWeaponClass(this.session.equipment)
+    if (usesTargetedAttack(weaponClass)) {
+      const preTarget = this.chaseMob ?? this.selectedMob
+      if (preTarget?.alive) this.faceToward(preTarget.sprite.x, preTarget.sprite.y)
+    }
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'bash',
       onStrike: () => {
-        const target = this.findMobInAttackCone()
+        const target = this.resolveAttackTargetMob()
         if (!target) {
           const pos = missTextPosition(
             this.playerDisplay.container.x,
@@ -1458,10 +1468,15 @@ export class WorldScene extends Phaser.Scene {
 
     this.sfx.playAttack()
     this.broadcastPlayerAction('basic_attack')
+    const weaponClass = getEquippedWeaponClass(this.session.equipment)
+    if (usesTargetedAttack(weaponClass)) {
+      const preTarget = this.chaseMob ?? this.selectedMob
+      if (preTarget?.alive) this.faceToward(preTarget.sprite.x, preTarget.sprite.y)
+    }
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       onStrike: () => {
-        const target = this.findMobInAttackCone()
+        const target = this.resolveAttackTargetMob()
         if (!target) {
           const pos = missTextPosition(
             this.playerDisplay.container.x,
@@ -1494,42 +1509,42 @@ export class WorldScene extends Phaser.Scene {
     })
   }
 
-  private findMobInAttackCone(): MobInstance | null {
-    let best: MobInstance | null = null
-    let bestDist = ATTACK_RANGE
-
-    for (const mob of this.mobs) {
-      if (!mob.alive) continue
-      const dx = mob.sprite.x - this.playerDisplay.container.x
-      const dy = mob.sprite.y - this.playerDisplay.container.y
-      const dist = Math.hypot(dx, dy)
-      if (dist > ATTACK_RANGE) continue
-      if (!this.isInFacingCone(dx, dy)) continue
-      if (dist < bestDist) {
-        bestDist = dist
-        best = mob
-      }
-    }
-    return best
+  private playerAttackRangePx(): number {
+    return getPlayerAttackRangePx(this.session.equipment)
   }
 
-  private isInFacingCone(dx: number, dy: number): boolean {
-    const len = Math.hypot(dx, dy)
-    if (len < 1) return true
-    const nx = dx / len
-    const ny = dy / len
-    switch (this.facing) {
-      case 'right':
-        return nx > 0
-      case 'left':
-        return nx < 0
-      case 'up':
-        return ny < 0
-      case 'down':
-        return ny > 0
-      default:
-        return true
-    }
+  private resolveAttackTargetMob(): MobInstance | null {
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    const weaponClass = getEquippedWeaponClass(this.session.equipment)
+    const mobs = this.mobs.map((mob) => ({
+      mob,
+      alive: mob.alive,
+      x: mob.sprite.x,
+      y: mob.sprite.y,
+    }))
+    const chase = this.chaseMob
+      ? { mob: this.chaseMob, alive: this.chaseMob.alive, x: this.chaseMob.sprite.x, y: this.chaseMob.sprite.y }
+      : null
+    const selected = this.selectedMob
+      ? {
+          mob: this.selectedMob,
+          alive: this.selectedMob.alive,
+          x: this.selectedMob.sprite.x,
+          y: this.selectedMob.sprite.y,
+        }
+      : null
+    const hit = resolvePlayerAttackTarget({
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      rangePx: this.playerAttackRangePx(),
+      weaponClass,
+      mobs,
+      chaseMob: chase,
+      selectedMob: selected,
+    })
+    return hit?.mob ?? null
   }
 
   private killMob(mob: MobInstance) {

@@ -57,6 +57,8 @@ export type RoConsumableEffect = {
   healSp?: number
 }
 
+export type WeaponClass = 'unarmed' | 'knife' | 'sword' | 'spear' | 'staff' | 'bow'
+
 export type RoItem = {
   id: string
   name: string
@@ -69,7 +71,13 @@ export type RoItem = {
   weaponAtk?: number
   weaponSize?: 'small' | 'medium' | 'large'
   attackElement?: string
+  /** Player basic-attack reach class; required when type is weapon. */
+  weaponClass?: WeaponClass
   consumable?: RoConsumableEffect
+  /** Minimum base level to equip; defaults to 1 when omitted. */
+  requiredBaseLevel?: number
+  /** When set, current job must be one of these ids; omitted means all jobs. */
+  requiredJobIds?: string[]
   sourceUrl?: string | null
 }
 

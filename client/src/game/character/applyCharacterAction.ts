@@ -11,6 +11,7 @@ import {
   useConsumableFromSession,
   type CharacterSessionState,
 } from './characterState'
+import { checkCanEquipItem } from './equipRequirements'
 import { getItemDisplayName } from './itemCatalog'
 import { EQUIPMENT } from './equipmentConfig'
 import { applyJobChange } from './jobChange'
@@ -101,6 +102,13 @@ export function applyCharacterAction(
       const def = EQUIPMENT[action.itemId]
       if (!def || def.slot !== action.slot) {
         return { state, changed: false, message: 'Cannot equip item in that slot.' }
+      }
+      const equipCheck = checkCanEquipItem(
+        { baseLevel: state.progress.baseLevel, jobId: state.jobId },
+        action.itemId,
+      )
+      if (equipCheck.ok === false) {
+        return { state, changed: false, message: equipCheck.reason }
       }
     }
     const transfer = equipItemWithInventoryTransfer(state, action.slot, action.itemId, {

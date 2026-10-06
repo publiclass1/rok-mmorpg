@@ -1,4 +1,6 @@
-import type { RoContentPack } from './types'
+import type { RoContentPack, WeaponClass } from './types'
+
+const WEAPON_CLASSES = new Set<WeaponClass>(['knife', 'sword', 'spear', 'staff', 'bow'])
 
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(`[content/ro] ${message}`)
@@ -45,6 +47,21 @@ export function validateRoContent(pack: RoContentPack): void {
     if (item.equipSlot) {
       assert(item.bonuses != null, `equippable item ${item.id} must have bonuses`)
       assert(item.layerColor != null, `equippable item ${item.id} must have layerColor`)
+    }
+    if (item.requiredBaseLevel != null) {
+      assert(item.requiredBaseLevel >= 1, `item ${item.id} requiredBaseLevel must be >= 1`)
+    }
+    if (item.requiredJobIds != null) {
+      for (const jobId of item.requiredJobIds) {
+        assert(jobIds.has(jobId), `item ${item.id} requiredJobIds references unknown job ${jobId}`)
+      }
+    }
+    if (item.type === 'weapon') {
+      assert(item.weaponClass != null, `weapon item ${item.id} must define weaponClass`)
+      assert(
+        WEAPON_CLASSES.has(item.weaponClass),
+        `weapon item ${item.id} has unknown weaponClass: ${item.weaponClass}`,
+      )
     }
   }
 

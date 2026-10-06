@@ -71,6 +71,5 @@ export const MOB_SPAWNS_BY_MAP: Record<string, MobSpawnPoint[]> = ro.mobSpawns
 
 export const PLAYER_DEFAULT_HP = 50
 export const PLAYER_DEFAULT_MP = 30
-export const ATTACK_RANGE = 56
 export const ATTACK_COOLDOWN_MS = 450
 export const MOB_RESPAWN_MS = 8000

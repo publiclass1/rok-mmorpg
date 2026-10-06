@@ -104,6 +104,14 @@
       "tileX": 25,
       "tileY": 11
     },
+    "prontera_armor_dealer": {
+      "tileX": 24,
+      "tileY": 11
+    },
+    "prontera_weapon_dealer": {
+      "tileX": 26,
+      "tileY": 11
+    },
     "prontera_healer": {
       "tileX": 14,
       "tileY": 15

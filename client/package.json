@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "content:validate": "tsx src/content/ro/validateContent.ts",
-    "test": "tsx src/game/combat/exp.test.ts && tsx src/game/character/statusEffects.test.ts"
+    "test": "tsx src/game/combat/exp.test.ts && tsx src/game/combat/playerAttackRange.test.ts && tsx src/game/character/statusEffects.test.ts && tsx src/game/character/equipRequirements.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

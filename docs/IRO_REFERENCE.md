@@ -27,7 +27,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Base / job EXP | [Experience](https://irowiki.org/wiki/Experience) | implemented | `content/ro/expTables.json`, `combat/exp.ts` (Pre-Renewal tables, cap 99) |
 | Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `content/ro/jobs.json`; Job Master NPC + client job change (`jobChange.ts`, `JobMasterModal.tsx`) |
 | Skills | [Skills](https://irowiki.org/wiki/Skills) | partial | `content/ro/skills.json`; Swordman tree + prerequisites; Bash usable in combat |
-| Items & equipment | [Items](https://irowiki.org/wiki/Items), [Equipment](https://irowiki.org/wiki/Equipment) | partial | `content/ro/items.json`, `equipmentConfig.ts` |
+| Items & equipment | [Items](https://irowiki.org/wiki/Items), [Equipment](https://irowiki.org/wiki/Equipment) | partial | `content/ro/items.json` (`requiredBaseLevel`, `requiredJobIds`); equip enforced in `equipRequirements.ts` / `applyCharacterAction.ts`; `equipmentConfig.ts` |
 | Inventory weight | [Weight](https://irowiki.org/wiki/Weight) | planned | — |
 | Monsters & drops | [Monsters](https://irowiki.org/wiki/Monsters) | implemented | `mobs.json` drops (rAthena pre-re rates) + `loot.json` zeny QoL & level bands; `combat/drops.ts` |
 | Combat & damage | [Damage](https://irowiki.org/wiki/Damage) | partial | `combat/damage.ts`, `WorldScene.ts` (HIT/FLEE, DEF, element/size); mob `runtime.*` still tunes movement/aggro |
@@ -36,7 +36,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | NPC Kafra storage | [Kafra](https://irowiki.org/wiki/Kafra) | implemented | `StorageModal.tsx`, `storage-transfer` function |
 | Save point | — | implemented | `save-point` function |
 | Player trade | [Trade](https://irowiki.org/wiki/Trade) | implemented | `TradeModal.tsx`, `trade-manage` function |
-| NPC shops | [Vending](https://irowiki.org/wiki/Vending) | partial | `ShopModal.tsx`, `shop` NPC type (client-trusted zeny) |
+| NPC shops | [Vending](https://irowiki.org/wiki/Vending) | partial | `ShopModal.tsx`, `shop` NPC type — Tool / Weapon / Armor dealers in Prontera; buy allowed without reqs, equip gated (client-trusted zeny) |
 | Healer NPC | — | implemented | `healer` NPC restores HP/SP to max (persisted on save) |
 | Zeny economy | [Zeny](https://irowiki.org/wiki/Zeny) | partial | `characters.zeny`, trade, **auto zeny on mob kill** (`loot.json`, debounced save) |
 | Party | [Party](https://irowiki.org/wiki/Party) | partial | `party-manage`, `PartyPanel`, click-target actions |

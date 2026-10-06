@@ -1792,6 +1792,16 @@ button:disabled {
   grid-template-columns: 1fr;
 }
 
+.shop-row--unmet:not(:disabled) {
+  opacity: 0.72;
+}
+
+.shop-row__req {
+  display: block;
+  margin-top: 0.2rem;
+  text-align: left;
+}
+
 .shop-modal__actions {
   margin-top: 0.75rem;
   align-items: center;

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
-import { getItemDisplayName } from '../game/character/itemCatalog'
+import { formatEquipRequirements, meetsEquipRequirements } from '../game/character/equipRequirements'
+import { getItemDisplayName, isEquippable } from '../game/character/itemCatalog'
 import {
   addToCart,
   cartEntries,
@@ -37,7 +38,14 @@ function formatRowLabel(name: string, qtyLabel: string, price: number): string {
   return `${name} (${qtyLabel}) — ${price} z`
 }
 
-type CatalogRow = { itemId: string; price: number; qtyLabel: string; maxAdd?: number }
+type CatalogRow = {
+  itemId: string
+  price: number
+  qtyLabel: string
+  maxAdd?: number
+  requirementHint?: string
+  unmetRequirements?: boolean
+}
 
 function ShopCatalogPane({
   title,
@@ -63,13 +71,16 @@ function ShopCatalogPane({
               <button
                 key={row.itemId}
                 type="button"
-                className="shop-row"
+                className={`shop-row${row.unmetRequirements ? ' shop-row--unmet' : ''}`}
                 disabled={atMax}
                 onClick={() => onAdd(row.itemId)}
               >
                 <span className="shop-row__name">
                   {formatRowLabel(getItemDisplayName(row.itemId), row.qtyLabel, row.price)}
                 </span>
+                {row.requirementHint ? (
+                  <span className="shop-row__req muted small">{row.requirementHint}</span>
+                ) : null}
               </button>
             )
           })
@@ -141,11 +152,24 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
   const buyTotal = cartTotal(buyCart, buyPrices)
   const sellTotal = cartTotal(sellCart, sellPrices)
 
-  const buyCatalogRows: CatalogRow[] = stock.map((row) => ({
-    itemId: row.itemId,
-    price: row.price,
-    qtyLabel: '∞',
-  }))
+  const equipContext = useMemo(
+    () => ({ baseLevel: sheet.baseLevel, jobId: sheet.jobId }),
+    [sheet.baseLevel, sheet.jobId],
+  )
+
+  const buyCatalogRows: CatalogRow[] = stock.map((row) => {
+    const requirementHint =
+      isEquippable(row.itemId) ? formatEquipRequirements(row.itemId) ?? undefined : undefined
+    const unmetRequirements =
+      requirementHint != null && !meetsEquipRequirements(equipContext, row.itemId)
+    return {
+      itemId: row.itemId,
+      price: row.price,
+      qtyLabel: '∞',
+      requirementHint,
+      unmetRequirements,
+    }
+  })
 
   const sellCatalogRows: CatalogRow[] = buys.map((row) => {
     const owned = countItemInSession(sheet, row.itemId)

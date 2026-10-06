@@ -1,4 +1,5 @@
 import { loadRoContent } from '../../content/ro/loadContent'
+import type { WeaponClass } from '../../content/ro/types'
 import { EQUIPMENT } from './equipmentConfig'
 
 const ro = loadRoContent()
@@ -27,6 +28,12 @@ export function getItemCombatStats(itemId: string): ItemCombatStats | null {
     weaponSize: item.weaponSize ?? 'medium',
     attackElement: item.attackElement ?? 'neutral',
   }
+}
+
+export function getItemWeaponClass(itemId: string): WeaponClass | null {
+  const item = ITEMS_BY_ID[itemId]
+  if (!item || item.type !== 'weapon' || !item.weaponClass) return null
+  return item.weaponClass
 }
 
 export function getConsumableEffect(itemId: string) {
