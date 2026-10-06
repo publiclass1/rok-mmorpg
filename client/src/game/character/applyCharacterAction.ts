@@ -122,6 +122,9 @@ export function applyCharacterAction(
   }
 
   if (action.type === 'useConsumable') {
+    if (state.hp <= 0) {
+      return { state, changed: false, message: 'You cannot use items while defeated.' }
+    }
     const itemId = state.sessionInventory[action.sessionInventoryIndex]?.itemId
     const result = useConsumableFromSession(state, action.sessionInventoryIndex)
     if (result.ok === false) {
@@ -155,10 +158,22 @@ export function applyCharacterAction(
   }
 
   if (action.type === 'restoreVitals') {
+    if (state.hp <= 0) {
+      return { state, changed: false, message: 'Return to your save point to recover.' }
+    }
     const sheet = toCharacterSheetPayload(syncDerivedVitals(state))
     const next = syncDerivedVitals({ ...state, hp: sheet.hpMax, mp: sheet.mpMax })
     logActivity('character', 'HP and SP fully restored.')
     return { state: next, changed: true, message: 'HP and SP restored.' }
+  }
+
+  if (action.type === 'respawnPartial') {
+    const sheet = toCharacterSheetPayload(syncDerivedVitals(state))
+    const hp = Math.max(1, Math.floor(sheet.hpMax * 0.5))
+    const mp = Math.floor(sheet.mpMax * 0.5)
+    const next = syncDerivedVitals({ ...state, hp, mp })
+    logActivity('character', 'Revived at save point with partial HP and SP.')
+    return { state: next, changed: true, message: 'You have been revived.' }
   }
 
   return { state, changed: false }

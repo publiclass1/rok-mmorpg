@@ -174,7 +174,8 @@ export function playPlayerAnim(display: PlayerDisplay, key: string, facing: Faci
     anim === 'jump' ||
     anim === 'sit' ||
     anim === 'idle' ||
-    anim === 'flinch'
+    anim === 'flinch' ||
+    anim === 'dead'
       ? anim
       : 'idle'
   display.pose = {

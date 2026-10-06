@@ -95,3 +95,20 @@ export function playPlayerFlinch(
     }
   })
 }
+
+export function playPlayerDeath(scene: Phaser.Scene, display: PlayerDisplay, facing: Facing) {
+  const container = display.container
+  const startY = container.y
+
+  playPlayerAnim(display, 'flinch', facing)
+
+  scene.tweens.add({
+    targets: container,
+    y: startY + 6,
+    duration: 180,
+    ease: 'Quad.easeIn',
+    onComplete: () => {
+      playPlayerAnim(display, 'dead', facing)
+    },
+  })
+}

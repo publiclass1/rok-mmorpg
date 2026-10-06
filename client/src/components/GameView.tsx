@@ -6,6 +6,7 @@ import { loadGuildForCharacter, type GuildSnapshot } from '../lib/guildState'
 import { loadPartyForCharacter, type PartySnapshot } from '../lib/partyState'
 import { MapChatChannel, type ChatMessage } from '../game/realtime/mapChat'
 import { PartyRealtimeChannel } from '../game/realtime/partyChannel'
+import { loadAccountSavePoint } from '../lib/accountSavePoint'
 import {
   loadCharacterSession,
   persistCharacterWorld,
@@ -53,6 +54,7 @@ import type { MinimapPayload } from '../game/world/minimapTypes'
 import { JobMasterModal } from './JobMasterModal'
 import { ShopModal } from './ShopModal'
 import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
+import { DeathModal } from './DeathModal'
 import { MapLoadingOverlay } from './MapLoadingOverlay'
 import { TradeModal } from './TradeModal'
 import { mapDisplayName } from '../game/world/mapDisplayName'
@@ -127,6 +129,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([])
   const [playerBuffs, setPlayerBuffs] = useState<PlayerBuffPayload[]>([])
   const [mapLoading, setMapLoading] = useState<{ mapId: string; label: string } | null>(null)
+  const [deathModalOpen, setDeathModalOpen] = useState(false)
+  const [deathSaveMapId, setDeathSaveMapId] = useState('prontera')
   const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
   const [logOpen, setLogOpen] = useState(false)
   const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
@@ -432,9 +436,48 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         setMapLoading((current) => (current?.mapId === mapId ? null : current))
       }),
       onGameEvent('minimap', setMinimap),
+      onGameEvent('playerDeath', () => {
+        void loadAccountSavePoint().then((save) => {
+          setDeathSaveMapId(save.mapId)
+          setDeathModalOpen(true)
+        })
+      }),
     ]
     return () => unsubs.forEach((u) => u())
   }, [])
+
+  async function returnToSavePoint() {
+    const save = await loadAccountSavePoint()
+    const sameMap = save.mapId === characterRef.current.map_id
+    if (!sameMap) {
+      setMapLoading({
+        mapId: save.mapId,
+        label: mapDisplayName(save.mapId),
+      })
+    }
+    const { data, error } = await supabase
+      .from('characters')
+      .update({
+        map_id: save.mapId,
+        x: save.x,
+        y: save.y,
+      })
+      .eq('id', characterRef.current.id)
+      .select('*')
+      .single()
+    if (error || !data) {
+      if (!sameMap) setMapLoading(null)
+      throw new Error(error?.message ?? 'Respawn failed')
+    }
+    setPosition({ x: save.x, y: save.y, mapId: save.mapId })
+    onCharacterUpdated(data as CharacterRow)
+    dispatchCharacterAction({ type: 'respawnPartial' })
+    if (sameMap) {
+      emitGameEvent('playerRevived', { x: save.x, y: save.y })
+    }
+    setDeathModalOpen(false)
+    setMessage('Returned to save point with partial HP and SP.')
+  }
 
   useEffect(() => {
     const unsub = onGameEvent('portalWarpRequest', (payload) => {
@@ -764,6 +807,20 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             <p className="game-hud-zeny">
               Zeny <strong>{character.zeny.toLocaleString()}</strong>
             </p>
+            {sheet.hp <= 0 && !deathModalOpen && (
+              <button
+                type="button"
+                className="secondary small"
+                onClick={() => {
+                  void loadAccountSavePoint().then((save) => {
+                    setDeathSaveMapId(save.mapId)
+                    setDeathModalOpen(true)
+                  })
+                }}
+              >
+                Respawn options
+              </button>
+            )}
             <PartyPanel
               characterId={character.id}
               snapshot={partySnapshot}
@@ -945,6 +1002,14 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             fromName={partyRequest.fromName}
             onClose={() => setPartyRequest(null)}
             onResolved={refreshParty}
+          />
+        )}
+        {deathModalOpen && (
+          <DeathModal
+            key="death"
+            saveMapId={deathSaveMapId}
+            onStay={() => setDeathModalOpen(false)}
+            onReturnToSave={returnToSavePoint}
           />
         )}
         {guildOpen && (

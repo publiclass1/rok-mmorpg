@@ -111,6 +111,7 @@ export type CharacterActionPayload =
   | { type: 'shopAddItems'; itemId: string; quantity: number }
   | { type: 'shopRemoveItem'; itemId: string; quantity: number }
   | { type: 'restoreVitals' }
+  | { type: 'respawnPartial' }
 
 export type SelectedMobPayload = {
   defId: string
@@ -169,6 +170,8 @@ export type GameEvents = {
   partyExpGrant: PartyExpGrantPayload
   vendorPosSync: { mapId: string; x: number; y: number }
   zenyGain: { amount: number }
+  playerDeath: Record<string, never>
+  playerRevived: { x: number; y: number }
 }
 
 type Listener = (payload: unknown) => void

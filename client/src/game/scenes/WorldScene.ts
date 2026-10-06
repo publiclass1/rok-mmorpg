@@ -64,7 +64,7 @@ import {
   type MoveTarget,
 } from '../movement/clickToMove'
 import { tryJump } from '../movement/jump'
-import { playPlayerFlinch, startPlayerAttackAnim } from '../player/playerCombatAnim'
+import { playPlayerDeath, playPlayerFlinch, startPlayerAttackAnim } from '../player/playerCombatAnim'
 import {
   createPlayerDisplay,
   playPlayerAnim,
@@ -147,6 +147,7 @@ export class WorldScene extends Phaser.Scene {
   private isAttacking = false
   private isJumping = false
   private isSitting = false
+  private isPlayerDead = false
   private lastSitRegenAt = 0
   private activeBuffs: PlayerStatusBuff[] = []
   private mobs: MobInstance[] = []
@@ -266,7 +267,7 @@ export class WorldScene extends Phaser.Scene {
     this.spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (this.uiPointerLocked || !pointer.leftButtonDown()) return
+      if (this.uiPointerLocked || this.isPlayerDead || !pointer.leftButtonDown()) return
       const wx = pointer.worldX
       const wy = pointer.worldY
       const npc = this.findNpcAt(wx, wy)
@@ -365,6 +366,15 @@ export class WorldScene extends Phaser.Scene {
       onGameEvent('partyExpGrant', (payload) => {
         this.applyPartyExpGrant(payload)
       }),
+      onGameEvent('playerRevived', ({ x, y }) => {
+        this.isPlayerDead = false
+        if (this.playerDisplay) {
+          this.playerDisplay.container.setPosition(x, y)
+          playPlayerAnim(this.playerDisplay, 'idle', this.facing)
+        }
+        this.emitCharacterSheet()
+        logActivity('character', 'Revived at save point.')
+      }),
       onGameEvent('vendorPosSync', () => {
         if (!this.vendingOpen) return
         const pos = this.getPlayerPosition()
@@ -438,9 +448,32 @@ export class WorldScene extends Phaser.Scene {
       `Entered ${this.character.map_id} — click move, click NPCs, Space jump, 1–9 skills`,
     )
     emitGameEvent('worldReady', { mapId: this.character.map_id })
+
+    if (this.session.hp <= 0) {
+      this.enterPlayerDeath({ animate: false })
+    }
   }
 
   private playerLabel!: Phaser.GameObjects.Text
+
+  private enterPlayerDeath(options?: { animate?: boolean }) {
+    if (this.isPlayerDead || this.session.hp > 0) return
+    this.isPlayerDead = true
+    if (this.isSitting) this.standUp()
+    this.chaseMob = null
+    this.isAttacking = false
+    clearMoveTarget(this.moveTarget)
+    this.stopPlayerMotion()
+    if (options?.animate !== false) {
+      playPlayerDeath(this, this.playerDisplay, this.facing)
+    } else {
+      playPlayerAnim(this.playerDisplay, 'dead', this.facing)
+    }
+    logActivity('combat', 'You have been defeated.')
+    emitGameEvent('playerDeath', {})
+    this.emitCharacterSheet()
+    this.scheduleProgressSave()
+  }
 
   private getPlayerBody(): Phaser.Physics.Arcade.Body | null {
     const body = this.playerDisplay?.container?.body
@@ -459,7 +492,11 @@ export class WorldScene extends Phaser.Scene {
 
     this.tickStatusEffects(now)
 
-    if (this.isSitting) {
+    if (this.isPlayerDead) {
+      playPlayerAnim(this.playerDisplay, 'dead', this.facing)
+      this.stopPlayerMotion()
+      clearMoveTarget(this.moveTarget)
+    } else if (this.isSitting) {
       setPlayerSitting(this.playerDisplay, true, this.facing)
       this.stopPlayerMotion()
       clearMoveTarget(this.moveTarget)
@@ -502,7 +539,7 @@ export class WorldScene extends Phaser.Scene {
 
     this.playerLabel.setPosition(this.playerDisplay.container.x, this.playerDisplay.container.y - 28)
 
-    if (!this.isSitting && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+    if (!this.isPlayerDead && !this.isSitting && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
       const jumped = tryJump(this, this.playerDisplay.container, () => this.isJumping, (v) => {
         this.isJumping = v
       })
@@ -683,7 +720,8 @@ export class WorldScene extends Phaser.Scene {
     const body = this.getPlayerBody()
     const moving = body ? Math.hypot(body.velocity.x, body.velocity.y) > 8 : false
     let anim: PlayerPresencePayload['anim'] = 'idle'
-    if (this.isSitting) anim = 'sit'
+    if (this.isPlayerDead) anim = 'dead'
+    else if (this.isSitting) anim = 'sit'
     else if (this.isJumping) anim = 'jump'
     else if (this.isAttacking) anim = 'attack'
     else if (moving) anim = 'walk'
@@ -756,6 +794,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private useSkillSlot(slot: number) {
+    if (this.isPlayerDead) return
     if (slot < 0 || slot > 8) return
     const skillId = this.session.skillBar[slot]
     if (!skillId) {
@@ -852,6 +891,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private toggleSit() {
+    if (this.isPlayerDead) return
     if (this.isSitting) {
       this.standUp()
       return
@@ -894,7 +934,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private tryBash(skillLevel: number, mpCost: number) {
-    if (this.isSitting) return
+    if (this.isPlayerDead || this.isSitting) return
     const now = this.time.now
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
     if (!this.spendMp(mpCost)) return
@@ -1131,7 +1171,8 @@ export class WorldScene extends Phaser.Scene {
       'mobHitPlayer',
     )
     flashPlayerHit(this, this.playerDisplay)
-    if (!enduring) {
+    const lethal = this.session.hp <= 0
+    if (!lethal && !enduring) {
       this.isAttacking = false
       playPlayerFlinch(
         this,
@@ -1152,7 +1193,11 @@ export class WorldScene extends Phaser.Scene {
       playMobHitShake(this, mob.sprite, def.color)
     }
     logActivity('combat', `Took ${damage} damage from Lv ${mob.level} ${mob.name}.`)
-    this.emitCharacterSheet()
+    if (lethal) {
+      this.enterPlayerDeath()
+    } else {
+      this.emitCharacterSheet()
+    }
   }
 
   private onMobSkillOnPlayer(mob: MobInstance, skillId: string, skillLevel: number) {
@@ -1179,7 +1224,8 @@ export class WorldScene extends Phaser.Scene {
       'mobHitPlayer',
     )
     flashPlayerHit(this, this.playerDisplay)
-    if (!enduring) {
+    const lethal = this.session.hp <= 0
+    if (!lethal && !enduring) {
       this.isAttacking = false
       playPlayerFlinch(
         this,
@@ -1203,7 +1249,11 @@ export class WorldScene extends Phaser.Scene {
       'combat',
       `Took ${damage} damage from Lv ${mob.level} ${mob.name}'s ${skillLabel}.`,
     )
-    this.emitCharacterSheet()
+    if (lethal) {
+      this.enterPlayerDeath()
+    } else {
+      this.emitCharacterSheet()
+    }
   }
 
   private spawnMapMobs() {
@@ -1398,7 +1448,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private tryBasicAttack() {
-    if (this.isSitting) return
+    if (this.isPlayerDead || this.isSitting) return
     const now = this.time.now
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
     this.lastAttackAt = now

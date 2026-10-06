@@ -24,7 +24,7 @@ export type CharacterRig = {
 
 export type CharacterPose = {
   facing: Facing
-  anim: 'idle' | 'walk' | 'attack' | 'jump' | 'sit' | 'flinch'
+  anim: 'idle' | 'walk' | 'attack' | 'jump' | 'sit' | 'flinch' | 'dead'
   walkFrame: 0 | 1
   attackPhase: 0 | 1 | 2
   bash: boolean
@@ -88,6 +88,7 @@ export function applyCharacterPose(
   const jumping = pose.anim === 'jump'
   const attacking = pose.anim === 'attack'
   const flinching = pose.anim === 'flinch'
+  const dead = pose.anim === 'dead'
   const frame = pose.walkFrame
   const flip = pose.facing === 'left' ? -1 : 1
   const attackPhase = pose.attackPhase
@@ -95,7 +96,7 @@ export function applyCharacterPose(
   const shirtColor = pose.hitFlash ? 0xf87171 : colors.shirt
   const skinColor = pose.hitFlash ? 0xfca5a5 : colors.skin
 
-  rig.root.setPosition(0, jumping ? -6 : 0)
+  rig.root.setPosition(0, jumping ? -6 : dead ? 10 : 0)
 
   clear(parts.feet)
   clear(parts.legs)
@@ -107,6 +108,48 @@ export function applyCharacterPose(
   clear(parts.eyes)
   clear(parts.nose)
   clear(parts.mouth)
+
+  if (dead) {
+    const lieFlip = pose.facing === 'up' || pose.facing === 'left' ? -1 : 1
+    parts.legs.fillStyle(colors.pants, 1)
+    parts.legs.fillRoundedRect(-14 * lieFlip, 10, 10, 5, 2)
+    parts.legs.fillRoundedRect(-2 * lieFlip, 10, 10, 5, 2)
+    parts.feet.fillStyle(colors.shoes, 1)
+    parts.feet.fillRoundedRect(-16 * lieFlip, 12, 6, 4, 1)
+    parts.feet.fillRoundedRect(8 * lieFlip, 12, 6, 4, 1)
+    parts.body.fillStyle(shirtColor, 1)
+    parts.body.fillRoundedRect(-10, 4, 20, 8, 3)
+    parts.arms.fillStyle(skinColor, 1)
+    parts.arms.fillRoundedRect(-18, 6, 8, 4, 2)
+    parts.arms.fillRoundedRect(10, 6, 8, 4, 2)
+    const headY = 8
+    const headX = 12 * lieFlip
+    parts.head.fillStyle(skinColor, 1)
+    parts.head.fillCircle(headX, headY, 6)
+    parts.head.fillStyle(colors.hair, 1)
+    if (female) {
+      parts.head.fillEllipse(headX, headY - 2, hairW - 2, 6)
+    } else {
+      parts.head.fillEllipse(headX, headY - 3, hairW - 2, 5)
+    }
+    parts.earLeft.fillStyle(skinColor, 1)
+    parts.earRight.fillStyle(skinColor, 1)
+    parts.earLeft.fillCircle(headX - 5, headY, 1.5)
+    parts.earRight.fillCircle(headX + 5, headY, 1.5)
+    parts.eyes.fillStyle(colors.eyes, 0.35)
+    parts.eyes.fillCircle(headX - 2, headY + 1, 1.2)
+    parts.eyes.fillCircle(headX + 2, headY + 1, 1.2)
+    parts.nose.fillStyle(0xd97706, 0.6)
+    parts.nose.fillCircle(headX, headY + 2, 0.8)
+    parts.mouth.lineStyle(1, 0x7c2d12, 0.7)
+    parts.mouth.strokeCircle(headX, headY + 4, 1.5)
+    if (pose.facing === 'left') {
+      rig.root.setScale(-1, 1)
+    } else {
+      rig.root.setScale(1, 1)
+    }
+    return
+  }
 
   let legSpread = sitting ? 10 : walk ? (frame === 0 ? 4 : -4) : 3
   let legY = sitting ? 6 : 8
