@@ -105,3 +105,27 @@ export function removeFromSessionInventory(
   }
   return next
 }
+
+/** Remove quantity of itemId across stacked slots; returns null if not enough. */
+export function removeItemFromSessionByItemId(
+  slots: SessionInventorySlot[],
+  itemId: string,
+  quantity: number,
+): SessionInventorySlot[] | null {
+  if (quantity <= 0) return slots
+  let remaining = quantity
+  const next = slots.map((s) => ({ ...s }))
+  for (let i = 0; i < next.length && remaining > 0; i++) {
+    const slot = next[i]
+    if (slot.itemId !== itemId) continue
+    const take = Math.min(remaining, slot.quantity)
+    slot.quantity -= take
+    remaining -= take
+    if (slot.quantity <= 0) {
+      next.splice(i, 1)
+      i -= 1
+    }
+  }
+  if (remaining > 0) return null
+  return normalizeSessionInventorySlots(next)
+}

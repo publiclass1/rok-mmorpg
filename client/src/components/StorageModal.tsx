@@ -57,7 +57,7 @@ export function StorageModal({ character, npc, position, onClose }: Props) {
 
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="modal panel">
-        <header className="row spread">
+        <header className="row spread modal-drag-handle">
           <h2>{npc.label} — Storage</h2>
           <button type="button" className="secondary" onClick={onClose}>
             Close

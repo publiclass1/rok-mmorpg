@@ -8,7 +8,7 @@ Execute in order unless noted. **Ruleset:** Pre-Renewal / Classic per [iRO Wiki]
 | M2 | Persist core | **Done** |
 | M3 | Pre-Renewal combat & economy (data-driven) | **Done** |
 | M4 | Job change + first job tree | **Done** |
-| M5 | World & NPC services | Not started |
+| M5 | World & NPC services | **Done** |
 | M6 | Social & trade depth | Not started |
 | M7+ | Late-game / out of scope for now | — |
 
@@ -108,11 +108,11 @@ Update the **Status** column as you finish each milestone.
 
 **Tasks:**
 
-- [ ] Add maps to Tiled + [maps.json](../content/ro/maps.json); warps/NPCs in DB seeds
-- [ ] More mobs and `mobSpawns` in content
-- [ ] NPC shop (buy/sell) using item ids and zeny
-- [ ] Healer NPC (HP/MP restore per policy from M2)
-- [ ] Expand Kafra/teleport destinations to match new maps
+- [x] Add maps to Tiled + [maps.json](../content/ro/maps.json); warps/NPCs in DB seeds
+- [x] More mobs and `mobSpawns` in content
+- [x] NPC shop (buy/sell) using item ids and zeny
+- [x] Healer NPC (HP/MP restore per policy from M2)
+- [x] Expand Kafra/teleport destinations to match new maps
 
 **Verify:** Travel hub → field → grind → shop → storage; no regressions on save/trade.
 

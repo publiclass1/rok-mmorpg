@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { motion } from 'motion/react'
-import { backdropMotion, panelMotion } from './motionPresets'
+import { panelMotion } from './motionPresets'
+import { useModalDrag } from './useModalDrag'
 
 type Props = {
   children: ReactNode
@@ -9,31 +10,35 @@ type Props = {
   panelClassName?: string
   role?: string
   'aria-modal'?: boolean | 'true' | 'false'
+  draggable?: boolean
 }
 
 export function AnimatedModal({
   children,
-  onClose,
-  backdropClassName = 'modal-backdrop',
+  backdropClassName = 'modal-layer',
   panelClassName = 'panel modal',
   role,
   'aria-modal': ariaModal,
+  draggable = true,
 }: Props) {
+  const panelRef = useRef<HTMLDivElement>(null)
+  const pos = useModalDrag(panelRef, draggable)
+
   return (
-    <motion.div
-      className={backdropClassName}
-      role={role}
-      aria-modal={ariaModal}
-      onClick={onClose}
-      {...backdropMotion}
-    >
+    <div className={backdropClassName} role={role} aria-modal={ariaModal}>
       <motion.div
+        ref={panelRef}
         className={panelClassName}
+        style={
+          pos
+            ? { position: 'fixed', left: pos.x, top: pos.y, margin: 0, visibility: 'visible' }
+            : { position: 'fixed', left: '50%', top: '12vh', margin: 0, visibility: 'hidden' }
+        }
         onClick={(e) => e.stopPropagation()}
         {...panelMotion}
       >
         {children}
       </motion.div>
-    </motion.div>
+    </div>
   )
 }

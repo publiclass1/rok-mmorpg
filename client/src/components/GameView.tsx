@@ -5,7 +5,10 @@ import { savePoint, teleport } from '../lib/api'
 import { loadCharacterSession, saveCharacterSession } from '../lib/characterProgress'
 import { supabase } from '../lib/supabase'
 import { JOB_NAMES } from '../game/character/skillsConfig'
-import { registerCharacterActionContext } from '../game/character/characterActionDispatch'
+import {
+  dispatchCharacterAction,
+  registerCharacterActionContext,
+} from '../game/character/characterActionDispatch'
 import { sessionFromSheetPayload, toCharacterSheetPayload } from '../game/character/characterSheet'
 import { createInitialCharacterState } from '../game/character/characterState'
 import { createPhaserGame } from '../game/createGame'
@@ -19,12 +22,14 @@ import {
 import type { CharacterRow, NpcRow, TradeSessionRow } from '../types/database'
 import { ActivityLog } from './ActivityLog'
 import { SkillBar } from './SkillBar'
+import { ExperienceHud } from './ExperienceHud'
 import { SkillsWindow } from './SkillsWindow'
 import { EquipmentWindow } from './EquipmentWindow'
 import { InventoryWindow } from './InventoryWindow'
 import { StatsWindow } from './StatsWindow'
 import { StorageModal } from './StorageModal'
 import { JobMasterModal } from './JobMasterModal'
+import { ShopModal } from './ShopModal'
 import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { MapLoadingOverlay } from './MapLoadingOverlay'
 import { TradeModal } from './TradeModal'
@@ -47,6 +52,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [status, setStatus] = useState('')
   const [storageNpc, setStorageNpc] = useState<NpcRow | null>(null)
   const [jobMasterNpc, setJobMasterNpc] = useState<NpcRow | null>(null)
+  const [shopNpc, setShopNpc] = useState<NpcRow | null>(null)
   const [npcMenu, setNpcMenu] = useState<NpcRow | null>(null)
   const [remotePlayers, setRemotePlayers] = useState<
     Array<{ characterId: string; name: string; x: number; y: number }>
@@ -78,6 +84,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     equipmentOpen ||
     !!storageNpc ||
     !!jobMasterNpc ||
+    !!shopNpc ||
     !!npcMenu ||
     !!tradePartner
 
@@ -136,8 +143,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [character.id])
 
   useEffect(() => {
-    emitGameEvent('uiPointerLock', modalOpen)
-  }, [modalOpen])
+    emitGameEvent('uiPointerLock', false)
+  }, [])
 
   useEffect(() => {
     registerCharacterActionContext({
@@ -299,6 +306,36 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       setJobMasterNpc(npc)
       return
     }
+    if (choice.kind === 'shop') {
+      setShopNpc(npc)
+      return
+    }
+    if (choice.kind === 'healer') {
+      try {
+        if (choice.zenyCost > 0) {
+          if (character.zeny < choice.zenyCost) {
+            setMessage(`Need ${choice.zenyCost} zeny.`)
+            return
+          }
+          const { data, error } = await supabase
+            .from('characters')
+            .update({ zeny: character.zeny - choice.zenyCost })
+            .eq('id', character.id)
+            .select('*')
+            .single()
+          if (error || !data) {
+            setMessage(error?.message ?? 'Payment failed')
+            return
+          }
+          onCharacterUpdated(data as CharacterRow)
+        }
+        dispatchCharacterAction({ type: 'restoreVitals' })
+        setMessage('HP and SP fully restored.')
+      } catch (err) {
+        setMessage(err instanceof Error ? err.message : 'Heal failed')
+      }
+      return
+    }
     if (choice.kind === 'save') {
       try {
         await savePoint({
@@ -383,6 +420,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               </div>
               <span className="vital-num">{sheet.mp}/{sheet.mpMax}</span>
             </div>
+            <p className="game-hud-zeny">
+              Zeny <strong>{character.zeny.toLocaleString()}</strong>
+            </p>
           </motion.div>
 
           <motion.div
@@ -481,6 +521,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             </div>
             <div className="game-bottom-dock">
               <SkillBar sheet={sheet} />
+              <ExperienceHud sheet={sheet} />
             </div>
           </motion.div>
         </div>
@@ -524,6 +565,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             npc={jobMasterNpc}
             sheet={sheet}
             onClose={() => setJobMasterNpc(null)}
+            onCharacterUpdated={onCharacterUpdated}
+          />
+        )}
+        {shopNpc && (
+          <ShopModal
+            key={`shop-${shopNpc.id}`}
+            character={character}
+            npc={shopNpc}
+            sheet={sheet}
+            onClose={() => setShopNpc(null)}
             onCharacterUpdated={onCharacterUpdated}
           />
         )}

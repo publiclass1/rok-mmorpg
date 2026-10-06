@@ -28,7 +28,7 @@ export function StatsWindow({ sheet, onClose }: Props) {
 
   return (
     <AnimatedModal onClose={onClose}>
-        <div className="row spread">
+        <div className="row spread modal-drag-handle">
           <h2 style={{ margin: 0 }}>Status</h2>
           <button type="button" className="secondary" onClick={onClose}>Close</button>
         </div>

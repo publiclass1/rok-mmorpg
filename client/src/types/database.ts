@@ -15,7 +15,7 @@ export type NpcRow = {
   map_id: string
   x: number
   y: number
-  npc_type: 'teleport' | 'storage' | 'save' | 'job_master'
+  npc_type: 'teleport' | 'storage' | 'save' | 'job_master' | 'shop' | 'healer'
   label: string
   config: {
     destinations?: Array<{ map_id: string; label: string; x: number; y: number }>
@@ -26,6 +26,9 @@ export type NpcRow = {
       requiredBaseLevel?: number
       zenyCost?: number
     }>
+    stock?: Array<{ itemId: string; price: number }>
+    buys?: Array<{ itemId: string; price: number }>
+    zenyCost?: number
   }
 }
 

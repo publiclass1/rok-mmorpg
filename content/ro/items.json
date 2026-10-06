@@ -135,6 +135,17 @@
       "layerColor": null,
       "bonuses": null,
       "sourceUrl": "https://irowiki.org/wiki/Jellopy"
+    },
+    {
+      "id": "fluff",
+      "name": "Fluff",
+      "type": "etc",
+      "weight": 1,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": "https://irowiki.org/wiki/Fluff"
     }
   ]
 }

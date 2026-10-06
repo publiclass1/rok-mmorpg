@@ -81,7 +81,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
 
   return (
     <AnimatedModal onClose={onClose} panelClassName="panel modal inventory-modal">
-        <div className="row spread">
+        <div className="row spread modal-drag-handle">
           <h2 style={{ margin: 0 }}>Inventory</h2>
           <button type="button" className="secondary" onClick={onClose}>Close</button>
         </div>

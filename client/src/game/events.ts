@@ -54,6 +54,9 @@ export type CharacterActionPayload =
   | { type: 'moveSkillBar'; from: number; to: number }
   | { type: 'equip'; slot: EquipSlot; itemId: string | null; sessionInventoryIndex?: number }
   | { type: 'useConsumable'; sessionInventoryIndex: number }
+  | { type: 'shopAddItems'; itemId: string; quantity: number }
+  | { type: 'shopRemoveItem'; itemId: string; quantity: number }
+  | { type: 'restoreVitals' }
 
 export type SelectedMobPayload = {
   defId: string

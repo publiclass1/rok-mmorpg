@@ -42,12 +42,8 @@ export function SkillsWindow({ sheet, onClose }: Props) {
   }
 
   return (
-    <AnimatedModal
-      onClose={onClose}
-      backdropClassName="modal-backdrop skills-modal-backdrop"
-      panelClassName="panel modal skills-modal"
-    >
-        <div className="row spread">
+    <AnimatedModal onClose={onClose} panelClassName="panel modal skills-modal">
+        <div className="row spread modal-drag-handle">
           <h2 style={{ margin: 0 }}>Skills</h2>
           <button type="button" className="secondary" onClick={onClose}>
             Close

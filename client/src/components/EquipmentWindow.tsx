@@ -61,7 +61,7 @@ export function EquipmentWindow({ sheet, onClose }: Props) {
 
   return (
     <AnimatedModal onClose={onClose} panelClassName="panel modal equipment-modal">
-        <div className="row spread">
+        <div className="row spread modal-drag-handle">
           <h2 style={{ margin: 0 }}>Equipment</h2>
           <button type="button" className="secondary" onClick={onClose}>Close</button>
         </div>

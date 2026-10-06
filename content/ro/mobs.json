@@ -29,6 +29,67 @@
         "baseExp": 15,
         "jobExp": 5
       }
+    },
+    {
+      "id": "lunatic",
+      "name": "Lunatic",
+      "sourceUrl": "https://irowiki.org/wiki/Lunatic",
+      "level": 3,
+      "hp": 55,
+      "atk": 10,
+      "def": 0,
+      "mdef": 0,
+      "size": "small",
+      "element": "neutral",
+      "wikiBaseExp": 36,
+      "wikiJobExp": 27,
+      "drops": [
+        { "itemId": "jellopy", "rate": 3500, "note": "per-mille" }
+      ],
+      "runtime": {
+        "maxHp": 55,
+        "color": "0xe5e7eb",
+        "aggroRange": 120,
+        "attackRange": 32,
+        "attackDamage": 5,
+        "attackCooldownMs": 1100,
+        "roamRadius": 80,
+        "moveSpeed": 65,
+        "wanderPauseMs": 1800,
+        "baseExp": 18,
+        "jobExp": 6
+      }
+    },
+    {
+      "id": "fabre",
+      "name": "Fabre",
+      "sourceUrl": "https://irowiki.org/wiki/Fabre",
+      "level": 6,
+      "hp": 65,
+      "atk": 12,
+      "def": 5,
+      "mdef": 0,
+      "size": "small",
+      "element": "earth",
+      "wikiBaseExp": 54,
+      "wikiJobExp": 40,
+      "drops": [
+        { "itemId": "fluff", "rate": 5500, "note": "per-mille" },
+        { "itemId": "jellopy", "rate": 2500, "note": "per-mille" }
+      ],
+      "runtime": {
+        "maxHp": 65,
+        "color": "0x84cc16",
+        "aggroRange": 100,
+        "attackRange": 28,
+        "attackDamage": 6,
+        "attackCooldownMs": 1300,
+        "roamRadius": 64,
+        "moveSpeed": 45,
+        "wanderPauseMs": 2200,
+        "baseExp": 22,
+        "jobExp": 8
+      }
     }
   ]
 }

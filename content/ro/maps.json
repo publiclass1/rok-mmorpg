@@ -7,6 +7,12 @@
       "sourceUrl": "https://irowiki.org/wiki/Prontera"
     },
     {
+      "id": "prt_fild01",
+      "displayName": "Prontera Field 01",
+      "fieldType": "field",
+      "sourceUrl": "https://irowiki.org/wiki/Prontera_Field_01"
+    },
+    {
       "id": "field_01",
       "displayName": "Field (dev)",
       "fieldType": "field",
@@ -14,6 +20,14 @@
     }
   ],
   "mobSpawns": {
+    "prt_fild01": [
+      { "x": 320, "y": 260, "defId": "lunatic" },
+      { "x": 480, "y": 220, "defId": "lunatic" },
+      { "x": 640, "y": 320, "defId": "fabre" },
+      { "x": 520, "y": 420, "defId": "fabre" },
+      { "x": 400, "y": 360, "defId": "poring" },
+      { "x": 720, "y": 480, "defId": "poring" }
+    ],
     "field_01": [
       { "x": 400, "y": 280, "defId": "poring" },
       { "x": 560, "y": 240, "defId": "poring" },

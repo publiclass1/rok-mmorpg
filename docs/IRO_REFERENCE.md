@@ -31,11 +31,12 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Monsters & drops | [Monsters](https://irowiki.org/wiki/Monsters) | implemented | `mobs.json` drops + wiki EXP; client roll in `combat/drops.ts` |
 | Combat & damage | [Damage](https://irowiki.org/wiki/Damage) | partial | `combat/damage.ts`, `WorldScene.ts` (HIT/FLEE, DEF, element/size); mob `runtime.*` still tunes movement/aggro |
 | Status effects | [Status](https://irowiki.org/wiki/Status) | planned | — |
-| Maps & warps | [Maps](https://irowiki.org/wiki/Category:Maps) | partial | Tiled maps, `content/ro/maps.json`, NPC teleport |
+| Maps & warps | [Maps](https://irowiki.org/wiki/Category:Maps) | implemented | Tiled `.tmj`, `maps.json`, `prt_fild01` + dev field; NPC teleport warps |
 | NPC Kafra storage | [Kafra](https://irowiki.org/wiki/Kafra) | implemented | `StorageModal.tsx`, `storage-transfer` function |
 | Save point | — | implemented | `save-point` function |
 | Player trade | [Trade](https://irowiki.org/wiki/Trade) | implemented | `TradeModal.tsx`, `trade-manage` function |
-| NPC shops | [Vending](https://irowiki.org/wiki/Vending) | planned | — |
+| NPC shops | [Vending](https://irowiki.org/wiki/Vending) | partial | `ShopModal.tsx`, `shop` NPC type (client-trusted zeny) |
+| Healer NPC | — | implemented | `healer` NPC restores HP/SP to max (persisted on save) |
 | Zeny economy | [Zeny](https://irowiki.org/wiki/Zeny) | partial | `characters.zeny`, trade |
 | Party | [Party](https://irowiki.org/wiki/Party) | planned | — |
 | Guild | [Guild](https://irowiki.org/wiki/Guild) | planned | — |
@@ -48,7 +49,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 
 | Field | Source | Notes |
 |-------|--------|--------|
-| Mob HP / ATK / DEF / MDEF / element / size | `content/ro/mobs.json` wiki-oriented columns | Used in `mobConfig` + `combat/damage.ts` |
+| Mob HP / ATK / DEF / MDEF / element / size | `content/ro/mobs.json` wiki-oriented columns + `runtime.maxHp` / `runtime.attackDamage` | Used in `mobConfig` + `combat/damage.ts` |
 | Mob EXP on kill | `wikiBaseExp` / `wikiJobExp` | Scaled by `VITE_MOB_EXP_MULTIPLIER` (`gameConfig.ts`) |
 | Mob movement / aggro / respawn | `mobs.json` → `runtime.*` | Gameplay tuning until a balance pass |
 | Player EXP curves | `content/ro/expTables.json` | rAthena Pre-Renewal tables (see file `sourceUrl`) |

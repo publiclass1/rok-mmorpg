@@ -285,6 +285,20 @@ button:disabled {
   font-size: 0.7rem;
 }
 
+.game-hud-zeny {
+  margin: 0.15rem 0 0;
+  padding-top: 0.2rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  border-top: 1px solid rgba(55, 65, 81, 0.6);
+}
+
+.game-hud-zeny strong {
+  font-variant-numeric: tabular-nums;
+  color: #fcd34d;
+  font-weight: 700;
+}
+
 .game-hud-menu {
   top: 0.65rem;
   right: 0.65rem;
@@ -313,12 +327,12 @@ button:disabled {
 
 .game-hud-target {
   left: 0.65rem;
-  bottom: 7.5rem;
+  bottom: 9.5rem;
 }
 
 .game-hud-nearby {
   right: 0.65rem;
-  bottom: 7.5rem;
+  bottom: 9.5rem;
 }
 
 .game-hud-bottom {
@@ -378,12 +392,15 @@ button:disabled {
   inset: 0;
   z-index: 15;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.92);
+  padding-top: 12vh;
+  pointer-events: none;
+  background: transparent;
 }
 
 .map-loading-panel {
+  pointer-events: auto;
   text-align: center;
   padding: 1.5rem 2rem;
   min-width: 220px;
@@ -454,6 +471,56 @@ button:disabled {
   padding: 0.5rem;
   background: #0f172a;
   border-bottom: 1px solid #374151;
+}
+
+.exp-hud {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0.5rem 0.45rem;
+  background: #0f172a;
+}
+
+.exp-hud__half {
+  min-width: 0;
+}
+
+.exp-hud__half--job {
+  border-left: 1px solid rgba(55, 65, 81, 0.7);
+  padding-left: 0.5rem;
+}
+
+.exp-hud-row {
+  margin-bottom: 0;
+  grid-template-columns: 1.5rem 1fr auto;
+  gap: 0.25rem;
+}
+
+.exp-hud-row .vital-num {
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+.exp-hud-row--near-level .vital-track {
+  border-color: #a78bfa;
+  box-shadow: 0 0 6px rgba(167, 139, 250, 0.35);
+}
+
+.vital-fill--base-exp {
+  background: linear-gradient(180deg, #4ade80, #16a34a);
+}
+
+.vital-fill--job-exp {
+  background: linear-gradient(180deg, #c084fc, #7c3aed);
+}
+
+.exp-hud-row--near-level .vital-fill--base-exp {
+  background: linear-gradient(180deg, #86efac, #22c55e);
+}
+
+.exp-hud-row--near-level .vital-fill--job-exp {
+  background: linear-gradient(180deg, #e9d5ff, #9333ea);
 }
 
 .skill-slot {
@@ -789,7 +856,39 @@ button:disabled {
   z-index: 20;
 }
 
-/* Skills modal: let drags reach the skill bar under the dim overlay */
+/* Floating windows: no dim mask; clicks pass through to the game except on the panel */
+.modal-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  background: transparent;
+}
+
+.modal-layer .panel {
+  pointer-events: auto;
+}
+
+.modal-drag-handle {
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.modal-drag-handle:active {
+  cursor: grabbing;
+}
+
+.modal-drag-handle button {
+  cursor: pointer;
+}
+
+/* Skills modal: panel height cap when assigning to skill bar */
+.modal.skills-modal {
+  max-height: min(55vh, 420px);
+}
+
+/* Legacy — prefer .modal-layer */
 .skills-modal-backdrop {
   pointer-events: none;
   align-items: flex-start;
@@ -833,6 +932,124 @@ button:disabled {
 
 .modal.npc-options-modal {
   width: min(260px, 92vw);
+}
+
+.shop-modal {
+  width: min(720px, 96vw);
+}
+
+.shop-modal__header {
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  gap: 0.75rem;
+}
+
+.shop-tabs {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.shop-modal__grid {
+  margin-top: 0.5rem;
+}
+
+.shop-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 260px;
+  max-height: 320px;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.shop-pane__title {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-bottom: 1px solid #374151;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.shop-pane__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.shop-pane__empty {
+  padding: 0.5rem;
+  margin: 0;
+}
+
+.shop-pane__total {
+  padding: 0.5rem 0.65rem;
+  border-top: 1px solid #374151;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.shop-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.shop-row:hover:not(:disabled) {
+  border-color: #4b5563;
+  background: rgba(96, 165, 250, 0.12);
+}
+
+.shop-row:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.shop-row--cart .shop-row__name {
+  grid-column: 1;
+}
+
+.shop-row__qty {
+  font-variant-numeric: tabular-nums;
+  color: #93c5fd;
+}
+
+.shop-row__price {
+  font-variant-numeric: tabular-nums;
+  color: #fcd34d;
+  min-width: 4.5rem;
+  text-align: right;
+}
+
+.shop-row:not(.shop-row--cart) {
+  grid-template-columns: 1fr;
+}
+
+.shop-modal__actions {
+  margin-top: 0.75rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shop-modal__hint {
+  margin: 0;
+  flex: 1;
 }
 
 .inv-grid {

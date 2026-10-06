@@ -112,7 +112,7 @@ export function TradeModal({ character, partner, initialTrade, onClose, onComple
 
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="modal panel wide">
-        <header className="row spread">
+        <header className="row spread modal-drag-handle">
           <h2>Trade with {partner.name}</h2>
           <button type="button" className="secondary" onClick={() => void run('cancel').then(onClose)}>
             Cancel

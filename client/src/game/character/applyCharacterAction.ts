@@ -15,6 +15,10 @@ import { getItemDisplayName } from './itemCatalog'
 import { EQUIPMENT } from './equipmentConfig'
 import { applyJobChange } from './jobChange'
 import { canLearnSkill, canPlaceSkillOnBar, JOB_NAMES, SKILLS } from './skillsConfig'
+import {
+  addItemsToSessionInventory,
+  removeItemFromSessionByItemId,
+} from './sessionInventory'
 
 export type ApplyResult = {
   state: CharacterSessionState
@@ -126,6 +130,35 @@ export function applyCharacterAction(
     const next = syncDerivedVitals(result.state)
     logActivity('character', `Used ${getItemDisplayName(itemId ?? 'item')}.`)
     return { state: next, changed: true }
+  }
+
+  if (action.type === 'shopAddItems') {
+    const qty = Math.floor(action.quantity)
+    if (qty <= 0) return { state, changed: false, message: 'Invalid quantity.' }
+    const ids = Array.from({ length: qty }, () => action.itemId)
+    const nextInv = addItemsToSessionInventory(state.sessionInventory, ids)
+    const next = syncDerivedVitals({ ...state, sessionInventory: nextInv })
+    logActivity('character', `Bought ${qty}× ${getItemDisplayName(action.itemId)}.`)
+    return { state: next, changed: true }
+  }
+
+  if (action.type === 'shopRemoveItem') {
+    const qty = Math.floor(action.quantity)
+    if (qty <= 0) return { state, changed: false, message: 'Invalid quantity.' }
+    const nextInv = removeItemFromSessionByItemId(state.sessionInventory, action.itemId, qty)
+    if (!nextInv) {
+      return { state, changed: false, message: 'Not enough items to sell.' }
+    }
+    const next = syncDerivedVitals({ ...state, sessionInventory: nextInv })
+    logActivity('character', `Sold ${qty}× ${getItemDisplayName(action.itemId)}.`)
+    return { state: next, changed: true }
+  }
+
+  if (action.type === 'restoreVitals') {
+    const sheet = toCharacterSheetPayload(syncDerivedVitals(state))
+    const next = syncDerivedVitals({ ...state, hp: sheet.hpMax, mp: sheet.mpMax })
+    logActivity('character', 'HP and SP fully restored.')
+    return { state: next, changed: true, message: 'HP and SP restored.' }
   }
 
   return { state, changed: false }
