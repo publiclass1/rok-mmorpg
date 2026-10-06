@@ -29,16 +29,16 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Skills | [Skills](https://irowiki.org/wiki/Skills) | partial | `content/ro/skills.json`; Swordman tree + prerequisites; Bash usable in combat |
 | Items & equipment | [Items](https://irowiki.org/wiki/Items), [Equipment](https://irowiki.org/wiki/Equipment) | partial | `content/ro/items.json`, `equipmentConfig.ts` |
 | Inventory weight | [Weight](https://irowiki.org/wiki/Weight) | planned | — |
-| Monsters & drops | [Monsters](https://irowiki.org/wiki/Monsters) | implemented | `mobs.json` drops + wiki EXP; client roll in `combat/drops.ts` |
+| Monsters & drops | [Monsters](https://irowiki.org/wiki/Monsters) | implemented | `mobs.json` drops (rAthena pre-re rates) + `loot.json` zeny QoL & level bands; `combat/drops.ts` |
 | Combat & damage | [Damage](https://irowiki.org/wiki/Damage) | partial | `combat/damage.ts`, `WorldScene.ts` (HIT/FLEE, DEF, element/size); mob `runtime.*` still tunes movement/aggro |
 | Status effects | [Status](https://irowiki.org/wiki/Status) | planned | — |
-| Maps & warps | [Maps](https://irowiki.org/wiki/Category:Maps) | implemented | Tiled `.tmj`, `maps.json`, `prt_fild01` + dev field; NPC teleport warps |
+| Maps & warps | [Maps](https://irowiki.org/wiki/Category:Maps) | implemented | Tiled `.tmj`, `maps.json`, `prt_fild01`, **`prt_sewb1` Culvert** (`npm run maps:culvert`); NPC teleport warps |
 | NPC Kafra storage | [Kafra](https://irowiki.org/wiki/Kafra) | implemented | `StorageModal.tsx`, `storage-transfer` function |
 | Save point | — | implemented | `save-point` function |
 | Player trade | [Trade](https://irowiki.org/wiki/Trade) | implemented | `TradeModal.tsx`, `trade-manage` function |
 | NPC shops | [Vending](https://irowiki.org/wiki/Vending) | partial | `ShopModal.tsx`, `shop` NPC type (client-trusted zeny) |
 | Healer NPC | — | implemented | `healer` NPC restores HP/SP to max (persisted on save) |
-| Zeny economy | [Zeny](https://irowiki.org/wiki/Zeny) | partial | `characters.zeny`, trade |
+| Zeny economy | [Zeny](https://irowiki.org/wiki/Zeny) | partial | `characters.zeny`, trade, **auto zeny on mob kill** (`loot.json`, debounced save) |
 | Party | [Party](https://irowiki.org/wiki/Party) | partial | `party-manage`, `PartyPanel`, click-target actions |
 | Guild | [Guild](https://irowiki.org/wiki/Guild) | partial | `guild-manage`, `GuildModal`, tag on HUD/presence |
 | Player vending | [Vending](https://irowiki.org/wiki/Vending) | partial | `vendor-manage`, `VendorSetupModal` / `VendorShopModal` |

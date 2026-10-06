@@ -1,11 +1,11 @@
 import Phaser from 'phaser'
 import { syncDerivedVitals, toCharacterSheetPayload } from '../character/characterSheet'
+import { addExperience, createInitialCharacterState, normalizeEquipment } from '../character/characterState'
 import {
-  addExperience,
-  createInitialCharacterState,
-  normalizeEquipment,
-  type CharacterSessionState,
-} from '../character/characterState'
+  getCharacterSession,
+  setCharacterSession,
+  updateCharacterSession,
+} from '../character/characterSessionBridge'
 import { SKILLS, skillUsableByJob } from '../character/skillsConfig'
 import {
   flashPlayerHit,
@@ -19,7 +19,8 @@ import { colliderWithObstacles, spawnObstacles, spawnObstaclesFromTilemap } from
 import { initMobAiFields, updateMob } from '../combat/mobAi'
 import { logActivity } from '../activityLog'
 import { calcMobVsPlayerDamage, calcPlayerVsMobDamage } from '../combat/damage'
-import { rollMobDrops } from '../combat/drops'
+import { resolveMobKillLoot } from '../combat/drops'
+import { LOOT_CONFIG } from '../combat/lootConfig'
 import { scaleMobExp } from '../combat/gameConfig'
 import {
   ATTACK_COOLDOWN_MS,
@@ -84,7 +85,7 @@ import {
 } from '../world/syncWorldViewport'
 import { cameraWorldViewRect, viewBoundsWithMargin } from '../world/viewportCull'
 import { ensureMobTexture, ensureTilesTexture, TILESET_TILE_COUNT } from '../textures'
-import { persistCharacterWorld, saveCharacterSession } from '../../lib/characterProgress'
+import { saveCharacterSession, saveCharacterWorldPosition } from '../../lib/characterProgress'
 import type { CharacterRow, NpcRow } from '../../types/database'
 
 const INTERACT_RANGE = 64
@@ -115,8 +116,15 @@ export class WorldScene extends Phaser.Scene {
   private progressSaveTimer: number | null = null
   private nearestNpc: NpcRow | null = null
 
-  private session: CharacterSessionState = createInitialCharacterState()
   private moveTarget: MoveTarget = createMoveTarget()
+
+  private get session() {
+    return getCharacterSession()
+  }
+
+  private set session(state: ReturnType<typeof getCharacterSession>) {
+    setCharacterSession(state)
+  }
   private chaseMob: MobInstance | null = null
   private selectedMob: MobInstance | null = null
   private selectionRing: Phaser.GameObjects.Ellipse | null = null
@@ -204,15 +212,17 @@ export class WorldScene extends Phaser.Scene {
     this.obstacles = fromTmj.length > 0 ? fromTmj : spawnObstacles(this, this.character.map_id)
     colliderWithObstacles(this, this.obstacles, this.playerDisplay.container)
 
-    const boot = this.registry.get('bootSession') as CharacterSessionState | undefined
-    this.session = syncDerivedVitals(
+    const boot = this.registry.get('bootSession') as ReturnType<typeof getCharacterSession> | undefined
+    const initial = syncDerivedVitals(
       boot
         ? { ...boot, equipment: normalizeEquipment(boot.equipment) }
         : createInitialCharacterState(),
     )
     if (!boot) {
-      const initialSheet = toCharacterSheetPayload(this.session)
-      this.session = { ...this.session, hp: initialSheet.hpMax, mp: initialSheet.mpMax }
+      const initialSheet = toCharacterSheetPayload(initial)
+      setCharacterSession({ ...initial, hp: initialSheet.hpMax, mp: initialSheet.mpMax })
+    } else {
+      setCharacterSession(initial)
     }
     updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
 
@@ -249,7 +259,7 @@ export class WorldScene extends Phaser.Scene {
         this.chaseMob = null
         this.setSelectedMob(null)
         clearMoveTarget(this.moveTarget)
-        this.getPlayerBody().setVelocity(0, 0)
+        this.stopPlayerMotion()
         this.faceToward(npc.x, npc.y)
         emitGameEvent('npcInteract', npc)
         return
@@ -267,7 +277,7 @@ export class WorldScene extends Phaser.Scene {
         }
         this.chaseMob = null
         clearMoveTarget(this.moveTarget)
-        this.getPlayerBody().setVelocity(0, 0)
+        this.stopPlayerMotion()
         this.setSelectedMob(null)
         this.setSelectedPlayer(remote)
         this.faceToward(rx, ry)
@@ -309,9 +319,9 @@ export class WorldScene extends Phaser.Scene {
     this.eventUnsubs.push(
       onGameEvent('useSkillSlot', ({ slot }) => this.useSkillSlot(slot)),
       onGameEvent('sessionSync', (payload) => {
-        this.session = syncDerivedVitals(structuredClone(payload))
+        setCharacterSession(structuredClone(payload))
         if (this.playerDisplay) {
-          updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
+          updatePlayerEquipmentLayers(this.playerDisplay, getCharacterSession().equipment)
         }
         this.scheduleProgressSave()
       }),
@@ -381,9 +391,11 @@ export class WorldScene extends Phaser.Scene {
       },
     )
 
-    void this.presence.join().then(() => {
-      this.presence?.setCombatHandler((payload) => this.handleRemoteCombat(payload))
-      this.presence?.startBroadcast(() => this.buildPlayerPresencePayload())
+    const presenceChannel = this.presence
+    void presenceChannel.join().then(() => {
+      if (!this.sys.isActive() || this.presence !== presenceChannel) return
+      presenceChannel.setCombatHandler((payload) => this.handleRemoteCombat(payload))
+      presenceChannel.startBroadcast(() => this.buildPlayerPresencePayload())
     })
 
     this.persistTimer = window.setInterval(() => {
@@ -401,8 +413,14 @@ export class WorldScene extends Phaser.Scene {
 
   private playerLabel!: Phaser.GameObjects.Text
 
-  private getPlayerBody() {
-    return this.playerDisplay.container.body as Phaser.Physics.Arcade.Body
+  private getPlayerBody(): Phaser.Physics.Arcade.Body | null {
+    const body = this.playerDisplay?.container?.body
+    if (!body || !('velocity' in body)) return null
+    return body as Phaser.Physics.Arcade.Body
+  }
+
+  private stopPlayerMotion() {
+    this.getPlayerBody()?.setVelocity(0, 0)
   }
 
   update() {
@@ -412,7 +430,7 @@ export class WorldScene extends Phaser.Scene {
 
     if (this.isSitting) {
       setPlayerSitting(this.playerDisplay, true, this.facing)
-      this.getPlayerBody().setVelocity(0, 0)
+      this.stopPlayerMotion()
       clearMoveTarget(this.moveTarget)
       this.tickSitRegen(now, sheet)
     } else if (!this.isAttacking && !this.isJumping) {
@@ -426,19 +444,22 @@ export class WorldScene extends Phaser.Scene {
         )
         if (dist <= ATTACK_RANGE) {
           clearMoveTarget(this.moveTarget)
-          this.getPlayerBody().setVelocity(0, 0)
+          this.stopPlayerMotion()
           this.faceToward(this.chaseMob.sprite.x, this.chaseMob.sprite.y)
           this.tryBasicAttack()
         }
       }
 
-      const move = updateClickMove(
-        this.getPlayerBody(),
-        this.playerDisplay.container.x,
-        this.playerDisplay.container.y,
-        this.moveTarget,
-        speed,
-      )
+      const playerBody = this.getPlayerBody()
+      const move = playerBody
+        ? updateClickMove(
+            playerBody,
+            this.playerDisplay.container.x,
+            this.playerDisplay.container.y,
+            this.moveTarget,
+            speed,
+          )
+        : { moving: false, facing: null as Facing | null }
       if (move.facing) this.facing = move.facing
       if (move.moving) {
         playPlayerAnim(this.playerDisplay, 'walk', this.facing)
@@ -576,8 +597,25 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private buildPlayerPresencePayload(): PlayerPresencePayload {
+    if (!this.playerDisplay) {
+      return {
+        characterId: this.character.id,
+        name: this.character.name,
+        x: this.character.x,
+        y: this.character.y,
+        facing: 'down',
+        anim: 'idle',
+        walkFrame: 0,
+        equipment: this.session.equipment,
+        appearance: appearanceFromCharacterRow(this.character),
+        guildTag: this.socialPresence.guildTag ?? null,
+        isVending: Boolean(this.socialPresence.isVending),
+        stallTitle: this.socialPresence.stallTitle ?? null,
+      }
+    }
+
     const body = this.getPlayerBody()
-    const moving = Math.hypot(body.velocity.x, body.velocity.y) > 8
+    const moving = body ? Math.hypot(body.velocity.x, body.velocity.y) > 8 : false
     let anim: PlayerPresencePayload['anim'] = 'idle'
     if (this.isSitting) anim = 'sit'
     else if (this.isJumping) anim = 'jump'
@@ -705,7 +743,7 @@ export class WorldScene extends Phaser.Scene {
     this.chaseMob = null
     this.setSelectedMob(null)
     clearMoveTarget(this.moveTarget)
-    this.getPlayerBody().setVelocity(0, 0)
+    this.stopPlayerMotion()
     this.isSitting = true
     this.lastSitRegenAt = this.time.now
     setPlayerSitting(this.playerDisplay, true, this.facing)
@@ -745,7 +783,7 @@ export class WorldScene extends Phaser.Scene {
     if (!this.spendMp(mpCost)) return
     this.lastAttackAt = now
     this.isAttacking = true
-    this.getPlayerBody().setVelocity(0, 0)
+    this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
 
     this.sfx.playAttack()
@@ -1190,7 +1228,7 @@ export class WorldScene extends Phaser.Scene {
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
     this.lastAttackAt = now
     this.isAttacking = true
-    this.getPlayerBody().setVelocity(0, 0)
+    this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
 
     this.sfx.playAttack()
@@ -1272,13 +1310,17 @@ export class WorldScene extends Phaser.Scene {
   private killMob(mob: MobInstance) {
     const def = MOB_DEFS[mob.defId]
     if (def) {
-      const drops = rollMobDrops(def.drops)
-      if (drops.length > 0) {
+      const loot = resolveMobKillLoot(def, LOOT_CONFIG)
+      if (loot.zeny > 0) {
+        logActivity('combat', `Obtained ${loot.zeny.toLocaleString()} zeny.`)
+        emitGameEvent('zenyGain', { amount: loot.zeny })
+      }
+      if (loot.itemIds.length > 0) {
         this.session = {
           ...this.session,
-          sessionInventory: addItemsToSessionInventory(this.session.sessionInventory, drops),
+          sessionInventory: addItemsToSessionInventory(this.session.sessionInventory, loot.itemIds),
         }
-        for (const itemId of drops) {
+        for (const itemId of loot.itemIds) {
           logActivity('combat', `Obtained ${getItemDisplayName(itemId)}.`)
         }
       }
@@ -1376,8 +1418,7 @@ export class WorldScene extends Phaser.Scene {
 
     const beforeBase = this.session.progress.baseLevel
     const beforeJob = this.session.progress.jobLevel
-    const result = addExperience(this.session, shareBase, shareJob)
-    this.session = syncDerivedVitals(result.state)
+    updateCharacterSession((s) => syncDerivedVitals(addExperience(s, shareBase, shareJob).state))
     showFloatingText(this, fx, fy - 52, `+${shareBase} Base EXP`, 'exp')
     showFloatingText(this, fx, fy - 68, `+${shareJob} Job EXP`, 'exp')
     logActivity('exp', `Gained ${shareBase} Base EXP and ${shareJob} Job EXP.`)
@@ -1405,8 +1446,9 @@ export class WorldScene extends Phaser.Scene {
 
     const beforeBase = this.session.progress.baseLevel
     const beforeJob = this.session.progress.jobLevel
-    const result = addExperience(this.session, payload.baseExp, payload.jobExp)
-    this.session = syncDerivedVitals(result.state)
+    updateCharacterSession((s) =>
+      syncDerivedVitals(addExperience(s, payload.baseExp, payload.jobExp).state),
+    )
     showFloatingText(this, px, py - 52, `+${payload.baseExp} Party EXP`, 'exp')
     logActivity('exp', `Party share: ${payload.baseExp} Base / ${payload.jobExp} Job EXP.`)
     if (this.session.progress.baseLevel > beforeBase) {
@@ -1424,7 +1466,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private emitCharacterSheet() {
-    const sheet = toCharacterSheetPayload(this.session)
+    const sheet = toCharacterSheetPayload(getCharacterSession())
     emitGameEvent('characterSheet', sheet)
     emitGameEvent('playerStats', {
       hp: sheet.hp,
@@ -1445,14 +1487,14 @@ export class WorldScene extends Phaser.Scene {
     if (this.progressSaveTimer) window.clearTimeout(this.progressSaveTimer)
     this.progressSaveTimer = window.setTimeout(() => {
       this.progressSaveTimer = null
-      void saveCharacterSession(this.character.id, this.session).catch((err) => {
+      void saveCharacterSession(this.character.id, getCharacterSession()).catch((err) => {
         console.warn('Progress save failed', err)
       })
     }, 2000)
   }
 
   private async persistWorldState() {
-    await persistCharacterWorld(this.character.id, this.getPlayerPosition(), this.session)
+    await saveCharacterWorldPosition(this.character.id, this.getPlayerPosition())
   }
 
   getNearestNpc() {
@@ -1474,7 +1516,10 @@ export class WorldScene extends Phaser.Scene {
     if (this.progressSaveTimer) window.clearTimeout(this.progressSaveTimer)
     this.presence?.setCombatHandler(null)
     void this.presence?.leave()
+    this.presence = null
     this.disposeRemotePlayers()
-    void this.persistWorldState()
+    void saveCharacterWorldPosition(this.character.id, this.getPlayerPosition()).catch((err) => {
+      console.warn('Final position save failed', err)
+    })
   }
 }

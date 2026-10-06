@@ -1,3 +1,18 @@
 {
-  "portals": {}
+  "portals": {
+    "prt_sewb1": [
+      {
+        "id": "culvert_exit_prontera",
+        "x": 736,
+        "y": 80,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ]
+  }
 }

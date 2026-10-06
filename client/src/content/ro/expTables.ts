@@ -16,8 +16,10 @@ export function baseExpRequiredForLevel(level: number): number {
 
 export function jobExpRequiredForLevel(level: number): number {
   const tables = getExpTables()
-  const idx = Math.min(Math.max(level, 1), tables.jobExpToNext.length) - 1
-  return tables.jobExpToNext[idx] ?? tables.jobExpToNext[tables.jobExpToNext.length - 1]
+  const cap = tables.jobLevelCap
+  const idx = Math.min(Math.max(level, 1), cap) - 1
+  const row = tables.jobExpToNext
+  return row[idx] ?? row[row.length - 1] ?? 1
 }
 
 export function statPointsForReachingBaseLevel(level: number): number {

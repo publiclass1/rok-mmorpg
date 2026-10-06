@@ -4,6 +4,7 @@ import skillsJson from '../../../../content/ro/skills.json'
 import itemsJson from '../../../../content/ro/items.json'
 import mobsJson from '../../../../content/ro/mobs.json'
 import mapsJson from '../../../../content/ro/maps.json'
+import lootJson from '../../../../content/ro/loot.json'
 import expTablesJson from '../../../../content/ro/expTables.json'
 import type {
   RoContentPack,
@@ -15,6 +16,7 @@ import type {
   MobSpawnPointJson,
   MapPortalDef,
   RoExpTables,
+  RoLootConfig,
 } from './types'
 import { validateRoContent } from './validateRoContent'
 
@@ -65,6 +67,7 @@ export function loadRoContent(): RoContentPack {
     mobSpawns,
     portals,
     expTables: expTablesJson as RoExpTables,
+    loot: lootJson as RoLootConfig,
   }
 
   validateRoContent(pack)

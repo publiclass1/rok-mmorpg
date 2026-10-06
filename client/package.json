@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "content:validate": "tsx src/content/ro/validateContent.ts"
+    "content:validate": "tsx src/content/ro/validateContent.ts",
+    "test": "tsx src/game/combat/exp.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

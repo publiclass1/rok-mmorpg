@@ -13,6 +13,7 @@
     "preview": "npm run preview -w client",
     "content:validate": "npm run content:validate -w client",
     "maps:prontera": "node scripts/generate-prontera-map.mjs",
+    "maps:culvert": "node scripts/generate-culvert-map.mjs",
     "supabase:login": "supabase login",
     "supabase:link": "supabase link",
     "supabase:push": "supabase db push",

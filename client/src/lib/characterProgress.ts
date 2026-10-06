@@ -264,7 +264,15 @@ export async function persistCharacterWorld(
   await Promise.all([saveCharacterWorldPosition(characterId, world), saveCharacterSession(characterId, state)])
 }
 
+let sessionSaveChain: Promise<void> = Promise.resolve()
+
 export async function saveCharacterSession(characterId: string, state: CharacterSessionState): Promise<void> {
+  const task = sessionSaveChain.then(() => writeCharacterSession(characterId, state))
+  sessionSaveChain = task.catch(() => {})
+  return task
+}
+
+async function writeCharacterSession(characterId: string, state: CharacterSessionState): Promise<void> {
   const synced = syncDerivedVitals(state)
   const progressPayload = {
     character_id: characterId,

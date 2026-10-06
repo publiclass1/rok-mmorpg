@@ -90,6 +90,137 @@
         "baseExp": 22,
         "jobExp": 8
       }
+    },
+    {
+      "id": "thief_bug_egg",
+      "name": "Thief Bug Egg",
+      "sourceUrl": "https://db.irowiki.org/db/monster-info/1048/",
+      "level": 4,
+      "hp": 48,
+      "atk": 15,
+      "def": 20,
+      "mdef": 0,
+      "size": "small",
+      "element": "shadow",
+      "wikiBaseExp": 8,
+      "wikiJobExp": 4,
+      "drops": [
+        { "itemId": "phracon", "rate": 300 },
+        { "itemId": "chrysalis", "rate": 5000 },
+        { "itemId": "sticky_mucus", "rate": 600 },
+        { "itemId": "iron_ore", "rate": 250 }
+      ],
+      "runtime": {
+        "maxHp": 48,
+        "color": "0xa855f7",
+        "aggroRange": 80,
+        "attackRange": 28,
+        "attackDamage": 4,
+        "attackCooldownMs": 1400,
+        "roamRadius": 48,
+        "moveSpeed": 35,
+        "wanderPauseMs": 2500,
+        "baseExp": 8,
+        "jobExp": 4
+      }
+    },
+    {
+      "id": "thief_bug",
+      "name": "Thief Bug",
+      "sourceUrl": "https://db.irowiki.org/db/monster-info/1051/",
+      "level": 6,
+      "hp": 126,
+      "atk": 21,
+      "def": 5,
+      "mdef": 0,
+      "size": "small",
+      "element": "neutral",
+      "wikiBaseExp": 17,
+      "wikiJobExp": 5,
+      "drops": [
+        { "itemId": "worm_peeling", "rate": 2500 },
+        { "itemId": "red_herb", "rate": 350 },
+        { "itemId": "jellopy", "rate": 2000 },
+        { "itemId": "iron_ore", "rate": 250 }
+      ],
+      "runtime": {
+        "maxHp": 126,
+        "color": "0x1f2937",
+        "aggroRange": 110,
+        "attackRange": 32,
+        "attackDamage": 7,
+        "attackCooldownMs": 1200,
+        "roamRadius": 72,
+        "moveSpeed": 50,
+        "wanderPauseMs": 2000,
+        "baseExp": 17,
+        "jobExp": 5
+      }
+    },
+    {
+      "id": "tarou",
+      "name": "Tarou",
+      "sourceUrl": "https://db.irowiki.org/db/monster-info/1175/",
+      "level": 11,
+      "hp": 284,
+      "atk": 39,
+      "def": 0,
+      "mdef": 5,
+      "size": "small",
+      "element": "shadow",
+      "wikiBaseExp": 57,
+      "wikiJobExp": 28,
+      "drops": [
+        { "itemId": "rat_tail", "rate": 9000 },
+        { "itemId": "animal_skin", "rate": 3000 },
+        { "itemId": "feather", "rate": 800 },
+        { "itemId": "monsters_feed", "rate": 1000 }
+      ],
+      "runtime": {
+        "maxHp": 284,
+        "color": "0x78716c",
+        "aggroRange": 100,
+        "attackRange": 32,
+        "attackDamage": 10,
+        "attackCooldownMs": 1300,
+        "roamRadius": 64,
+        "moveSpeed": 48,
+        "wanderPauseMs": 2200,
+        "baseExp": 57,
+        "jobExp": 28
+      }
+    },
+    {
+      "id": "familiar",
+      "name": "Familiar",
+      "sourceUrl": "https://db.irowiki.org/db/monster-info/1005/",
+      "level": 8,
+      "hp": 155,
+      "atk": 24,
+      "def": 0,
+      "mdef": 0,
+      "size": "small",
+      "element": "shadow",
+      "wikiBaseExp": 28,
+      "wikiJobExp": 15,
+      "drops": [
+        { "itemId": "tooth_of_bat", "rate": 5500 },
+        { "itemId": "red_herb", "rate": 700 },
+        { "itemId": "grape", "rate": 100 }
+      ],
+      "runtime": {
+        "maxHp": 155,
+        "color": "0x7c2d12",
+        "aggroRange": 120,
+        "attackRange": 34,
+        "attackDamage": 8,
+        "attackCooldownMs": 1100,
+        "roamRadius": 80,
+        "moveSpeed": 58,
+        "wanderPauseMs": 1800,
+        "baseExp": 28,
+        "jobExp": 15
+      }
     }
   ]
 }

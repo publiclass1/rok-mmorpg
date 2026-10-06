@@ -23,5 +23,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "../content/ro/**/*.json"]
+  "include": ["src", "../content/ro/**/*.json"],
+  "exclude": ["src/**/*.test.ts"]
 }

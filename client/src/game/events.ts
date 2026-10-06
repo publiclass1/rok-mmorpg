@@ -158,6 +158,7 @@ export type GameEvents = {
   partyExpBroadcast: Omit<PartyExpGrantPayload, 'at'>
   partyExpGrant: PartyExpGrantPayload
   vendorPosSync: { mapId: string; x: number; y: number }
+  zenyGain: { amount: number }
 }
 
 type Listener = (payload: unknown) => void

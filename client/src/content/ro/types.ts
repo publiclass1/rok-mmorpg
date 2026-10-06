@@ -136,6 +136,35 @@ export type MapPortalDef = {
 
 export type MobSpawnPointJson = { x: number; y: number; defId: string }
 
+export type RoLootZenyLinear = {
+  levelMul: number
+  offset: number
+}
+
+export type RoLootZenyConfig = {
+  note?: string
+  minLinear: RoLootZenyLinear
+  maxLinear: RoLootZenyLinear
+}
+
+export type RoLootWeightedItem = {
+  itemId: string
+  weight: number
+}
+
+export type RoLootLevelBand = {
+  minLevel: number
+  maxLevel: number
+  chancePerMille: number
+  items: RoLootWeightedItem[]
+}
+
+export type RoLootConfig = {
+  sourceUrl?: string | null
+  zeny: RoLootZenyConfig
+  levelBands: RoLootLevelBand[]
+}
+
 export type RoContentPack = {
   manifest: RoManifest
   jobs: RoJob[]
@@ -146,4 +175,5 @@ export type RoContentPack = {
   mobSpawns: Record<string, MobSpawnPointJson[]>
   portals: Record<string, MapPortalDef[]>
   expTables: RoExpTables
+  loot: RoLootConfig
 }

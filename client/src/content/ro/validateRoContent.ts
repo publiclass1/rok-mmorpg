@@ -71,6 +71,16 @@ export function validateRoContent(pack: RoContentPack): void {
     }
   }
 
+  for (const band of pack.loot.levelBands) {
+    assert(band.minLevel <= band.maxLevel, 'loot levelBand minLevel must be <= maxLevel')
+    assert(band.chancePerMille >= 0 && band.chancePerMille <= 10000, 'loot chancePerMille out of range')
+    assert(band.items.length > 0, 'loot levelBand must have items')
+    for (const entry of band.items) {
+      assert(itemIds.has(entry.itemId), `loot band references unknown item ${entry.itemId}`)
+      assert(entry.weight > 0, `loot band item ${entry.itemId} weight must be > 0`)
+    }
+  }
+
   for (const [mapId, portalList] of Object.entries(pack.portals)) {
     if (mapIds.size > 0 && !mapIds.has(mapId)) {
       assert(false, `portals key ${mapId} has no matching map entry`)

@@ -8,6 +8,7 @@ type DispatchContext = {
   getSession: () => CharacterSessionState
   setSession: (state: CharacterSessionState) => void
   setSheet: (sheet: CharacterSheetPayload) => void
+  persistSession?: (state: CharacterSessionState) => void
 }
 
 let context: DispatchContext | null = null
@@ -38,6 +39,9 @@ export function dispatchCharacterAction(action: CharacterActionPayload) {
   const { sheet } = publishSessionState(result.state)
   context.setSheet(sheet)
   emitGameEvent('sessionSync', result.state)
+  if (action.type === 'changeJob') {
+    context.persistSession?.(result.state)
+  }
   if (result.message && action.type === 'changeJob') {
     emitGameEvent('status', result.message)
   }

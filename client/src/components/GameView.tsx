@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Phaser from 'phaser'
 import { partyManage, portalWarp, savePoint, teleport } from '../lib/api'
@@ -9,6 +9,7 @@ import { PartyRealtimeChannel } from '../game/realtime/partyChannel'
 import {
   loadCharacterSession,
   persistCharacterWorld,
+  saveCharacterSession,
 } from '../lib/characterProgress'
 import { supabase } from '../lib/supabase'
 import { JOB_NAMES } from '../game/character/skillsConfig'
@@ -16,6 +17,7 @@ import {
   dispatchCharacterAction,
   registerCharacterActionContext,
 } from '../game/character/characterActionDispatch'
+import { registerCharacterSessionBridge } from '../game/character/characterSessionBridge'
 import { sessionFromSheetPayload, toCharacterSheetPayload } from '../game/character/characterSheet'
 import { createInitialCharacterState } from '../game/character/characterState'
 import { createPhaserGame } from '../game/createGame'
@@ -69,6 +71,26 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [position, setPosition] = useState({ x: character.x, y: character.y, mapId: character.map_id })
   const positionRef = useRef(position)
   positionRef.current = position
+  const characterRef = useRef(character)
+  characterRef.current = character
+  const pendingZenySaveRef = useRef(0)
+  const zenySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const flushZenyToDb = useCallback(async () => {
+    if (pendingZenySaveRef.current <= 0) return
+    pendingZenySaveRef.current = 0
+    const zeny = characterRef.current.zeny
+    const { data, error } = await supabase
+      .from('characters')
+      .update({ zeny })
+      .eq('id', characterRef.current.id)
+      .select()
+      .single()
+    if (!error && data) {
+      characterRef.current = data as CharacterRow
+      onCharacterUpdated(data as CharacterRow)
+    }
+  }, [onCharacterUpdated])
   const [status, setStatus] = useState('')
   const [storageNpc, setStorageNpc] = useState<NpcRow | null>(null)
   const [jobMasterNpc, setJobMasterNpc] = useState<NpcRow | null>(null)
@@ -324,15 +346,48 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [modalOpen])
 
   useEffect(() => {
+    const setSession = (state: typeof sessionRef.current) => {
+      sessionRef.current = state
+    }
+    registerCharacterSessionBridge({
+      get: () => sessionRef.current,
+      set: setSession,
+    })
     registerCharacterActionContext({
       getSession: () => sessionRef.current,
-      setSession: (state) => {
-        sessionRef.current = state
-      },
+      setSession,
       setSheet,
+      persistSession: (state) => {
+        void saveCharacterSession(character.id, state).catch((err) => {
+          console.warn('Progress save failed', err)
+        })
+      },
     })
-    return () => registerCharacterActionContext(null)
-  }, [])
+    return () => {
+      registerCharacterSessionBridge(null)
+      registerCharacterActionContext(null)
+    }
+  }, [character.id])
+
+  useEffect(() => {
+    const unsub = onGameEvent('zenyGain', ({ amount }) => {
+      if (amount <= 0) return
+      const updated: CharacterRow = {
+        ...characterRef.current,
+        zeny: characterRef.current.zeny + amount,
+      }
+      characterRef.current = updated
+      onCharacterUpdated(updated)
+      pendingZenySaveRef.current += amount
+      if (zenySaveTimerRef.current) clearTimeout(zenySaveTimerRef.current)
+      zenySaveTimerRef.current = setTimeout(() => {
+        void flushZenyToDb()
+      }, 1500)
+    })
+    return () => {
+      unsub()
+    }
+  }, [onCharacterUpdated, flushZenyToDb])
 
   useEffect(() => {
     const unsubs = [
@@ -342,7 +397,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       onGameEvent('status', setStatus),
       onGameEvent('remotePlayers', setRemotePlayers),
       onGameEvent('characterSheet', (payload) => {
-        sessionRef.current = sessionFromSheetPayload(payload, sessionRef.current)
+        const ref = sessionRef.current
+        if (payload.jobId !== ref.jobId) {
+          const merged = sessionFromSheetPayload(payload, ref)
+          merged.jobId = ref.jobId
+          sessionRef.current = merged
+          setSheet({ ...payload, jobId: ref.jobId })
+          emitGameEvent('sessionSync', structuredClone(sessionRef.current))
+          return
+        }
+        sessionRef.current = sessionFromSheetPayload(payload, ref)
         setSheet(payload)
       }),
       onGameEvent('playerStats', (p) => {
@@ -465,6 +529,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [mapLoading])
 
   async function leaveWorld() {
+    if (zenySaveTimerRef.current) clearTimeout(zenySaveTimerRef.current)
+    await flushZenyToDb()
     try {
       await persistCharacterWorld(character.id, positionRef.current, sessionRef.current)
     } catch (err) {
@@ -478,6 +544,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
     function flushOnHide() {
       if (document.visibilityState !== 'hidden') return
+      void flushZenyToDb()
       void persistCharacterWorld(character.id, positionRef.current, sessionRef.current).catch((err) => {
         console.warn('Background save failed', err)
       })
@@ -485,7 +552,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
     document.addEventListener('visibilitychange', flushOnHide)
     return () => document.removeEventListener('visibilitychange', flushOnHide)
-  }, [sessionReady, character.id])
+  }, [sessionReady, character.id, flushZenyToDb])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

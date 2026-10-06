@@ -58,7 +58,7 @@ const expYaml = (
 const baseIdx = expYaml.findIndex((l, i) => i > 80 && l.trim() === 'BaseExp:')
 const jobIdx = expYaml.findIndex((l, i) => i > 560 && l.trim() === 'JobExp:')
 const baseExpToNext = extractExpBlock(expYaml, baseIdx)
-const jobExpToNext = extractExpBlock(expYaml, jobIdx).slice(0, 10)
+const jobExpToNext = extractExpBlock(expYaml, jobIdx).slice(0, 50)
 
 const bp = (
   await get('https://raw.githubusercontent.com/rathena/rathena/refs/heads/master/db/pre-re/job_basepoints.yml')

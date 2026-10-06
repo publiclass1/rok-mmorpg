@@ -1,0 +1,29 @@
+{
+  "sourceUrl": "https://irowiki.org/wiki/Zeny",
+  "zeny": {
+    "note": "QoL auto-grant per kill (not classic ground zeny). min/max scale with mob level from content/ro/mobs.json.",
+    "minLinear": { "levelMul": 2, "offset": 1 },
+    "maxLinear": { "levelMul": 6, "offset": 5 }
+  },
+  "levelBands": [
+    {
+      "minLevel": 1,
+      "maxLevel": 10,
+      "chancePerMille": 2500,
+      "items": [
+        { "itemId": "jellopy", "weight": 7 },
+        { "itemId": "fluff", "weight": 3 }
+      ]
+    },
+    {
+      "minLevel": 11,
+      "maxLevel": 99,
+      "chancePerMille": 2000,
+      "items": [
+        { "itemId": "jellopy", "weight": 4 },
+        { "itemId": "chrysalis", "weight": 3 },
+        { "itemId": "fluff", "weight": 3 }
+      ]
+    }
+  ]
+}
