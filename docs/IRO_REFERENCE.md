@@ -4,7 +4,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 
 **Ruleset:** Pre-Renewal (not Renewal). See [`PRE_RENEWAL_FORMULAS.md`](PRE_RENEWAL_FORMULAS.md) for formulas we intend to port.
 
-**Execution order:** [`MILESTONES.md`](MILESTONES.md) — M1–M4 done; work through M5–M6 one at a time.
+**Execution order:** [`MILESTONES.md`](MILESTONES.md) — M1–M5 done; next is M6.
 
 ## Custom rules (this game ≠ vanilla iRO)
 
@@ -61,6 +61,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 - **`character_equipment`** — RO slots → `item_id` (FK `items`)
 - **`public.items`** — extended with `item_type`, `weight`, `equip_slot`, `metadata` (equippables seeded from content)
 - Client: [`client/src/lib/characterProgress.ts`](../client/src/lib/characterProgress.ts)
+- Transport (M2 vs map/trade realtime): [`PERSISTENCE_AND_REALTIME.md`](PERSISTENCE_AND_REALTIME.md)
 
 **HP/MP:** Saved values restored on login (clamped to max). New rows use `NULL` HP/MP until first play → full heal once on load.
 
@@ -78,5 +79,6 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 ## Related docs
 
 - [`PRE_RENEWAL_FORMULAS.md`](PRE_RENEWAL_FORMULAS.md) — formula targets
+- [`PERSISTENCE_AND_REALTIME.md`](PERSISTENCE_AND_REALTIME.md) — M2 HTTP save vs Supabase Realtime
 - [`DECISIONS.md`](DECISIONS.md) — v1 architecture choices
 - [`README.md`](../README.md) — run & deploy

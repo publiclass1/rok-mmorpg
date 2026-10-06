@@ -136,6 +136,39 @@ export async function loadCharacterSession(characterId: string): Promise<Charact
   return rowToSession(progress, (skillsRes.data ?? []) as SkillRow[], (equipRes.data ?? []) as EquipRow[])
 }
 
+export type CharacterWorldPosition = {
+  x: number
+  y: number
+  mapId: string
+}
+
+export async function saveCharacterWorldPosition(
+  characterId: string,
+  world: CharacterWorldPosition,
+): Promise<void> {
+  const { error } = await supabase
+    .from('characters')
+    .update({
+      x: world.x,
+      y: world.y,
+      map_id: world.mapId,
+    })
+    .eq('id', characterId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+/** M2 progress + `characters` row (position/map). Used on interval and when leaving the world. */
+export async function persistCharacterWorld(
+  characterId: string,
+  world: CharacterWorldPosition,
+  state: CharacterSessionState,
+): Promise<void> {
+  await Promise.all([saveCharacterWorldPosition(characterId, world), saveCharacterSession(characterId, state)])
+}
+
 export async function saveCharacterSession(characterId: string, state: CharacterSessionState): Promise<void> {
   const synced = syncDerivedVitals(state)
   const progressPayload = {

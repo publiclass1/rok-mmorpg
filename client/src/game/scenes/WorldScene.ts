@@ -31,7 +31,7 @@ import { getItemDisplayName } from '../character/itemCatalog'
 import { addItemsToSessionInventory } from '../character/sessionInventory'
 import type { MobInstance } from '../combat/mobTypes'
 import { SfxPlayer } from '../combat/sfx'
-import { emitGameEvent, onGameEvent } from '../events'
+import { emitGameEvent, onGameEvent, type PlayerPresencePayload } from '../events'
 import {
   clearMoveTarget,
   createMoveTarget,
@@ -51,11 +51,17 @@ import {
 } from '../player/playerSprites'
 import { SIT_REGEN_INTERVAL_MS, sitRegenAmounts } from '../character/sitRegen'
 import { MapPresenceChannel } from '../realtime/mapChannel'
+import {
+  applyRemotePresence,
+  destroyRemotePlayer,
+  spawnRemotePlayer,
+  tickRemotePlayer,
+  type RemotePlayerEntity,
+} from '../realtime/remotePlayers'
 import { clampToMap } from '../world/clampToMap'
 import { setDepthByFeet } from '../world/depthSort'
 import { ensureMobTexture, ensureTilesTexture } from '../textures'
-import { supabase } from '../../lib/supabase'
-import { saveCharacterSession } from '../../lib/characterProgress'
+import { persistCharacterWorld, saveCharacterSession } from '../../lib/characterProgress'
 import type { CharacterRow, NpcRow } from '../../types/database'
 
 const INTERACT_RANGE = 64
@@ -79,7 +85,7 @@ export class WorldScene extends Phaser.Scene {
   private npcVisuals: NpcVisual[] = []
   private playerShadow!: Phaser.GameObjects.Ellipse
   private presence: MapPresenceChannel | null = null
-  private remoteSprites = new Map<string, Phaser.GameObjects.Container>()
+  private remotePlayers = new Map<string, RemotePlayerEntity>()
   private facing: Facing = 'down'
   private persistTimer: number | null = null
   private progressSaveTimer: number | null = null
@@ -247,26 +253,26 @@ export class WorldScene extends Phaser.Scene {
 
     this.presence = new MapPresenceChannel(
       this.character.map_id,
-      {
-        characterId: this.character.id,
-        name: this.character.name,
-        x: this.playerDisplay.container.x,
-        y: this.playerDisplay.container.y,
-        facing: this.facing,
-      },
+      this.buildPlayerPresencePayload(),
       (remotes) => {
-        for (const remote of remotes) {
-          let container = this.remoteSprites.get(remote.characterId)
-          if (!container) {
-            const dot = this.add.circle(0, 0, 10, 0xef4444)
-            const label = this.add.text(0, -18, remote.name, { fontSize: '10px', color: '#fecaca' })
-            label.setOrigin(0.5)
-            container = this.add.container(remote.x, remote.y, [dot, label])
-            this.remoteSprites.set(remote.characterId, container)
-          } else {
-            container.setPosition(remote.x, remote.y)
+        const activeIds = new Set(remotes.map((r) => r.characterId))
+        for (const [id, entity] of this.remotePlayers) {
+          if (!activeIds.has(id)) {
+            destroyRemotePlayer(entity)
+            this.remotePlayers.delete(id)
           }
         }
+
+        for (const remote of remotes) {
+          let entity = this.remotePlayers.get(remote.characterId)
+          if (!entity) {
+            entity = spawnRemotePlayer(this, remote)
+            this.remotePlayers.set(remote.characterId, entity)
+          } else {
+            applyRemotePresence(entity, remote)
+          }
+        }
+
         emitGameEvent(
           'remotePlayers',
           remotes.map((r) => ({
@@ -280,13 +286,7 @@ export class WorldScene extends Phaser.Scene {
     )
 
     void this.presence.join().then(() => {
-      this.presence?.startBroadcast(() => ({
-        characterId: this.character.id,
-        name: this.character.name,
-        x: this.playerDisplay.container.x,
-        y: this.playerDisplay.container.y,
-        facing: this.facing,
-      }))
+      this.presence?.startBroadcast(() => this.buildPlayerPresencePayload())
     })
 
     this.persistTimer = window.setInterval(() => {
@@ -391,7 +391,43 @@ export class WorldScene extends Phaser.Scene {
       }
     }
     emitGameEvent('npcNearby', this.nearestNpc)
+    const remoteSmooth = 1 - Math.pow(0.001, this.game.loop.delta / 120)
+    for (const entity of this.remotePlayers.values()) {
+      tickRemotePlayer(entity, now, remoteSmooth)
+    }
+
     this.syncWorldDepth()
+  }
+
+  private buildPlayerPresencePayload(): PlayerPresencePayload {
+    const body = this.getPlayerBody()
+    const moving = Math.hypot(body.velocity.x, body.velocity.y) > 8
+    let anim: PlayerPresencePayload['anim'] = 'idle'
+    if (this.isSitting) anim = 'sit'
+    else if (this.isJumping) anim = 'jump'
+    else if (this.isAttacking) anim = 'attack'
+    else if (moving) anim = 'walk'
+
+    const walkFrame =
+      anim === 'walk' ? ((Math.floor(this.time.now / 150) % 2) as 0 | 1) : 0
+
+    return {
+      characterId: this.character.id,
+      name: this.character.name,
+      x: this.playerDisplay.container.x,
+      y: this.playerDisplay.container.y,
+      facing: this.facing,
+      anim,
+      walkFrame,
+      equipment: this.session.equipment,
+    }
+  }
+
+  private disposeRemotePlayers() {
+    for (const entity of this.remotePlayers.values()) {
+      destroyRemotePlayer(entity)
+    }
+    this.remotePlayers.clear()
   }
 
   private playerFeetY(): number {
@@ -423,9 +459,10 @@ export class WorldScene extends Phaser.Scene {
       setDepthByFeet(npc.label, npc.feetY, 0.05)
     }
 
-    for (const container of this.remoteSprites.values()) {
-      const feet = container.y + 10
-      setDepthByFeet(container, feet)
+    for (const entity of this.remotePlayers.values()) {
+      const feet = entity.display.container.y + PLAYER_FEET_OFFSET
+      setDepthByFeet(entity.display.container, feet)
+      setDepthByFeet(entity.label, feet, 0.05)
     }
 
     if (this.selectionRing && this.selectedMob?.alive) {
@@ -929,17 +966,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private async persistWorldState() {
-    await Promise.all([
-      supabase
-        .from('characters')
-        .update({
-          x: this.playerDisplay.container.x,
-          y: this.playerDisplay.container.y,
-          map_id: this.character.map_id,
-        })
-        .eq('id', this.character.id),
-      saveCharacterSession(this.character.id, this.session),
-    ])
+    await persistCharacterWorld(this.character.id, this.getPlayerPosition(), this.session)
   }
 
   getNearestNpc() {
@@ -960,6 +987,7 @@ export class WorldScene extends Phaser.Scene {
     if (this.persistTimer) window.clearInterval(this.persistTimer)
     if (this.progressSaveTimer) window.clearTimeout(this.progressSaveTimer)
     void this.presence?.leave()
+    this.disposeRemotePlayers()
     void this.persistWorldState()
   }
 }

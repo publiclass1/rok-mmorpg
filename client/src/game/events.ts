@@ -1,4 +1,5 @@
 import type { CharacterSessionState, EquipSlot, PrimaryStat, SessionInventorySlot } from './character/characterState'
+import type { CharacterPose } from './player/playerCharacterRig'
 import type { NpcRow } from '../types/database'
 
 export type PositionPayload = {
@@ -6,7 +7,14 @@ export type PositionPayload = {
   name: string
   x: number
   y: number
-  facing: 'up' | 'down' | 'left' | 'right'
+  facing: CharacterPose['facing']
+}
+
+/** Map presence broadcast: position, pose, and equipment for remote avatars. */
+export type PlayerPresencePayload = PositionPayload & {
+  anim: CharacterPose['anim']
+  walkFrame: 0 | 1
+  equipment: Record<EquipSlot, string | null>
 }
 
 export type PlayerStatsPayload = {

@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Phaser from 'phaser'
 import { savePoint, teleport } from '../lib/api'
-import { loadCharacterSession, saveCharacterSession } from '../lib/characterProgress'
+import {
+  loadCharacterSession,
+  persistCharacterWorld,
+} from '../lib/characterProgress'
 import { supabase } from '../lib/supabase'
 import { JOB_NAMES } from '../game/character/skillsConfig'
 import {
@@ -49,6 +52,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [npcsReady, setNpcsReady] = useState(false)
   const [nearbyNpc, setNearbyNpc] = useState<NpcRow | null>(null)
   const [position, setPosition] = useState({ x: character.x, y: character.y, mapId: character.map_id })
+  const positionRef = useRef(position)
+  positionRef.current = position
   const [status, setStatus] = useState('')
   const [storageNpc, setStorageNpc] = useState<NpcRow | null>(null)
   const [jobMasterNpc, setJobMasterNpc] = useState<NpcRow | null>(null)
@@ -252,12 +257,26 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
   async function leaveWorld() {
     try {
-      await saveCharacterSession(character.id, sessionRef.current)
+      await persistCharacterWorld(character.id, positionRef.current, sessionRef.current)
     } catch (err) {
       console.warn('Failed to save character progress', err)
     }
     onExit()
   }
+
+  useEffect(() => {
+    if (!sessionReady) return
+
+    function flushOnHide() {
+      if (document.visibilityState !== 'hidden') return
+      void persistCharacterWorld(character.id, positionRef.current, sessionRef.current).catch((err) => {
+        console.warn('Background save failed', err)
+      })
+    }
+
+    document.addEventListener('visibilitychange', flushOnHide)
+    return () => document.removeEventListener('visibilitychange', flushOnHide)
+  }, [sessionReady, character.id])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

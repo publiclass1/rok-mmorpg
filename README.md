@@ -2,7 +2,7 @@
 
 A simple browser MMORPG inspired by Ragnarok Online — for fun and game-dev learning. Shared 2D tile maps, account/characters, Kafra-style storage, NPC warps, and player trading.
 
-**Design reference:** [iRO Wiki](https://irowiki.org/) (Pre-Renewal / Classic). See [docs/IRO_REFERENCE.md](docs/IRO_REFERENCE.md) for system status, [docs/MILESTONES.md](docs/MILESTONES.md) for the step-by-step roadmap, and [content/ro/](content/ro/) for curated game data. Validate content with `npm run content:validate`.
+**Design reference:** [iRO Wiki](https://irowiki.org/) (Pre-Renewal / Classic). See [docs/IRO_REFERENCE.md](docs/IRO_REFERENCE.md) for system status, [docs/MILESTONES.md](docs/MILESTONES.md) for the step-by-step roadmap, [docs/PERSISTENCE_AND_REALTIME.md](docs/PERSISTENCE_AND_REALTIME.md) for save vs multiplayer realtime (Netlify + Supabase), and [content/ro/](content/ro/) for curated game data. Validate content with `npm run content:validate`.
 
 ## Features
 
@@ -18,7 +18,7 @@ A simple browser MMORPG inspired by Ragnarok Online — for fun and game-dev lea
 
 - **Client:** Vite, React, TypeScript, Phaser 4
 - **Maps:** Tiled (`.tmj` in `client/public/maps/`)
-- **Backend:** Supabase (Postgres, Auth, Realtime, Edge Functions)
+- **Backend:** Supabase (Postgres, Auth, Realtime, Edge Functions) — progression saves over HTTP; map/trade use Supabase Realtime (no separate socket host on Netlify)
 - **Hosting:** Netlify (static SPA)
 - **Repo:** GitHub
 

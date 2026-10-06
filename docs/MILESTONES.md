@@ -41,6 +41,8 @@ Update the **Status** column as you finish each milestone.
 
 **HP/MP policy:** Persist current HP/MP on save; restore on login and clamp to derived max. New characters use `NULL` HP/MP in DB until first save → client fills to max on load.
 
+**Transport:** Postgres via Supabase **HTTP** (PostgREST), not a custom WebSocket server. See [PERSISTENCE_AND_REALTIME.md](PERSISTENCE_AND_REALTIME.md).
+
 **Delivered:**
 
 - [x] HP/MP policy documented above and in [IRO_REFERENCE.md](IRO_REFERENCE.md)
