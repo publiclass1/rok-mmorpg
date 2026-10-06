@@ -29,6 +29,7 @@ import {
 } from '../game/events'
 import type { CharacterRow, NpcRow, PartyRequestRow, TradeSessionRow } from '../types/database'
 import { ChatStrip } from './ChatStrip'
+import { PlayerTargetPopup } from './PlayerTargetPopup'
 import { GuildModal } from './GuildModal'
 import { PartyPanel } from './PartyPanel'
 import { PartyRequestModal } from './PartyRequestModal'
@@ -100,6 +101,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [mapLoading, setMapLoading] = useState<{ mapId: string; label: string } | null>(null)
   const [logOpen, setLogOpen] = useState(false)
   const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
+  const [selectedPlayerAnchor, setSelectedPlayerAnchor] = useState<{ x: number; y: number } | null>(null)
   const [partySnapshot, setPartySnapshot] = useState<PartySnapshot>(null)
   const [guildSnapshot, setGuildSnapshot] = useState<GuildSnapshot>(null)
   const [partyRequest, setPartyRequest] = useState<{ request: PartyRequestRow; fromName: string } | null>(
@@ -346,7 +348,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         setSelectedMob(mob)
         if (mob) setSelectedPlayer(null)
       }),
-      onGameEvent('selectedPlayer', setSelectedPlayer),
+      onGameEvent('selectedPlayer', (player) => {
+        setSelectedPlayer(player)
+        if (!player) setSelectedPlayerAnchor(null)
+      }),
+      onGameEvent('selectedPlayerAnchor', setSelectedPlayerAnchor),
       onGameEvent('activityLog', (entry) => {
         setActivityLog((prev) => [...prev, entry].slice(-100))
       }),
@@ -622,6 +628,22 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         </AnimatePresence>
         {!sessionReady && !mapLoading && <p className="muted game-loading">Loading character…</p>}
 
+        {selectedPlayer && selectedPlayerAnchor && (
+          <PlayerTargetPopup
+            player={selectedPlayer}
+            anchor={selectedPlayerAnchor}
+            onTrade={() =>
+              setTradePartner({
+                characterId: selectedPlayer.characterId,
+                name: selectedPlayer.name,
+              })
+            }
+            onInvite={() => void runPartyAction('invite', selectedPlayer.characterId)}
+            onApply={() => void runPartyAction('apply', selectedPlayer.characterId)}
+            onBrowseShop={() => setVendorShopTarget(selectedPlayer)}
+          />
+        )}
+
         <div className="game-hud-overlay" aria-label="Game HUD">
           <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>
             <p className="game-hud-name">
@@ -703,48 +725,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             transition={{ ...hudEnterMotion.transition, delay: 0.12 }}
           >
             <h3>Target</h3>
-            {selectedPlayer ? (
-              <div className="target-panel">
-                <p><strong>{selectedPlayer.name}</strong></p>
-                <div className="target-actions row wrap gap">
-                  <button
-                    type="button"
-                    className="hud-btn"
-                    onClick={() =>
-                      setTradePartner({
-                        characterId: selectedPlayer.characterId,
-                        name: selectedPlayer.name,
-                      })
-                    }
-                  >
-                    Trade
-                  </button>
-                  <button
-                    type="button"
-                    className="hud-btn"
-                    onClick={() => void runPartyAction('invite', selectedPlayer.characterId)}
-                  >
-                    Join Party
-                  </button>
-                  <button
-                    type="button"
-                    className="hud-btn"
-                    onClick={() => void runPartyAction('apply', selectedPlayer.characterId)}
-                  >
-                    Apply Party
-                  </button>
-                  {selectedPlayer.isVending && (
-                    <button
-                      type="button"
-                      className="hud-btn"
-                      onClick={() => setVendorShopTarget(selectedPlayer)}
-                    >
-                      Browse shop
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : selectedMob ? (
+            {selectedMob ? (
               <div className="target-panel">
                 <p><strong>{selectedMob.name}</strong></p>
                 <p className="muted small">Lv {selectedMob.level}</p>

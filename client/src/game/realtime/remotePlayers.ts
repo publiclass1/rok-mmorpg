@@ -10,6 +10,9 @@ import {
   updatePlayerEquipmentLayers,
   type PlayerDisplay,
 } from '../player/playerSprites'
+import { playPlayerAttack } from '../combat/combatFx'
+import type { MapCombatSkillId } from './mapCombatTypes'
+import type { SfxPlayer } from '../combat/sfx'
 
 const EQUIP_SLOTS: EquipSlot[] = [
   'weapon',
@@ -112,4 +115,23 @@ export function tickRemotePlayer(entity: RemotePlayerEntity, now: number, smooth
 export function destroyRemotePlayer(entity: RemotePlayerEntity) {
   entity.label.destroy()
   entity.display.container.destroy()
+}
+
+export function playRemotePlayerAction(
+  scene: Phaser.Scene,
+  entity: RemotePlayerEntity,
+  facing: PlayerPresencePayload['facing'],
+  _skillId: MapCombatSkillId,
+  listenerX: number,
+  listenerY: number,
+  sfx: SfxPlayer,
+) {
+  const body = entity.display.body
+  const cx = entity.display.container.x
+  const cy = entity.display.container.y
+  playPlayerAnim(entity.display, 'attack', facing)
+  playPlayerAttack(scene, body, facing, () => {
+    playPlayerAnim(entity.display, entity.lastPayload.anim, entity.lastPayload.facing)
+  })
+  sfx.playAttackNearby(listenerX, listenerY, cx, cy)
 }

@@ -31,7 +31,7 @@ flowchart LR
   end
   Client -->|"M2 load/save"| REST
   REST --> PG
-  Client -->|"map pos broadcast"| RT
+  Client -->|"map pos + combat broadcast"| RT
   Client -->|"trade row changes"| RT
   Client -->|"storage/trade/warp"| EF
 ```
@@ -44,14 +44,26 @@ The browser opens a **WebSocket to `*.supabase.co`** (Supabase Realtime), not to
 
 | Feature | Mechanism | Code |
 |---------|-----------|------|
-| Other players on a map | Realtime **Broadcast** on channel `map:{mapId}` | [`client/src/game/realtime/mapChannel.ts`](../client/src/game/realtime/mapChannel.ts) |
+| Other players on a map | Realtime **Broadcast** on channel `map:{mapId}` — event `pos` | [`client/src/game/realtime/mapChannel.ts`](../client/src/game/realtime/mapChannel.ts) |
+| Shared field combat (visibility) | Realtime **Broadcast** on `map:{mapId}` — event `combat` | [`mapChannel.ts`](../client/src/game/realtime/mapChannel.ts), [`mapCombatTypes.ts`](../client/src/game/realtime/mapCombatTypes.ts), [`WorldScene.ts`](../client/src/game/scenes/WorldScene.ts) |
 | Trade UI updates | Realtime **postgres_changes** on `trade_sessions` / `trade_offers` | Migrations + [`GameView.tsx`](../client/src/components/GameView.tsx), [`TradeModal.tsx`](../client/src/components/TradeModal.tsx) |
 | Party invites / roster | **postgres_changes** on `party_requests`, `party_members`, `parties` | [`20260324100000_m6_social.sql`](../supabase/migrations/20260324100000_m6_social.sql), `party-manage` |
 | Map / party chat | Realtime **Broadcast** (`chat` event on `map:{mapId}` and `party:{partyId}`) | [`mapChat.ts`](../client/src/game/realtime/mapChat.ts), [`partyChannel.ts`](../client/src/game/realtime/partyChannel.ts) |
 | Party EXP share (client) | Broadcast `exp_grant` on `party:{partyId}` | [`WorldScene.ts`](../client/src/game/scenes/WorldScene.ts) |
 | Vending listings | **postgres_changes** on `vendor_listings` + `vendor-manage` HTTP | [`VendorShopModal.tsx`](../client/src/components/VendorShopModal.tsx) |
 
-Combat, drops, and mob AI run **on the client**. Persistence is **pull/push over HTTP**, not a live sync of every combat tick.
+Combat math, drops, and EXP on kill stay **on the attacking client** (client-trusted). Other players on the same map receive **`combat` broadcasts** so they see attacks, skill swings, damage numbers, mob HP/death/respawn (by spawn index), and nearby combat SFX. Mob wander/AI is still simulated locally per client.
+
+Persistence is **pull/push over HTTP**, not a live sync of every combat tick.
+
+### Manual check (two clients)
+
+1. Two browsers, two characters on the same field map (e.g. `prt_fild01`).
+2. A attacks a mob: B sees A’s slash, hit numbers, HP bar drop, hit sound when near.
+3. A kills the mob: B sees it disappear; ~8s later both see respawn at the spawn point.
+4. A uses Bash: B sees attack FX and damage float text.
+5. A misses: B sees miss text and sound at A’s position.
+6. Solo play and trade/presence unchanged.
 
 ## Netlify and socket servers
 

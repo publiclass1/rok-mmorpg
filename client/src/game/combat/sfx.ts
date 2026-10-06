@@ -1,3 +1,16 @@
+const NEARBY_COMBAT_AUDIO_RANGE = 480
+
+export function isWithinCombatAudioRange(
+  listenerX: number,
+  listenerY: number,
+  sourceX: number,
+  sourceY: number,
+): boolean {
+  const dx = listenerX - sourceX
+  const dy = listenerY - sourceY
+  return dx * dx + dy * dy <= NEARBY_COMBAT_AUDIO_RANGE * NEARBY_COMBAT_AUDIO_RANGE
+}
+
 export class SfxPlayer {
   private ctx: AudioContext | null = null
 
@@ -29,15 +42,31 @@ export class SfxPlayer {
     osc.stop(t + durationMs / 1000)
   }
 
-  playAttack() {
-    this.beep(320, 60, 'triangle', 0.06)
+  playAttack(gain = 0.06) {
+    this.beep(320, 60, 'triangle', gain)
   }
 
-  playHit() {
-    this.beep(180, 70, 'square', 0.09)
+  playHit(gain = 0.09) {
+    this.beep(180, 70, 'square', gain)
   }
 
-  playMiss() {
-    this.beep(90, 90, 'sawtooth', 0.05)
+  playMiss(gain = 0.05) {
+    this.beep(90, 90, 'sawtooth', gain)
+  }
+
+  /** Quieter beeps when the listener is far from the action. */
+  playAttackNearby(listenerX: number, listenerY: number, sourceX: number, sourceY: number) {
+    if (!isWithinCombatAudioRange(listenerX, listenerY, sourceX, sourceY)) return
+    this.playAttack(0.045)
+  }
+
+  playHitNearby(listenerX: number, listenerY: number, sourceX: number, sourceY: number) {
+    if (!isWithinCombatAudioRange(listenerX, listenerY, sourceX, sourceY)) return
+    this.playHit(0.065)
+  }
+
+  playMissNearby(listenerX: number, listenerY: number, sourceX: number, sourceY: number) {
+    if (!isWithinCombatAudioRange(listenerX, listenerY, sourceX, sourceY)) return
+    this.playMiss(0.035)
   }
 }

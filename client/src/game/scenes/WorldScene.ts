@@ -59,9 +59,11 @@ import {
 } from '../player/playerSprites'
 import { SIT_REGEN_INTERVAL_MS, sitRegenAmounts } from '../character/sitRegen'
 import { MapPresenceChannel } from '../realtime/mapChannel'
+import type { MapCombatPayload, MapCombatSkillId } from '../realtime/mapCombatTypes'
 import {
   applyRemotePresence,
   destroyRemotePlayer,
+  playRemotePlayerAction,
   spawnRemotePlayer,
   tickRemotePlayer,
   type RemotePlayerEntity,
@@ -114,6 +116,7 @@ export class WorldScene extends Phaser.Scene {
   private isSitting = false
   private lastSitRegenAt = 0
   private mobs: MobInstance[] = []
+  private mobBySpawnIndex: (MobInstance | undefined)[] = []
   private obstacles: Phaser.GameObjects.Rectangle[] = []
   private collisionLayer: Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer | null = null
   private portalWarpCooldownUntil = 0
@@ -362,6 +365,7 @@ export class WorldScene extends Phaser.Scene {
     )
 
     void this.presence.join().then(() => {
+      this.presence?.setCombatHandler((payload) => this.handleRemoteCombat(payload))
       this.presence?.startBroadcast(() => this.buildPlayerPresencePayload())
     })
 
@@ -667,6 +671,7 @@ export class WorldScene extends Phaser.Scene {
     clearMoveTarget(this.moveTarget)
 
     this.sfx.playAttack()
+    this.broadcastPlayerAction('bash')
     playPlayerAnim(this.playerDisplay, 'attack', this.facing)
     playPlayerAttack(this, this.playerDisplay.body, this.facing, () => {
       this.isAttacking = false
@@ -678,6 +683,7 @@ export class WorldScene extends Phaser.Scene {
       const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
       showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
       this.sfx.playMiss()
+      this.broadcastMobMissAt(undefined, pos.x, pos.y)
       logActivity('combat', 'Bash missed.')
       this.emitCharacterSheet()
       return
@@ -693,6 +699,7 @@ export class WorldScene extends Phaser.Scene {
     if (!hit || damage <= 0) {
       showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
       this.sfx.playMiss()
+      this.broadcastMobMissAt(target.spawnIndex, target.sprite.x, target.sprite.y - 40)
       logActivity('combat', `Bash missed Lv ${target.level} ${target.name}.`)
       this.emitCharacterSheet()
       return
@@ -720,6 +727,7 @@ export class WorldScene extends Phaser.Scene {
     if (this.selectedMob === target) {
       this.emitSelectedMobPayload(target)
     }
+    this.broadcastMobHit(target, damage, skillLabel)
     if (target.hp <= 0) {
       if (this.selectedMob === target) this.setSelectedMob(null)
       this.chaseMob = null
@@ -784,6 +792,7 @@ export class WorldScene extends Phaser.Scene {
       this.playerSelectionRing?.destroy()
       this.playerSelectionRing = null
       emitGameEvent('selectedPlayer', null)
+      emitGameEvent('selectedPlayerAnchor', null)
       return
     }
     this.selectedRemoteId = entity.lastPayload.characterId
@@ -813,6 +822,17 @@ export class WorldScene extends Phaser.Scene {
       const c = entity.display.container
       this.playerSelectionRing.setPosition(c.x, c.y - 6)
     }
+    this.emitSelectedPlayerAnchor(entity)
+  }
+
+  private emitSelectedPlayerAnchor(entity: RemotePlayerEntity) {
+    const cam = this.cameras.main
+    const c = entity.display.container
+    const worldX = c.x
+    const worldY = c.y - 56
+    const sx = (worldX - cam.scrollX) * cam.zoom + cam.width * 0.5
+    const sy = (worldY - cam.scrollY) * cam.zoom + cam.height * 0.5
+    emitGameEvent('selectedPlayerAnchor', { x: sx, y: sy })
   }
 
   private findRemotePlayerAt(wx: number, wy: number): RemotePlayerEntity | null {
@@ -875,14 +895,22 @@ export class WorldScene extends Phaser.Scene {
 
   private spawnMapMobs() {
     const spawns = MOB_SPAWNS_BY_MAP[this.character.map_id] ?? []
-    for (const spawn of spawns) {
+    this.mobBySpawnIndex = []
+    spawns.forEach((spawn, spawnIndex) => {
       const def = MOB_DEFS[spawn.defId]
-      if (!def) continue
-      this.mobs.push(this.createMobInstance(spawn.x, spawn.y, def))
-    }
+      if (!def) return
+      const mob = this.createMobInstance(spawnIndex, spawn.x, spawn.y, def)
+      this.mobs.push(mob)
+      this.mobBySpawnIndex[spawnIndex] = mob
+    })
   }
 
-  private createMobInstance(x: number, y: number, def: (typeof MOB_DEFS)[string]): MobInstance {
+  private createMobInstance(
+    spawnIndex: number,
+    x: number,
+    y: number,
+    def: (typeof MOB_DEFS)[string],
+  ): MobInstance {
     const sprite = this.physics.add.sprite(x, y + MOB_FEET_ANCHOR_ADJUST, 'mob')
     sprite.setOrigin(0.5, 1)
     sprite.setTint(def.color)
@@ -902,6 +930,7 @@ export class WorldScene extends Phaser.Scene {
     const hpBarFill = this.add.rectangle(x - barW / 2, feetY - 26, barW, 4, 0x22c55e).setOrigin(0, 0.5)
 
     const mob: MobInstance = {
+      spawnIndex,
       sprite,
       hpBarBg,
       hpBarFill,
@@ -924,6 +953,125 @@ export class WorldScene extends Phaser.Scene {
     return mob
   }
 
+  private getMobBySpawnIndex(spawnIndex: number): MobInstance | null {
+    return this.mobBySpawnIndex[spawnIndex] ?? null
+  }
+
+  private listenerPosition(): { x: number; y: number } {
+    return {
+      x: this.playerDisplay.container.x,
+      y: this.playerDisplay.container.y,
+    }
+  }
+
+  private broadcastPlayerAction(skillId: MapCombatSkillId) {
+    this.presence?.sendCombat({
+      kind: 'player_action',
+      characterId: this.character.id,
+      facing: this.facing,
+      x: this.playerDisplay.container.x,
+      y: this.playerDisplay.container.y,
+      skillId,
+    })
+  }
+
+  private broadcastMobHit(target: MobInstance, damage: number, skillLabel: string) {
+    this.presence?.sendCombat({
+      kind: 'mob_hit',
+      characterId: this.character.id,
+      spawnIndex: target.spawnIndex,
+      damage,
+      hpAfter: Math.max(0, target.hp),
+      skillLabel,
+    })
+  }
+
+  private broadcastMobMissAt(spawnIndex: number | undefined, x: number, y: number) {
+    this.presence?.sendCombat({
+      kind: 'mob_miss',
+      characterId: this.character.id,
+      spawnIndex,
+      x,
+      y,
+    })
+  }
+
+  private broadcastMobDie(spawnIndex: number) {
+    this.presence?.sendCombat({
+      kind: 'mob_die',
+      characterId: this.character.id,
+      spawnIndex,
+    })
+  }
+
+  private broadcastMobRespawn(spawnIndex: number) {
+    this.presence?.sendCombat({ kind: 'mob_respawn', spawnIndex })
+  }
+
+  private handleRemoteCombat(payload: MapCombatPayload) {
+    const listener = this.listenerPosition()
+
+    if (payload.kind === 'player_action') {
+      const entity = this.remotePlayers.get(payload.characterId)
+      if (entity) {
+        playRemotePlayerAction(
+          this,
+          entity,
+          payload.facing,
+          payload.skillId,
+          listener.x,
+          listener.y,
+          this.sfx,
+        )
+      }
+      return
+    }
+
+    if (payload.kind === 'mob_miss') {
+      showFloatingText(this, payload.x, payload.y, 'MISS', 'miss')
+      this.sfx.playMissNearby(listener.x, listener.y, payload.x, payload.y)
+      return
+    }
+
+    if (payload.kind === 'mob_hit') {
+      const mob = this.getMobBySpawnIndex(payload.spawnIndex)
+      if (!mob || !mob.alive) return
+      // Last hpAfter from any attacker wins for this spawn (client-trusted sync).
+      mob.hp = Math.max(0, payload.hpAfter)
+      const def = MOB_DEFS[mob.defId]
+      if (def) playMobHitShake(this, mob.sprite, def.color)
+      this.sfx.playHitNearby(listener.x, listener.y, mob.sprite.x, mob.sprite.y)
+      showFloatingText(this, mob.sprite.x, mob.sprite.y - 40, `-${payload.damage}`, 'hit')
+      this.updateMobHpBar(mob)
+      if (this.selectedMob === mob) {
+        this.emitSelectedMobPayload(mob)
+      }
+      if (mob.hp <= 0) {
+        if (this.selectedMob === mob) this.setSelectedMob(null)
+        if (this.chaseMob === mob) this.chaseMob = null
+        this.killMobVisualOnly(mob)
+      }
+      return
+    }
+
+    if (payload.kind === 'mob_die') {
+      const mob = this.getMobBySpawnIndex(payload.spawnIndex)
+      if (!mob || !mob.alive) return
+      if (this.selectedMob === mob) this.setSelectedMob(null)
+      if (this.chaseMob === mob) this.chaseMob = null
+      this.killMobVisualOnly(mob)
+      return
+    }
+
+    if (payload.kind === 'mob_respawn') {
+      const mob = this.getMobBySpawnIndex(payload.spawnIndex)
+      if (!mob || mob.alive) return
+      const def = MOB_DEFS[mob.defId]
+      if (!def) return
+      this.respawnMobInstance(mob, def)
+    }
+  }
+
   private updateMobHpBar(mob: MobInstance) {
     const barW = 32
     const ratio = Math.max(0, mob.hp / mob.maxHp)
@@ -944,6 +1092,7 @@ export class WorldScene extends Phaser.Scene {
     clearMoveTarget(this.moveTarget)
 
     this.sfx.playAttack()
+    this.broadcastPlayerAction('basic_attack')
     playPlayerAnim(this.playerDisplay, 'attack', this.facing)
     playPlayerAttack(this, this.playerDisplay.body, this.facing, () => {
       this.isAttacking = false
@@ -955,6 +1104,7 @@ export class WorldScene extends Phaser.Scene {
       const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
       showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
       this.sfx.playMiss()
+      this.broadcastMobMissAt(undefined, pos.x, pos.y)
       logActivity('combat', 'Attack missed.')
       return
     }
@@ -965,25 +1115,12 @@ export class WorldScene extends Phaser.Scene {
     if (!hit || damage <= 0) {
       showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
       this.sfx.playMiss()
+      this.broadcastMobMissAt(target.spawnIndex, target.sprite.x, target.sprite.y - 40)
       logActivity('combat', `Attack missed Lv ${target.level} ${target.name}.`)
       return
     }
 
-    target.hp -= damage
-    if (def) playMobHitShake(this, target.sprite, def.color)
-    this.sfx.playHit()
-    showFloatingText(this, target.sprite.x, target.sprite.y - 40, `-${damage}`, 'hit')
-    logActivity('combat', `Dealt ${damage} damage to Lv ${target.level} ${target.name} (HP ${Math.max(0, target.hp)}/${target.maxHp}).`)
-    this.updateMobHpBar(target)
-    if (this.selectedMob === target) {
-      this.emitSelectedMobPayload(target)
-    }
-
-    if (target.hp <= 0) {
-      if (this.selectedMob === target) this.setSelectedMob(null)
-      this.chaseMob = null
-      this.killMob(target)
-    }
+    this.applyDamageToMob(target, damage, def, 'Attack')
   }
 
   private findMobInAttackCone(): MobInstance | null {
@@ -1043,6 +1180,15 @@ export class WorldScene extends Phaser.Scene {
       logActivity('combat', `Defeated Lv ${mob.level} ${mob.name}.`)
     }
 
+    this.broadcastMobDie(mob.spawnIndex)
+    this.killMobVisualOnly(mob, true)
+  }
+
+  /** Hide mob and respawn locally; no loot/EXP (remote observers). */
+  private killMobVisualOnly(mob: MobInstance, broadcastRespawn = false) {
+    if (!mob.alive) return
+    const def = MOB_DEFS[mob.defId]
+
     mob.alive = false
     mob.state = 'wander'
     mob.sprite.setVisible(false)
@@ -1053,18 +1199,25 @@ export class WorldScene extends Phaser.Scene {
 
     this.time.delayedCall(MOB_RESPAWN_MS, () => {
       if (!def) return
-      mob.hp = def.maxHp
-      mob.alive = true
-      mob.sprite.setPosition(mob.spawnX, mob.spawnY)
-      mob.sprite.setVisible(true)
-      mob.sprite.body.enable = true
-      mob.sprite.setTint(def.color)
-      mob.hpBarBg.setVisible(true)
-      mob.hpBarFill.setVisible(true)
-      mob.label.setVisible(true)
-      initMobAiFields(mob, def)
-      this.updateMobHpBar(mob)
+      this.respawnMobInstance(mob, def)
+      if (broadcastRespawn) {
+        this.broadcastMobRespawn(mob.spawnIndex)
+      }
     })
+  }
+
+  private respawnMobInstance(mob: MobInstance, def: (typeof MOB_DEFS)[string]) {
+    mob.hp = def.maxHp
+    mob.alive = true
+    mob.sprite.setPosition(mob.spawnX, mob.spawnY)
+    mob.sprite.setVisible(true)
+    mob.sprite.body.enable = true
+    mob.sprite.setTint(def.color)
+    mob.hpBarBg.setVisible(true)
+    mob.hpBarFill.setVisible(true)
+    mob.label.setVisible(true)
+    initMobAiFields(mob, def)
+    this.updateMobHpBar(mob)
   }
 
   private countPartyExpEligible(kx: number, ky: number): number {
@@ -1207,6 +1360,7 @@ export class WorldScene extends Phaser.Scene {
     this.eventUnsubs = []
     if (this.persistTimer) window.clearInterval(this.persistTimer)
     if (this.progressSaveTimer) window.clearTimeout(this.progressSaveTimer)
+    this.presence?.setCombatHandler(null)
     void this.presence?.leave()
     this.disposeRemotePlayers()
     void this.persistWorldState()

@@ -1217,6 +1217,22 @@ button:disabled {
   color: #93c5fd;
 }
 
+.player-target-popup {
+  position: absolute;
+  z-index: 12;
+  pointer-events: auto;
+  transform: translate(-50%, -100%);
+  margin-top: -10px;
+  min-width: 10rem;
+  max-width: min(280px, 90vw);
+  padding: 0.5rem 0.65rem;
+}
+
+.player-target-popup__name {
+  margin: 0 0 0.35rem;
+  text-align: center;
+}
+
 .chat-strip {
   pointer-events: auto;
   margin: 0 0.65rem 0.35rem;
@@ -1225,6 +1241,26 @@ button:disabled {
   border: 1px solid #374151;
   border-radius: 8px;
   max-width: min(520px, 96vw);
+}
+
+.chat-strip--minimized {
+  padding-bottom: 0.35rem;
+}
+
+.chat-strip-header {
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.chat-strip--minimized .chat-strip-header {
+  margin-bottom: 0;
+}
+
+.chat-strip-minimize {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.45rem;
 }
 
 .chat-strip-log {

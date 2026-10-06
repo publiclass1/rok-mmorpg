@@ -132,6 +132,7 @@ export type GameEvents = {
     stallTitle?: string | null
   }>
   selectedPlayer: SelectedPlayerPayload | null
+  selectedPlayerAnchor: { x: number; y: number } | null
   partySync: PartySyncPayload
   socialPresence: SocialPresencePayload
   status: string

@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { DEFAULT_CHARACTER_APPEARANCE, type CharacterAppearance } from '../character/characterAppearance'
 import { createDefaultEquipment } from '../character/characterState'
 import type { PlayerPresencePayload } from '../events'
+import { normalizeMapCombatPayload, type MapCombatPayload } from './mapCombatTypes'
 
 const BROADCAST_MS = 50
 const STALE_MS = 5000
@@ -51,6 +52,7 @@ export class MapPresenceChannel {
   private mapId: string
   private local: PlayerPresencePayload
   private onUpdate: (remotes: PlayerPresencePayload[]) => void
+  private onCombat: ((payload: MapCombatPayload) => void) | null = null
 
   constructor(
     mapId: string,
@@ -60,6 +62,19 @@ export class MapPresenceChannel {
     this.mapId = mapId
     this.local = local
     this.onUpdate = onUpdate
+  }
+
+  setCombatHandler(handler: ((payload: MapCombatPayload) => void) | null) {
+    this.onCombat = handler
+  }
+
+  sendCombat(payload: MapCombatPayload) {
+    if (!this.channel) return
+    void this.channel.send({
+      type: 'broadcast',
+      event: 'combat',
+      payload,
+    })
   }
 
   private emitRemotes() {
@@ -88,6 +103,13 @@ export class MapPresenceChannel {
       if (!p || p.characterId === this.local.characterId) return
       this.remotes.set(p.characterId, { payload: p, at: Date.now() })
       this.emitRemotes()
+    })
+
+    this.channel.on('broadcast', { event: 'combat' }, ({ payload }) => {
+      const p = normalizeMapCombatPayload(payload)
+      if (!p) return
+      if ('characterId' in p && p.characterId === this.local.characterId) return
+      this.onCombat?.(p)
     })
 
     await this.channel.subscribe()

@@ -13,6 +13,7 @@ type Props = {
 export function ChatStrip({ partyEnabled, onSend, mapLines, partyLines }: Props) {
   const [tab, setTab] = useState<Tab>('map')
   const [draft, setDraft] = useState('')
+  const [minimized, setMinimized] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const lines = tab === 'map' ? mapLines : partyLines
@@ -29,44 +30,58 @@ export function ChatStrip({ partyEnabled, onSend, mapLines, partyLines }: Props)
   }
 
   return (
-    <div className="chat-strip">
-      <div className="chat-strip-tabs row gap">
+    <div className={`chat-strip${minimized ? ' chat-strip--minimized' : ''}`}>
+      <div className="chat-strip-header row spread">
+        <div className="chat-strip-tabs row gap">
+          <button
+            type="button"
+            className={tab === 'map' ? 'hud-btn' : 'secondary hud-btn'}
+            onClick={() => setTab('map')}
+          >
+            Map
+          </button>
+          <button
+            type="button"
+            className={tab === 'party' ? 'hud-btn' : 'secondary hud-btn'}
+            disabled={!partyEnabled}
+            onClick={() => setTab('party')}
+          >
+            Party
+          </button>
+        </div>
         <button
           type="button"
-          className={tab === 'map' ? 'hud-btn' : 'secondary hud-btn'}
-          onClick={() => setTab('map')}
+          className="secondary hud-btn chat-strip-minimize"
+          onClick={() => setMinimized((m) => !m)}
+          aria-expanded={!minimized}
         >
-          Map
-        </button>
-        <button
-          type="button"
-          className={tab === 'party' ? 'hud-btn' : 'secondary hud-btn'}
-          disabled={!partyEnabled}
-          onClick={() => setTab('party')}
-        >
-          Party
+          {minimized ? 'Show chat' : 'Minimize'}
         </button>
       </div>
-      <div className="chat-strip-log" ref={scrollRef}>
-        {lines.map((line) => (
-          <p key={`${line.at}-${line.characterId}`} className="small chat-line">
-            <strong>{line.name}:</strong> {line.text}
-          </p>
-        ))}
-      </div>
-      <input
-        className="chat-strip-input"
-        value={draft}
-        placeholder={tab === 'party' && !partyEnabled ? 'Join a party to chat' : 'Say something…'}
-        disabled={tab === 'party' && !partyEnabled}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            submit()
-          }
-        }}
-      />
+      {!minimized && (
+        <>
+          <div className="chat-strip-log" ref={scrollRef}>
+            {lines.map((line) => (
+              <p key={`${line.at}-${line.characterId}`} className="small chat-line">
+                <strong>{line.name}:</strong> {line.text}
+              </p>
+            ))}
+          </div>
+          <input
+            className="chat-strip-input"
+            value={draft}
+            placeholder={tab === 'party' && !partyEnabled ? 'Join a party to chat' : 'Say something…'}
+            disabled={tab === 'party' && !partyEnabled}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                submit()
+              }
+            }}
+          />
+        </>
+      )}
     </div>
   )
 }
