@@ -77,6 +77,7 @@ Optional in `client/.env`: `VITE_AUTH_EMAIL_DOMAIN` — defaults to `<project-re
 | `Access token not provided` | Run `npx supabase login` in your terminal. |
 | Edge Function 401 | Deploy functions after linking; client must send logged-in JWT. |
 | Realtime trades not updating | Dashboard → Database → Publications: ensure `trade_sessions` / `trade_offers` are in `supabase_realtime` (migration adds them). |
+| Party/guild/vendor realtime | Apply `20260324100000_m6_social.sql`; deploy `party-manage`, `guild-manage`, `vendor-manage`. |
 | Other players not visible on map | Client uses Realtime **Broadcast** (`map:{mapId}`); check project Realtime is enabled and quotas. See [PERSISTENCE_AND_REALTIME.md](PERSISTENCE_AND_REALTIME.md). |
 | Character list shows other accounts’ chars | Apply latest migrations (`npm run supabase:push`). Old RLS policy exposed all characters to every user. |
 

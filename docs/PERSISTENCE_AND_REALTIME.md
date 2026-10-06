@@ -46,6 +46,10 @@ The browser opens a **WebSocket to `*.supabase.co`** (Supabase Realtime), not to
 |---------|-----------|------|
 | Other players on a map | Realtime **Broadcast** on channel `map:{mapId}` | [`client/src/game/realtime/mapChannel.ts`](../client/src/game/realtime/mapChannel.ts) |
 | Trade UI updates | Realtime **postgres_changes** on `trade_sessions` / `trade_offers` | Migrations + [`GameView.tsx`](../client/src/components/GameView.tsx), [`TradeModal.tsx`](../client/src/components/TradeModal.tsx) |
+| Party invites / roster | **postgres_changes** on `party_requests`, `party_members`, `parties` | [`20260324100000_m6_social.sql`](../supabase/migrations/20260324100000_m6_social.sql), `party-manage` |
+| Map / party chat | Realtime **Broadcast** (`chat` event on `map:{mapId}` and `party:{partyId}`) | [`mapChat.ts`](../client/src/game/realtime/mapChat.ts), [`partyChannel.ts`](../client/src/game/realtime/partyChannel.ts) |
+| Party EXP share (client) | Broadcast `exp_grant` on `party:{partyId}` | [`WorldScene.ts`](../client/src/game/scenes/WorldScene.ts) |
+| Vending listings | **postgres_changes** on `vendor_listings` + `vendor-manage` HTTP | [`VendorShopModal.tsx`](../client/src/components/VendorShopModal.tsx) |
 
 Combat, drops, and mob AI run **on the client**. Persistence is **pull/push over HTTP**, not a live sync of every combat tick.
 

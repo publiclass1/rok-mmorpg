@@ -32,6 +32,9 @@ function normalizePresence(raw: Partial<PlayerPresencePayload>): PlayerPresenceP
     walkFrame: raw.walkFrame === 1 ? 1 : 0,
     equipment: raw.equipment ?? createDefaultEquipment(),
     appearance: normalizeAppearance(raw.appearance),
+    guildTag: raw.guildTag ?? null,
+    isVending: Boolean(raw.isVending),
+    stallTitle: raw.stallTitle ?? null,
   }
 }
 

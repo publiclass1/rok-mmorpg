@@ -1191,6 +1191,62 @@ button:disabled {
   border-bottom: 1px solid #374151;
 }
 
+.target-actions {
+  margin-top: 0.35rem;
+  pointer-events: auto;
+}
+
+.target-actions .hud-btn {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.45rem;
+}
+
+.party-panel {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(55, 65, 81, 0.6);
+  pointer-events: auto;
+}
+
+.party-panel h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+}
+
+.nearby-selected {
+  color: #93c5fd;
+}
+
+.chat-strip {
+  pointer-events: auto;
+  margin: 0 0.65rem 0.35rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid #374151;
+  border-radius: 8px;
+  max-width: min(520px, 96vw);
+}
+
+.chat-strip-log {
+  max-height: 4.5rem;
+  overflow-y: auto;
+  margin: 0.25rem 0;
+}
+
+.chat-line {
+  margin: 0.1rem 0;
+}
+
+.chat-strip-input {
+  width: 100%;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #4b5563;
+  background: #111827;
+  color: #f3f4f6;
+}
+
 .target-panel {
   margin-bottom: 0.75rem;
   padding: 0.5rem 0.65rem;
@@ -1392,6 +1448,37 @@ button:disabled {
 
 .modal.npc-options-modal {
   width: min(260px, 92vw);
+}
+
+.guild-modal {
+  width: min(440px, 94vw);
+  padding: 2rem 2.25rem;
+}
+
+.guild-modal__header {
+  align-items: center;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.guild-modal__create {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.guild-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.guild-modal__field input {
+  width: 100%;
+}
+
+.guild-modal__actions {
+  margin-top: 0.5rem;
 }
 
 .shop-modal {

@@ -4,7 +4,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 
 **Ruleset:** Pre-Renewal (not Renewal). See [`PRE_RENEWAL_FORMULAS.md`](PRE_RENEWAL_FORMULAS.md) for formulas we intend to port.
 
-**Execution order:** [`MILESTONES.md`](MILESTONES.md) — M1–M5 done; next is M6.
+**Execution order:** [`MILESTONES.md`](MILESTONES.md) — M1–M6 done; next is M7+.
 
 ## Custom rules (this game ≠ vanilla iRO)
 
@@ -38,8 +38,10 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | NPC shops | [Vending](https://irowiki.org/wiki/Vending) | partial | `ShopModal.tsx`, `shop` NPC type (client-trusted zeny) |
 | Healer NPC | — | implemented | `healer` NPC restores HP/SP to max (persisted on save) |
 | Zeny economy | [Zeny](https://irowiki.org/wiki/Zeny) | partial | `characters.zeny`, trade |
-| Party | [Party](https://irowiki.org/wiki/Party) | planned | — |
-| Guild | [Guild](https://irowiki.org/wiki/Guild) | planned | — |
+| Party | [Party](https://irowiki.org/wiki/Party) | partial | `party-manage`, `PartyPanel`, click-target actions |
+| Guild | [Guild](https://irowiki.org/wiki/Guild) | partial | `guild-manage`, `GuildModal`, tag on HUD/presence |
+| Player vending | [Vending](https://irowiki.org/wiki/Vending) | partial | `vendor-manage`, `VendorSetupModal` / `VendorShopModal` |
+| Map / party chat | — | implemented | `MapChatChannel`, `ChatStrip` |
 | Quests | [Quests](https://irowiki.org/wiki/Category:Quests) | planned | — |
 | Cards / refine | [Cards](https://irowiki.org/wiki/Cards), [Refine](https://irowiki.org/wiki/Refine) | out_of_scope | Later milestone |
 | PvP / WoE | [WoE](https://irowiki.org/wiki/War_of_Emperium) | out_of_scope | — |

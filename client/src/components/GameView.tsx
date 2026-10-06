@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Phaser from 'phaser'
-import { portalWarp, savePoint, teleport } from '../lib/api'
+import { partyManage, portalWarp, savePoint, teleport } from '../lib/api'
+import { loadGuildForCharacter, type GuildSnapshot } from '../lib/guildState'
+import { loadPartyForCharacter, type PartySnapshot } from '../lib/partyState'
+import { MapChatChannel, type ChatMessage } from '../game/realtime/mapChat'
+import { PartyRealtimeChannel } from '../game/realtime/partyChannel'
 import {
   loadCharacterSession,
   persistCharacterWorld,
@@ -21,8 +25,15 @@ import {
   type CharacterSheetPayload,
   type ActivityLogEntry,
   type SelectedMobPayload,
+  type SelectedPlayerPayload,
 } from '../game/events'
-import type { CharacterRow, NpcRow, TradeSessionRow } from '../types/database'
+import type { CharacterRow, NpcRow, PartyRequestRow, TradeSessionRow } from '../types/database'
+import { ChatStrip } from './ChatStrip'
+import { GuildModal } from './GuildModal'
+import { PartyPanel } from './PartyPanel'
+import { PartyRequestModal } from './PartyRequestModal'
+import { VendorSetupModal } from './VendorSetupModal'
+import { VendorShopModal } from './VendorShopModal'
 import { ActivityLog } from './ActivityLog'
 import { SkillBar } from './SkillBar'
 import { ExperienceHud } from './ExperienceHud'
@@ -60,7 +71,14 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [shopNpc, setShopNpc] = useState<NpcRow | null>(null)
   const [npcMenu, setNpcMenu] = useState<NpcRow | null>(null)
   const [remotePlayers, setRemotePlayers] = useState<
-    Array<{ characterId: string; name: string; x: number; y: number }>
+    Array<{
+      characterId: string
+      name: string
+      x: number
+      y: number
+      isVending?: boolean
+      stallTitle?: string | null
+    }>
   >([])
   const [tradePartner, setTradePartner] = useState<{
     characterId: string
@@ -81,6 +99,21 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([])
   const [mapLoading, setMapLoading] = useState<{ mapId: string; label: string } | null>(null)
   const [logOpen, setLogOpen] = useState(false)
+  const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
+  const [partySnapshot, setPartySnapshot] = useState<PartySnapshot>(null)
+  const [guildSnapshot, setGuildSnapshot] = useState<GuildSnapshot>(null)
+  const [partyRequest, setPartyRequest] = useState<{ request: PartyRequestRow; fromName: string } | null>(
+    null,
+  )
+  const [guildOpen, setGuildOpen] = useState(false)
+  const [vendorSetupOpen, setVendorSetupOpen] = useState(false)
+  const [vendorShopTarget, setVendorShopTarget] = useState<SelectedPlayerPayload | null>(null)
+  const [vendingOpen, setVendingOpen] = useState(false)
+  const [stallTitle, setStallTitle] = useState('Shop')
+  const [mapChatLines, setMapChatLines] = useState<ChatMessage[]>([])
+  const [partyChatLines, setPartyChatLines] = useState<ChatMessage[]>([])
+  const mapChatRef = useRef<MapChatChannel | null>(null)
+  const partyChannelRef = useRef<PartyRealtimeChannel | null>(null)
 
   const modalOpen =
     statsOpen ||
@@ -91,7 +124,19 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     !!jobMasterNpc ||
     !!shopNpc ||
     !!npcMenu ||
-    !!tradePartner
+    !!tradePartner ||
+    !!partyRequest ||
+    guildOpen ||
+    vendorSetupOpen ||
+    !!vendorShopTarget
+
+  const refreshParty = () => {
+    void loadPartyForCharacter(character.id).then(setPartySnapshot)
+  }
+
+  const refreshGuild = () => {
+    void loadGuildForCharacter(character.id).then(setGuildSnapshot)
+  }
 
   useEffect(() => {
     setSessionReady(false)
@@ -148,8 +193,129 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [character.id])
 
   useEffect(() => {
-    emitGameEvent('uiPointerLock', false)
+    refreshParty()
+    refreshGuild()
+    void supabase
+      .from('vendor_stalls')
+      .select('*')
+      .eq('character_id', character.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.is_open) {
+          setVendingOpen(true)
+          setStallTitle(data.title)
+        }
+      })
+  }, [character.id])
+
+  useEffect(() => {
+    emitGameEvent('socialPresence', {
+      guildTag: guildSnapshot?.guild.tag ?? null,
+      isVending: vendingOpen,
+      stallTitle: vendingOpen ? stallTitle : null,
+    })
+  }, [guildSnapshot, vendingOpen, stallTitle])
+
+  useEffect(() => {
+    emitGameEvent('partySync', {
+      partyId: partySnapshot?.party.id ?? null,
+      leaderCharacterId: partySnapshot?.party.leader_character_id ?? null,
+      expShare: partySnapshot?.party.exp_share ?? false,
+      memberCharacterIds: partySnapshot?.members.map((m) => m.characterId) ?? [],
+      myCharacterId: character.id,
+    })
+  }, [partySnapshot, character.id])
+
+  useEffect(() => {
+    if (!vendingOpen) return
+    const tick = () => {
+      const pos = positionRef.current
+      emitGameEvent('vendorPosSync', { mapId: pos.mapId, x: pos.x, y: pos.y })
+    }
+    tick()
+    const interval = window.setInterval(tick, 3000)
+    return () => window.clearInterval(interval)
+  }, [vendingOpen, character.id])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`party-requests:${character.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'party_requests' },
+        async (payload) => {
+          const row = payload.new as PartyRequestRow
+          if (row.to_character_id !== character.id || row.status !== 'pending') return
+          const { data } = await supabase
+            .from('characters')
+            .select('name')
+            .eq('id', row.from_character_id)
+            .single()
+          setPartyRequest({ request: row, fromName: data?.name ?? 'Adventurer' })
+        },
+      )
+      .subscribe()
+
+    const partyMemberSub = supabase
+      .channel(`party-roster:${character.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'party_members' },
+        () => refreshParty(),
+      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'parties' }, () => refreshParty())
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+      void supabase.removeChannel(partyMemberSub)
+    }
+  }, [character.id])
+
+  useEffect(() => {
+    let chat: MapChatChannel | null = new MapChatChannel(character.map_id, (msg) => {
+      setMapChatLines((prev) => [...prev, msg].slice(-50))
+    })
+    mapChatRef.current = chat
+    void chat.join()
+    return () => {
+      void chat?.leave()
+      mapChatRef.current = null
+    }
+  }, [character.map_id])
+
+  useEffect(() => {
+    const partyId = partySnapshot?.party.id
+    if (!partyId) {
+      void partyChannelRef.current?.leave()
+      partyChannelRef.current = null
+      return
+    }
+    const ch = new PartyRealtimeChannel(
+      partyId,
+      (msg) => setPartyChatLines((prev) => [...prev, msg].slice(-50)),
+      (grant) => emitGameEvent('partyExpGrant', grant),
+    )
+    partyChannelRef.current = ch
+    void ch.join()
+    return () => {
+      void ch.leave()
+      if (partyChannelRef.current === ch) partyChannelRef.current = null
+    }
+  }, [partySnapshot?.party.id])
+
+  useEffect(() => {
+    const unsub = onGameEvent('partyExpBroadcast', (payload) => {
+      partyChannelRef.current?.broadcastExpGrant(payload)
+    })
+    return () => {
+      unsub()
+    }
   }, [])
+
+  useEffect(() => {
+    emitGameEvent('uiPointerLock', modalOpen)
+  }, [modalOpen])
 
   useEffect(() => {
     registerCharacterActionContext({
@@ -176,7 +342,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       onGameEvent('playerStats', (p) => {
         setSheet((s) => ({ ...s, ...p }))
       }),
-      onGameEvent('selectedMob', setSelectedMob),
+      onGameEvent('selectedMob', (mob) => {
+        setSelectedMob(mob)
+        if (mob) setSelectedPlayer(null)
+      }),
+      onGameEvent('selectedPlayer', setSelectedPlayer),
       onGameEvent('activityLog', (entry) => {
         setActivityLog((prev) => [...prev, entry].slice(-100))
       }),
@@ -421,8 +591,25 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     }
   }
 
+  async function runPartyAction(action: 'invite' | 'apply', targetCharacterId: string) {
+    try {
+      await partyManage({ action, characterId: character.id, targetCharacterId })
+      setMessage(action === 'invite' ? 'Party invite sent.' : 'Party application sent.')
+      refreshParty()
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Party action failed')
+    }
+  }
+
+  function sendChat(tab: 'map' | 'party', text: string) {
+    const local = { characterId: character.id, name: character.name }
+    if (tab === 'map') return mapChatRef.current?.send(local, text) ?? false
+    return partyChannelRef.current?.sendChat(local, text) ?? false
+  }
+
   const hpRatio = sheet.hpMax > 0 ? Math.min(1, sheet.hp / sheet.hpMax) : 0
   const mpRatio = sheet.mpMax > 0 ? Math.min(1, sheet.mp / sheet.mpMax) : 0
+  const guildTag = guildSnapshot?.guild.tag
 
   return (
     <div className={`game-shell game-shell--fullscreen${skillsOpen ? ' skills-assign-mode' : ''}`}>
@@ -438,7 +625,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         <div className="game-hud-overlay" aria-label="Game HUD">
           <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>
             <p className="game-hud-name">
-              <strong>{character.name}</strong>
+              <strong>
+                {guildTag ? `[${guildTag}] ` : ''}
+                {character.name}
+              </strong>
               <span className="muted small">
                 {mapDisplayName(character.map_id)} · {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Base {sheet.baseLevel} · Job {sheet.jobLevel}
               </span>
@@ -470,6 +660,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             <p className="game-hud-zeny">
               Zeny <strong>{character.zeny.toLocaleString()}</strong>
             </p>
+            <PartyPanel
+              characterId={character.id}
+              snapshot={partySnapshot}
+              onChanged={refreshParty}
+              onMessage={setMessage}
+            />
           </motion.div>
 
           <motion.div
@@ -489,6 +685,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             <button type="button" className="secondary hud-btn" onClick={() => setSkillsOpen(true)} title="Alt+K">
               Skills
             </button>
+            <button type="button" className="secondary hud-btn" onClick={() => setGuildOpen(true)}>
+              Guild
+            </button>
+            <button type="button" className="secondary hud-btn" onClick={() => setVendorSetupOpen(true)}>
+              Vend
+            </button>
             {status && <span className="hud-status muted small">{status}</span>}
             <button type="button" className="secondary hud-btn hud-btn--leave" onClick={() => void leaveWorld()}>
               Leave
@@ -501,14 +703,55 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             transition={{ ...hudEnterMotion.transition, delay: 0.12 }}
           >
             <h3>Target</h3>
-            {selectedMob ? (
+            {selectedPlayer ? (
+              <div className="target-panel">
+                <p><strong>{selectedPlayer.name}</strong></p>
+                <div className="target-actions row wrap gap">
+                  <button
+                    type="button"
+                    className="hud-btn"
+                    onClick={() =>
+                      setTradePartner({
+                        characterId: selectedPlayer.characterId,
+                        name: selectedPlayer.name,
+                      })
+                    }
+                  >
+                    Trade
+                  </button>
+                  <button
+                    type="button"
+                    className="hud-btn"
+                    onClick={() => void runPartyAction('invite', selectedPlayer.characterId)}
+                  >
+                    Join Party
+                  </button>
+                  <button
+                    type="button"
+                    className="hud-btn"
+                    onClick={() => void runPartyAction('apply', selectedPlayer.characterId)}
+                  >
+                    Apply Party
+                  </button>
+                  {selectedPlayer.isVending && (
+                    <button
+                      type="button"
+                      className="hud-btn"
+                      onClick={() => setVendorShopTarget(selectedPlayer)}
+                    >
+                      Browse shop
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : selectedMob ? (
               <div className="target-panel">
                 <p><strong>{selectedMob.name}</strong></p>
                 <p className="muted small">Lv {selectedMob.level}</p>
                 <p className="small">HP {selectedMob.hp} / {selectedMob.hpMax}</p>
               </div>
             ) : (
-              <p className="muted small">Click a mob</p>
+              <p className="muted small">Click a mob or player</p>
             )}
           </motion.div>
 
@@ -520,11 +763,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             <h3>Nearby</h3>
             <ul className="item-list">
               {remotePlayers.map((p) => (
-                <li key={p.characterId} className="row spread">
-                  <span className="small">{p.name}</span>
-                  <button type="button" className="hud-btn" onClick={() => setTradePartner({ characterId: p.characterId, name: p.name })}>
-                    Trade
-                  </button>
+                <li
+                  key={p.characterId}
+                  className={`small${selectedPlayer?.characterId === p.characterId ? ' nearby-selected' : ''}`}
+                >
+                  {p.name}
+                  {p.isVending ? ' [Shop]' : ''}
                 </li>
               ))}
               {remotePlayers.length === 0 && <li className="muted small">Alone on map</li>}
@@ -566,6 +810,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
                 )}
               </AnimatePresence>
             </div>
+            <ChatStrip
+              partyEnabled={!!partySnapshot}
+              mapLines={mapChatLines}
+              partyLines={partyChatLines}
+              onSend={sendChat}
+            />
             <div className="game-bottom-dock">
               <SkillBar sheet={sheet} />
               <ExperienceHud sheet={sheet} />
@@ -623,6 +873,70 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             sheet={sheet}
             onClose={() => setShopNpc(null)}
             onCharacterUpdated={onCharacterUpdated}
+          />
+        )}
+        {partyRequest && (
+          <PartyRequestModal
+            key={partyRequest.request.id}
+            characterId={character.id}
+            request={partyRequest.request}
+            fromName={partyRequest.fromName}
+            onClose={() => setPartyRequest(null)}
+            onResolved={refreshParty}
+          />
+        )}
+        {guildOpen && (
+          <GuildModal
+            key="guild"
+            characterId={character.id}
+            snapshot={guildSnapshot}
+            onClose={() => setGuildOpen(false)}
+            onChanged={refreshGuild}
+            onCharacterUpdated={() => {
+              void supabase
+                .from('characters')
+                .select('*')
+                .eq('id', character.id)
+                .single()
+                .then(({ data }) => {
+                  if (data) onCharacterUpdated(data)
+                })
+            }}
+            onMessage={setMessage}
+          />
+        )}
+        {vendorSetupOpen && (
+          <VendorSetupModal
+            key="vendor-setup"
+            characterId={character.id}
+            sheet={sheet}
+            mapId={position.mapId}
+            x={position.x}
+            y={position.y}
+            title={stallTitle}
+            onClose={() => setVendorSetupOpen(false)}
+            onOpened={() => setVendingOpen(true)}
+            onStallClosed={() => {
+              setVendingOpen(false)
+              void loadCharacterSession(character.id).then((loaded) => {
+                sessionRef.current = loaded
+                setSheet(toCharacterSheetPayload(loaded))
+                emitGameEvent('sessionSync', loaded)
+              })
+            }}
+            onMessage={setMessage}
+          />
+        )}
+        {vendorShopTarget && (
+          <VendorShopModal
+            key={`vendor-${vendorShopTarget.characterId}`}
+            buyer={character}
+            sellerCharacterId={vendorShopTarget.characterId}
+            sellerName={vendorShopTarget.name}
+            stallTitle={vendorShopTarget.stallTitle}
+            onClose={() => setVendorShopTarget(null)}
+            onCharacterUpdated={onCharacterUpdated}
+            onMessage={setMessage}
           />
         )}
         {tradePartner && (

@@ -17,6 +17,40 @@ export type PlayerPresencePayload = PositionPayload & {
   walkFrame: 0 | 1
   equipment: Record<EquipSlot, string | null>
   appearance: CharacterAppearance
+  guildTag?: string | null
+  isVending?: boolean
+  stallTitle?: string | null
+}
+
+export type SelectedPlayerPayload = {
+  characterId: string
+  name: string
+  isVending?: boolean
+  stallTitle?: string | null
+}
+
+export type PartySyncPayload = {
+  partyId: string | null
+  leaderCharacterId: string | null
+  expShare: boolean
+  memberCharacterIds: string[]
+  myCharacterId: string
+}
+
+export type SocialPresencePayload = {
+  guildTag?: string | null
+  isVending?: boolean
+  stallTitle?: string | null
+}
+
+export type PartyExpGrantPayload = {
+  killerCharacterId: string
+  baseExp: number
+  jobExp: number
+  mapId: string
+  x: number
+  y: number
+  at: number
 }
 
 export type PlayerStatsPayload = {
@@ -89,7 +123,17 @@ export type GameEvents = {
   position: { x: number; y: number; mapId: string }
   npcNearby: NpcRow | null
   npcInteract: NpcRow
-  remotePlayers: Array<{ characterId: string; name: string; x: number; y: number }>
+  remotePlayers: Array<{
+    characterId: string
+    name: string
+    x: number
+    y: number
+    isVending?: boolean
+    stallTitle?: string | null
+  }>
+  selectedPlayer: SelectedPlayerPayload | null
+  partySync: PartySyncPayload
+  socialPresence: SocialPresencePayload
   status: string
   playerStats: PlayerStatsPayload
   characterSheet: CharacterSheetPayload
@@ -108,6 +152,9 @@ export type GameEvents = {
     label: string
     destinationMapId: string
   }
+  partyExpBroadcast: Omit<PartyExpGrantPayload, 'at'>
+  partyExpGrant: PartyExpGrantPayload
+  vendorPosSync: { mapId: string; x: number; y: number }
 }
 
 type Listener = (payload: unknown) => void

@@ -9,7 +9,7 @@ Execute in order unless noted. **Ruleset:** Pre-Renewal / Classic per [iRO Wiki]
 | M3 | Pre-Renewal combat & economy (data-driven) | **Done** |
 | M4 | Job change + first job tree | **Done** |
 | M5 | World & NPC services | **Done** |
-| M6 | Social & trade depth | Not started |
+| M6 | Social & trade depth | **Done** |
 | M7+ | Late-game / out of scope for now | — |
 
 Update the **Status** column as you finish each milestone.
@@ -128,10 +128,11 @@ Update the **Status** column as you finish each milestone.
 
 **Tasks:**
 
-- [ ] Party: invite, roster, optional EXP share rules
-- [ ] Guild basics (creation, tag, roster) — scope as minimal viable
-- [ ] Chat channel(s) or refine sidebar chat
-- [ ] Vending or player shop stall (optional, larger scope)
+- [x] Party: invite, apply, roster, EXP share (simple split in range)
+- [x] Guild basics (create with zeny, tag, roster, disband/leave)
+- [x] Map + party chat (Realtime broadcast)
+- [x] Player vending stall (`vendor-manage` Edge Function)
+- [x] Click player → Target panel: Trade, Join Party, Apply Party, Browse shop
 
 **Verify:** Two+ clients party and grind; trade/storage still work with RLS.
 

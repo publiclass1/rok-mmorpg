@@ -37,9 +37,12 @@ supabase functions deploy storage-transfer
 supabase functions deploy save-point
 supabase functions deploy teleport
 supabase functions deploy trade-manage
+supabase functions deploy party-manage
+supabase functions deploy guild-manage
+supabase functions deploy vendor-manage
 ```
 
-4. Enable **Realtime** for `trade_sessions` and `trade_offers` if not applied by migration.
+4. Apply migrations through `20260324100000_m6_social.sql`. Enable **Realtime** for trade/party/guild/vendor tables if not applied by migration.
 
 ### 2. Client
 
@@ -64,7 +67,9 @@ npm run dev
 - **Alt+K** / **Skills** — job skills (skill points from job level)
 - **E** — interact with nearby NPC (storage / save / warp)
 - On `field_01`, mobs roam, aggro, and fight back; kill for Base/Job EXP (saved to your character)
-- **Trade** — use sidebar when another player is on the same map
+- **Trade / party** — click another player on the map; use Target actions (Trade, Join Party, Apply Party)
+- **Chat** — map and party tabs above the skill bar
+- **Guild / vending** — Guild and Vend buttons on the HUD
 
 ## Project layout
 

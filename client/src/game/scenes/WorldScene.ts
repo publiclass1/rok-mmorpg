@@ -32,7 +32,14 @@ import { getItemDisplayName } from '../character/itemCatalog'
 import { addItemsToSessionInventory } from '../character/sessionInventory'
 import type { MobInstance } from '../combat/mobTypes'
 import { SfxPlayer } from '../combat/sfx'
-import { emitGameEvent, onGameEvent, type PlayerPresencePayload } from '../events'
+import {
+  emitGameEvent,
+  onGameEvent,
+  type PartySyncPayload,
+  type PlayerPresencePayload,
+  type SocialPresencePayload,
+} from '../events'
+import { vendorManage } from '../../lib/api'
 import {
   clearMoveTarget,
   createMoveTarget,
@@ -69,6 +76,7 @@ import type { CharacterRow, NpcRow } from '../../types/database'
 
 const INTERACT_RANGE = 64
 const MOB_CLICK_RADIUS = 24
+const PARTY_EXP_RANGE = 120
 const PLAYER_FEET_OFFSET = 2
 const MOB_FEET_ANCHOR_ADJUST = 14
 
@@ -110,6 +118,17 @@ export class WorldScene extends Phaser.Scene {
   private collisionLayer: Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer | null = null
   private portalWarpCooldownUntil = 0
   private sfx = new SfxPlayer()
+  private socialPresence: SocialPresencePayload = {}
+  private partySync: PartySyncPayload = {
+    partyId: null,
+    leaderCharacterId: null,
+    expShare: false,
+    memberCharacterIds: [],
+    myCharacterId: '',
+  }
+  private selectedRemoteId: string | null = null
+  private playerSelectionRing: Phaser.GameObjects.Ellipse | null = null
+  private vendingOpen = false
 
   constructor() {
     super('WorldScene')
@@ -215,11 +234,31 @@ export class WorldScene extends Phaser.Scene {
         emitGameEvent('npcInteract', npc)
         return
       }
+      const remote = this.findRemotePlayerAt(wx, wy)
+      if (remote) {
+        if (this.isSitting) this.standUp()
+        const px = this.playerDisplay.container.x
+        const py = this.playerDisplay.container.y
+        const rx = remote.display.container.x
+        const ry = remote.display.container.y
+        if (Phaser.Math.Distance.Between(px, py, rx, ry) > INTERACT_RANGE) {
+          emitGameEvent('status', 'Too far from player — move closer.')
+          return
+        }
+        this.chaseMob = null
+        clearMoveTarget(this.moveTarget)
+        this.getPlayerBody().setVelocity(0, 0)
+        this.setSelectedMob(null)
+        this.setSelectedPlayer(remote)
+        this.faceToward(rx, ry)
+        return
+      }
       const mob = this.findMobAt(wx, wy)
       if (mob) {
         if (this.isSitting) this.standUp()
         this.chaseMob = mob
         this.setSelectedMob(mob)
+        this.setSelectedPlayer(null)
         setMoveTarget(this.moveTarget, mob.sprite.x, mob.sprite.y)
         this.faceToward(mob.sprite.x, mob.sprite.y)
       } else {
@@ -229,6 +268,7 @@ export class WorldScene extends Phaser.Scene {
         }
         this.chaseMob = null
         this.setSelectedMob(null)
+        this.setSelectedPlayer(null)
         setMoveTarget(this.moveTarget, wx, wy)
       }
     })
@@ -258,7 +298,32 @@ export class WorldScene extends Phaser.Scene {
       onGameEvent('uiPointerLock', (locked) => {
         this.uiPointerLocked = locked
       }),
+      onGameEvent('socialPresence', (payload) => {
+        this.socialPresence = { ...this.socialPresence, ...payload }
+        if (payload.isVending !== undefined) {
+          this.vendingOpen = Boolean(payload.isVending)
+        }
+      }),
+      onGameEvent('partySync', (payload) => {
+        this.partySync = payload
+      }),
+      onGameEvent('partyExpGrant', (payload) => {
+        this.applyPartyExpGrant(payload)
+      }),
+      onGameEvent('vendorPosSync', () => {
+        if (!this.vendingOpen) return
+        const pos = this.getPlayerPosition()
+        void vendorManage({
+          action: 'update_pos',
+          characterId: this.character.id,
+          mapId: pos.mapId,
+          x: pos.x,
+          y: pos.y,
+        })
+      }),
     )
+
+    this.partySync.myCharacterId = this.character.id
 
     this.presence = new MapPresenceChannel(
       this.character.map_id,
@@ -289,6 +354,8 @@ export class WorldScene extends Phaser.Scene {
             name: r.name,
             x: r.x,
             y: r.y,
+            isVending: r.isVending,
+            stallTitle: r.stallTitle,
           })),
         )
       },
@@ -422,6 +489,7 @@ export class WorldScene extends Phaser.Scene {
       tickRemotePlayer(entity, now, remoteSmooth)
     }
 
+    this.syncPlayerSelectionRing()
     this.syncWorldDepth()
   }
 
@@ -447,6 +515,9 @@ export class WorldScene extends Phaser.Scene {
       walkFrame,
       equipment: this.session.equipment,
       appearance: appearanceFromCharacterRow(this.character),
+      guildTag: this.socialPresence.guildTag ?? null,
+      isVending: Boolean(this.socialPresence.isVending),
+      stallTitle: this.socialPresence.stallTitle ?? null,
     }
   }
 
@@ -707,6 +778,53 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  private setSelectedPlayer(entity: RemotePlayerEntity | null) {
+    if (!entity) {
+      this.selectedRemoteId = null
+      this.playerSelectionRing?.destroy()
+      this.playerSelectionRing = null
+      emitGameEvent('selectedPlayer', null)
+      return
+    }
+    this.selectedRemoteId = entity.lastPayload.characterId
+    if (!this.playerSelectionRing) {
+      this.playerSelectionRing = this.add.ellipse(0, 0, 40, 28, 0x60a5fa, 0)
+      this.playerSelectionRing.setStrokeStyle(2, 0x60a5fa, 0.9)
+      this.playerSelectionRing.setDepth(5)
+    }
+    const p = entity.lastPayload
+    emitGameEvent('selectedPlayer', {
+      characterId: p.characterId,
+      name: p.name,
+      isVending: p.isVending,
+      stallTitle: p.stallTitle,
+    })
+    emitGameEvent('status', `Target: ${p.name}`)
+  }
+
+  private syncPlayerSelectionRing() {
+    if (!this.selectedRemoteId) return
+    const entity = this.remotePlayers.get(this.selectedRemoteId)
+    if (!entity) {
+      this.setSelectedPlayer(null)
+      return
+    }
+    if (this.playerSelectionRing) {
+      const c = entity.display.container
+      this.playerSelectionRing.setPosition(c.x, c.y - 6)
+    }
+  }
+
+  private findRemotePlayerAt(wx: number, wy: number): RemotePlayerEntity | null {
+    for (const entity of this.remotePlayers.values()) {
+      const c = entity.display.container
+      if (Phaser.Math.Distance.Between(wx, wy, c.x, c.y) <= MOB_CLICK_RADIUS) {
+        return entity
+      }
+    }
+    return null
+  }
+
   private findMobAt(wx: number, wy: number): MobInstance | null {
     for (const mob of this.mobs) {
       if (!mob.alive) continue
@@ -920,24 +1038,9 @@ export class WorldScene extends Phaser.Scene {
         }
       }
 
-      const beforeBase = this.session.progress.baseLevel
-      const beforeJob = this.session.progress.jobLevel
       const gained = scaleMobExp(def.wikiBaseExp, def.wikiJobExp)
-      const result = addExperience(this.session, gained.baseExp, gained.jobExp)
-      this.session = syncDerivedVitals(result.state)
-      showFloatingText(this, mob.sprite.x, mob.sprite.y - 52, `+${gained.baseExp} Base EXP`, 'exp')
-      showFloatingText(this, mob.sprite.x, mob.sprite.y - 68, `+${gained.jobExp} Job EXP`, 'exp')
+      this.grantKillExperience(gained.baseExp, gained.jobExp, mob.sprite.x, mob.sprite.y)
       logActivity('combat', `Defeated Lv ${mob.level} ${mob.name}.`)
-      logActivity('exp', `Gained ${gained.baseExp} Base EXP and ${gained.jobExp} Job EXP.`)
-      if (this.session.progress.baseLevel > beforeBase) {
-        emitGameEvent('status', `Base level up! Lv ${this.session.progress.baseLevel}`)
-        logActivity('level', `Base level up! Now Lv ${this.session.progress.baseLevel}.`)
-      }
-      if (this.session.progress.jobLevel > beforeJob) {
-        emitGameEvent('status', `Job level up! Job ${this.session.progress.jobLevel}`)
-        logActivity('level', `Job level up! Now Job Lv ${this.session.progress.jobLevel}.`)
-      }
-      this.emitCharacterSheet()
     }
 
     mob.alive = false
@@ -962,6 +1065,97 @@ export class WorldScene extends Phaser.Scene {
       initMobAiFields(mob, def)
       this.updateMobHpBar(mob)
     })
+  }
+
+  private countPartyExpEligible(kx: number, ky: number): number {
+    const ids = this.partySync.memberCharacterIds
+    if (ids.length === 0) return 1
+    let count = 0
+    for (const id of ids) {
+      if (id === this.character.id) {
+        count += 1
+        continue
+      }
+      const remote = this.remotePlayers.get(id)
+      if (!remote) continue
+      const c = remote.display.container
+      if (Phaser.Math.Distance.Between(kx, ky, c.x, c.y) <= PARTY_EXP_RANGE) count += 1
+    }
+    return Math.max(1, count)
+  }
+
+  private grantKillExperience(baseExp: number, jobExp: number, fx: number, fy: number) {
+    const party = this.partySync
+    const useShare =
+      party.partyId &&
+      party.expShare &&
+      party.memberCharacterIds.includes(this.character.id)
+
+    let shareBase = baseExp
+    let shareJob = jobExp
+    if (useShare) {
+      const eligible = this.countPartyExpEligible(fx, fy)
+      shareBase = Math.floor(baseExp / eligible)
+      shareJob = Math.floor(jobExp / eligible)
+      if (eligible > 1) {
+        emitGameEvent('partyExpBroadcast', {
+          killerCharacterId: this.character.id,
+          baseExp: shareBase,
+          jobExp: shareJob,
+          mapId: this.character.map_id,
+          x: fx,
+          y: fy,
+        })
+      }
+    }
+
+    const beforeBase = this.session.progress.baseLevel
+    const beforeJob = this.session.progress.jobLevel
+    const result = addExperience(this.session, shareBase, shareJob)
+    this.session = syncDerivedVitals(result.state)
+    showFloatingText(this, fx, fy - 52, `+${shareBase} Base EXP`, 'exp')
+    showFloatingText(this, fx, fy - 68, `+${shareJob} Job EXP`, 'exp')
+    logActivity('exp', `Gained ${shareBase} Base EXP and ${shareJob} Job EXP.`)
+    if (this.session.progress.baseLevel > beforeBase) {
+      emitGameEvent('status', `Base level up! Lv ${this.session.progress.baseLevel}`)
+      logActivity('level', `Base level up! Now Lv ${this.session.progress.baseLevel}.`)
+    }
+    if (this.session.progress.jobLevel > beforeJob) {
+      emitGameEvent('status', `Job level up! Job ${this.session.progress.jobLevel}`)
+      logActivity('level', `Job level up! Now Job Lv ${this.session.progress.jobLevel}.`)
+    }
+    this.emitCharacterSheet()
+  }
+
+  private applyPartyExpGrant(payload: import('../events').PartyExpGrantPayload) {
+    if (payload.killerCharacterId === this.character.id) return
+    const party = this.partySync
+    if (!party.partyId || !party.expShare || !party.memberCharacterIds.includes(this.character.id)) {
+      return
+    }
+    if (payload.mapId !== this.character.map_id) return
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (Phaser.Math.Distance.Between(px, py, payload.x, payload.y) > PARTY_EXP_RANGE) return
+
+    const beforeBase = this.session.progress.baseLevel
+    const beforeJob = this.session.progress.jobLevel
+    const result = addExperience(this.session, payload.baseExp, payload.jobExp)
+    this.session = syncDerivedVitals(result.state)
+    showFloatingText(this, px, py - 52, `+${payload.baseExp} Party EXP`, 'exp')
+    logActivity('exp', `Party share: ${payload.baseExp} Base / ${payload.jobExp} Job EXP.`)
+    if (this.session.progress.baseLevel > beforeBase) {
+      emitGameEvent('status', `Base level up! Lv ${this.session.progress.baseLevel}`)
+    }
+    if (this.session.progress.jobLevel > beforeJob) {
+      emitGameEvent('status', `Job level up! Job ${this.session.progress.jobLevel}`)
+    }
+    this.emitCharacterSheet()
+  }
+
+  setVendingOpen(open: boolean) {
+    this.vendingOpen = open
+    this.socialPresence = { ...this.socialPresence, isVending: open }
   }
 
   private emitCharacterSheet() {

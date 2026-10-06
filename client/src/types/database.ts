@@ -117,6 +117,65 @@ export type TradeOfferRow = {
   zeny: number
 }
 
+export type PartyRow = {
+  id: string
+  leader_character_id: string
+  name: string
+  exp_share: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type PartyMemberRow = {
+  party_id: string
+  character_id: string
+  joined_at: string
+}
+
+export type PartyRequestRow = {
+  id: string
+  party_id: string
+  from_character_id: string
+  to_character_id: string
+  kind: 'invite' | 'apply'
+  status: 'pending' | 'accepted' | 'declined' | 'cancelled'
+  created_at: string
+  updated_at: string
+}
+
+export type GuildRow = {
+  id: string
+  name: string
+  tag: string
+  leader_character_id: string
+  created_at: string
+}
+
+export type GuildMemberRow = {
+  guild_id: string
+  character_id: string
+  role: 'leader' | 'member'
+  joined_at: string
+}
+
+export type VendorStallRow = {
+  character_id: string
+  title: string
+  map_id: string
+  x: number
+  y: number
+  is_open: boolean
+  updated_at: string
+}
+
+export type VendorListingRow = {
+  id: string
+  character_id: string
+  item_id: string
+  price: number
+  quantity: number
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -173,6 +232,13 @@ export type Database = {
       }
       trade_sessions: { Row: TradeSessionRow; Insert: Partial<TradeSessionRow>; Update: Partial<TradeSessionRow> }
       trade_offers: { Row: TradeOfferRow; Insert: Partial<TradeOfferRow>; Update: Partial<TradeOfferRow> }
+      parties: { Row: PartyRow; Insert: Partial<PartyRow>; Update: Partial<PartyRow> }
+      party_members: { Row: PartyMemberRow; Insert: Partial<PartyMemberRow>; Update: Partial<PartyMemberRow> }
+      party_requests: { Row: PartyRequestRow; Insert: Partial<PartyRequestRow>; Update: Partial<PartyRequestRow> }
+      guilds: { Row: GuildRow; Insert: Partial<GuildRow>; Update: Partial<GuildRow> }
+      guild_members: { Row: GuildMemberRow; Insert: Partial<GuildMemberRow>; Update: Partial<GuildMemberRow> }
+      vendor_stalls: { Row: VendorStallRow; Insert: Partial<VendorStallRow>; Update: Partial<VendorStallRow> }
+      vendor_listings: { Row: VendorListingRow; Insert: Partial<VendorListingRow>; Update: Partial<VendorListingRow> }
     }
   }
 }
