@@ -16,7 +16,7 @@ A simple browser MMORPG inspired by Ragnarok Online — for fun and game-dev lea
 - **Client:** Vite, React, TypeScript, Phaser 4
 - **Maps:** Tiled (`.tmj` in `client/public/maps/`)
 - **Backend:** Supabase (Postgres, Auth, Realtime, Edge Functions)
-- **Hosting:** Vercel (static SPA) — Netlify works with the same build
+- **Hosting:** Netlify (static SPA)
 - **Repo:** GitHub
 
 See [docs/DECISIONS.md](docs/DECISIONS.md) for v1 choices (React + Phaser, WASD movement).
@@ -41,10 +41,11 @@ supabase functions deploy trade-manage
 ### 2. Client
 
 ```bash
+npm install
 cd client
 cp .env.example .env
 # Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-npm install
+cd ..
 npm run dev
 ```
 
@@ -66,3 +67,23 @@ npm run dev
 - `field_01` — field with return warp
 
 Replace tile graphics via `client/public/tiles.png` and edit maps in [Tiled](https://www.mapeditor.org/), exporting JSON to `client/public/maps/`.
+
+## Deploy on Netlify
+
+1. Push the repo to GitHub (or GitLab/Bitbucket).
+2. In [Netlify](https://app.netlify.com): **Add new site** → **Import from Git** → select the repo.
+3. Netlify reads [netlify.toml](netlify.toml) automatically:
+   - **Build command:** `npm run build`
+   - **Publish directory:** `client/dist`
+4. **Site settings → Environment variables** (required for production):
+
+   | Key | Value |
+   |-----|--------|
+   | `VITE_SUPABASE_URL` | Project URL from Supabase → Settings → API |
+   | `VITE_SUPABASE_ANON_KEY` | `anon` public key (same place) |
+
+5. Deploy. After each push to your production branch, Netlify rebuilds the client.
+
+Supabase (database, auth, Realtime, Edge Functions) stays on [supabase.com](https://supabase.com) — Netlify only hosts the browser app.
+
+**Local vs Netlify:** use `client/.env` for `npm run dev`; use Netlify env vars for live builds (Vite bakes `VITE_*` in at build time).

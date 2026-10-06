@@ -1,0 +1,24 @@
+{
+  "name": "browser-ragnarok-like",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser-based Ragnarok-like MMORPG (Vite + Phaser + Supabase)",
+  "workspaces": [
+    "client"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w client",
+    "build": "npm run build -w client",
+    "lint": "npm run lint -w client",
+    "preview": "npm run preview -w client",
+    "supabase:login": "supabase login",
+    "supabase:link": "supabase link",
+    "supabase:push": "supabase db push",
+    "supabase:functions": "supabase functions deploy storage-transfer && supabase functions deploy save-point && supabase functions deploy teleport && supabase functions deploy trade-manage",
+    "supabase:setup": "npm run supabase:push && npm run supabase:functions",
+    "supabase:cloud-setup": "bash scripts/supabase-cloud-setup.sh"
+  },
+  "devDependencies": {
+    "supabase": "^2.119.0"
+  }
+}

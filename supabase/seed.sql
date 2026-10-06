@@ -1,0 +1,2 @@
+-- Optional seed data (runs on `supabase db reset` locally only).
+-- Catalog and NPC rows are created in migrations.

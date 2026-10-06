@@ -5,4 +5,5 @@ dist/
 client/.env
 client/dist/
 supabase/.temp/
+.supabase/
 .DS_Store
