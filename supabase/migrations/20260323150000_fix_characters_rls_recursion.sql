@@ -1,9 +1,5 @@
--- Fix: characters_select_visible_for_trade used (true), exposing every character to every user.
+-- Fix infinite recursion: trade SELECT policy must not query characters under RLS.
 
-drop policy if exists "characters_select_visible_for_trade" on public.characters;
-drop policy if exists "characters_select_trade_counterparty" on public.characters;
-
--- Subquery on characters under RLS causes infinite recursion; use security definer helper.
 create or replace function public.can_view_character_for_trade(target_character_id uuid)
 returns boolean
 language sql
@@ -21,5 +17,22 @@ as $$
   );
 $$;
 
+drop policy if exists "characters_select_trade_counterparty" on public.characters;
+
 create policy "characters_select_trade_counterparty" on public.characters
   for select using (public.can_view_character_for_trade(id));
+
+-- Count existing slots without re-entering characters RLS (before-insert trigger).
+create or replace function public.enforce_max_characters()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if (select count(*) from public.characters c where c.user_id = new.user_id) >= 3 then
+    raise exception 'Maximum of 3 characters per account';
+  end if;
+  return new;
+end;
+$$;

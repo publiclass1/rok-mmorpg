@@ -65,6 +65,11 @@ export function CharacterSelect({ onSelect, onLogout }: Props) {
       .single()
 
     if (err) {
+      if (err.code === '23505' && err.message.includes('characters_name_unique')) {
+        setError('That name is already taken (names are unique across all players). Pick another or check your list below.')
+        void loadCharacters()
+        return
+      }
       setError(err.message)
       return
     }
