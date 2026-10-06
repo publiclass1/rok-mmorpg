@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import type { EquipSlot } from '../character/characterState'
+import { resolveHeadItemId, type EquipSlot } from '../character/characterState'
 import { EQUIPMENT } from '../character/equipmentConfig'
 import type { Facing } from '../movement/clickToMove'
 
@@ -58,10 +58,12 @@ export function ensurePlayerAnimationTextures(scene: Phaser.Scene) {
   }
 }
 
+export type PlayerVisualLayer = 'weapon' | 'armor' | 'head' | 'offhand'
+
 export type PlayerDisplay = {
   container: Phaser.GameObjects.Container
   body: Phaser.GameObjects.Sprite
-  layers: Partial<Record<EquipSlot, Phaser.GameObjects.Rectangle>>
+  layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Rectangle>>
 }
 
 export function createPlayerDisplay(
@@ -74,15 +76,17 @@ export function createPlayerDisplay(
   body.setOrigin(0.5, 0.85)
   body.anims.play('idle_down')
 
-  const layers: Partial<Record<EquipSlot, Phaser.GameObjects.Rectangle>> = {}
+  const layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Rectangle>> = {}
   const weapon = scene.add.rectangle(8, 4, 10, 4, 0xc0c0c0).setVisible(false)
   const armor = scene.add.rectangle(0, 8, 18, 12, 0xf5f5dc, 0.7).setVisible(false)
   const head = scene.add.rectangle(0, -10, 16, 6, 0x8b4513).setVisible(false)
+  const offhand = scene.add.rectangle(-8, 6, 8, 10, 0x6b7280).setVisible(false)
   layers.weapon = weapon
   layers.armor = armor
   layers.head = head
+  layers.offhand = offhand
 
-  const container = scene.add.container(x, y, [body, armor, head, weapon])
+  const container = scene.add.container(x, y, [body, armor, head, offhand, weapon])
   scene.physics.add.existing(container)
   const bodyPhys = container.body as Phaser.Physics.Arcade.Body
   bodyPhys.setSize(18, 14)
@@ -99,21 +103,34 @@ export function updatePlayerEquipmentLayers(
   display: PlayerDisplay,
   equipment: Record<EquipSlot, string | null>,
 ) {
-  const show = (slot: EquipSlot, visible: boolean, color?: number) => {
-    const layer = display.layers[slot]
+  const show = (layerKey: PlayerVisualLayer, visible: boolean, color?: number, alpha = 1) => {
+    const layer = display.layers[layerKey]
     if (!layer) return
     layer.setVisible(visible)
-    if (color !== undefined) layer.setFillStyle(color, slot === 'armor' ? 0.7 : 1)
+    if (color !== undefined) layer.setFillStyle(color, alpha)
   }
   show('weapon', false)
   show('armor', false)
   show('head', false)
+  show('offhand', false)
 
   for (const itemId of Object.values(equipment)) {
     if (!itemId) continue
     const def = EQUIPMENT[itemId]
     if (!def) continue
-    show(def.slot, true, def.layerColor)
+    if (def.slot === 'headTop' || def.slot === 'headMiddle' || def.slot === 'headLower') continue
+    if (def.slot === 'offhand') {
+      show('offhand', true, def.layerColor)
+      continue
+    }
+    if (def.slot === 'weapon') show('weapon', true, def.layerColor)
+    else if (def.slot === 'armor') show('armor', true, def.layerColor, 0.7)
+  }
+
+  const headItemId = resolveHeadItemId(equipment)
+  if (headItemId) {
+    const def = EQUIPMENT[headItemId]
+    if (def) show('head', true, def.layerColor)
   }
 }
 

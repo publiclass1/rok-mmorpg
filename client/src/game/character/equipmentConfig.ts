@@ -27,7 +27,7 @@ export const EQUIPMENT: Record<string, EquipmentDefinition> = {
   cap: {
     id: 'cap',
     name: 'Cap',
-    slot: 'head',
+    slot: 'headTop',
     layerColor: 0x8b4513,
     bonuses: { str: 0, agi: 0, vit: 0, int: 0, dex: 0, luk: 1 },
   },

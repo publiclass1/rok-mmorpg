@@ -346,9 +346,12 @@ button:disabled {
   width: min(860px, 100%);
 }
 
-.inventory-modal,
-.equipment-modal {
+.inventory-modal {
   width: min(520px, 100%);
+}
+
+.equipment-modal {
+  width: min(560px, 100%);
 }
 
 .inv-grid {
@@ -407,11 +410,101 @@ button:disabled {
   pointer-events: none;
 }
 
-.equip-slots-grid {
+.equipment-ro-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem 1rem;
   margin-top: 1rem;
+  align-items: stretch;
+}
+
+.equipment-ro-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  justify-content: space-between;
+}
+
+.equipment-ro-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  padding: 0.5rem;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  background: #111827;
+}
+
+.character-equip-preview {
+  position: relative;
+  width: 96px;
+  height: 112px;
+}
+
+.character-equip-preview__body {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 48px;
+  height: 42px;
+  margin-left: -24px;
+  border-radius: 6px;
+  background: #1d4ed8;
+}
+
+.character-equip-preview__head {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  border-radius: 50%;
+  background: #fcd34d;
+}
+
+.character-equip-preview__armor {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 52px;
+  height: 34px;
+  margin-left: -26px;
+  border-radius: 4px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.character-equip-preview__headgear {
+  position: absolute;
+  left: 50%;
+  top: 14%;
+  width: 44px;
+  height: 10px;
+  margin-left: -22px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.character-equip-preview__weapon {
+  position: absolute;
+  right: 8%;
+  top: 38%;
+  width: 28px;
+  height: 8px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.character-equip-preview__offhand {
+  position: absolute;
+  left: 6%;
+  top: 48%;
+  width: 18px;
+  height: 24px;
+  border-radius: 2px;
+  pointer-events: none;
 }
 
 .equip-slot-cell {

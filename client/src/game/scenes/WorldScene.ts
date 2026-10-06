@@ -1,6 +1,11 @@
 import Phaser from 'phaser'
 import { syncDerivedVitals, toCharacterSheetPayload } from '../character/characterSheet'
-import { addExperience, createInitialCharacterState, type CharacterSessionState } from '../character/characterState'
+import {
+  addExperience,
+  createInitialCharacterState,
+  normalizeEquipment,
+  type CharacterSessionState,
+} from '../character/characterState'
 import { SKILLS } from '../character/skillsConfig'
 import {
   flashPlayer,
@@ -117,7 +122,11 @@ export class WorldScene extends Phaser.Scene {
     colliderWithObstacles(this, this.obstacles, this.playerDisplay.container)
 
     const boot = this.registry.get('bootSession') as CharacterSessionState | undefined
-    this.session = syncDerivedVitals(boot ? { ...boot } : createInitialCharacterState())
+    this.session = syncDerivedVitals(
+      boot
+        ? { ...boot, equipment: normalizeEquipment(boot.equipment) }
+        : createInitialCharacterState(),
+    )
     if (!boot) {
       const initialSheet = toCharacterSheetPayload(this.session)
       this.session = { ...this.session, hp: initialSheet.hpMax, mp: initialSheet.mpMax }

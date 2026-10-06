@@ -3,7 +3,55 @@ import { SKILL_POINTS_PER_JOB_LEVEL, STAT_POINTS_PER_BASE_LEVEL, statRaiseCost }
 
 export type PrimaryStat = 'str' | 'agi' | 'vit' | 'int' | 'dex' | 'luk'
 
-export type EquipSlot = 'weapon' | 'head' | 'armor' | 'garment' | 'boots'
+export type EquipSlot =
+  | 'weapon'
+  | 'headTop'
+  | 'headMiddle'
+  | 'headLower'
+  | 'armor'
+  | 'garment'
+  | 'boots'
+  | 'offhand'
+  | 'accLeft'
+  | 'accRight'
+
+export const HEAD_EQUIP_SLOTS: EquipSlot[] = ['headTop', 'headMiddle', 'headLower']
+
+export function createDefaultEquipment(): Record<EquipSlot, string | null> {
+  return {
+    weapon: null,
+    headTop: null,
+    headMiddle: null,
+    headLower: null,
+    armor: null,
+    garment: null,
+    boots: null,
+    offhand: null,
+    accLeft: null,
+    accRight: null,
+  }
+}
+
+/** Merge persisted/partial equipment into the current slot schema (legacy `head` → headTop). */
+export function normalizeEquipment(raw: unknown): Record<EquipSlot, string | null> {
+  const base = createDefaultEquipment()
+  if (!raw || typeof raw !== 'object') return base
+  const obj = raw as Record<string, string | null | undefined>
+  for (const slot of Object.keys(base) as EquipSlot[]) {
+    const v = obj[slot]
+    if (v != null && v !== '') base[slot] = v
+  }
+  if (obj.head && !base.headTop) base.headTop = obj.head
+  return base
+}
+
+export function resolveHeadItemId(equipment: Record<EquipSlot, string | null>): string | null {
+  for (const slot of HEAD_EQUIP_SLOTS) {
+    const id = equipment[slot]
+    if (id) return id
+  }
+  return null
+}
 
 export type CharacterSessionState = {
   progress: PlayerProgressState
@@ -41,7 +89,7 @@ export function createInitialCharacterState(): CharacterSessionState {
     jobId: 'novice',
     skillPointsUnspent: 0,
     skills: { basic_attack: 1 },
-    equipment: { weapon: null, head: null, armor: null, garment: null, boots: null },
+    equipment: createDefaultEquipment(),
     skillBar: ['basic_attack', null, null, null, null, null, null, null, null],
     sessionInventory: ['knife', 'cotton_shirt', 'cap'],
     hp: 50,

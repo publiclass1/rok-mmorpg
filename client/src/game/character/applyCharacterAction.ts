@@ -44,6 +44,12 @@ export function applyCharacterAction(
   }
 
   if (action.type === 'equip') {
+    if (action.itemId) {
+      const def = EQUIPMENT[action.itemId]
+      if (!def || def.slot !== action.slot) {
+        return { state, changed: false, message: 'Cannot equip item in that slot.' }
+      }
+    }
     const next = syncDerivedVitals(equipItem(state, action.slot, action.itemId))
     const label = action.itemId ? EQUIPMENT[action.itemId]?.name ?? action.itemId : 'empty'
     logActivity(

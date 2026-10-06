@@ -7,12 +7,30 @@ type Props = {
   sheet: CharacterSheetPayload
 }
 
+const SLOT_ORDER: EquipSlot[] = [
+  'headTop',
+  'headMiddle',
+  'headLower',
+  'weapon',
+  'armor',
+  'offhand',
+  'garment',
+  'boots',
+  'accLeft',
+  'accRight',
+]
+
 const SLOT_LABELS: Record<EquipSlot, string> = {
+  headTop: 'Head (Top)',
+  headMiddle: 'Head (Mid)',
+  headLower: 'Head (Low)',
   weapon: 'Weapon',
-  head: 'Head',
   armor: 'Armor',
+  offhand: 'Off-hand',
   garment: 'Garment',
   boots: 'Boots',
+  accLeft: 'Acc (L)',
+  accRight: 'Acc (R)',
 }
 
 export function EquipPanel({ sheet }: Props) {
@@ -26,7 +44,7 @@ export function EquipPanel({ sheet }: Props) {
     <div className="equip-panel">
       <h3>Equipment</h3>
       <ul className="item-list">
-        {(Object.keys(SLOT_LABELS) as EquipSlot[]).map((slot) => {
+        {SLOT_ORDER.map((slot) => {
           const itemId = sheet.equipment[slot]
           const name = itemId ? EQUIPMENT[itemId]?.name ?? itemId : '—'
           return (
