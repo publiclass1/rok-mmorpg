@@ -4,6 +4,7 @@ import { dispatchCharacterAction } from '../game/character/characterActionDispat
 import { readSkillBarDrag, SKILL_BAR_DRAG_MIME } from '../game/character/skillBarDrag'
 import { canLearnSkill, JOB_NAMES, SKILLS, barAssignableSkills, skillsForJob } from '../game/character/skillsConfig'
 import type { CharacterSheetPayload } from '../game/events'
+import { AnimatedModal } from './motion/AnimatedModal'
 
 type Props = {
   sheet: CharacterSheetPayload
@@ -41,8 +42,11 @@ export function SkillsWindow({ sheet, onClose }: Props) {
   }
 
   return (
-    <div className="modal-backdrop skills-modal-backdrop" onClick={onClose}>
-      <div className="panel modal skills-modal" onClick={(e) => e.stopPropagation()}>
+    <AnimatedModal
+      onClose={onClose}
+      backdropClassName="modal-backdrop skills-modal-backdrop"
+      panelClassName="panel modal skills-modal"
+    >
         <div className="row spread">
           <h2 style={{ margin: 0 }}>Skills</h2>
           <button type="button" className="secondary" onClick={onClose}>
@@ -112,7 +116,6 @@ export function SkillsWindow({ sheet, onClose }: Props) {
             )
           })}
         </div>
-      </div>
-    </div>
+    </AnimatedModal>
   )
 }

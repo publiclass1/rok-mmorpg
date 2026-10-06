@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { motion } from 'motion/react'
+import { panelMotion } from './motion/motionPresets'
 import { supabase } from '../lib/supabase'
 import {
   friendlyAuthError,
@@ -65,7 +67,7 @@ export function AuthScreen({ onAuthed }: Props) {
   }
 
   return (
-    <div className="panel auth-panel">
+    <motion.div className="panel auth-panel" {...panelMotion}>
       <h1>Browser Ragnarok-like</h1>
       <p className="muted">Sign in to create up to 3 characters and enter the world.</p>
       <p className="muted small">Username and password only — no email. Password at least 6 characters.</p>
@@ -103,6 +105,6 @@ export function AuthScreen({ onAuthed }: Props) {
       <button type="button" className="linkish" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
         {mode === 'login' ? 'Need an account? Sign up' : 'Already have an account? Log in'}
       </button>
-    </div>
+    </motion.div>
   )
 }

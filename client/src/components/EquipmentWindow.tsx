@@ -4,6 +4,7 @@ import { getItemDisplayName } from '../game/character/itemCatalog'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import type { CharacterSheetPayload } from '../game/events'
 import { CharacterEquipPreview } from './CharacterEquipPreview'
+import { AnimatedModal } from './motion/AnimatedModal'
 
 type Props = {
   sheet: CharacterSheetPayload
@@ -59,8 +60,7 @@ export function EquipmentWindow({ sheet, onClose }: Props) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="panel modal equipment-modal" onClick={(e) => e.stopPropagation()}>
+    <AnimatedModal onClose={onClose} panelClassName="panel modal equipment-modal">
         <div className="row spread">
           <h2 style={{ margin: 0 }}>Equipment</h2>
           <button type="button" className="secondary" onClick={onClose}>Close</button>
@@ -90,7 +90,6 @@ export function EquipmentWindow({ sheet, onClose }: Props) {
             ))}
           </div>
         </div>
-      </div>
-    </div>
+    </AnimatedModal>
   )
 }

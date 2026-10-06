@@ -1,4 +1,5 @@
 import type { NpcRow } from '../types/database'
+import { AnimatedModal } from './motion/AnimatedModal'
 
 export type NpcMenuChoice =
   | { kind: 'storage'; label: string }
@@ -52,8 +53,7 @@ export function NpcOptionsModal({ npc, onChoose, onClose }: Props) {
   const choices = npcMenuChoices(npc)
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="panel modal npc-options-modal" onClick={(e) => e.stopPropagation()}>
+    <AnimatedModal onClose={onClose} panelClassName="panel modal npc-options-modal">
         <div className="row spread">
           <h2 style={{ margin: 0 }}>{npc.label}</h2>
           <button type="button" className="secondary" onClick={onClose}>
@@ -84,7 +84,6 @@ export function NpcOptionsModal({ npc, onChoose, onClose }: Props) {
             )
           })}
         </ul>
-      </div>
-    </div>
+    </AnimatedModal>
   )
 }

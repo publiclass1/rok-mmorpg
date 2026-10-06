@@ -3,6 +3,10 @@ import type { CharacterSessionState } from './character/characterState'
 import type { CharacterRow, NpcRow } from '../types/database'
 import { WorldScene } from './scenes/WorldScene'
 
+/** Internal render size; Scale.FIT scales this canvas to the fullscreen host. */
+export const GAME_VIEW_WIDTH = 1280
+export const GAME_VIEW_HEIGHT = 720
+
 export function createPhaserGame(
   parent: HTMLElement,
   character: CharacterRow,
@@ -12,8 +16,8 @@ export function createPhaserGame(
   return new Phaser.Game({
     type: Phaser.AUTO,
     parent,
-    width: 960,
-    height: 640,
+    width: GAME_VIEW_WIDTH,
+    height: GAME_VIEW_HEIGHT,
     backgroundColor: '#0f172a',
     physics: {
       default: 'arcade',

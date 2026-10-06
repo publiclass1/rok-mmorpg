@@ -4,6 +4,7 @@ import { JOB_NAMES } from '../game/character/skillsConfig'
 import type { CharacterSheetPayload } from '../game/events'
 import type { CharacterRow, NpcRow } from '../types/database'
 import { supabase } from '../lib/supabase'
+import { AnimatedModal } from './motion/AnimatedModal'
 
 type Props = {
   character: CharacterRow
@@ -51,8 +52,7 @@ export function JobMasterModal({ character, npc, sheet, onClose, onCharacterUpda
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="panel modal" onClick={(e) => e.stopPropagation()}>
+    <AnimatedModal onClose={onClose}>
         <div className="row spread">
           <h2 style={{ margin: 0 }}>{npc.label}</h2>
           <button type="button" className="secondary" onClick={onClose}>
@@ -83,7 +83,6 @@ export function JobMasterModal({ character, npc, sheet, onClose, onCharacterUpda
             })}
           </ul>
         )}
-      </div>
-    </div>
+    </AnimatedModal>
   )
 }

@@ -40,7 +40,7 @@ function App() {
   }
 
   return (
-    <main className="app-root">
+    <main className={`app-root${screen === 'game' ? ' app-root--game' : ''}`}>
       {screen === 'auth' && (
         <AuthScreen
           onAuthed={() => {

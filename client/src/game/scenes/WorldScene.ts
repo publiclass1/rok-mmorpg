@@ -51,6 +51,8 @@ import {
 } from '../player/playerSprites'
 import { SIT_REGEN_INTERVAL_MS, sitRegenAmounts } from '../character/sitRegen'
 import { MapPresenceChannel } from '../realtime/mapChannel'
+import { clampToMap } from '../world/clampToMap'
+import { setDepthByFeet } from '../world/depthSort'
 import { ensureMobTexture, ensureTilesTexture } from '../textures'
 import { supabase } from '../../lib/supabase'
 import { saveCharacterSession } from '../../lib/characterProgress'
@@ -58,6 +60,14 @@ import type { CharacterRow, NpcRow } from '../../types/database'
 
 const INTERACT_RANGE = 64
 const MOB_CLICK_RADIUS = 24
+const PLAYER_FEET_OFFSET = 2
+const MOB_FEET_ANCHOR_ADJUST = 14
+
+type NpcVisual = {
+  rect: Phaser.GameObjects.Rectangle
+  label: Phaser.GameObjects.Text
+  feetY: number
+}
 
 export class WorldScene extends Phaser.Scene {
   private character!: CharacterRow
@@ -66,7 +76,8 @@ export class WorldScene extends Phaser.Scene {
   private eventUnsubs: Array<() => void> = []
 
   private npcs: NpcRow[] = []
-  private npcSprites: Phaser.GameObjects.Rectangle[] = []
+  private npcVisuals: NpcVisual[] = []
+  private playerShadow!: Phaser.GameObjects.Ellipse
   private presence: MapPresenceChannel | null = null
   private remoteSprites = new Map<string, Phaser.GameObjects.Container>()
   private facing: Facing = 'down'
@@ -111,7 +122,8 @@ export class WorldScene extends Phaser.Scene {
     const tileset = map.addTilesetImage('tiles', 'tiles', 32, 32, 0, 0)
     if (!tileset) throw new Error('Failed to load tileset')
 
-    map.createLayer('ground', tileset, 0, 0)
+    const ground = map.createLayer('ground', tileset, 0, 0)
+    ground?.setDepth(0)
     const collision = map.createLayer('collision', tileset, 0, 0)
     collision?.setVisible(false)
     collision?.setCollisionByExclusion([-1, 0])
@@ -122,7 +134,13 @@ export class WorldScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, worldW, worldH)
     this.cameras.main.setBounds(0, 0, worldW, worldH)
 
-    this.playerDisplay = createPlayerDisplay(this, this.character.x, this.character.y)
+    const spawn = clampToMap(this.character.x, this.character.y, worldW, worldH)
+
+    this.playerShadow = this.add
+      .ellipse(spawn.x, spawn.y + PLAYER_FEET_OFFSET, 22, 8, 0x000000, 0.28)
+      .setDepth(0.5)
+
+    this.playerDisplay = createPlayerDisplay(this, spawn.x, spawn.y)
     const playerBody = this.playerDisplay.container.body as Phaser.Physics.Arcade.Body
     playerBody.setCollideWorldBounds(true)
     if (collision) {
@@ -145,14 +163,16 @@ export class WorldScene extends Phaser.Scene {
     updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
 
     this.playerLabel = this.add
-      .text(this.character.x, this.character.y - 28, this.character.name, {
+      .text(spawn.x, spawn.y - 28, this.character.name, {
         fontSize: '11px',
         color: '#bfdbfe',
       })
       .setOrigin(0.5)
 
+    this.cameras.main.centerOn(spawn.x, spawn.y)
     this.cameras.main.startFollow(this.playerDisplay.container, true, 0.12, 0.12)
-    this.cameras.main.setZoom(1)
+    this.cameras.main.setFollowOffset(0, 48)
+    this.cameras.main.setZoom(1.35)
 
     this.spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
 
@@ -199,11 +219,14 @@ export class WorldScene extends Phaser.Scene {
     })
 
     for (const npc of this.npcs) {
-      const rect = this.add.rectangle(npc.x, npc.y, 28, 36, 0xf59e0b)
+      const feetY = npc.y + 18
+      const rect = this.add.rectangle(npc.x, feetY - 18, 28, 36, 0xf59e0b)
       rect.setStrokeStyle(2, 0xffffff)
       rect.setInteractive({ useHandCursor: true })
-      this.add.text(npc.x, npc.y - 28, npc.label, { fontSize: '11px', color: '#fff' }).setOrigin(0.5)
-      this.npcSprites.push(rect)
+      const label = this.add
+        .text(npc.x, feetY - 46, npc.label, { fontSize: '11px', color: '#fff' })
+        .setOrigin(0.5)
+      this.npcVisuals.push({ rect, label, feetY })
     }
 
     this.spawnMapMobs()
@@ -368,6 +391,47 @@ export class WorldScene extends Phaser.Scene {
       }
     }
     emitGameEvent('npcNearby', this.nearestNpc)
+    this.syncWorldDepth()
+  }
+
+  private playerFeetY(): number {
+    const jumpLift = this.isJumping ? -10 : 0
+    return this.playerDisplay.container.y + PLAYER_FEET_OFFSET + jumpLift
+  }
+
+  private syncWorldDepth() {
+    const playerFeet = this.playerFeetY()
+    setDepthByFeet(this.playerShadow, playerFeet, -0.5)
+    this.playerShadow.setPosition(
+      this.playerDisplay.container.x,
+      this.playerDisplay.container.y + PLAYER_FEET_OFFSET,
+    )
+    setDepthByFeet(this.playerDisplay.container, playerFeet)
+    setDepthByFeet(this.playerLabel, playerFeet, 0.05)
+
+    for (const mob of this.mobs) {
+      if (!mob.alive) continue
+      const feet = mob.sprite.y
+      setDepthByFeet(mob.sprite, feet)
+      setDepthByFeet(mob.hpBarBg, feet, 0.02)
+      setDepthByFeet(mob.hpBarFill, feet, 0.03)
+      setDepthByFeet(mob.label, feet, 0.04)
+    }
+
+    for (const npc of this.npcVisuals) {
+      setDepthByFeet(npc.rect, npc.feetY)
+      setDepthByFeet(npc.label, npc.feetY, 0.05)
+    }
+
+    for (const container of this.remoteSprites.values()) {
+      const feet = container.y + 10
+      setDepthByFeet(container, feet)
+    }
+
+    if (this.selectionRing && this.selectedMob?.alive) {
+      const feet = this.selectedMob.sprite.y
+      setDepthByFeet(this.selectionRing, feet, -0.1)
+    }
   }
 
   private useSkillSlot(slot: number) {
@@ -575,7 +639,7 @@ export class WorldScene extends Phaser.Scene {
       return
     }
     if (this.selectionRing) {
-      this.selectionRing.setPosition(this.selectedMob.sprite.x, this.selectedMob.sprite.y)
+      this.selectionRing.setPosition(this.selectedMob.sprite.x, this.selectedMob.sprite.y - 6)
     }
   }
 
@@ -637,7 +701,8 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createMobInstance(x: number, y: number, def: (typeof MOB_DEFS)[string]): MobInstance {
-    const sprite = this.physics.add.sprite(x, y, 'mob')
+    const sprite = this.physics.add.sprite(x, y + MOB_FEET_ANCHOR_ADJUST, 'mob')
+    sprite.setOrigin(0.5, 1)
     sprite.setTint(def.color)
     sprite.setCollideWorldBounds(true)
     if (this.collisionLayer) {
@@ -645,13 +710,14 @@ export class WorldScene extends Phaser.Scene {
     }
     colliderWithObstacles(this, this.obstacles, sprite)
 
+    const feetY = sprite.y
     const label = this.add
-      .text(x, y - 32, `Lv${def.level} ${def.name}`, { fontSize: '10px', color: '#fbcfe8' })
+      .text(x, feetY - 38, `Lv${def.level} ${def.name}`, { fontSize: '10px', color: '#fbcfe8' })
       .setOrigin(0.5)
 
     const barW = 32
-    const hpBarBg = this.add.rectangle(x, y - 22, barW, 4, 0x1f2937).setOrigin(0.5)
-    const hpBarFill = this.add.rectangle(x - barW / 2, y - 22, barW, 4, 0x22c55e).setOrigin(0, 0.5)
+    const hpBarBg = this.add.rectangle(x, feetY - 26, barW, 4, 0x1f2937).setOrigin(0.5)
+    const hpBarFill = this.add.rectangle(x - barW / 2, feetY - 26, barW, 4, 0x22c55e).setOrigin(0, 0.5)
 
     const mob: MobInstance = {
       sprite,
@@ -664,7 +730,7 @@ export class WorldScene extends Phaser.Scene {
       level: def.level,
       name: def.name,
       spawnX: x,
-      spawnY: y,
+      spawnY: feetY,
       alive: true,
       state: 'wander',
       roamTargetX: x,
@@ -679,10 +745,11 @@ export class WorldScene extends Phaser.Scene {
   private updateMobHpBar(mob: MobInstance) {
     const barW = 32
     const ratio = Math.max(0, mob.hp / mob.maxHp)
-    mob.hpBarBg.setPosition(mob.sprite.x, mob.sprite.y - 22)
-    mob.hpBarFill.setPosition(mob.sprite.x - barW / 2, mob.sprite.y - 22)
+    const feetY = mob.sprite.y
+    mob.hpBarBg.setPosition(mob.sprite.x, feetY - 26)
+    mob.hpBarFill.setPosition(mob.sprite.x - barW / 2, feetY - 26)
     mob.hpBarFill.width = barW * ratio
-    mob.label.setPosition(mob.sprite.x, mob.sprite.y - 32)
+    mob.label.setPosition(mob.sprite.x, feetY - 38)
   }
 
   private tryBasicAttack() {

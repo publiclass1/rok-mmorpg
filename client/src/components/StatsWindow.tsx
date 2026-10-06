@@ -2,6 +2,7 @@ import type { PrimaryStat } from '../game/character/characterState'
 import { derivedMaxHp, derivedMaxMp } from '../game/character/statFormulas'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import type { CharacterSheetPayload } from '../game/events'
+import { AnimatedModal } from './motion/AnimatedModal'
 
 type Props = {
   sheet: CharacterSheetPayload
@@ -26,8 +27,7 @@ export function StatsWindow({ sheet, onClose }: Props) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="panel modal" onClick={(e) => e.stopPropagation()}>
+    <AnimatedModal onClose={onClose}>
         <div className="row spread">
           <h2 style={{ margin: 0 }}>Status</h2>
           <button type="button" className="secondary" onClick={onClose}>Close</button>
@@ -64,7 +64,6 @@ export function StatsWindow({ sheet, onClose }: Props) {
           })}
         </ul>
         <p className="muted small">ATK ~{sheet.attackDamage} · HP {sheet.hp}/{previewHp} · MP {sheet.mp}/{previewMp}</p>
-      </div>
-    </div>
+    </AnimatedModal>
   )
 }

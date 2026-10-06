@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { tradeManage } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import type { CharacterRow, ItemRow, TradeOfferRow, TradeSessionRow } from '../types/database'
+import { AnimatedModal } from './motion/AnimatedModal'
 
 type Props = {
   character: CharacterRow
@@ -110,8 +111,7 @@ export function TradeModal({ character, partner, initialTrade, onClose, onComple
   const theirOffers = offers.filter((o) => o.character_id === partner.characterId)
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal panel wide">
+    <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="modal panel wide">
         <header className="row spread">
           <h2>Trade with {partner.name}</h2>
           <button type="button" className="secondary" onClick={() => void run('cancel').then(onClose)}>
@@ -189,7 +189,6 @@ export function TradeModal({ character, partner, initialTrade, onClose, onComple
             </button>
           )}
         </footer>
-      </div>
-    </div>
+    </AnimatedModal>
   )
 }

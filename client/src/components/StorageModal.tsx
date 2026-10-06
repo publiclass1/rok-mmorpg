@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { transferStorage } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import type { CharacterRow, ItemRow, NpcRow, StorageRow } from '../types/database'
+import { AnimatedModal } from './motion/AnimatedModal'
 
 type InvRow = { item_id: string; quantity: number }
 
@@ -55,8 +56,7 @@ export function StorageModal({ character, npc, position, onClose }: Props) {
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal panel">
+    <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="modal panel">
         <header className="row spread">
           <h2>{npc.label} — Storage</h2>
           <button type="button" className="secondary" onClick={onClose}>
@@ -96,7 +96,6 @@ export function StorageModal({ character, npc, position, onClose }: Props) {
             </ul>
           </section>
         </div>
-      </div>
-    </div>
+    </AnimatedModal>
   )
 }

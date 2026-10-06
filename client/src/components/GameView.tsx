@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import Phaser from 'phaser'
 import { savePoint, teleport } from '../lib/api'
 import { loadCharacterSession, saveCharacterSession } from '../lib/characterProgress'
@@ -28,6 +29,7 @@ import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { MapLoadingOverlay } from './MapLoadingOverlay'
 import { TradeModal } from './TradeModal'
 import { mapDisplayName } from '../game/world/mapDisplayName'
+import { hudEnterMotion } from './motion/motionPresets'
 
 type Props = {
   character: CharacterRow
@@ -67,6 +69,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [selectedMob, setSelectedMob] = useState<SelectedMobPayload | null>(null)
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([])
   const [mapLoading, setMapLoading] = useState<{ mapId: string; label: string } | null>(null)
+  const [logOpen, setLogOpen] = useState(false)
 
   const modalOpen =
     statsOpen ||
@@ -184,19 +187,61 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [character.map_id, sessionReady, npcsReady])
 
   useEffect(() => {
-    if (!hostRef.current || !npcsReady || !sessionReady) return
+    document.body.classList.add('game-active')
+    return () => document.body.classList.remove('game-active')
+  }, [])
 
-    const game = createPhaserGame(hostRef.current, character, npcs, sessionRef.current)
-    gameRef.current = game
-    queueMicrotask(() => {
-      emitGameEvent('sessionSync', structuredClone(sessionRef.current))
-    })
+  useEffect(() => {
+    const host = hostRef.current
+    if (!host || !npcsReady || !sessionReady) return
+
+    let cancelled = false
+    let game: Phaser.Game | null = null
+    let rafId = 0
+
+    const refreshScale = () => {
+      if (!game || cancelled) return
+      game.scale.refresh()
+    }
+
+    const startGame = () => {
+      if (cancelled) return
+      host.replaceChildren()
+      game = createPhaserGame(host, character, npcs, sessionRef.current)
+      gameRef.current = game
+      game.events.once('ready', () => {
+        refreshScale()
+        requestAnimationFrame(refreshScale)
+      })
+      queueMicrotask(() => {
+        if (!cancelled) {
+          emitGameEvent('sessionSync', structuredClone(sessionRef.current))
+        }
+      })
+    }
+
+    rafId = requestAnimationFrame(startGame)
+
+    window.addEventListener('resize', refreshScale)
+    const ro = new ResizeObserver(refreshScale)
+    ro.observe(host)
 
     return () => {
-      game.destroy(true)
+      cancelled = true
+      cancelAnimationFrame(rafId)
+      ro.disconnect()
+      window.removeEventListener('resize', refreshScale)
+      game?.destroy(true)
+      host.replaceChildren()
       gameRef.current = null
     }
   }, [character.id, character.map_id, npcsReady, npcs, sessionReady])
+
+  useEffect(() => {
+    if (!mapLoading) return
+    const t = window.setTimeout(() => setMapLoading(null), 12_000)
+    return () => window.clearTimeout(t)
+  }, [mapLoading])
 
   async function leaveWorld() {
     try {
@@ -292,125 +337,217 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     }
   }
 
-  return (
-    <div className={`game-shell ro-layout${skillsOpen ? ' skills-assign-mode' : ''}`}>
-      <header className="hud row spread">
-        <div>
-          <strong>{character.name}</strong>
-          <span className="muted">
-            {' '}
-            · {character.map_id} · {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Lv {sheet.baseLevel} · Job {sheet.jobLevel} · HP {sheet.hp}/{sheet.hpMax} · MP{' '}
-            {sheet.mp}/{sheet.mpMax}
-          </span>
-        </div>
-        <div className="row">
-          <button type="button" className="secondary" onClick={() => setStatsOpen(true)}>Stats</button>
-          <button type="button" className="secondary" onClick={() => setInventoryOpen(true)}>Inventory</button>
-          <button type="button" className="secondary" onClick={() => setEquipmentOpen(true)}>Equip</button>
-          <button type="button" className="secondary" onClick={() => setSkillsOpen(true)}>Skills</button>
-          <span className="muted">{status}</span>
-          <button type="button" className="secondary" onClick={() => void leaveWorld()}>Leave world</button>
-        </div>
-      </header>
+  const hpRatio = sheet.hpMax > 0 ? Math.min(1, sheet.hp / sheet.hpMax) : 0
+  const mpRatio = sheet.mpMax > 0 ? Math.min(1, sheet.mp / sheet.mpMax) : 0
 
-      <div className="game-stage">
-        {mapLoading && (
-          <MapLoadingOverlay label={mapLoading.label} mapId={mapLoading.mapId} />
-        )}
-        {!sessionReady && !mapLoading && <p className="muted game-loading">Loading character…</p>}
+  return (
+    <div className={`game-shell game-shell--fullscreen${skillsOpen ? ' skills-assign-mode' : ''}`}>
+      <div className="game-stage game-stage--fullscreen" aria-label="Game world">
         <div ref={hostRef} className="game-canvas" />
-        <div className="game-bottom-dock">
-          <SkillBar sheet={sheet} />
-          <ActivityLog entries={activityLog} />
+        <AnimatePresence>
+          {mapLoading && (
+            <MapLoadingOverlay key={mapLoading.mapId} label={mapLoading.label} mapId={mapLoading.mapId} />
+          )}
+        </AnimatePresence>
+        {!sessionReady && !mapLoading && <p className="muted game-loading">Loading character…</p>}
+
+        <div className="game-hud-overlay" aria-label="Game HUD">
+          <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>
+            <p className="game-hud-name">
+              <strong>{character.name}</strong>
+              <span className="muted small">
+                {mapDisplayName(character.map_id)} · {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Base {sheet.baseLevel} · Job {sheet.jobLevel}
+              </span>
+            </p>
+            <div className="vital-row">
+              <span className="vital-label">HP</span>
+              <div className="vital-track">
+                <motion.div
+                  className="vital-fill vital-fill--hp"
+                  initial={false}
+                  animate={{ width: `${hpRatio * 100}%` }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                />
+              </div>
+              <span className="vital-num">{sheet.hp}/{sheet.hpMax}</span>
+            </div>
+            <div className="vital-row">
+              <span className="vital-label">SP</span>
+              <div className="vital-track">
+                <motion.div
+                  className="vital-fill vital-fill--mp"
+                  initial={false}
+                  animate={{ width: `${mpRatio * 100}%` }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                />
+              </div>
+              <span className="vital-num">{sheet.mp}/{sheet.mpMax}</span>
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="game-hud-panel game-hud-menu row"
+            {...hudEnterMotion}
+            transition={{ ...hudEnterMotion.transition, delay: 0.08 }}
+          >
+            <button type="button" className="secondary hud-btn" onClick={() => setStatsOpen(true)} title="Alt+S">
+              Stats
+            </button>
+            <button type="button" className="secondary hud-btn" onClick={() => setInventoryOpen(true)} title="Alt+I">
+              Inv
+            </button>
+            <button type="button" className="secondary hud-btn" onClick={() => setEquipmentOpen(true)} title="Alt+E">
+              Equip
+            </button>
+            <button type="button" className="secondary hud-btn" onClick={() => setSkillsOpen(true)} title="Alt+K">
+              Skills
+            </button>
+            {status && <span className="hud-status muted small">{status}</span>}
+            <button type="button" className="secondary hud-btn hud-btn--leave" onClick={() => void leaveWorld()}>
+              Leave
+            </button>
+          </motion.div>
+
+          <motion.div
+            className="game-hud-panel game-hud-target"
+            {...hudEnterMotion}
+            transition={{ ...hudEnterMotion.transition, delay: 0.12 }}
+          >
+            <h3>Target</h3>
+            {selectedMob ? (
+              <div className="target-panel">
+                <p><strong>{selectedMob.name}</strong></p>
+                <p className="muted small">Lv {selectedMob.level}</p>
+                <p className="small">HP {selectedMob.hp} / {selectedMob.hpMax}</p>
+              </div>
+            ) : (
+              <p className="muted small">Click a mob</p>
+            )}
+          </motion.div>
+
+          <motion.div
+            className="game-hud-panel game-hud-nearby"
+            {...hudEnterMotion}
+            transition={{ ...hudEnterMotion.transition, delay: 0.16 }}
+          >
+            <h3>Nearby</h3>
+            <ul className="item-list">
+              {remotePlayers.map((p) => (
+                <li key={p.characterId} className="row spread">
+                  <span className="small">{p.name}</span>
+                  <button type="button" className="hud-btn" onClick={() => setTradePartner({ characterId: p.characterId, name: p.name })}>
+                    Trade
+                  </button>
+                </li>
+              ))}
+              {remotePlayers.length === 0 && <li className="muted small">Alone on map</li>}
+            </ul>
+            {nearbyNpc && (
+              <p className="muted small">
+                NPC: <strong>{nearbyNpc.label}</strong>
+              </p>
+            )}
+            {message && <p className="small">{message}</p>}
+          </motion.div>
+
+          <motion.div
+            className="game-hud-bottom"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 30, delay: 0.2 }}
+          >
+            <div className="game-hud-log-row">
+              <button
+                type="button"
+                className="secondary hud-btn hud-log-toggle"
+                onClick={() => setLogOpen((o) => !o)}
+              >
+                {logOpen ? 'Hide log' : 'Log'}
+              </button>
+              <AnimatePresence>
+                {logOpen && (
+                  <motion.div
+                    key="activity-log"
+                    className="activity-log-motion-wrap"
+                    initial={{ opacity: 0, y: 8, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: 'auto' }}
+                    exit={{ opacity: 0, y: 6, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ActivityLog entries={activityLog} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="game-bottom-dock">
+              <SkillBar sheet={sheet} />
+            </div>
+          </motion.div>
         </div>
       </div>
 
-      <aside className="side-panel panel compact-side">
-        <h3>Target</h3>
-        {selectedMob ? (
-          <div className="target-panel">
-            <p><strong>{selectedMob.name}</strong></p>
-            <p className="muted small">Lv {selectedMob.level}</p>
-            <p>HP {selectedMob.hp} / {selectedMob.hpMax}</p>
-          </div>
-        ) : (
-          <p className="muted small">Click a mob to select</p>
+      <AnimatePresence mode="wait">
+        {statsOpen && <StatsWindow key="stats" sheet={sheet} onClose={() => setStatsOpen(false)} />}
+        {inventoryOpen && (
+          <InventoryWindow
+            key="inventory"
+            characterId={character.id}
+            sheet={sheet}
+            onClose={() => setInventoryOpen(false)}
+          />
         )}
-        <h3>Nearby</h3>
-        <ul className="item-list">
-          {remotePlayers.map((p) => (
-            <li key={p.characterId} className="row spread">
-              <span>{p.name}</span>
-              <button type="button" onClick={() => setTradePartner({ characterId: p.characterId, name: p.name })}>
-                Trade
-              </button>
-            </li>
-          ))}
-          {remotePlayers.length === 0 && <li className="muted">Alone on map</li>}
-        </ul>
-        <p className="muted small">
-          Click move · Space jump · 1–9 skills · Click NPC · Alt+S/I/E/K windows
-        </p>
-        {nearbyNpc && (
-          <p className="muted small">
-            Nearby: <strong>{nearbyNpc.label}</strong> — click them to talk
-          </p>
+        {equipmentOpen && (
+          <EquipmentWindow key="equipment" sheet={sheet} onClose={() => setEquipmentOpen(false)} />
         )}
-        {message && <p>{message}</p>}
-      </aside>
-
-      {statsOpen && <StatsWindow sheet={sheet} onClose={() => setStatsOpen(false)} />}
-      {inventoryOpen && (
-        <InventoryWindow
-          characterId={character.id}
-          sheet={sheet}
-          onClose={() => setInventoryOpen(false)}
-        />
-      )}
-      {equipmentOpen && <EquipmentWindow sheet={sheet} onClose={() => setEquipmentOpen(false)} />}
-      {skillsOpen && <SkillsWindow sheet={sheet} onClose={() => setSkillsOpen(false)} />}
-
-      {npcMenu && (
-        <NpcOptionsModal
-          npc={npcMenu}
-          onClose={() => setNpcMenu(null)}
-          onChoose={(choice) => void runNpcChoice(npcMenu, choice)}
-        />
-      )}
-
-      {storageNpc && (
-        <StorageModal character={character} npc={storageNpc} position={position} onClose={() => setStorageNpc(null)} />
-      )}
-
-      {jobMasterNpc && (
-        <JobMasterModal
-          character={character}
-          npc={jobMasterNpc}
-          sheet={sheet}
-          onClose={() => setJobMasterNpc(null)}
-          onCharacterUpdated={onCharacterUpdated}
-        />
-      )}
-
-      {tradePartner && (
-        <TradeModal
-          character={character}
-          partner={{ characterId: tradePartner.characterId, name: tradePartner.name }}
-          initialTrade={tradePartner.initialTrade}
-          onClose={() => setTradePartner(null)}
-          onComplete={() => {
-            setTradePartner(null)
-            void supabase
-              .from('characters')
-              .select('*')
-              .eq('id', character.id)
-              .single()
-              .then(({ data }) => {
-                if (data) onCharacterUpdated(data)
-              })
-          }}
-        />
-      )}
+        {skillsOpen && <SkillsWindow key="skills" sheet={sheet} onClose={() => setSkillsOpen(false)} />}
+        {npcMenu && (
+          <NpcOptionsModal
+            key={`npc-${npcMenu.id}`}
+            npc={npcMenu}
+            onClose={() => setNpcMenu(null)}
+            onChoose={(choice) => void runNpcChoice(npcMenu, choice)}
+          />
+        )}
+        {storageNpc && (
+          <StorageModal
+            key={`storage-${storageNpc.id}`}
+            character={character}
+            npc={storageNpc}
+            position={position}
+            onClose={() => setStorageNpc(null)}
+          />
+        )}
+        {jobMasterNpc && (
+          <JobMasterModal
+            key={`job-${jobMasterNpc.id}`}
+            character={character}
+            npc={jobMasterNpc}
+            sheet={sheet}
+            onClose={() => setJobMasterNpc(null)}
+            onCharacterUpdated={onCharacterUpdated}
+          />
+        )}
+        {tradePartner && (
+          <TradeModal
+            key={`trade-${tradePartner.characterId}`}
+            character={character}
+            partner={{ characterId: tradePartner.characterId, name: tradePartner.name }}
+            initialTrade={tradePartner.initialTrade}
+            onClose={() => setTradePartner(null)}
+            onComplete={() => {
+              setTradePartner(null)
+              void supabase
+                .from('characters')
+                .select('*')
+                .eq('id', character.id)
+                .single()
+                .then(({ data }) => {
+                  if (data) onCharacterUpdated(data)
+                })
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
