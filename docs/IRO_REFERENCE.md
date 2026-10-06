@@ -4,6 +4,8 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 
 **Ruleset:** Pre-Renewal (not Renewal). See [`PRE_RENEWAL_FORMULAS.md`](PRE_RENEWAL_FORMULAS.md) for formulas we intend to port.
 
+**Execution order:** [`MILESTONES.md`](MILESTONES.md) — M1 done; work through M2–M6 one at a time.
+
 ## Custom rules (this game ≠ vanilla iRO)
 
 | Topic | Choice |
