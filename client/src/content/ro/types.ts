@@ -18,6 +18,12 @@ export type SkillPrerequisite = {
   level: number
 }
 
+export type RoSkillSelfBuff = {
+  statusId: string
+  durationMsBase: number
+  durationMsPerLevel?: number
+}
+
 export type RoSkill = {
   id: string
   name: string
@@ -34,6 +40,7 @@ export type RoSkill = {
   sourceUrl?: string | null
   /** Override path under /skills/; default `{id}.svg` */
   iconFile?: string | null
+  selfBuff?: RoSkillSelfBuff
 }
 
 export type StatBonusJson = {

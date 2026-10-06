@@ -6,7 +6,15 @@ import {
   setCharacterSession,
   updateCharacterSession,
 } from '../character/characterSessionBridge'
-import { SKILLS, skillUsableByJob } from '../character/skillsConfig'
+import { SKILLS, selfBuffDurationMs, skillUsableByJob, type SkillDefinition } from '../character/skillsConfig'
+import {
+  applySelfBuff,
+  buffsEqual,
+  hasStatus,
+  pruneExpired,
+  toPlayerBuffPayloads,
+  type PlayerStatusBuff,
+} from '../character/statusEffects'
 import {
   flashPlayerHit,
   missTextPosition,
@@ -134,6 +142,7 @@ export class WorldScene extends Phaser.Scene {
   private isJumping = false
   private isSitting = false
   private lastSitRegenAt = 0
+  private activeBuffs: PlayerStatusBuff[] = []
   private mobs: MobInstance[] = []
   private mobBySpawnIndex: (MobInstance | undefined)[] = []
   private obstacles: Phaser.GameObjects.Rectangle[] = []
@@ -402,7 +411,11 @@ export class WorldScene extends Phaser.Scene {
       void this.persistWorldState()
     }, 3000)
 
+    // Avoid instant portal warp when spawn tile overlaps a portal (e.g. culvert entrance).
+    this.portalWarpCooldownUntil = this.time.now + 2500
+
     this.emitCharacterSheet()
+    this.emitPlayerBuffs()
     logActivity('system', `Entered ${this.character.map_id}.`)
     emitGameEvent(
       'status',
@@ -427,6 +440,8 @@ export class WorldScene extends Phaser.Scene {
     const sheet = toCharacterSheetPayload(this.session)
     const speed = 140 + Math.min(sheet.effectiveAgi, 99)
     const now = this.time.now
+
+    this.tickStatusEffects(now)
 
     if (this.isSitting) {
       setPlayerSitting(this.playerDisplay, true, this.facing)
@@ -723,7 +738,58 @@ export class WorldScene extends Phaser.Scene {
       this.toggleSit()
       return
     }
+    if (def.selfBuff) {
+      this.trySelfBuffSkill(skillId, level, def)
+      return
+    }
     emitGameEvent('status', `${def.name} (Lv ${level}) — not implemented yet`)
+  }
+
+  private tickStatusEffects(now: number) {
+    const pruned = pruneExpired(this.activeBuffs, now)
+    if (!buffsEqual(pruned, this.activeBuffs)) {
+      this.activeBuffs = pruned
+      this.emitPlayerBuffs()
+    }
+  }
+
+  private emitPlayerBuffs() {
+    emitGameEvent('playerBuffs', toPlayerBuffPayloads(this.activeBuffs))
+  }
+
+  private playerAttackElementOverride(): string | undefined {
+    if (hasStatus(this.activeBuffs, 'magnum_break')) return 'fire'
+    return undefined
+  }
+
+  private calcPlayerVsMobDamageForSession(def: (typeof MOB_DEFS)[string]) {
+    const override = this.playerAttackElementOverride()
+    return calcPlayerVsMobDamage(
+      this.session,
+      def,
+      override ? { attackElementOverride: override } : undefined,
+    )
+  }
+
+  private trySelfBuffSkill(skillId: string, skillLevel: number, def: SkillDefinition) {
+    if (!def.selfBuff) return
+    if (this.isAttacking || this.isJumping) return
+    if (!this.spendMp(def.mpCost)) return
+
+    const durationMs = selfBuffDurationMs(def.selfBuff, skillLevel)
+    this.activeBuffs = applySelfBuff(this.activeBuffs, {
+      statusId: def.selfBuff.statusId,
+      name: def.name,
+      iconSkillId: skillId,
+      skillLevel,
+      now: this.time.now,
+      durationMs,
+    })
+    const seconds = Math.ceil(durationMs / 1000)
+    emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — ${seconds}s`)
+    logActivity('character', `${def.name} Lv ${skillLevel} (${seconds}s).`)
+    this.emitPlayerBuffs()
+    this.emitCharacterSheet()
   }
 
   private standUp() {
@@ -811,7 +877,7 @@ export class WorldScene extends Phaser.Scene {
           this.emitCharacterSheet()
           return
         }
-        const { damage: baseDamage, hit } = calcPlayerVsMobDamage(this.session, def)
+        const { damage: baseDamage, hit } = this.calcPlayerVsMobDamageForSession(def)
         const damage =
           hit && baseDamage > 0
             ? Math.max(1, Math.floor(baseDamage * (1 + skillLevel * 0.15)) + skillLevel * 3)
@@ -993,7 +1059,8 @@ export class WorldScene extends Phaser.Scene {
 
   private onMobHitPlayer(mob: MobInstance) {
     if (this.session.hp <= 0) return
-    if (this.isSitting) this.standUp()
+    const enduring = hasStatus(this.activeBuffs, 'endure')
+    if (this.isSitting && !enduring) this.standUp()
     const def = MOB_DEFS[mob.defId]
     const damage = def ? calcMobVsPlayerDamage(def, this.session) : 0
     if (damage <= 0) {
@@ -1012,13 +1079,15 @@ export class WorldScene extends Phaser.Scene {
       'mobHitPlayer',
     )
     flashPlayerHit(this, this.playerDisplay)
-    playPlayerFlinch(
-      this,
-      this.playerDisplay,
-      this.facing,
-      this.playerDisplay.container.x - mob.sprite.x,
-      this.playerDisplay.container.y - mob.sprite.y,
-    )
+    if (!enduring) {
+      playPlayerFlinch(
+        this,
+        this.playerDisplay,
+        this.facing,
+        this.playerDisplay.container.x - mob.sprite.x,
+        this.playerDisplay.container.y - mob.sprite.y,
+      )
+    }
     this.sfx.playHit()
     if (def) {
       playMobAttackLunge(
@@ -1252,7 +1321,7 @@ export class WorldScene extends Phaser.Scene {
 
         const def = MOB_DEFS[target.defId]
         if (!def) return
-        const { damage, hit } = calcPlayerVsMobDamage(this.session, def)
+        const { damage, hit } = this.calcPlayerVsMobDamageForSession(def)
         if (!hit || damage <= 0) {
           showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
           this.sfx.playMiss()
@@ -1518,8 +1587,7 @@ export class WorldScene extends Phaser.Scene {
     void this.presence?.leave()
     this.presence = null
     this.disposeRemotePlayers()
-    void saveCharacterWorldPosition(this.character.id, this.getPlayerPosition()).catch((err) => {
-      console.warn('Final position save failed', err)
-    })
+    // Do not save world position here: this.character.map_id is from scene boot and can be
+    // stale when React remounts the game after NPC/portal warp, overwriting the new map in DB.
   }
 }

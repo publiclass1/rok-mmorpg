@@ -1,5 +1,5 @@
 import { loadRoContent } from '../../content/ro/loadContent'
-import type { SkillPrerequisite } from '../../content/ro/types'
+import type { RoSkillSelfBuff, SkillPrerequisite } from '../../content/ro/types'
 
 export type SkillDefinition = {
   id: string
@@ -12,6 +12,7 @@ export type SkillDefinition = {
   type: 'active' | 'passive'
   prerequisites: SkillPrerequisite[]
   iconFile?: string | null
+  selfBuff?: RoSkillSelfBuff
 }
 
 const ro = loadRoContent()
@@ -30,9 +31,14 @@ export const SKILLS: Record<string, SkillDefinition> = Object.fromEntries(
       type: s.type,
       prerequisites: s.prerequisites,
       iconFile: s.iconFile ?? null,
+      selfBuff: s.selfBuff,
     },
   ]),
 )
+
+export function selfBuffDurationMs(selfBuff: RoSkillSelfBuff, skillLevel: number): number {
+  return selfBuff.durationMsBase + (selfBuff.durationMsPerLevel ?? 0) * skillLevel
+}
 
 export const JOB_NAMES: Record<string, string> = Object.fromEntries(ro.jobs.map((j) => [j.id, j.name]))
 

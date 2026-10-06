@@ -29,6 +29,13 @@ export function validateRoContent(pack: RoContentPack): void {
     for (const pre of skill.prerequisites) {
       assert(allSkillIds.has(pre.skillId), `skill ${skill.id} prerequisite unknown: ${pre.skillId}`)
     }
+    if (skill.selfBuff) {
+      assert(Boolean(skill.selfBuff.statusId), `skill ${skill.id} selfBuff missing statusId`)
+      assert(skill.selfBuff.durationMsBase > 0, `skill ${skill.id} selfBuff.durationMsBase must be > 0`)
+      if (skill.selfBuff.durationMsPerLevel != null) {
+        assert(skill.selfBuff.durationMsPerLevel >= 0, `skill ${skill.id} selfBuff.durationMsPerLevel must be >= 0`)
+      }
+    }
   }
 
   const itemIds = new Set<string>()

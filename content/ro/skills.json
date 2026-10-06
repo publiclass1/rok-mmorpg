@@ -87,8 +87,13 @@
       "castTimeMs": 0,
       "range": 0,
       "prerequisites": [],
-      "description": "Endure attacks without flinching (placeholder).",
-      "sourceUrl": "https://irowiki.org/wiki/Endure"
+      "description": "Endure attacks without flinching for a short time.",
+      "sourceUrl": "https://irowiki.org/wiki/Endure",
+      "selfBuff": {
+        "statusId": "endure",
+        "durationMsBase": 10000,
+        "durationMsPerLevel": 3000
+      }
     },
     {
       "id": "magnum",
@@ -102,8 +107,12 @@
       "castTimeMs": 0,
       "range": 0,
       "prerequisites": [{ "skillId": "bash", "level": 5 }],
-      "description": "Fire splash around the caster (placeholder).",
-      "sourceUrl": "https://irowiki.org/wiki/Magnum_Break"
+      "description": "Briefly imbues attacks with Fire property.",
+      "sourceUrl": "https://irowiki.org/wiki/Magnum_Break",
+      "selfBuff": {
+        "statusId": "magnum_break",
+        "durationMsBase": 10000
+      }
     },
     {
       "id": "hp_recovery",

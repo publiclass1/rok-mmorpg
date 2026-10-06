@@ -64,12 +64,13 @@ function damageAfterDef(atk: number, def: number, vit: number): number {
 export function calcPlayerVsMobDamage(
   state: CharacterSessionState,
   mob: MobDefinition,
-  rng = Math.random,
+  options?: { attackElementOverride?: string; rng?: () => number },
 ): { damage: number; hit: boolean } {
+  const rng = options?.rng ?? Math.random
   const stats = effectiveStats(state)
   const weapon = state.equipment.weapon ? getItemCombatStats(state.equipment.weapon) : null
   const weaponAtk = weapon?.weaponAtk ?? 0
-  const weaponElement = weapon?.attackElement ?? 'neutral'
+  const weaponElement = options?.attackElementOverride ?? weapon?.attackElement ?? 'neutral'
   const weaponSize = weapon?.weaponSize ?? 'medium'
 
   const hit = rollHitSuccess(

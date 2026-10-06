@@ -694,6 +694,7 @@ button:disabled {
 
 .game-hud-overlay .game-hud-panel,
 .game-hud-overlay .game-hud-bottom,
+.game-hud-overlay .skill-bar-panel,
 .game-hud-overlay .game-hud-menu button,
 .game-hud-overlay .game-hud-nearby button,
 .game-hud-overlay .hud-log-toggle {
@@ -751,6 +752,54 @@ button:disabled {
 .game-hud-minimap-svg {
   display: block;
   border-radius: 4px;
+}
+
+.buff-bar {
+  position: absolute;
+  top: 0.65rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 11;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.4rem;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
+.buff-slot {
+  flex-shrink: 0;
+}
+
+.buff-slot-icon {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+
+.buff-slot-icon .skill-icon {
+  display: block;
+}
+
+.buff-duration-ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.buff-duration-ring-track {
+  stroke: rgba(55, 65, 81, 0.85);
+}
+
+.buff-duration-ring-progress {
+  stroke: #93c5fd;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.05s linear;
 }
 
 .game-hud-name {
@@ -980,13 +1029,38 @@ button:disabled {
   background: #0f172a;
 }
 
+.skill-bar-panel {
+  z-index: 11;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+}
+
+.skill-bar-drag-handle {
+  cursor: grab;
+  text-align: center;
+  font-size: 0.55rem;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  color: #6b7280;
+  padding: 0.2rem 0.35rem;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.7);
+  user-select: none;
+}
+
+.skill-bar-drag-handle:active {
+  cursor: grabbing;
+}
+
 .skill-bar {
   display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  gap: 0.35rem;
-  padding: 0.5rem;
-  background: #0f172a;
-  border-bottom: 1px solid #374151;
+  grid-template-columns: repeat(9, auto);
+  gap: 0.2rem;
+  padding: 0.35rem;
+  width: max-content;
+  background: transparent;
 }
 
 .exp-hud {
@@ -1044,22 +1118,23 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.1rem;
-  padding: 0.25rem;
+  gap: 0.05rem;
+  padding: 0.15rem;
   background: #1f2937;
   border: 1px solid #4b5563;
-  min-height: 3.25rem;
+  min-height: 2.5rem;
+  border-radius: 4px;
 }
 
 .skill-key {
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   color: #9ca3af;
   line-height: 1;
 }
 
 .skill-slot-empty {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1087,6 +1162,11 @@ button:disabled {
   overflow: hidden;
   border: 1px solid #4b5563;
   user-select: none;
+}
+
+.skill-icon--xs {
+  width: 28px;
+  height: 28px;
 }
 
 .skill-icon--sm {
@@ -1513,6 +1593,11 @@ button:disabled {
   position: relative;
   z-index: 25;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.45);
+}
+
+.game-shell.skills-assign-mode .skill-bar-panel {
+  z-index: 25;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
 }
 
 .game-shell.skills-assign-mode .skill-bar {

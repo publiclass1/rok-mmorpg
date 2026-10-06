@@ -67,6 +67,15 @@ export type PlayerStatsPayload = {
   jobExpToNext: number
 }
 
+export type PlayerBuffPayload = {
+  statusId: string
+  name: string
+  iconSkillId: string
+  skillLevel: number
+  expiresAt: number
+  durationMs: number
+}
+
 export type CharacterSheetPayload = PlayerStatsPayload & {
   str: number
   agi: number
@@ -138,6 +147,7 @@ export type GameEvents = {
   socialPresence: SocialPresencePayload
   status: string
   playerStats: PlayerStatsPayload
+  playerBuffs: PlayerBuffPayload[]
   characterSheet: CharacterSheetPayload
   useSkillSlot: { slot: number }
   characterAction: CharacterActionPayload

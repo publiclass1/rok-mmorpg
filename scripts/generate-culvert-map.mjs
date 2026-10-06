@@ -165,13 +165,15 @@ function patchMapsJson(spawns) {
 
   maps.mobSpawns.prt_sewb1 = spawns
 
-  const entrancePx = { x: Math.floor(W / 2) * TILE + 16, y: 3 * TILE + 16 }
+  // NPC / warp landing at north entrance — must not overlap the south exit portal.
+  const warpSpawnPx = { x: Math.floor(W / 2) * TILE + 16, y: 3 * TILE + 16 }
+  const exitPx = { x: Math.floor(W / 2) * TILE + 16, y: (H - 4) * TILE + 16 }
   maps.portals = maps.portals ?? {}
   maps.portals.prt_sewb1 = [
     {
       id: 'culvert_exit_prontera',
-      x: entrancePx.x - 48,
-      y: entrancePx.y - 32,
+      x: exitPx.x - 48,
+      y: exitPx.y - 32,
       width: 96,
       height: 64,
       targetMapId: 'prontera',

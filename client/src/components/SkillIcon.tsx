@@ -15,7 +15,7 @@ type DragConfig =
 type Props = {
   skillId: string
   level?: number
-  size?: 'sm' | 'md'
+  size?: 'xs' | 'sm' | 'md'
   dimmed?: boolean
   draggable?: boolean
   drag?: DragConfig
@@ -42,7 +42,8 @@ export function SkillIcon({
   const [imgFailed, setImgFailed] = useState(false)
   const def = SKILLS[skillId]
   const tooltip = title ?? skillTooltipTitle(skillId, level)
-  const sizeClass = size === 'sm' ? 'skill-icon--sm' : 'skill-icon--md'
+  const sizeClass =
+    size === 'xs' ? 'skill-icon--xs' : size === 'sm' ? 'skill-icon--sm' : 'skill-icon--md'
   const canDrag = draggable && drag != null
 
   function onDragStart(e: React.DragEvent) {

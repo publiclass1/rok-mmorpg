@@ -28,6 +28,7 @@ import {
   type ActivityLogEntry,
   type SelectedMobPayload,
   type SelectedPlayerPayload,
+  type PlayerBuffPayload,
 } from '../game/events'
 import type { CharacterRow, NpcRow, PartyRequestRow, TradeSessionRow } from '../types/database'
 import { ChatStrip } from './ChatStrip'
@@ -38,6 +39,7 @@ import { PartyRequestModal } from './PartyRequestModal'
 import { VendorSetupModal } from './VendorSetupModal'
 import { VendorShopModal } from './VendorShopModal'
 import { ActivityLog } from './ActivityLog'
+import { BuffBar } from './BuffBar'
 import { SkillBar } from './SkillBar'
 import { ExperienceHud } from './ExperienceHud'
 import { SkillsWindow } from './SkillsWindow'
@@ -123,6 +125,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [equipmentOpen, setEquipmentOpen] = useState(false)
   const [selectedMob, setSelectedMob] = useState<SelectedMobPayload | null>(null)
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([])
+  const [playerBuffs, setPlayerBuffs] = useState<PlayerBuffPayload[]>([])
   const [mapLoading, setMapLoading] = useState<{ mapId: string; label: string } | null>(null)
   const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
   const [logOpen, setLogOpen] = useState(false)
@@ -412,6 +415,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       onGameEvent('playerStats', (p) => {
         setSheet((s) => ({ ...s, ...p }))
       }),
+      onGameEvent('playerBuffs', setPlayerBuffs),
       onGameEvent('selectedMob', (mob) => {
         setSelectedMob(mob)
         if (mob) setSelectedPlayer(null)
@@ -447,6 +451,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             y: payload.y,
             portalId: payload.portalId,
           })
+          setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
           onCharacterUpdated(res.character)
           emitGameEvent('status', `Warped to ${payload.label}`)
         } catch (err) {
@@ -660,6 +665,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           npcId: npc.id,
           destinationMapId: choice.destinationMapId,
         })
+        setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
         onCharacterUpdated(res.character)
         emitGameEvent('status', `Warped to ${choice.label}`)
       } catch (err) {
@@ -718,7 +724,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         )}
 
         <div className="game-hud-overlay" aria-label="Game HUD">
+          <SkillBar sheet={sheet} />
           <Minimap data={minimap} />
+          <BuffBar buffs={playerBuffs} />
           <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>
             <p className="game-hud-name">
               <strong>
@@ -872,7 +880,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               onSend={sendChat}
             />
             <div className="game-bottom-dock">
-              <SkillBar sheet={sheet} />
               <ExperienceHud sheet={sheet} />
             </div>
           </motion.div>

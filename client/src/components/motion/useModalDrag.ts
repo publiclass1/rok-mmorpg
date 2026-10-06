@@ -1,29 +1,39 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 
-export function useModalDrag(panelRef: RefObject<HTMLElement | null>, enabled: boolean) {
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null)
+export type PanelPosition = { x: number; y: number }
+
+export function useModalDrag(
+  panelRef: RefObject<HTMLElement | null>,
+  enabled: boolean,
+  getInitialPosition?: (panel: HTMLElement) => PanelPosition,
+) {
+  const [pos, setPos] = useState<PanelPosition | null>(null)
   const posRef = useRef({ x: 0, y: 0 })
+  const getInitialRef = useRef(getInitialPosition)
+  getInitialRef.current = getInitialPosition
 
   useLayoutEffect(() => {
     const panel = panelRef.current
     if (!panel) return
 
-    const centerPanel = () => {
+    const placePanel = () => {
       const w = panel.offsetWidth
       const h = panel.offsetHeight
       if (w < 8 || h < 8) return false
-      const next = {
-        x: Math.max(8, (window.innerWidth - w) / 2),
-        y: Math.max(8, (window.innerHeight - h) / 2),
-      }
+      const next = getInitialRef.current
+        ? getInitialRef.current(panel)
+        : {
+            x: Math.max(8, (window.innerWidth - w) / 2),
+            y: Math.max(8, (window.innerHeight - h) / 2),
+          }
       posRef.current = next
       setPos(next)
       return true
     }
 
-    if (centerPanel()) return
+    if (placePanel()) return
     const id = requestAnimationFrame(() => {
-      centerPanel()
+      placePanel()
     })
     return () => cancelAnimationFrame(id)
   }, [panelRef])
