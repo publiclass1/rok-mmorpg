@@ -2,15 +2,19 @@ import { logActivity } from '../activityLog'
 import type { CharacterActionPayload } from '../events'
 import { syncDerivedVitals, toCharacterSheetPayload } from './characterSheet'
 import {
+  assignSkillBarSlot,
   equipItemWithInventoryTransfer,
   learnOrLevelSkill,
+  moveSkillBarSlot,
+  placeSkillOnBar,
   raiseStat,
   useConsumableFromSession,
   type CharacterSessionState,
 } from './characterState'
 import { getItemDisplayName } from './itemCatalog'
 import { EQUIPMENT } from './equipmentConfig'
-import { SKILLS } from './skillsConfig'
+import { applyJobChange } from './jobChange'
+import { canLearnSkill, canPlaceSkillOnBar, JOB_NAMES, SKILLS } from './skillsConfig'
 
 export type ApplyResult = {
   state: CharacterSessionState
@@ -36,13 +40,56 @@ export function applyCharacterAction(
     const def = SKILLS[action.skillId]
     if (!def) return { state, changed: false }
     const before = state.skills[action.skillId] ?? 0
-    const next = learnOrLevelSkill(state, action.skillId, def.maxLevel)
+    if (
+      !canLearnSkill(
+        def,
+        state.jobId,
+        state.progress.jobLevel,
+        before,
+        state.skillPointsUnspent,
+        state.skills,
+      )
+    ) {
+      return { state, changed: false, message: 'Cannot learn skill (requirements not met).' }
+    }
+    const next = syncDerivedVitals(learnOrLevelSkill(state, action.skillId, def.maxLevel))
     const after = next.skills[action.skillId] ?? 0
     if (after > before) {
       logActivity('character', `${def.name} skill level ${after}.`)
       return { state: next, changed: true }
     }
     return { state, changed: false, message: 'Cannot learn skill (need job level or skill points).' }
+  }
+
+  if (action.type === 'changeJob') {
+    if (state.jobId === action.jobId) {
+      return { state, changed: false, message: 'You already have this job.' }
+    }
+    const next = syncDerivedVitals(applyJobChange(state, action.jobId))
+    const jobName = JOB_NAMES[action.jobId] ?? action.jobId
+    logActivity('character', `Job change complete — now a ${jobName}.`)
+    return { state: next, changed: true, message: `You are now a ${jobName}!` }
+  }
+
+  if (action.type === 'assignSkillBar') {
+    if (action.slot < 0 || action.slot > 8) return { state, changed: false }
+    if (action.skillId === null) {
+      if (state.skillBar[action.slot] == null) return { state, changed: false }
+      return { state: assignSkillBarSlot(state, action.slot, null), changed: true }
+    }
+    if (!canPlaceSkillOnBar(action.skillId, state.jobId, state.skills)) {
+      return { state, changed: false, message: 'That skill cannot be placed on the bar.' }
+    }
+    const next = placeSkillOnBar(state, action.slot, action.skillId)
+    if (next.skillBar[action.slot] !== action.skillId) return { state, changed: false }
+    return { state: next, changed: true }
+  }
+
+  if (action.type === 'moveSkillBar') {
+    if (action.from === action.to || action.from < 0 || action.from > 8 || action.to < 0 || action.to > 8) {
+      return { state, changed: false }
+    }
+    return { state: moveSkillBarSlot(state, action.from, action.to), changed: true }
   }
 
   if (action.type === 'equip') {

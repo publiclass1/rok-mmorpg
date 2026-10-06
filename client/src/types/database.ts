@@ -15,10 +15,17 @@ export type NpcRow = {
   map_id: string
   x: number
   y: number
-  npc_type: 'teleport' | 'storage' | 'save'
+  npc_type: 'teleport' | 'storage' | 'save' | 'job_master'
   label: string
   config: {
     destinations?: Array<{ map_id: string; label: string; x: number; y: number }>
+    offers?: Array<{
+      jobId: string
+      fromJobId?: string
+      requiredJobLevel?: number
+      requiredBaseLevel?: number
+      zenyCost?: number
+    }>
   }
 }
 

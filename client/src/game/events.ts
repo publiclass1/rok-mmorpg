@@ -49,6 +49,9 @@ export type CharacterSheetPayload = PlayerStatsPayload & {
 export type CharacterActionPayload =
   | { type: 'raiseStat'; stat: PrimaryStat }
   | { type: 'learnSkill'; skillId: string }
+  | { type: 'changeJob'; jobId: string }
+  | { type: 'assignSkillBar'; slot: number; skillId: string | null }
+  | { type: 'moveSkillBar'; from: number; to: number }
   | { type: 'equip'; slot: EquipSlot; itemId: string | null; sessionInventoryIndex?: number }
   | { type: 'useConsumable'; sessionInventoryIndex: number }
 
@@ -72,6 +75,7 @@ export type ActivityLogEntry = {
 export type GameEvents = {
   position: { x: number; y: number; mapId: string }
   npcNearby: NpcRow | null
+  npcInteract: NpcRow
   remotePlayers: Array<{ characterId: string; name: string; x: number; y: number }>
   status: string
   playerStats: PlayerStatsPayload
@@ -82,6 +86,7 @@ export type GameEvents = {
   selectedMob: SelectedMobPayload | null
   activityLog: ActivityLogEntry
   sessionSync: CharacterSessionState
+  worldReady: { mapId: string }
 }
 
 type Listener = (payload: unknown) => void

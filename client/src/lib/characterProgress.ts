@@ -69,8 +69,12 @@ function rowToSession(
   for (const row of skills) {
     skillsMap[row.skill_id] = row.level
   }
+  if ((skillsMap.sit ?? 0) < 1) {
+    skillsMap.sit = 1
+  }
   if (Object.keys(skillsMap).length === 0) {
     skillsMap.basic_attack = 1
+    skillsMap.sit = 1
   }
 
   let state: CharacterSessionState = {

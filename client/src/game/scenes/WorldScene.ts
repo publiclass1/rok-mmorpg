@@ -6,7 +6,7 @@ import {
   normalizeEquipment,
   type CharacterSessionState,
 } from '../character/characterState'
-import { SKILLS } from '../character/skillsConfig'
+import { SKILLS, skillUsableByJob } from '../character/skillsConfig'
 import {
   flashPlayer,
   missTextPosition,
@@ -44,9 +44,12 @@ import { tryJump } from '../movement/jump'
 import {
   createPlayerDisplay,
   playPlayerAnim,
+  setPlayerSitting,
+  setPlayerWalkFrame,
   updatePlayerEquipmentLayers,
   type PlayerDisplay,
 } from '../player/playerSprites'
+import { SIT_REGEN_INTERVAL_MS, sitRegenAmounts } from '../character/sitRegen'
 import { MapPresenceChannel } from '../realtime/mapChannel'
 import { ensureMobTexture, ensureTilesTexture } from '../textures'
 import { supabase } from '../../lib/supabase'
@@ -80,6 +83,8 @@ export class WorldScene extends Phaser.Scene {
   private lastAttackAt = 0
   private isAttacking = false
   private isJumping = false
+  private isSitting = false
+  private lastSitRegenAt = 0
   private mobs: MobInstance[] = []
   private obstacles: Phaser.GameObjects.Rectangle[] = []
   private collisionLayer: Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer | null = null
@@ -155,13 +160,38 @@ export class WorldScene extends Phaser.Scene {
       if (this.uiPointerLocked || !pointer.leftButtonDown()) return
       const wx = pointer.worldX
       const wy = pointer.worldY
+      const npc = this.findNpcAt(wx, wy)
+      if (npc) {
+        if (this.isSitting) {
+          this.standUp()
+          return
+        }
+        const px = this.playerDisplay.container.x
+        const py = this.playerDisplay.container.y
+        if (Phaser.Math.Distance.Between(px, py, npc.x, npc.y) > INTERACT_RANGE) {
+          emitGameEvent('status', 'Too far from NPC — move closer.')
+          return
+        }
+        this.chaseMob = null
+        this.setSelectedMob(null)
+        clearMoveTarget(this.moveTarget)
+        this.getPlayerBody().setVelocity(0, 0)
+        this.faceToward(npc.x, npc.y)
+        emitGameEvent('npcInteract', npc)
+        return
+      }
       const mob = this.findMobAt(wx, wy)
       if (mob) {
+        if (this.isSitting) this.standUp()
         this.chaseMob = mob
         this.setSelectedMob(mob)
         setMoveTarget(this.moveTarget, mob.sprite.x, mob.sprite.y)
         this.faceToward(mob.sprite.x, mob.sprite.y)
       } else {
+        if (this.isSitting) {
+          this.standUp()
+          return
+        }
         this.chaseMob = null
         this.setSelectedMob(null)
         setMoveTarget(this.moveTarget, wx, wy)
@@ -171,6 +201,7 @@ export class WorldScene extends Phaser.Scene {
     for (const npc of this.npcs) {
       const rect = this.add.rectangle(npc.x, npc.y, 28, 36, 0xf59e0b)
       rect.setStrokeStyle(2, 0xffffff)
+      rect.setInteractive({ useHandCursor: true })
       this.add.text(npc.x, npc.y - 28, npc.label, { fontSize: '11px', color: '#fff' }).setOrigin(0.5)
       this.npcSprites.push(rect)
     }
@@ -243,8 +274,9 @@ export class WorldScene extends Phaser.Scene {
     logActivity('system', `Entered ${this.character.map_id}.`)
     emitGameEvent(
       'status',
-      `Entered ${this.character.map_id} — click move, Space jump, 1 attack, Alt+S/I/K/E`,
+      `Entered ${this.character.map_id} — click move, click NPCs, Space jump, 1–9 skills`,
     )
+    emitGameEvent('worldReady', { mapId: this.character.map_id })
   }
 
   private playerLabel!: Phaser.GameObjects.Text
@@ -256,8 +288,14 @@ export class WorldScene extends Phaser.Scene {
   update() {
     const sheet = toCharacterSheetPayload(this.session)
     const speed = 140 + Math.min(sheet.effectiveAgi, 99)
+    const now = this.time.now
 
-    if (!this.isAttacking && !this.isJumping) {
+    if (this.isSitting) {
+      setPlayerSitting(this.playerDisplay, true, this.facing)
+      this.getPlayerBody().setVelocity(0, 0)
+      clearMoveTarget(this.moveTarget)
+      this.tickSitRegen(now, sheet)
+    } else if (!this.isAttacking && !this.isJumping) {
       if (this.chaseMob?.alive) {
         setMoveTarget(this.moveTarget, this.chaseMob.sprite.x, this.chaseMob.sprite.y)
         const dist = Phaser.Math.Distance.Between(
@@ -284,6 +322,7 @@ export class WorldScene extends Phaser.Scene {
       if (move.facing) this.facing = move.facing
       if (move.moving) {
         playPlayerAnim(this.playerDisplay, 'walk', this.facing)
+        setPlayerWalkFrame(this.playerDisplay, (Math.floor(now / 150) % 2) as 0 | 1)
       } else if (!this.isAttacking) {
         playPlayerAnim(this.playerDisplay, 'idle', this.facing)
       }
@@ -291,14 +330,13 @@ export class WorldScene extends Phaser.Scene {
 
     this.playerLabel.setPosition(this.playerDisplay.container.x, this.playerDisplay.container.y - 28)
 
-    if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+    if (!this.isSitting && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
       const jumped = tryJump(this, this.playerDisplay.body, () => this.isJumping, (v) => {
         this.isJumping = v
       })
       if (jumped) playPlayerAnim(this.playerDisplay, 'jump', this.facing)
     }
 
-    const now = this.time.now
     const playerAlive = this.session.hp > 0
     for (const mob of this.mobs) {
       if (!mob.alive) continue
@@ -350,7 +388,144 @@ export class WorldScene extends Phaser.Scene {
       emitGameEvent('status', `${def.name} not learned`)
       return
     }
+    if (!skillUsableByJob(skillId, this.session.jobId)) {
+      emitGameEvent('status', `${def.name} is not available for your job`)
+      return
+    }
+    if (def.type === 'passive') {
+      emitGameEvent('status', `${def.name} is passive`)
+      return
+    }
+    if (skillId === 'bash') {
+      this.tryBash(level, def.mpCost)
+      return
+    }
+    if (skillId === 'sit') {
+      this.toggleSit()
+      return
+    }
     emitGameEvent('status', `${def.name} (Lv ${level}) — not implemented yet`)
+  }
+
+  private standUp() {
+    if (!this.isSitting) return
+    this.isSitting = false
+    setPlayerSitting(this.playerDisplay, false, this.facing)
+    emitGameEvent('status', 'Stood up.')
+    logActivity('character', 'Stood up.')
+  }
+
+  private toggleSit() {
+    if (this.isSitting) {
+      this.standUp()
+      return
+    }
+    if (this.isAttacking || this.isJumping) return
+    this.chaseMob = null
+    this.setSelectedMob(null)
+    clearMoveTarget(this.moveTarget)
+    this.getPlayerBody().setVelocity(0, 0)
+    this.isSitting = true
+    this.lastSitRegenAt = this.time.now
+    setPlayerSitting(this.playerDisplay, true, this.facing)
+    emitGameEvent('status', 'Sitting — recovering HP and SP.')
+    logActivity('character', 'Sitting to recover HP and SP.')
+  }
+
+  private tickSitRegen(now: number, sheet: ReturnType<typeof toCharacterSheetPayload>) {
+    if (now - this.lastSitRegenAt < SIT_REGEN_INTERVAL_MS) return
+    this.lastSitRegenAt = now
+    if (this.session.hp >= sheet.hpMax && this.session.mp >= sheet.mpMax) return
+
+    const { hp, mp } = sitRegenAmounts(sheet.effectiveVit, sheet.effectiveInt)
+    const nextHp = Math.min(sheet.hpMax, this.session.hp + hp)
+    const nextMp = Math.min(sheet.mpMax, this.session.mp + mp)
+    if (nextHp === this.session.hp && nextMp === this.session.mp) return
+
+    this.session = { ...this.session, hp: nextHp, mp: nextMp }
+    this.emitCharacterSheet()
+    logActivity('character', `Resting… HP ${nextHp}/${sheet.hpMax}, SP ${nextMp}/${sheet.mpMax}.`)
+  }
+
+  private spendMp(cost: number): boolean {
+    if (cost <= 0) return true
+    if (this.session.mp < cost) {
+      emitGameEvent('status', 'Not enough MP')
+      return false
+    }
+    this.session = { ...this.session, mp: this.session.mp - cost }
+    return true
+  }
+
+  private tryBash(skillLevel: number, mpCost: number) {
+    if (this.isSitting) return
+    const now = this.time.now
+    if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
+    if (!this.spendMp(mpCost)) return
+    this.lastAttackAt = now
+    this.isAttacking = true
+    this.getPlayerBody().setVelocity(0, 0)
+    clearMoveTarget(this.moveTarget)
+
+    this.sfx.playAttack()
+    playPlayerAnim(this.playerDisplay, 'attack', this.facing)
+    playPlayerAttack(this, this.playerDisplay.body, this.facing, () => {
+      this.isAttacking = false
+      playPlayerAnim(this.playerDisplay, 'idle', this.facing)
+    })
+
+    const target = this.findMobInAttackCone()
+    if (!target) {
+      const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
+      showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
+      this.sfx.playMiss()
+      logActivity('combat', 'Bash missed.')
+      this.emitCharacterSheet()
+      return
+    }
+
+    const def = MOB_DEFS[target.defId]
+    if (!def) {
+      this.emitCharacterSheet()
+      return
+    }
+    const { damage: baseDamage, hit } = calcPlayerVsMobDamage(this.session, def)
+    const damage = hit && baseDamage > 0 ? Math.max(1, Math.floor(baseDamage * (1 + skillLevel * 0.15)) + skillLevel * 3) : 0
+    if (!hit || damage <= 0) {
+      showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
+      this.sfx.playMiss()
+      logActivity('combat', `Bash missed Lv ${target.level} ${target.name}.`)
+      this.emitCharacterSheet()
+      return
+    }
+
+    this.applyDamageToMob(target, damage, def, 'Bash')
+    this.emitCharacterSheet()
+  }
+
+  private applyDamageToMob(
+    target: MobInstance,
+    damage: number,
+    def: (typeof MOB_DEFS)[string],
+    skillLabel: string,
+  ) {
+    target.hp -= damage
+    playMobHitShake(this, target.sprite, def.color)
+    this.sfx.playHit()
+    showFloatingText(this, target.sprite.x, target.sprite.y - 40, `-${damage}`, 'hit')
+    logActivity(
+      'combat',
+      `${skillLabel} dealt ${damage} damage to Lv ${target.level} ${target.name} (HP ${Math.max(0, target.hp)}/${target.maxHp}).`,
+    )
+    this.updateMobHpBar(target)
+    if (this.selectedMob === target) {
+      this.emitSelectedMobPayload(target)
+    }
+    if (target.hp <= 0) {
+      if (this.selectedMob === target) this.setSelectedMob(null)
+      this.chaseMob = null
+      this.killMob(target)
+    }
   }
 
   private faceToward(tx: number, ty: number) {
@@ -414,8 +589,20 @@ export class WorldScene extends Phaser.Scene {
     return null
   }
 
+  private findNpcAt(wx: number, wy: number): NpcRow | null {
+    const hitRadius = 22
+    for (let i = 0; i < this.npcs.length; i++) {
+      const npc = this.npcs[i]
+      if (Phaser.Math.Distance.Between(wx, wy, npc.x, npc.y) <= hitRadius) {
+        return npc
+      }
+    }
+    return null
+  }
+
   private onMobHitPlayer(mob: MobInstance) {
     if (this.session.hp <= 0) return
+    if (this.isSitting) this.standUp()
     const def = MOB_DEFS[mob.defId]
     const damage = def ? calcMobVsPlayerDamage(def, this.session) : 0
     if (damage <= 0) {
@@ -499,6 +686,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private tryBasicAttack() {
+    if (this.isSitting) return
     const now = this.time.now
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
     this.lastAttackAt = now

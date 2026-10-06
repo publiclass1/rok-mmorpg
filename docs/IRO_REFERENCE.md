@@ -4,7 +4,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 
 **Ruleset:** Pre-Renewal (not Renewal). See [`PRE_RENEWAL_FORMULAS.md`](PRE_RENEWAL_FORMULAS.md) for formulas we intend to port.
 
-**Execution order:** [`MILESTONES.md`](MILESTONES.md) — M1–M3 done; work through M4–M6 one at a time.
+**Execution order:** [`MILESTONES.md`](MILESTONES.md) — M1–M4 done; work through M5–M6 one at a time.
 
 ## Custom rules (this game ≠ vanilla iRO)
 
@@ -24,8 +24,8 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Accounts & characters | — | implemented | `client/src/lib/accountAuth.ts`, `supabase/migrations/*` |
 | Stats (STR–LUK) | [Stats](https://irowiki.org/wiki/Stats) | partial | Pre-Renewal HP/SP tables + stat point grants in `statFormulas.ts` / `content/ro/expTables.json` |
 | Base / job EXP | [Experience](https://irowiki.org/wiki/Experience) | implemented | `content/ro/expTables.json`, `combat/exp.ts` (Pre-Renewal tables, cap 99) |
-| Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `content/ro/jobs.json` (Novice + 1st-job stubs); runtime: Novice only |
-| Skills | [Skills](https://irowiki.org/wiki/Skills) | partial | `content/ro/skills.json`; placeholders for Bash/Magnum/Heal |
+| Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `content/ro/jobs.json`; Job Master NPC + client job change (`jobChange.ts`, `JobMasterModal.tsx`) |
+| Skills | [Skills](https://irowiki.org/wiki/Skills) | partial | `content/ro/skills.json`; Swordman tree + prerequisites; Bash usable in combat |
 | Items & equipment | [Items](https://irowiki.org/wiki/Items), [Equipment](https://irowiki.org/wiki/Equipment) | partial | `content/ro/items.json`, `equipmentConfig.ts` |
 | Inventory weight | [Weight](https://irowiki.org/wiki/Weight) | planned | — |
 | Monsters & drops | [Monsters](https://irowiki.org/wiki/Monsters) | implemented | `mobs.json` drops + wiki EXP; client roll in `combat/drops.ts` |

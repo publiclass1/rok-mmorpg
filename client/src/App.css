@@ -143,6 +143,66 @@ button:disabled {
   overflow: hidden;
 }
 
+.map-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.92);
+}
+
+.map-loading-panel {
+  text-align: center;
+  padding: 1.5rem 2rem;
+  min-width: 220px;
+}
+
+.map-loading-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.map-loading-destination {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.map-loading-id {
+  margin: 0 0 1rem;
+}
+
+.map-loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto;
+  border: 3px solid #374151;
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  animation: map-loading-spin 0.75s linear infinite;
+}
+
+@keyframes map-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.game-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.85);
+}
+
 .game-stage .game-canvas {
   flex: 1;
   min-height: 480px;
@@ -170,21 +230,184 @@ button:disabled {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.35rem 0.25rem;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.25rem;
   background: #1f2937;
   border: 1px solid #4b5563;
-  min-height: 3rem;
+  min-height: 3.25rem;
 }
 
 .skill-key {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: #9ca3af;
+  line-height: 1;
 }
 
-.skill-label {
+.skill-slot-empty {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+  font-size: 1.25rem;
+  border: 1px dashed #374151;
+  border-radius: 6px;
+}
+
+.skill-slot--inactive {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.skill-slot--drop-target {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 1px #60a5fa;
+}
+
+.skill-icon {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #4b5563;
+  user-select: none;
+}
+
+.skill-icon--sm {
+  width: 36px;
+  height: 36px;
+}
+
+.skill-icon--md {
+  width: 40px;
+  height: 40px;
+}
+
+.skill-icon--dim {
+  opacity: 0.55;
+  filter: grayscale(0.35);
+}
+
+.skill-icon--draggable {
+  cursor: grab;
+}
+
+.skill-icon-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.skill-icon-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.65rem;
-  line-height: 1.1;
+  font-weight: 700;
+  color: #f9fafb;
+}
+
+.skill-icon-lv {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  font-size: 0.55rem;
+  line-height: 1;
+  padding: 1px 2px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fef3c7;
+  border-radius: 2px 0 0 0;
+}
+
+.skill-unassign-zone {
+  margin: 0.5rem 0;
+  padding: 0.35rem 0.5rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #9ca3af;
+  border: 1px dashed #4b5563;
+  border-radius: 4px;
+}
+
+.skill-unassign-zone--compact {
+  margin-top: 0.35rem;
+  padding: 0.3rem 0.4rem;
+}
+
+.skill-unassign-zone--active {
+  border-color: #f87171;
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.25);
+}
+
+.npc-options-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.npc-options-list button {
+  width: 100%;
+  text-align: left;
+}
+
+.skills-modal-meta {
+  margin: 0.25rem 0 0;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+@media (max-width: 420px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skill-cell {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: #111827;
+}
+
+.skill-cell-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.skill-cell-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skill-cell-btn {
+  min-width: 2rem;
+  padding: 0.25rem 0.45rem;
+  font-weight: 700;
 }
 
 .stat-list {
@@ -336,6 +559,29 @@ button:disabled {
   z-index: 20;
 }
 
+/* Skills modal: let drags reach the skill bar under the dim overlay */
+.skills-modal-backdrop {
+  pointer-events: none;
+  align-items: flex-start;
+  padding-top: 1.25rem;
+}
+
+.skills-modal-backdrop .panel {
+  pointer-events: auto;
+  max-height: min(55vh, 420px);
+}
+
+.game-shell.skills-assign-mode .game-bottom-dock {
+  position: relative;
+  z-index: 25;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.45);
+}
+
+.game-shell.skills-assign-mode .skill-bar {
+  outline: 1px solid #60a5fa;
+  outline-offset: -1px;
+}
+
 .modal {
   width: min(720px, 100%);
   max-height: 90vh;
@@ -352,6 +598,10 @@ button:disabled {
 
 .equipment-modal {
   width: min(560px, 100%);
+}
+
+.modal.npc-options-modal {
+  width: min(260px, 92vw);
 }
 
 .inv-grid {

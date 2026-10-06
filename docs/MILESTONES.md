@@ -7,7 +7,7 @@ Execute in order unless noted. **Ruleset:** Pre-Renewal / Classic per [iRO Wiki]
 | M1 | iRO Wiki reference + content layer | **Done** |
 | M2 | Persist core | **Done** |
 | M3 | Pre-Renewal combat & economy (data-driven) | **Done** |
-| M4 | Job change + first job tree | Not started |
+| M4 | Job change + first job tree | **Done** |
 | M5 | World & NPC services | Not started |
 | M6 | Social & trade depth | Not started |
 | M7+ | Late-game / out of scope for now | — |
@@ -88,13 +88,13 @@ Update the **Status** column as you finish each milestone.
 
 **Tasks:**
 
-- [ ] Job Master NPC type + UI/dialog flow
-- [ ] Implement job change (requirements: job level, items/zeny if desired)
-- [ ] Pick template job (e.g. Swordman): full skill list in `skills.json` with prerequisites
-- [ ] Move misplaced novice placeholders (Bash, Heal, etc.) to correct jobs per wiki
-- [ ] Enforce `maxJobLevel` from [jobs.json](../content/ro/jobs.json)
-- [ ] Skills window + skill bar respect job-gated skills
-- [ ] Content validate + docs update
+- [x] Job Master NPC type + UI/dialog flow
+- [x] Implement job change (requirements: job level, items/zeny if desired)
+- [x] Pick template job (e.g. Swordman): full skill list in `skills.json` with prerequisites
+- [x] Move misplaced novice placeholders (Bash, Heal, etc.) to correct jobs per wiki
+- [x] Enforce `maxJobLevel` from [jobs.json](../content/ro/jobs.json)
+- [x] Skills window + skill bar respect job-gated skills
+- [x] Content validate + docs update
 
 **Verify:** Novice at required job level changes to 1st job; learn and use that job’s skills; persist after refresh.
 

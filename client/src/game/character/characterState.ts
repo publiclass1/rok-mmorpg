@@ -100,9 +100,9 @@ export function createInitialCharacterState(): CharacterSessionState {
     statPointsUnspent: 0,
     jobId: 'novice',
     skillPointsUnspent: 0,
-    skills: { basic_attack: 1 },
+    skills: { basic_attack: 1, sit: 1 },
     equipment: createDefaultEquipment(),
-    skillBar: ['basic_attack', null, null, null, null, null, null, null, null],
+    skillBar: ['basic_attack', 'sit', null, null, null, null, null, null, null],
     sessionInventory: parseSessionInventory([
       { itemId: 'red_potion', quantity: 2 },
       'knife',
@@ -281,4 +281,24 @@ export function assignSkillBarSlot(state: CharacterSessionState, index: number, 
   const skillBar = [...state.skillBar]
   skillBar[index] = skillId
   return { ...state, skillBar }
+}
+
+/** Move or swap skills between bar slots (used by drag-and-drop). */
+export function moveSkillBarSlot(state: CharacterSessionState, from: number, to: number): CharacterSessionState {
+  if (from === to || from < 0 || from > 8 || to < 0 || to > 8) return state
+  const skillBar = [...state.skillBar]
+  const tmp = skillBar[from]
+  skillBar[from] = skillBar[to]
+  skillBar[to] = tmp
+  return { ...state, skillBar }
+}
+
+/** Place skill on a bar slot; clears duplicate slot if the skill is already assigned elsewhere. */
+export function placeSkillOnBar(state: CharacterSessionState, slot: number, skillId: string): CharacterSessionState {
+  let next = state
+  const existing = next.skillBar.findIndex((id, i) => id === skillId && i !== slot)
+  if (existing >= 0) {
+    next = assignSkillBarSlot(next, existing, null)
+  }
+  return assignSkillBarSlot(next, slot, skillId)
 }

@@ -2,25 +2,24 @@ import Phaser from 'phaser'
 import { resolveHeadItemId, type EquipSlot } from '../character/characterState'
 import { EQUIPMENT } from '../character/equipmentConfig'
 import type { Facing } from '../movement/clickToMove'
+import {
+  applyCharacterPose,
+  createCharacterRig,
+  type CharacterPose,
+  type CharacterRig,
+} from './playerCharacterRig'
 
 const FRAME_W = 24
 const FRAME_H = 28
 
-function drawBodyFrame(g: Phaser.GameObjects.Graphics, frame: number, tintBody = 0x1d4ed8) {
-  const ox = frame * FRAME_W
-  g.fillStyle(tintBody, 1)
-  g.fillRoundedRect(ox + 4, 10, 16, 14, 3)
-  g.fillStyle(0xfcd34d, 1)
-  const headY = frame === 1 ? 7 : 8
-  g.fillCircle(ox + 12, headY, 7)
-}
-
-export function ensurePlayerAnimationTextures(scene: Phaser.Scene) {
+/** Invisible sprite used only for animation timing / legacy hooks. */
+function ensurePlayerAnimationTextures(scene: Phaser.Scene) {
   if (scene.textures.exists('player_body')) return
 
   const g = scene.add.graphics()
-  drawBodyFrame(g, 0)
-  drawBodyFrame(g, 1)
+  g.fillStyle(0x000000, 0)
+  g.fillRect(0, 0, FRAME_W, FRAME_H)
+  g.fillRect(FRAME_W, 0, FRAME_W, FRAME_H)
   g.generateTexture('player_body', FRAME_W * 2, FRAME_H)
   g.destroy()
 
@@ -29,33 +28,6 @@ export function ensurePlayerAnimationTextures(scene: Phaser.Scene) {
     tex.add('0', 0, 0, 0, FRAME_W, FRAME_H)
     tex.add('1', 0, FRAME_W, 0, FRAME_W, FRAME_H)
   }
-
-  if (!scene.anims.exists('walk_down')) {
-    const dirs = ['down', 'up', 'left', 'right'] as const
-    for (const dir of dirs) {
-      scene.anims.create({
-        key: `walk_${dir}`,
-        frames: [{ key: 'player_body', frame: '0' }, { key: 'player_body', frame: '1' }],
-        frameRate: 6,
-        repeat: -1,
-      })
-      scene.anims.create({
-        key: `idle_${dir}`,
-        frames: [{ key: 'player_body', frame: '0' }],
-        frameRate: 1,
-      })
-      scene.anims.create({
-        key: `attack_${dir}`,
-        frames: [{ key: 'player_body', frame: '1' }],
-        frameRate: 1,
-      })
-      scene.anims.create({
-        key: `jump_${dir}`,
-        frames: [{ key: 'player_body', frame: '1' }],
-        frameRate: 1,
-      })
-    }
-  }
 }
 
 export type PlayerVisualLayer = 'weapon' | 'armor' | 'head' | 'offhand'
@@ -63,7 +35,9 @@ export type PlayerVisualLayer = 'weapon' | 'armor' | 'head' | 'offhand'
 export type PlayerDisplay = {
   container: Phaser.GameObjects.Container
   body: Phaser.GameObjects.Sprite
+  rig: CharacterRig
   layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Rectangle>>
+  pose: CharacterPose
 }
 
 export function createPlayerDisplay(
@@ -74,7 +48,10 @@ export function createPlayerDisplay(
   ensurePlayerAnimationTextures(scene)
   const body = scene.add.sprite(0, 0, 'player_body', '0')
   body.setOrigin(0.5, 0.85)
-  body.anims.play('idle_down')
+  body.setVisible(false)
+
+  const rig = createCharacterRig(scene)
+  const pose: CharacterPose = { facing: 'down', anim: 'idle', walkFrame: 0 }
 
   const layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Rectangle>> = {}
   const weapon = scene.add.rectangle(8, 4, 10, 4, 0xc0c0c0).setVisible(false)
@@ -86,13 +63,13 @@ export function createPlayerDisplay(
   layers.head = head
   layers.offhand = offhand
 
-  const container = scene.add.container(x, y, [body, armor, head, offhand, weapon])
+  const container = scene.add.container(x, y, [rig.root, armor, head, offhand, weapon])
   scene.physics.add.existing(container)
   const bodyPhys = container.body as Phaser.Physics.Arcade.Body
   bodyPhys.setSize(18, 14)
   bodyPhys.setOffset(-9, -12)
 
-  return { container, body, layers }
+  return { container, body, rig, layers, pose }
 }
 
 export function syncPlayerDisplayPosition(display: PlayerDisplay, x: number, y: number) {
@@ -135,10 +112,28 @@ export function updatePlayerEquipmentLayers(
 }
 
 export function playPlayerAnim(display: PlayerDisplay, key: string, facing: Facing) {
-  const animKey = `${key}_${facing}`
-  if (display.body.anims.currentAnim?.key !== animKey) {
-    display.body.anims.play(animKey, true)
+  const anim = key === 'sit' ? 'sit' : (key as CharacterPose['anim'])
+  display.pose = {
+    ...display.pose,
+    facing,
+    anim: anim === 'walk' || anim === 'attack' || anim === 'jump' || anim === 'sit' || anim === 'idle' ? anim : 'idle',
   }
+  applyCharacterPose(display.rig, display.pose)
+}
+
+export function setPlayerWalkFrame(display: PlayerDisplay, walkFrame: 0 | 1) {
+  if (display.pose.anim !== 'walk') return
+  display.pose = { ...display.pose, walkFrame }
+  applyCharacterPose(display.rig, display.pose)
+}
+
+export function setPlayerSitting(display: PlayerDisplay, sitting: boolean, facing: Facing) {
+  display.pose = {
+    facing,
+    anim: sitting ? 'sit' : 'idle',
+    walkFrame: 0,
+  }
+  applyCharacterPose(display.rig, display.pose)
 }
 
 export function getPlayerPhysicsSprite(display: PlayerDisplay): Phaser.Types.Physics.Arcade.GameObjectWithBody {

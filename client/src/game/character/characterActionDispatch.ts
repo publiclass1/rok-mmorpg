@@ -27,7 +27,7 @@ export function dispatchCharacterAction(action: CharacterActionPayload) {
   if (!result.changed) {
     if (result.message) {
       emitGameEvent('status', result.message)
-      if (action.type === 'raiseStat' || action.type === 'learnSkill') {
+      if (action.type === 'raiseStat' || action.type === 'learnSkill' || action.type === 'changeJob' || action.type === 'assignSkillBar') {
         logActivity('character', result.message)
       }
     }
@@ -38,4 +38,7 @@ export function dispatchCharacterAction(action: CharacterActionPayload) {
   const { sheet } = publishSessionState(result.state)
   context.setSheet(sheet)
   emitGameEvent('sessionSync', result.state)
+  if (result.message && action.type === 'changeJob') {
+    emitGameEvent('status', result.message)
+  }
 }

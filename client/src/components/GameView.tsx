@@ -3,6 +3,7 @@ import Phaser from 'phaser'
 import { savePoint, teleport } from '../lib/api'
 import { loadCharacterSession, saveCharacterSession } from '../lib/characterProgress'
 import { supabase } from '../lib/supabase'
+import { JOB_NAMES } from '../game/character/skillsConfig'
 import { registerCharacterActionContext } from '../game/character/characterActionDispatch'
 import { sessionFromSheetPayload, toCharacterSheetPayload } from '../game/character/characterSheet'
 import { createInitialCharacterState } from '../game/character/characterState'
@@ -22,7 +23,11 @@ import { EquipmentWindow } from './EquipmentWindow'
 import { InventoryWindow } from './InventoryWindow'
 import { StatsWindow } from './StatsWindow'
 import { StorageModal } from './StorageModal'
+import { JobMasterModal } from './JobMasterModal'
+import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
+import { MapLoadingOverlay } from './MapLoadingOverlay'
 import { TradeModal } from './TradeModal'
+import { mapDisplayName } from '../game/world/mapDisplayName'
 
 type Props = {
   character: CharacterRow
@@ -39,6 +44,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [position, setPosition] = useState({ x: character.x, y: character.y, mapId: character.map_id })
   const [status, setStatus] = useState('')
   const [storageNpc, setStorageNpc] = useState<NpcRow | null>(null)
+  const [jobMasterNpc, setJobMasterNpc] = useState<NpcRow | null>(null)
+  const [npcMenu, setNpcMenu] = useState<NpcRow | null>(null)
   const [remotePlayers, setRemotePlayers] = useState<
     Array<{ characterId: string; name: string; x: number; y: number }>
   >([])
@@ -59,9 +66,17 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [equipmentOpen, setEquipmentOpen] = useState(false)
   const [selectedMob, setSelectedMob] = useState<SelectedMobPayload | null>(null)
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([])
+  const [mapLoading, setMapLoading] = useState<{ mapId: string; label: string } | null>(null)
 
   const modalOpen =
-    statsOpen || skillsOpen || inventoryOpen || equipmentOpen || !!storageNpc || !!tradePartner
+    statsOpen ||
+    skillsOpen ||
+    inventoryOpen ||
+    equipmentOpen ||
+    !!storageNpc ||
+    !!jobMasterNpc ||
+    !!npcMenu ||
+    !!tradePartner
 
   useEffect(() => {
     setSessionReady(false)
@@ -135,6 +150,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     const unsubs = [
       onGameEvent('npcNearby', setNearbyNpc),
+      onGameEvent('npcInteract', (npc) => setNpcMenu(npc)),
       onGameEvent('position', setPosition),
       onGameEvent('status', setStatus),
       onGameEvent('remotePlayers', setRemotePlayers),
@@ -149,9 +165,23 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       onGameEvent('activityLog', (entry) => {
         setActivityLog((prev) => [...prev, entry].slice(-100))
       }),
+      onGameEvent('worldReady', ({ mapId }) => {
+        setMapLoading((current) => (current?.mapId === mapId ? null : current))
+      }),
     ]
     return () => unsubs.forEach((u) => u())
   }, [])
+
+  useEffect(() => {
+    if (!sessionReady || !npcsReady) return
+    setMapLoading((current) => {
+      if (current?.mapId === character.map_id) return current
+      return {
+        mapId: character.map_id,
+        label: mapDisplayName(character.map_id),
+      }
+    })
+  }, [character.map_id, sessionReady, npcsReady])
 
   useEffect(() => {
     if (!hostRef.current || !npcsReady || !sessionReady) return
@@ -199,10 +229,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         setEquipmentOpen((o) => !o)
         return
       }
-      if (e.key.toLowerCase() === 'e' && nearbyNpc) {
-        void handleNpc(nearbyNpc)
-        return
-      }
       if (modalOpen) return
       const num = parseInt(e.key, 10)
       if (num >= 1 && num <= 9) {
@@ -212,15 +238,23 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [nearbyNpc, position, character, modalOpen])
+  }, [modalOpen])
 
-  async function handleNpc(npc: NpcRow) {
+  async function runNpcChoice(npc: NpcRow, choice: NpcMenuChoice) {
+    setNpcMenu(null)
     setMessage(null)
-    if (npc.npc_type === 'storage') {
+
+    if (choice.kind === 'cancel') return
+
+    if (choice.kind === 'storage') {
       setStorageNpc(npc)
       return
     }
-    if (npc.npc_type === 'save') {
+    if (choice.kind === 'job_master') {
+      setJobMasterNpc(npc)
+      return
+    }
+    if (choice.kind === 'save') {
       try {
         await savePoint({
           characterId: character.id,
@@ -235,38 +269,37 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       }
       return
     }
-    if (npc.npc_type === 'teleport') {
-      const destinations = npc.config?.destinations ?? []
-      const dest = destinations[0]
-      if (!dest) {
-        setMessage('No destinations configured.')
-        return
-      }
+    if (choice.kind === 'teleport') {
       try {
+        setMapLoading({
+          mapId: choice.destinationMapId,
+          label: choice.label || mapDisplayName(choice.destinationMapId),
+        })
         const res = await teleport({
           characterId: character.id,
           mapId: position.mapId,
           x: position.x,
           y: position.y,
           npcId: npc.id,
-          destinationMapId: dest.map_id,
+          destinationMapId: choice.destinationMapId,
         })
         onCharacterUpdated(res.character)
-        emitGameEvent('status', `Warped to ${dest.label}`)
+        emitGameEvent('status', `Warped to ${choice.label}`)
       } catch (err) {
+        setMapLoading(null)
         setMessage(err instanceof Error ? err.message : 'Warp failed')
       }
     }
   }
 
   return (
-    <div className="game-shell ro-layout">
+    <div className={`game-shell ro-layout${skillsOpen ? ' skills-assign-mode' : ''}`}>
       <header className="hud row spread">
         <div>
           <strong>{character.name}</strong>
           <span className="muted">
             {' '}
-            · {character.map_id} · Lv {sheet.baseLevel} · Job {sheet.jobLevel} · HP {sheet.hp}/{sheet.hpMax} · MP{' '}
+            · {character.map_id} · {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Lv {sheet.baseLevel} · Job {sheet.jobLevel} · HP {sheet.hp}/{sheet.hpMax} · MP{' '}
             {sheet.mp}/{sheet.mpMax}
           </span>
         </div>
@@ -281,7 +314,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       </header>
 
       <div className="game-stage">
-        {!sessionReady && <p className="muted game-loading">Loading character…</p>}
+        {mapLoading && (
+          <MapLoadingOverlay label={mapLoading.label} mapId={mapLoading.mapId} />
+        )}
+        {!sessionReady && !mapLoading && <p className="muted game-loading">Loading character…</p>}
         <div ref={hostRef} className="game-canvas" />
         <div className="game-bottom-dock">
           <SkillBar sheet={sheet} />
@@ -313,10 +349,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           {remotePlayers.length === 0 && <li className="muted">Alone on map</li>}
         </ul>
         <p className="muted small">
-          Click move · Space jump · 1 attack · Alt+S stats · Alt+I inventory · Alt+E equip · Alt+K skills · E NPC
+          Click move · Space jump · 1–9 skills · Click NPC · Alt+S/I/E/K windows
         </p>
         {nearbyNpc && (
-          <p>Near: <strong>{nearbyNpc.label}</strong> — E</p>
+          <p className="muted small">
+            Nearby: <strong>{nearbyNpc.label}</strong> — click them to talk
+          </p>
         )}
         {message && <p>{message}</p>}
       </aside>
@@ -332,8 +370,26 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       {equipmentOpen && <EquipmentWindow sheet={sheet} onClose={() => setEquipmentOpen(false)} />}
       {skillsOpen && <SkillsWindow sheet={sheet} onClose={() => setSkillsOpen(false)} />}
 
+      {npcMenu && (
+        <NpcOptionsModal
+          npc={npcMenu}
+          onClose={() => setNpcMenu(null)}
+          onChoose={(choice) => void runNpcChoice(npcMenu, choice)}
+        />
+      )}
+
       {storageNpc && (
         <StorageModal character={character} npc={storageNpc} position={position} onClose={() => setStorageNpc(null)} />
+      )}
+
+      {jobMasterNpc && (
+        <JobMasterModal
+          character={character}
+          npc={jobMasterNpc}
+          sheet={sheet}
+          onClose={() => setJobMasterNpc(null)}
+          onCharacterUpdated={onCharacterUpdated}
+        />
       )}
 
       {tradePartner && (

@@ -32,6 +32,8 @@ export type RoSkill = {
   prerequisites: SkillPrerequisite[]
   description: string
   sourceUrl?: string | null
+  /** Override path under /skills/; default `{id}.svg` */
+  iconFile?: string | null
 }
 
 export type StatBonusJson = {
