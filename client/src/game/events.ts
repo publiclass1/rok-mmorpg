@@ -1,4 +1,4 @@
-import type { CharacterSessionState, EquipSlot, PrimaryStat } from './character/characterState'
+import type { CharacterSessionState, EquipSlot, PrimaryStat, SessionInventorySlot } from './character/characterState'
 import type { NpcRow } from '../types/database'
 
 export type PositionPayload = {
@@ -42,7 +42,7 @@ export type CharacterSheetPayload = PlayerStatsPayload & {
   skills: Record<string, number>
   equipment: Record<EquipSlot, string | null>
   skillBar: (string | null)[]
-  sessionInventory: string[]
+  sessionInventory: SessionInventorySlot[]
   attackDamage: number
 }
 
@@ -50,6 +50,7 @@ export type CharacterActionPayload =
   | { type: 'raiseStat'; stat: PrimaryStat }
   | { type: 'learnSkill'; skillId: string }
   | { type: 'equip'; slot: EquipSlot; itemId: string | null; sessionInventoryIndex?: number }
+  | { type: 'useConsumable'; sessionInventoryIndex: number }
 
 export type SelectedMobPayload = {
   defId: string

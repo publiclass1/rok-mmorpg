@@ -6,7 +6,7 @@ Execute in order unless noted. **Ruleset:** Pre-Renewal / Classic per [iRO Wiki]
 |---|-----------|--------|
 | M1 | iRO Wiki reference + content layer | **Done** |
 | M2 | Persist core | **Done** |
-| M3 | Pre-Renewal combat & economy (data-driven) | Not started |
+| M3 | Pre-Renewal combat & economy (data-driven) | **Done** |
 | M4 | Job change + first job tree | Not started |
 | M5 | World & NPC services | Not started |
 | M6 | Social & trade depth | Not started |
@@ -65,14 +65,14 @@ Update the **Status** column as you finish each milestone.
 
 **Tasks:**
 
-- [ ] Add `content/ro/expTables.json`; wire [exp.ts](../client/src/game/combat/exp.ts) to Pre-Renewal tables
-- [ ] Align [statFormulas.ts](../client/src/game/character/statFormulas.ts) with [PRE_RENEWAL_FORMULAS.md](PRE_RENEWAL_FORMULAS.md) (HP/SP, stat point cost, base cap 99)
-- [ ] Implement HIT/FLEE and damage pipeline ([Damage](https://irowiki.org/wiki/Damage))
-- [ ] Use mob `element`, `size`, DEF/MDEF from [mobs.json](../content/ro/mobs.json) in combat
-- [ ] Implement drops from `mobs.json` `drops[]` (rates as documented in content)
-- [ ] Red Potion (and consumable use) from [items.json](../content/ro/items.json)
-- [ ] Decide: keep `runtime.*` combat tuning vs wiki ATK/HP until balance pass
-- [ ] Update system matrix in IRO_REFERENCE
+- [x] Add `content/ro/expTables.json`; wire [exp.ts](../client/src/game/combat/exp.ts) to Pre-Renewal tables
+- [x] Align [statFormulas.ts](../client/src/game/character/statFormulas.ts) with [PRE_RENEWAL_FORMULAS.md](PRE_RENEWAL_FORMULAS.md) (HP/SP, stat point cost, base cap 99)
+- [x] Implement HIT/FLEE and damage pipeline ([Damage](https://irowiki.org/wiki/Damage))
+- [x] Use mob `element`, `size`, DEF/MDEF from [mobs.json](../content/ro/mobs.json) in combat
+- [x] Implement drops from `mobs.json` `drops[]` (rates as documented in content)
+- [x] Red Potion (and consumable use) from [items.json](../content/ro/items.json)
+- [x] Decide: keep `runtime.*` combat tuning vs wiki ATK/HP until balance pass
+- [x] Update system matrix in IRO_REFERENCE
 
 **Verify:** Kill Poring → Jellopy (or configured drops); potion heals; EXP curves match documented tables.
 

@@ -14,10 +14,10 @@
       "wikiBaseExp": 27,
       "wikiJobExp": 20,
       "drops": [
-        { "itemId": "jellopy", "rate": 7000, "note": "per-mille; not implemented in combat yet" }
+        { "itemId": "jellopy", "rate": 7000, "note": "per-mille (0–10000); 7000 ≈ 70%" }
       ],
       "runtime": {
-        "maxHp": 30,
+        "maxHp": 50,
         "color": "0xf472b6",
         "aggroRange": 140,
         "attackRange": 36,

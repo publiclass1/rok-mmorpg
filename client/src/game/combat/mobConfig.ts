@@ -1,41 +1,57 @@
 import { loadRoContent } from '../../content/ro/loadContent'
 import { parseLayerColor } from '../../content/ro/parseColor'
-import type { RoMob } from '../../content/ro/types'
+import type { RoMob, RoMobDrop } from '../../content/ro/types'
 
 export type MobDefinition = {
   id: string
   name: string
   level: number
   maxHp: number
+  atk: number
+  def: number
+  mdef: number
+  element: string
+  size: string
+  /** Mob HIT/FLEE helpers derived from level until mob stats exist in content. */
+  hit: number
+  flee: number
   color: number
   aggroRange: number
   attackRange: number
-  attackDamage: number
   attackCooldownMs: number
   roamRadius: number
   moveSpeed: number
   wanderPauseMs: number
-  baseExp: number
-  jobExp: number
+  wikiBaseExp: number
+  wikiJobExp: number
+  drops: RoMobDrop[]
 }
 
 function mobDefinitionFromContent(mob: RoMob): MobDefinition {
   const r = mob.runtime
+  const level = mob.level
   return {
     id: mob.id,
     name: mob.name,
-    level: mob.level,
-    maxHp: r.maxHp,
+    level,
+    maxHp: mob.hp,
+    atk: mob.atk,
+    def: mob.def,
+    mdef: mob.mdef,
+    element: mob.element,
+    size: mob.size,
+    hit: level + level + Math.floor(level / 2),
+    flee: level + Math.floor(level / 2),
     color: parseLayerColor(r.color),
     aggroRange: r.aggroRange,
     attackRange: r.attackRange,
-    attackDamage: r.attackDamage,
     attackCooldownMs: r.attackCooldownMs,
     roamRadius: r.roamRadius,
     moveSpeed: r.moveSpeed,
     wanderPauseMs: r.wanderPauseMs,
-    baseExp: r.baseExp,
-    jobExp: r.jobExp,
+    wikiBaseExp: mob.wikiBaseExp,
+    wikiJobExp: mob.wikiJobExp,
+    drops: mob.drops,
   }
 }
 
@@ -53,7 +69,6 @@ export const MOB_SPAWNS_BY_MAP: Record<string, MobSpawnPoint[]> = ro.mobSpawns
 
 export const PLAYER_DEFAULT_HP = 50
 export const PLAYER_DEFAULT_MP = 30
-export const ATTACK_DAMAGE = 10
 export const ATTACK_RANGE = 56
 export const ATTACK_COOLDOWN_MS = 450
 export const MOB_RESPAWN_MS = 8000

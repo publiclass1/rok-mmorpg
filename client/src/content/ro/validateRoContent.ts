@@ -51,6 +51,16 @@ export function validateRoContent(pack: RoContentPack): void {
     assert(mob.runtime.maxHp > 0, `mob ${mob.id} runtime.maxHp must be > 0`)
   }
 
+  assert(pack.expTables.baseExpToNext.length === pack.expTables.baseLevelCap, 'baseExpToNext length must match baseLevelCap')
+  assert(pack.expTables.statPointsOnBaseLevelUp.length === pack.expTables.baseLevelCap, 'statPointsOnBaseLevelUp length must match baseLevelCap')
+  assert(pack.expTables.jobBaseHp.novice?.length === pack.expTables.baseLevelCap, 'jobBaseHp.novice length must match baseLevelCap')
+
+  for (const item of pack.items) {
+    if (item.type === 'consumable') {
+      assert(item.consumable != null, `consumable item ${item.id} must define consumable effect`)
+    }
+  }
+
   const mapIds = new Set(pack.maps.map((m) => m.id))
   for (const [mapId, spawns] of Object.entries(pack.mobSpawns)) {
     for (const spawn of spawns) {

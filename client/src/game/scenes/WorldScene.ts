@@ -17,6 +17,8 @@ import {
 import { colliderWithObstacles, spawnObstacles } from '../combat/mapObstacles'
 import { initMobAiFields, updateMob } from '../combat/mobAi'
 import { logActivity } from '../activityLog'
+import { calcMobVsPlayerDamage, calcPlayerVsMobDamage } from '../combat/damage'
+import { rollMobDrops } from '../combat/drops'
 import { scaleMobExp } from '../combat/gameConfig'
 import {
   ATTACK_COOLDOWN_MS,
@@ -25,6 +27,8 @@ import {
   MOB_RESPAWN_MS,
   MOB_SPAWNS_BY_MAP,
 } from '../combat/mobConfig'
+import { getItemDisplayName } from '../character/itemCatalog'
+import { addItemsToSessionInventory } from '../character/sessionInventory'
 import type { MobInstance } from '../combat/mobTypes'
 import { SfxPlayer } from '../combat/sfx'
 import { emitGameEvent, onGameEvent } from '../events'
@@ -301,7 +305,7 @@ export class WorldScene extends Phaser.Scene {
       const def = MOB_DEFS[mob.defId]
       if (def) {
         updateMob(mob, def, this.playerDisplay.container.x, this.playerDisplay.container.y, playerAlive, now, {
-          onMobHitPlayer: (damage, m) => this.onMobHitPlayer(damage, m),
+          onMobHitPlayer: (m) => this.onMobHitPlayer(m),
         })
       }
       this.updateMobHpBar(mob)
@@ -410,9 +414,17 @@ export class WorldScene extends Phaser.Scene {
     return null
   }
 
-  private onMobHitPlayer(damage: number, mob: MobInstance) {
+  private onMobHitPlayer(mob: MobInstance) {
     if (this.session.hp <= 0) return
     const def = MOB_DEFS[mob.defId]
+    const damage = def ? calcMobVsPlayerDamage(def, this.session) : 0
+    if (damage <= 0) {
+      const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
+      showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
+      this.sfx.playMiss()
+      logActivity('combat', `${mob.name} missed you.`)
+      return
+    }
     this.session = { ...this.session, hp: Math.max(0, this.session.hp - damage) }
     showFloatingText(
       this,
@@ -486,10 +498,6 @@ export class WorldScene extends Phaser.Scene {
     mob.label.setPosition(mob.sprite.x, mob.sprite.y - 32)
   }
 
-  private getAttackDamage(): number {
-    return toCharacterSheetPayload(this.session).attackDamage
-  }
-
   private tryBasicAttack() {
     const now = this.time.now
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
@@ -506,7 +514,6 @@ export class WorldScene extends Phaser.Scene {
     })
 
     const target = this.findMobInAttackCone()
-    const damage = this.getAttackDamage()
     if (!target) {
       const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
       showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
@@ -516,6 +523,15 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const def = MOB_DEFS[target.defId]
+    if (!def) return
+    const { damage, hit } = calcPlayerVsMobDamage(this.session, def)
+    if (!hit || damage <= 0) {
+      showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
+      this.sfx.playMiss()
+      logActivity('combat', `Attack missed Lv ${target.level} ${target.name}.`)
+      return
+    }
+
     target.hp -= damage
     if (def) playMobHitShake(this, target.sprite, def.color)
     this.sfx.playHit()
@@ -574,9 +590,20 @@ export class WorldScene extends Phaser.Scene {
   private killMob(mob: MobInstance) {
     const def = MOB_DEFS[mob.defId]
     if (def) {
+      const drops = rollMobDrops(def.drops)
+      if (drops.length > 0) {
+        this.session = {
+          ...this.session,
+          sessionInventory: addItemsToSessionInventory(this.session.sessionInventory, drops),
+        }
+        for (const itemId of drops) {
+          logActivity('combat', `Obtained ${getItemDisplayName(itemId)}.`)
+        }
+      }
+
       const beforeBase = this.session.progress.baseLevel
       const beforeJob = this.session.progress.jobLevel
-      const gained = scaleMobExp(def.baseExp, def.jobExp)
+      const gained = scaleMobExp(def.wikiBaseExp, def.wikiJobExp)
       const result = addExperience(this.session, gained.baseExp, gained.jobExp)
       this.session = syncDerivedVitals(result.state)
       showFloatingText(this, mob.sprite.x, mob.sprite.y - 52, `+${gained.baseExp} Base EXP`, 'exp')

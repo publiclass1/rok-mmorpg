@@ -38,7 +38,9 @@ export function EquipPanel({ sheet }: Props) {
     emitGameEvent('characterAction', { type: 'equip', slot, itemId })
   }
 
-  const invItems = sheet.sessionInventory.filter((id) => EQUIPMENT[id])
+  const invEntries = sheet.sessionInventory
+    .map((slot, sessionIndex) => ({ slot, sessionIndex }))
+    .filter(({ slot }) => EQUIPMENT[slot.itemId])
 
   return (
     <div className="equip-panel">
@@ -59,13 +61,26 @@ export function EquipPanel({ sheet }: Props) {
       </ul>
       <h4>Inventory (session)</h4>
       <ul className="item-list">
-        {invItems.map((itemId) => {
-          const def = EQUIPMENT[itemId]
+        {invEntries.map(({ slot, sessionIndex }) => {
+          const def = EQUIPMENT[slot.itemId]
           if (!def) return null
+          const label = slot.quantity > 1 ? `${def.name} ×${slot.quantity}` : def.name
           return (
-            <li key={itemId} className="row spread">
-              <span>{def.name}</span>
-              <button type="button" onClick={() => equip(def.slot, itemId)}>Equip</button>
+            <li key={`${slot.itemId}-${sessionIndex}`} className="row spread">
+              <span>{label}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  emitGameEvent('characterAction', {
+                    type: 'equip',
+                    slot: def.slot,
+                    itemId: slot.itemId,
+                    sessionInventoryIndex: sessionIndex,
+                  })
+                }
+              >
+                Equip
+              </button>
             </li>
           )
         })}

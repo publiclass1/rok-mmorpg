@@ -43,6 +43,11 @@ export type StatBonusJson = {
   luk: number
 }
 
+export type RoConsumableEffect = {
+  healHp?: number
+  healSp?: number
+}
+
 export type RoItem = {
   id: string
   name: string
@@ -52,7 +57,22 @@ export type RoItem = {
   equipSlot: string | null
   layerColor: string | null
   bonuses: StatBonusJson | null
+  weaponAtk?: number
+  weaponSize?: 'small' | 'medium' | 'large'
+  attackElement?: string
+  consumable?: RoConsumableEffect
   sourceUrl?: string | null
+}
+
+export type RoExpTables = {
+  sourceUrl?: string
+  baseLevelCap: number
+  jobLevelCap: number
+  baseExpToNext: number[]
+  jobExpToNext: number[]
+  jobBaseHp: Record<string, number[]>
+  jobBaseSp: Record<string, number[]>
+  statPointsOnBaseLevelUp: number[]
 }
 
 export type RoMobDrop = {
@@ -109,4 +129,5 @@ export type RoContentPack = {
   mobs: RoMob[]
   maps: RoMap[]
   mobSpawns: Record<string, MobSpawnPointJson[]>
+  expTables: RoExpTables
 }

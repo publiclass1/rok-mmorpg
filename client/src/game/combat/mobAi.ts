@@ -3,7 +3,7 @@ import type { MobDefinition } from './mobConfig'
 import type { MobInstance, MobState } from './mobTypes'
 
 export type MobAiCallbacks = {
-  onMobHitPlayer: (damage: number, mob: MobInstance) => void
+  onMobHitPlayer: (mob: MobInstance) => void
 }
 
 function dist(ax: number, ay: number, bx: number, by: number) {
@@ -70,7 +70,7 @@ export function updateMob(
     mob.sprite.setVelocity(0, 0)
     if (now - mob.lastAttackAt >= def.attackCooldownMs) {
       mob.lastAttackAt = now
-      callbacks.onMobHitPlayer(def.attackDamage, mob)
+      callbacks.onMobHitPlayer(mob)
     }
     return
   }

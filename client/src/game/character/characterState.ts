@@ -1,5 +1,17 @@
 import { addBaseExp, addJobExp, createInitialProgress, type PlayerProgressState } from '../combat/exp'
-import { SKILL_POINTS_PER_JOB_LEVEL, STAT_POINTS_PER_BASE_LEVEL, statRaiseCost } from './statFormulas'
+import { statPointsForReachingBaseLevel } from '../../content/ro/expTables'
+import { equipmentBonusesFromState } from './equipmentConfig'
+import { getConsumableEffect } from './itemCatalog'
+import {
+  addItemsToSessionInventory,
+  parseSessionInventory,
+  removeFromSessionInventory,
+  type SessionInventorySlot,
+} from './sessionInventory'
+import { derivedMaxHp, derivedMaxMp, SKILL_POINTS_PER_JOB_LEVEL, statRaiseCost } from './statFormulas'
+
+export type { SessionInventorySlot } from './sessionInventory'
+export { parseSessionInventory } from './sessionInventory'
 
 export type PrimaryStat = 'str' | 'agi' | 'vit' | 'int' | 'dex' | 'luk'
 
@@ -67,7 +79,7 @@ export type CharacterSessionState = {
   skills: Record<string, number>
   equipment: Record<EquipSlot, string | null>
   skillBar: (string | null)[]
-  sessionInventory: string[]
+  sessionInventory: SessionInventorySlot[]
   hp: number
   mp: number
 }
@@ -91,7 +103,8 @@ export function createInitialCharacterState(): CharacterSessionState {
     skills: { basic_attack: 1 },
     equipment: createDefaultEquipment(),
     skillBar: ['basic_attack', null, null, null, null, null, null, null, null],
-    sessionInventory: [
+    sessionInventory: parseSessionInventory([
+      { itemId: 'red_potion', quantity: 2 },
       'knife',
       'cotton_shirt',
       'cap',
@@ -102,17 +115,25 @@ export function createInitialCharacterState(): CharacterSessionState {
       'sandals',
       'clip',
       'glove',
-    ],
+    ]),
     hp: 50,
     mp: 30,
   }
 }
 
-export function grantBaseLevelRewards(state: CharacterSessionState, levelsGained: number): CharacterSessionState {
+export function grantBaseLevelRewards(
+  state: CharacterSessionState,
+  levelsGained: number,
+  beforeBaseLevel: number,
+): CharacterSessionState {
   if (levelsGained <= 0) return state
+  let points = 0
+  for (let lv = beforeBaseLevel + 1; lv <= state.progress.baseLevel; lv++) {
+    points += statPointsForReachingBaseLevel(lv)
+  }
   return {
     ...state,
-    statPointsUnspent: state.statPointsUnspent + levelsGained * STAT_POINTS_PER_BASE_LEVEL,
+    statPointsUnspent: state.statPointsUnspent + points,
   }
 }
 
@@ -144,11 +165,11 @@ export function addExperience(
   const beforeJob = state.progress.jobLevel
   let progress = state.progress
   progress = addBaseExp(progress, baseExp).newState
-  progress = addJobExp(progress, jobExp).newState
+  progress = addJobExp(progress, jobExp, state.jobId).newState
   let next = { ...state, progress }
   const baseLeveled = progress.baseLevel - beforeBase
   const jobLeveled = progress.jobLevel - beforeJob
-  next = grantBaseLevelRewards(next, baseLeveled)
+  next = grantBaseLevelRewards(next, baseLeveled, beforeBase)
   next = grantJobLevelRewards(next, jobLeveled)
   return { state: next, baseLeveled, jobLeveled }
 }
@@ -190,38 +211,68 @@ export function equipItemWithInventoryTransfer(
       state: {
         ...state,
         equipment: { ...state.equipment, [slot]: null },
-        sessionInventory: [...state.sessionInventory, current],
+        sessionInventory: addItemsToSessionInventory(state.sessionInventory, [current]),
       },
     }
   }
 
-  const inv = [...state.sessionInventory]
   let removeIndex: number
+  const inv = state.sessionInventory
 
   if (options?.sessionInventoryIndex !== undefined) {
     const idx = options.sessionInventoryIndex
-    if (idx < 0 || idx >= inv.length || inv[idx] !== itemId) {
+    if (idx < 0 || idx >= inv.length || inv[idx].itemId !== itemId) {
       return { ok: false, reason: 'Item not found in inventory at that slot.' }
     }
     removeIndex = idx
   } else {
-    removeIndex = inv.indexOf(itemId)
+    removeIndex = inv.findIndex((s) => s.itemId === itemId)
     if (removeIndex < 0) {
       return { ok: false, reason: 'Item is not in your session inventory.' }
     }
   }
 
-  inv.splice(removeIndex, 1)
+  let nextInv = removeFromSessionInventory(inv, removeIndex, 1)
   const displaced = state.equipment[slot]
-  if (displaced) inv.push(displaced)
+  if (displaced) nextInv = addItemsToSessionInventory(nextInv, [displaced])
 
   return {
     ok: true,
     state: {
       ...state,
-      sessionInventory: inv,
+      sessionInventory: nextInv,
       equipment: { ...state.equipment, [slot]: itemId },
     },
+  }
+}
+
+export function useConsumableFromSession(
+  state: CharacterSessionState,
+  sessionInventoryIndex: number,
+): { ok: true; state: CharacterSessionState } | { ok: false; reason: string } {
+  const inv = state.sessionInventory
+  if (sessionInventoryIndex < 0 || sessionInventoryIndex >= inv.length) {
+    return { ok: false, reason: 'Invalid inventory slot.' }
+  }
+  const itemId = inv[sessionInventoryIndex].itemId
+  const effect = getConsumableEffect(itemId)
+  if (!effect) return { ok: false, reason: 'Item is not usable.' }
+
+  const bonuses = equipmentBonusesFromState(state.equipment)
+  const vit = state.vit + bonuses.vit
+  const int = state.int + bonuses.int
+  const hpMax = derivedMaxHp(state.jobId, state.progress.baseLevel, vit)
+  const mpMax = derivedMaxMp(state.jobId, state.progress.baseLevel, int)
+
+  let hp = state.hp
+  let mp = state.mp
+  if (effect.healHp) hp = Math.min(hpMax, hp + effect.healHp)
+  if (effect.healSp) mp = Math.min(mpMax, mp + effect.healSp)
+
+  const nextInv = removeFromSessionInventory(inv, sessionInventoryIndex, 1)
+  return {
+    ok: true,
+    state: { ...state, sessionInventory: nextInv, hp, mp },
   }
 }
 

@@ -18,8 +18,8 @@ const STAT_LABELS: Record<PrimaryStat, string> = {
 }
 
 export function StatsWindow({ sheet, onClose }: Props) {
-  const previewHp = derivedMaxHp(sheet.baseLevel, sheet.effectiveVit)
-  const previewMp = derivedMaxMp(sheet.baseLevel, sheet.effectiveInt)
+  const previewHp = derivedMaxHp(sheet.jobId, sheet.baseLevel, sheet.effectiveVit)
+  const previewMp = derivedMaxMp(sheet.jobId, sheet.baseLevel, sheet.effectiveInt)
 
   function raise(stat: PrimaryStat) {
     dispatchCharacterAction({ type: 'raiseStat', stat })

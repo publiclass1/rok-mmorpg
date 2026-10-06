@@ -1,20 +1,15 @@
 import type { CharacterSessionState, EquipSlot, PrimaryStat } from './characterState'
-import { equipmentBonusesFromState } from './equipmentConfig'
-import { applyBonuses, derivedAttackDamage, derivedMaxHp, derivedMaxMp, statRaiseCost } from './statFormulas'
+import { previewPlayerAttack } from '../combat/damage'
+import { effectiveStats } from './effectiveStats'
+import { derivedMaxHp, derivedMaxMp, statRaiseCost } from './statFormulas'
 import type { CharacterSheetPayload } from '../events'
 
-export function effectiveStats(state: CharacterSessionState) {
-  const bonuses = equipmentBonusesFromState(state.equipment)
-  return applyBonuses(
-    { str: state.str, agi: state.agi, vit: state.vit, int: state.int, dex: state.dex, luk: state.luk },
-    bonuses,
-  )
-}
+export { effectiveStats } from './effectiveStats'
 
 export function syncDerivedVitals(state: CharacterSessionState): CharacterSessionState {
   const stats = effectiveStats(state)
-  const hpMax = derivedMaxHp(state.progress.baseLevel, stats.vit)
-  const mpMax = derivedMaxMp(state.progress.baseLevel, stats.int)
+  const hpMax = derivedMaxHp(state.jobId, state.progress.baseLevel, stats.vit)
+  const mpMax = derivedMaxMp(state.jobId, state.progress.baseLevel, stats.int)
   return {
     ...state,
     hp: Math.min(state.hp, hpMax),
@@ -24,9 +19,9 @@ export function syncDerivedVitals(state: CharacterSessionState): CharacterSessio
 
 export function toCharacterSheetPayload(state: CharacterSessionState): CharacterSheetPayload {
   const stats = effectiveStats(state)
-  const hpMax = derivedMaxHp(state.progress.baseLevel, stats.vit)
-  const mpMax = derivedMaxMp(state.progress.baseLevel, stats.int)
-  const attackDamage = derivedAttackDamage(stats.str, stats.dex)
+  const hpMax = derivedMaxHp(state.jobId, state.progress.baseLevel, stats.vit)
+  const mpMax = derivedMaxMp(state.jobId, state.progress.baseLevel, stats.int)
+  const attackDamage = previewPlayerAttack(state)
 
   return {
     hp: state.hp,

@@ -5,8 +5,10 @@ import {
   equipItemWithInventoryTransfer,
   learnOrLevelSkill,
   raiseStat,
+  useConsumableFromSession,
   type CharacterSessionState,
 } from './characterState'
+import { getItemDisplayName } from './itemCatalog'
 import { EQUIPMENT } from './equipmentConfig'
 import { SKILLS } from './skillsConfig'
 
@@ -65,6 +67,17 @@ export function applyCharacterAction(
       'character',
       action.itemId ? `Equipped ${label} (${action.slot}).` : `Unequipped ${action.slot}.`,
     )
+    return { state: next, changed: true }
+  }
+
+  if (action.type === 'useConsumable') {
+    const itemId = state.sessionInventory[action.sessionInventoryIndex]?.itemId
+    const result = useConsumableFromSession(state, action.sessionInventoryIndex)
+    if (result.ok === false) {
+      return { state, changed: false, message: result.reason }
+    }
+    const next = syncDerivedVitals(result.state)
+    logActivity('character', `Used ${getItemDisplayName(itemId ?? 'item')}.`)
     return { state: next, changed: true }
   }
 

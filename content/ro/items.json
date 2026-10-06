@@ -9,6 +9,7 @@
       "equipSlot": null,
       "layerColor": null,
       "bonuses": null,
+      "consumable": { "healHp": 45 },
       "sourceUrl": "https://irowiki.org/wiki/Red_Potion"
     },
     {
@@ -20,6 +21,9 @@
       "equipSlot": "weapon",
       "layerColor": "0xc0c0c0",
       "bonuses": { "str": 1, "agi": 0, "vit": 0, "int": 0, "dex": 1, "luk": 0 },
+      "weaponAtk": 17,
+      "weaponSize": "small",
+      "attackElement": "neutral",
       "sourceUrl": "https://irowiki.org/wiki/Knife"
     },
     {

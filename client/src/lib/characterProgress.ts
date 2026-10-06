@@ -4,6 +4,7 @@ import {
   createDefaultEquipment,
   createInitialCharacterState,
   normalizeEquipment,
+  parseSessionInventory,
   type CharacterSessionState,
   type EquipSlot,
 } from '../game/character/characterState'
@@ -52,11 +53,6 @@ function parseSkillBar(raw: unknown): (string | null)[] {
   return raw.map((v) => (typeof v === 'string' ? v : null))
 }
 
-function parseSessionInventory(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return []
-  return raw.filter((v): v is string => typeof v === 'string' && v.length > 0)
-}
-
 function rowToSession(
   progress: ProgressRow,
   skills: SkillRow[],
@@ -83,6 +79,7 @@ function rowToSession(
       progress.base_exp,
       progress.job_level,
       progress.job_exp,
+      progress.job_id,
     ),
     str: progress.str,
     agi: progress.agi,

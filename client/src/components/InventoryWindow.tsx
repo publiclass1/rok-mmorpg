@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { EQUIPMENT } from '../game/character/equipmentConfig'
-import { getEquipColor, getItemDisplayName, isEquippable } from '../game/character/itemCatalog'
+import { getEquipColor, getItemDisplayName, isConsumable, isEquippable } from '../game/character/itemCatalog'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
@@ -33,8 +33,14 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
 
   const cells = useMemo(() => {
     const list: InvCell[] = []
-    sheet.sessionInventory.forEach((itemId, i) => {
-      list.push({ key: `s-${itemId}-${i}`, itemId, quantity: 1, source: 'session', sessionIndex: i })
+    sheet.sessionInventory.forEach((slot, i) => {
+      list.push({
+        key: `s-${slot.itemId}-${i}`,
+        itemId: slot.itemId,
+        quantity: slot.quantity,
+        source: 'session',
+        sessionIndex: i,
+      })
     })
     for (const row of dbRows) {
       list.push({
@@ -49,12 +55,19 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
 
   function onDoubleClick(cell: InvCell) {
     if (cell.source !== 'session') {
-      emitGameEvent('status', 'Cannot equip from account storage yet.')
+      emitGameEvent('status', 'Cannot use items from account storage yet.')
+      return
+    }
+    if (isConsumable(cell.itemId)) {
+      dispatchCharacterAction({
+        type: 'useConsumable',
+        sessionInventoryIndex: cell.sessionIndex ?? 0,
+      })
       return
     }
     const def = EQUIPMENT[cell.itemId]
     if (!def) {
-      emitGameEvent('status', `Cannot equip ${getItemDisplayName(cell.itemId)}.`)
+      emitGameEvent('status', `Cannot use ${getItemDisplayName(cell.itemId)}.`)
       return
     }
     dispatchCharacterAction({
@@ -72,7 +85,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
           <h2 style={{ margin: 0 }}>Inventory</h2>
           <button type="button" className="secondary" onClick={onClose}>Close</button>
         </div>
-        <p className="muted small">Double-click session gear to equip (moves to equipment). Account storage is view-only.</p>
+        <p className="muted small">Double-click session items to use or equip. Account storage is view-only.</p>
         <div className="inv-grid">
           {cells.map((cell) => {
             const equippable = isEquippable(cell.itemId)

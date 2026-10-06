@@ -4,7 +4,8 @@ import skillsJson from '../../../../content/ro/skills.json'
 import itemsJson from '../../../../content/ro/items.json'
 import mobsJson from '../../../../content/ro/mobs.json'
 import mapsJson from '../../../../content/ro/maps.json'
-import type { RoContentPack, RoJob, RoMob, RoSkill, RoItem, RoMap, MobSpawnPointJson } from './types'
+import expTablesJson from '../../../../content/ro/expTables.json'
+import type { RoContentPack, RoJob, RoMob, RoSkill, RoItem, RoMap, MobSpawnPointJson, RoExpTables } from './types'
 import { validateRoContent } from './validateRoContent'
 
 let cached: RoContentPack | null = null
@@ -45,6 +46,7 @@ export function loadRoContent(): RoContentPack {
     mobs: asMobs(mobsJson as { mobs: RoMob[] }),
     maps,
     mobSpawns,
+    expTables: expTablesJson as RoExpTables,
   }
 
   validateRoContent(pack)

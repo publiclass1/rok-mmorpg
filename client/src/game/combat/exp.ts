@@ -1,3 +1,6 @@
+import { baseExpRequiredForLevel, jobExpRequiredForLevel, getExpTables } from '../../content/ro/expTables'
+import { loadRoContent } from '../../content/ro/loadContent'
+
 export type PlayerProgressState = {
   baseLevel: number
   baseExp: number
@@ -7,23 +10,24 @@ export type PlayerProgressState = {
   jobExpToNext: number
 }
 
+export function getBaseLevelCap(): number {
+  return getExpTables().baseLevelCap
+}
+
+export function getMaxJobLevel(jobId: string): number {
+  const job = loadRoContent().jobs.find((j) => j.id === jobId)
+  return job?.maxJobLevel ?? getExpTables().jobLevelCap
+}
+
 export function createInitialProgress(): PlayerProgressState {
   return {
     baseLevel: 1,
     baseExp: 0,
-    baseExpToNext: baseExpToNext(1),
+    baseExpToNext: baseExpRequiredForLevel(1),
     jobLevel: 1,
     jobExp: 0,
-    jobExpToNext: jobExpToNext(1),
+    jobExpToNext: jobExpRequiredForLevel(1),
   }
-}
-
-function baseExpToNext(level: number): number {
-  return 100 + (level - 1) * 40
-}
-
-function jobExpToNext(level: number): number {
-  return 50 + (level - 1) * 25
 }
 
 /** Rebuild progress slice from persisted level/exp (recomputes exp-to-next thresholds). */
@@ -32,14 +36,19 @@ export function progressFromLevels(
   baseExp: number,
   jobLevel: number,
   jobExp: number,
+  jobId = 'novice',
 ): PlayerProgressState {
+  const capBase = getBaseLevelCap()
+  const capJob = getMaxJobLevel(jobId)
+  const clampedBase = Math.min(Math.max(baseLevel, 1), capBase)
+  const clampedJob = Math.min(Math.max(jobLevel, 1), capJob)
   return {
-    baseLevel,
+    baseLevel: clampedBase,
     baseExp,
-    baseExpToNext: baseExpToNext(baseLevel),
-    jobLevel,
+    baseExpToNext: clampedBase >= capBase ? 0 : baseExpRequiredForLevel(clampedBase),
+    jobLevel: clampedJob,
     jobExp,
-    jobExpToNext: jobExpToNext(jobLevel),
+    jobExpToNext: clampedJob >= capJob ? 0 : jobExpRequiredForLevel(clampedJob),
   }
 }
 
@@ -47,14 +56,22 @@ export function addBaseExp(
   state: PlayerProgressState,
   amount: number,
 ): { leveledUp: boolean; newState: PlayerProgressState } {
+  const cap = getBaseLevelCap()
   let { baseLevel, baseExp, baseExpToNext: toNext } = state
+  if (baseLevel >= cap) {
+    return { leveledUp: false, newState: { ...state, baseExp: 0, baseExpToNext: 0 } }
+  }
   baseExp += amount
   let leveledUp = false
-  while (baseExp >= toNext) {
+  while (toNext > 0 && baseExp >= toNext && baseLevel < cap) {
     baseExp -= toNext
     baseLevel += 1
-    toNext = baseExpToNext(baseLevel)
     leveledUp = true
+    toNext = baseLevel >= cap ? 0 : baseExpRequiredForLevel(baseLevel)
+  }
+  if (baseLevel >= cap) {
+    baseExp = 0
+    toNext = 0
   }
   return {
     leveledUp,
@@ -65,15 +82,24 @@ export function addBaseExp(
 export function addJobExp(
   state: PlayerProgressState,
   amount: number,
+  jobId: string,
 ): { leveledUp: boolean; newState: PlayerProgressState } {
+  const cap = getMaxJobLevel(jobId)
   let { jobLevel, jobExp, jobExpToNext: toNext } = state
+  if (jobLevel >= cap) {
+    return { leveledUp: false, newState: { ...state, jobExp: 0, jobExpToNext: 0 } }
+  }
   jobExp += amount
   let leveledUp = false
-  while (jobExp >= toNext) {
+  while (toNext > 0 && jobExp >= toNext && jobLevel < cap) {
     jobExp -= toNext
     jobLevel += 1
-    toNext = jobExpToNext(jobLevel)
     leveledUp = true
+    toNext = jobLevel >= cap ? 0 : jobExpRequiredForLevel(jobLevel)
+  }
+  if (jobLevel >= cap) {
+    jobExp = 0
+    toNext = 0
   }
   return {
     leveledUp,
