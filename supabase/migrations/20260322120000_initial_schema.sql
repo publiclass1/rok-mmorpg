@@ -161,6 +161,19 @@ create policy "profiles_update_own" on public.profiles
 create policy "characters_select_own" on public.characters
   for select using (auth.uid() = user_id);
 
+-- Trade UI may load the counterparty's name by character id (see GameView trade listener).
+create policy "characters_select_trade_counterparty" on public.characters
+  for select using (
+    exists (
+      select 1
+      from public.trade_sessions t
+      join public.characters mine on mine.user_id = auth.uid()
+      where mine.id in (t.initiator_character_id, t.partner_character_id)
+        and characters.id in (t.initiator_character_id, t.partner_character_id)
+        and characters.id <> mine.id
+    )
+  );
+
 create policy "characters_insert_own" on public.characters
   for insert with check (auth.uid() = user_id);
 
@@ -169,9 +182,6 @@ create policy "characters_update_own" on public.characters
 
 create policy "characters_delete_own" on public.characters
   for delete using (auth.uid() = user_id);
-
-create policy "characters_select_visible_for_trade" on public.characters
-  for select using (true);
 
 create policy "account_storage_select_own" on public.account_storage
   for select using (auth.uid() = user_id);

@@ -1,3 +1,4 @@
+import type { CharacterSessionState, EquipSlot, PrimaryStat } from './character/characterState'
 import type { NpcRow } from '../types/database'
 
 export type PositionPayload = {
@@ -8,11 +9,78 @@ export type PositionPayload = {
   facing: 'up' | 'down' | 'left' | 'right'
 }
 
+export type PlayerStatsPayload = {
+  hp: number
+  hpMax: number
+  mp: number
+  mpMax: number
+  baseLevel: number
+  baseExp: number
+  baseExpToNext: number
+  jobLevel: number
+  jobExp: number
+  jobExpToNext: number
+}
+
+export type CharacterSheetPayload = PlayerStatsPayload & {
+  str: number
+  agi: number
+  vit: number
+  int: number
+  dex: number
+  luk: number
+  effectiveStr: number
+  effectiveAgi: number
+  effectiveVit: number
+  effectiveInt: number
+  effectiveDex: number
+  effectiveLuk: number
+  statPointsUnspent: number
+  statRaiseCosts: Record<PrimaryStat, number>
+  jobId: string
+  skillPointsUnspent: number
+  skills: Record<string, number>
+  equipment: Record<EquipSlot, string | null>
+  skillBar: (string | null)[]
+  sessionInventory: string[]
+  attackDamage: number
+}
+
+export type CharacterActionPayload =
+  | { type: 'raiseStat'; stat: PrimaryStat }
+  | { type: 'learnSkill'; skillId: string }
+  | { type: 'equip'; slot: EquipSlot; itemId: string | null }
+
+export type SelectedMobPayload = {
+  defId: string
+  name: string
+  level: number
+  hp: number
+  hpMax: number
+}
+
+export type ActivityLogKind = 'combat' | 'exp' | 'level' | 'target' | 'character' | 'system'
+
+export type ActivityLogEntry = {
+  id: string
+  at: number
+  kind: ActivityLogKind
+  message: string
+}
+
 export type GameEvents = {
   position: { x: number; y: number; mapId: string }
   npcNearby: NpcRow | null
   remotePlayers: Array<{ characterId: string; name: string; x: number; y: number }>
   status: string
+  playerStats: PlayerStatsPayload
+  characterSheet: CharacterSheetPayload
+  useSkillSlot: { slot: number }
+  characterAction: CharacterActionPayload
+  uiPointerLock: boolean
+  selectedMob: SelectedMobPayload | null
+  activityLog: ActivityLogEntry
+  sessionSync: CharacterSessionState
 }
 
 type Listener = (payload: unknown) => void

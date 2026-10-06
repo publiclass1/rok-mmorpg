@@ -2,9 +2,24 @@ import { useEffect, useRef, useState } from 'react'
 import Phaser from 'phaser'
 import { savePoint, teleport } from '../lib/api'
 import { supabase } from '../lib/supabase'
+import { registerCharacterActionContext } from '../game/character/characterActionDispatch'
+import { sessionFromSheetPayload, toCharacterSheetPayload } from '../game/character/characterSheet'
+import { createInitialCharacterState } from '../game/character/characterState'
 import { createPhaserGame } from '../game/createGame'
-import { emitGameEvent, onGameEvent } from '../game/events'
+import {
+  emitGameEvent,
+  onGameEvent,
+  type CharacterSheetPayload,
+  type ActivityLogEntry,
+  type SelectedMobPayload,
+} from '../game/events'
 import type { CharacterRow, NpcRow, TradeSessionRow } from '../types/database'
+import { ActivityLog } from './ActivityLog'
+import { SkillBar } from './SkillBar'
+import { SkillsWindow } from './SkillsWindow'
+import { EquipmentWindow } from './EquipmentWindow'
+import { InventoryWindow } from './InventoryWindow'
+import { StatsWindow } from './StatsWindow'
 import { StorageModal } from './StorageModal'
 import { TradeModal } from './TradeModal'
 
@@ -32,6 +47,23 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     initialTrade?: TradeSessionRow | null
   } | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const sessionRef = useRef(createInitialCharacterState())
+  const [sheet, setSheet] = useState<CharacterSheetPayload>(() =>
+    toCharacterSheetPayload(sessionRef.current),
+  )
+  const [statsOpen, setStatsOpen] = useState(false)
+  const [skillsOpen, setSkillsOpen] = useState(false)
+  const [inventoryOpen, setInventoryOpen] = useState(false)
+  const [equipmentOpen, setEquipmentOpen] = useState(false)
+  const [selectedMob, setSelectedMob] = useState<SelectedMobPayload | null>(null)
+  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([])
+
+  const modalOpen =
+    statsOpen || skillsOpen || inventoryOpen || equipmentOpen || !!storageNpc || !!tradePartner
+
+  useEffect(() => {
+    emitGameEvent('uiPointerLock', modalOpen)
+  }, [modalOpen])
 
   useEffect(() => {
     setNpcsReady(false)
@@ -74,11 +106,33 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [character.id])
 
   useEffect(() => {
+    registerCharacterActionContext({
+      getSession: () => sessionRef.current,
+      setSession: (state) => {
+        sessionRef.current = state
+      },
+      setSheet,
+    })
+    return () => registerCharacterActionContext(null)
+  }, [])
+
+  useEffect(() => {
     const unsubs = [
       onGameEvent('npcNearby', setNearbyNpc),
       onGameEvent('position', setPosition),
       onGameEvent('status', setStatus),
       onGameEvent('remotePlayers', setRemotePlayers),
+      onGameEvent('characterSheet', (payload) => {
+        sessionRef.current = sessionFromSheetPayload(payload, sessionRef.current)
+        setSheet(payload)
+      }),
+      onGameEvent('playerStats', (p) => {
+        setSheet((s) => ({ ...s, ...p }))
+      }),
+      onGameEvent('selectedMob', setSelectedMob),
+      onGameEvent('activityLog', (entry) => {
+        setActivityLog((prev) => [...prev, entry].slice(-100))
+      }),
     ]
     return () => unsubs.forEach((u) => u())
   }, [])
@@ -86,24 +140,54 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     if (!hostRef.current || !npcsReady) return
 
-    const game = createPhaserGame(hostRef.current, character, npcs)
+    const game = createPhaserGame(hostRef.current, character, npcs, sessionRef.current)
     gameRef.current = game
+    queueMicrotask(() => {
+      emitGameEvent('sessionSync', structuredClone(sessionRef.current))
+    })
 
     return () => {
       game.destroy(true)
       gameRef.current = null
     }
-  }, [character.id, character.map_id, character.x, character.y, npcsReady, npcs])
+  }, [character.id, character.map_id, npcsReady, npcs])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (e.altKey && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        setStatsOpen((o) => !o)
+        return
+      }
+      if (e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSkillsOpen((o) => !o)
+        return
+      }
+      if (e.altKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault()
+        setInventoryOpen((o) => !o)
+        return
+      }
+      if (e.altKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault()
+        setEquipmentOpen((o) => !o)
+        return
+      }
       if (e.key.toLowerCase() === 'e' && nearbyNpc) {
         void handleNpc(nearbyNpc)
+        return
+      }
+      if (modalOpen) return
+      const num = parseInt(e.key, 10)
+      if (num >= 1 && num <= 9) {
+        e.preventDefault()
+        emitGameEvent('useSkillSlot', { slot: num - 1 })
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [nearbyNpc, position, character])
+  }, [nearbyNpc, position, character, modalOpen])
 
   async function handleNpc(npc: NpcRow) {
     setMessage(null)
@@ -151,27 +235,46 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }
 
   return (
-    <div className="game-shell">
+    <div className="game-shell ro-layout">
       <header className="hud row spread">
         <div>
           <strong>{character.name}</strong>
           <span className="muted">
             {' '}
-            · {character.map_id} · {character.zeny} z
+            · {character.map_id} · Lv {sheet.baseLevel} · Job {sheet.jobLevel} · HP {sheet.hp}/{sheet.hpMax} · MP{' '}
+            {sheet.mp}/{sheet.mpMax}
           </span>
         </div>
         <div className="row">
+          <button type="button" className="secondary" onClick={() => setStatsOpen(true)}>Stats</button>
+          <button type="button" className="secondary" onClick={() => setInventoryOpen(true)}>Inventory</button>
+          <button type="button" className="secondary" onClick={() => setEquipmentOpen(true)}>Equip</button>
+          <button type="button" className="secondary" onClick={() => setSkillsOpen(true)}>Skills</button>
           <span className="muted">{status}</span>
-          <button type="button" className="secondary" onClick={onExit}>
-            Leave world
-          </button>
+          <button type="button" className="secondary" onClick={onExit}>Leave world</button>
         </div>
       </header>
 
-      <div ref={hostRef} className="game-canvas" />
+      <div className="game-stage">
+        <div ref={hostRef} className="game-canvas" />
+        <div className="game-bottom-dock">
+          <SkillBar sheet={sheet} />
+          <ActivityLog entries={activityLog} />
+        </div>
+      </div>
 
-      <aside className="side-panel panel">
-        <h3>Nearby players</h3>
+      <aside className="side-panel panel compact-side">
+        <h3>Target</h3>
+        {selectedMob ? (
+          <div className="target-panel">
+            <p><strong>{selectedMob.name}</strong></p>
+            <p className="muted small">Lv {selectedMob.level}</p>
+            <p>HP {selectedMob.hp} / {selectedMob.hpMax}</p>
+          </div>
+        ) : (
+          <p className="muted small">Click a mob to select</p>
+        )}
+        <h3>Nearby</h3>
         <ul className="item-list">
           {remotePlayers.map((p) => (
             <li key={p.characterId} className="row spread">
@@ -181,16 +284,27 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               </button>
             </li>
           ))}
-          {remotePlayers.length === 0 && <li className="muted">No one else on this map yet.</li>}
+          {remotePlayers.length === 0 && <li className="muted">Alone on map</li>}
         </ul>
-        <p className="muted small">WASD move · E interact with NPC when close</p>
+        <p className="muted small">
+          Click move · Space jump · 1 attack · Alt+S stats · Alt+I inventory · Alt+E equip · Alt+K skills · E NPC
+        </p>
         {nearbyNpc && (
-          <p>
-            Near: <strong>{nearbyNpc.label}</strong> ({nearbyNpc.npc_type}) — press E
-          </p>
+          <p>Near: <strong>{nearbyNpc.label}</strong> — E</p>
         )}
         {message && <p>{message}</p>}
       </aside>
+
+      {statsOpen && <StatsWindow sheet={sheet} onClose={() => setStatsOpen(false)} />}
+      {inventoryOpen && (
+        <InventoryWindow
+          characterId={character.id}
+          sheet={sheet}
+          onClose={() => setInventoryOpen(false)}
+        />
+      )}
+      {equipmentOpen && <EquipmentWindow sheet={sheet} onClose={() => setEquipmentOpen(false)} />}
+      {skillsOpen && <SkillsWindow sheet={sheet} onClose={() => setSkillsOpen(false)} />}
 
       {storageNpc && (
         <StorageModal character={character} npc={storageNpc} position={position} onClose={() => setStorageNpc(null)} />

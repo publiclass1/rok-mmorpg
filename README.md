@@ -4,7 +4,7 @@ A simple browser MMORPG inspired by Ragnarok Online — for fun and game-dev lea
 
 ## Features
 
-- Email signup/login (Supabase Auth)
+- Username + password accounts (Supabase Auth; no email verification)
 - Up to 3 characters per account (globally unique names)
 - Account storage shared across characters
 - NPCs: storage, save point, teleport
@@ -45,14 +45,22 @@ npm install
 cd client
 cp .env.example .env
 # Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+# Optional: VITE_MOB_EXP_MULTIPLIER=100 (mob base/job EXP × multiplier on kill)
 cd ..
 npm run dev
 ```
 
 ### 3. Controls in-world
 
-- **WASD** — move
+- **Click** — walk to point (RO-style); **click mob** to chase and attack
+- **Space** — jump
+- **1**–**9** — skill bar (`1` = Basic Attack)
+- **Alt+S** / **Stats** — STR/AGI/VIT/INT/DEX/LUK (stat points from base level)
+- **Alt+I** / **Inventory** — session gear + DB stacks; double-click to equip
+- **Alt+E** / **Equip** — equipment slots; unequip per slot
+- **Alt+K** / **Skills** — job skills (skill points from job level)
 - **E** — interact with nearby NPC (storage / save / warp)
+- On `field_01`, mobs roam, aggro, and fight back; kill for Base/Job EXP (session)
 - **Trade** — use sidebar when another player is on the same map
 
 ## Project layout
@@ -64,9 +72,9 @@ npm run dev
 ## Maps
 
 - `prontera` — hub town (Kafra, save, warp to field)
-- `field_01` — field with return warp
+- `field_01` — field with return warp, rock obstacles, roaming Porings
 
-Replace tile graphics via `client/public/tiles.png` and edit maps in [Tiled](https://www.mapeditor.org/), exporting JSON to `client/public/maps/`.
+Tile graphics are generated at runtime for dev; you can replace them with `client/public/tiles.png` and edit maps in [Tiled](https://www.mapeditor.org/), exporting JSON to `client/public/maps/`. HP/MP are session-only in the client for now.
 
 ## Deploy on Netlify
 

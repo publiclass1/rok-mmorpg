@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import type { CharacterSessionState } from './character/characterState'
 import type { CharacterRow, NpcRow } from '../types/database'
 import { WorldScene } from './scenes/WorldScene'
 
@@ -6,6 +7,7 @@ export function createPhaserGame(
   parent: HTMLElement,
   character: CharacterRow,
   npcs: NpcRow[],
+  bootSession: CharacterSessionState,
 ): Phaser.Game {
   return new Phaser.Game({
     type: Phaser.AUTO,
@@ -29,6 +31,7 @@ export function createPhaserGame(
       preBoot: (game) => {
         game.registry.set('bootCharacter', character)
         game.registry.set('bootNpcs', npcs)
+        game.registry.set('bootSession', bootSession)
       },
     },
   })

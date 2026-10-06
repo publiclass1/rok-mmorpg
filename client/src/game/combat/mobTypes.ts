@@ -1,0 +1,23 @@
+import Phaser from 'phaser'
+
+export type MobState = 'wander' | 'chase' | 'attack'
+
+export type MobInstance = {
+  sprite: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
+  hpBarBg: Phaser.GameObjects.Rectangle
+  hpBarFill: Phaser.GameObjects.Rectangle
+  label: Phaser.GameObjects.Text
+  defId: string
+  hp: number
+  maxHp: number
+  level: number
+  name: string
+  spawnX: number
+  spawnY: number
+  alive: boolean
+  state: MobState
+  roamTargetX: number
+  roamTargetY: number
+  lastAttackAt: number
+  lastWanderAt: number
+}

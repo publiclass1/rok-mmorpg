@@ -61,12 +61,13 @@ Set:
 
 Use the same values in **Netlify** environment variables for production.
 
-## 6. Auth (email)
+## 6. Auth (username + password)
 
-In Supabase → **Authentication → Providers**, enable **Email**.  
-For development you can disable **Confirm email** under Email settings so signup works immediately.
+The client uses **username and password** only. Supabase Auth still stores a synthetic email internally (`username@<domain>`); no real inbox is used.
 
-**Test emails:** Supabase rejects reserved domains like `ace@example.com`. Use something like `you@gmail.com` or any real domain. With confirm email off, signup logs you in immediately.
+In Supabase → **Authentication → Providers**, enable **Email** and **turn off Confirm email** under Email settings so signup logs in immediately and **no auth emails are sent** (avoids rate limits).
+
+Optional in `client/.env`: `VITE_AUTH_EMAIL_DOMAIN` — defaults to `<project-ref>.account.local`. Keep this stable; changing it breaks login for existing accounts unless you migrate users.
 
 ## Troubleshooting
 
@@ -76,6 +77,7 @@ For development you can disable **Confirm email** under Email settings so signup
 | `Access token not provided` | Run `npx supabase login` in your terminal. |
 | Edge Function 401 | Deploy functions after linking; client must send logged-in JWT. |
 | Realtime trades not updating | Dashboard → Database → Publications: ensure `trade_sessions` / `trade_offers` are in `supabase_realtime` (migration adds them). |
+| Character list shows other accounts’ chars | Apply latest migrations (`npm run supabase:push`). Old RLS policy exposed all characters to every user. |
 
 ## One-shot after link
 

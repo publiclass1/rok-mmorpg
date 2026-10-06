@@ -15,9 +15,19 @@ export function CharacterSelect({ onSelect, onLogout }: Props) {
 
   async function loadCharacters() {
     setLoading(true)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      setLoading(false)
+      setCharacters([])
+      return
+    }
+
     const { data, error: err } = await supabase
       .from('characters')
       .select('*')
+      .eq('user_id', user.id)
       .order('slot', { ascending: true })
 
     setLoading(false)
