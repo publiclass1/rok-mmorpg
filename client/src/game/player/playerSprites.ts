@@ -44,6 +44,12 @@ export type PlayerDisplay = RarityGlowHost & {
   idleRigTween?: Phaser.Tweens.Tween
 }
 
+/** Active scene for this rig, or undefined if the display was destroyed. */
+export function playerDisplayScene(display: PlayerDisplay): Phaser.Scene | undefined {
+  const scene = display.container.scene ?? display.body.scene
+  return scene?.textures ? scene : undefined
+}
+
 function syncSpritePose(display: PlayerDisplay) {
   display.riderLayer.setY(display.pose.mounted ? MOUNT_BODY_Y_OFFSET : 0)
   display.body.setY(0)
