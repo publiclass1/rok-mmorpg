@@ -224,6 +224,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [selectedPlayerAnchor, setSelectedPlayerAnchor] = useState<{ x: number; y: number } | null>(null)
   const [mapDropHover, setMapDropHover] = useState<GameEvents['mapDropHover']>(null)
   const [partySnapshot, setPartySnapshot] = useState<PartySnapshot>(null)
+  const [partyLoadState, setPartyLoadState] = useState<'loading' | 'ready'>('loading')
+  const dungeonValidatedKeyRef = useRef<string | null>(null)
+  const bootDungeonRef = useRef<BootDungeonState | null>(null)
   const [guildSnapshot, setGuildSnapshot] = useState<GuildSnapshot>(null)
   const [partyRequest, setPartyRequest] = useState<{ request: PartyRequestRow; fromName: string } | null>(
     null,
@@ -244,6 +247,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const chatStripRef = useRef<ChatStripHandle>(null)
   const partyChannelRef = useRef<PartyRealtimeChannel | null>(null)
   const [bootDungeon, setBootDungeon] = useState<BootDungeonState | null>(null)
+  bootDungeonRef.current = bootDungeon
   const [dungeonReady, setDungeonReady] = useState(true)
   const [autoAttackOpen, setAutoAttackOpen] = useState(false)
   const [autoAttackConfig, setAutoAttackConfig] = useState<AutoAttackConfig>(() =>
@@ -318,14 +322,24 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
   useEffect(() => {
     if (!isDungeonMapId(character.map_id)) {
+      dungeonValidatedKeyRef.current = null
       setBootDungeon(null)
       setDungeonReady(true)
       return
     }
 
-    setDungeonReady(false)
-    const partyId = partySnapshot?.party.id
-    if (!partyId) {
+    if (partyLoadState !== 'ready') {
+      setDungeonReady(false)
+      return
+    }
+
+    let cancelled = false
+
+    const finishReady = () => {
+      if (!cancelled) setDungeonReady(true)
+    }
+
+    const warpToProntera = (message: string) => {
       void supabase
         .from('characters')
         .update({
@@ -337,45 +351,79 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         .select('*')
         .single()
         .then(({ data }) => {
+          if (cancelled) return
           if (data) {
             onCharacterUpdated(data as CharacterRow)
-            setMessage('Left the dungeon — you must be in a party.')
+            setMessage(message)
           }
-          setDungeonReady(true)
+          dungeonValidatedKeyRef.current = null
+          setBootDungeon(null)
+          finishReady()
         })
-      return
     }
 
-    void supabase
-      .from('dungeon_instances')
-      .select('*')
-      .eq('party_id', partyId)
-      .eq('map_id', character.map_id)
-      .neq('status', 'cleared')
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error || !data) {
-          void supabase
-            .from('characters')
-            .update({
-              map_id: 'prontera',
-              x: PRONTERA_TOWN_SPAWN.x,
-              y: PRONTERA_TOWN_SPAWN.y,
-            })
-            .eq('id', character.id)
-            .select('*')
-            .single()
-            .then(({ data: char }) => {
-              if (char) onCharacterUpdated(char as CharacterRow)
-              setMessage('No active dungeon instance for your party.')
-            })
-          setBootDungeon(null)
-        } else {
-          setBootDungeon(dungeonInstanceToSync(data as DungeonInstanceRow))
-        }
-        setDungeonReady(true)
-      })
-  }, [character.id, character.map_id, partySnapshot?.party.id, onCharacterUpdated])
+    const partyId = partySnapshot?.party.id
+    if (!partyId) {
+      setDungeonReady(false)
+      warpToProntera('Left the dungeon — you must be in a party.')
+      return () => {
+        cancelled = true
+      }
+    }
+
+    const gateBaseKey = `${character.id}:${character.map_id}:${partyId}`
+    if (
+      dungeonValidatedKeyRef.current?.startsWith(`${gateBaseKey}:`) &&
+      bootDungeonRef.current?.mapId === character.map_id
+    ) {
+      finishReady()
+      return () => {
+        cancelled = true
+      }
+    }
+
+    setDungeonReady(false)
+
+    const queryInstance = (attempt: number) => {
+      void supabase
+        .from('dungeon_instances')
+        .select('*')
+        .eq('party_id', partyId)
+        .eq('map_id', character.map_id)
+        .neq('status', 'cleared')
+        .maybeSingle()
+        .then(({ data, error }) => {
+          if (cancelled) return
+          if (error) {
+            if (attempt < 2) {
+              window.setTimeout(() => queryInstance(attempt + 1), 1500)
+              return
+            }
+            setMessage('Could not verify dungeon instance. Check your connection.')
+            const cached = bootDungeonRef.current
+            if (cached?.mapId === character.map_id) {
+              finishReady()
+            }
+            return
+          }
+          if (!data) {
+            warpToProntera('No active dungeon instance for your party.')
+            return
+          }
+          const sync = dungeonInstanceToSync(data as DungeonInstanceRow)
+          setBootDungeon(sync)
+          dungeonValidatedKeyRef.current = `${gateBaseKey}:${sync.instanceId}`
+          emitGameEvent('dungeonSync', sync)
+          finishReady()
+        })
+    }
+
+    queryInstance(0)
+
+    return () => {
+      cancelled = true
+    }
+  }, [character.id, character.map_id, partySnapshot?.party.id, partyLoadState, onCharacterUpdated])
 
   useEffect(() => {
     if (!bootDungeon?.instanceId) return
@@ -478,7 +526,17 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [character.id])
 
   useEffect(() => {
-    refreshParty()
+    setPartyLoadState('loading')
+    void loadPartyForCharacter(character.id)
+      .then((snapshot) => {
+        setPartySnapshot(snapshot)
+        setPartyLoadState('ready')
+      })
+      .catch((err) => {
+        setPartySnapshot(null)
+        setPartyLoadState('ready')
+        setMessage(err instanceof Error ? err.message : 'Could not load party')
+      })
     refreshGuild()
     void supabase
       .from('vendor_stalls')
@@ -1057,7 +1115,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     const startGame = () => {
       if (cancelled) return
       host.replaceChildren()
-      game = createPhaserGame(host, character, npcs, sessionRef.current, bootDungeon)
+      game = createPhaserGame(host, character, npcs, sessionRef.current, bootDungeonRef.current)
       gameRef.current = game
       game.events.once('ready', () => {
         refreshScale()
@@ -1085,7 +1143,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       host.replaceChildren()
       gameRef.current = null
     }
-  }, [character.id, character.map_id, npcsReady, npcs, sessionReady, dungeonReady, bootDungeon])
+  }, [character.id, character.map_id, npcsReady, npcs, sessionReady, dungeonReady, bootDungeon?.instanceId])
 
   useEffect(() => {
     if (!mapLoading) return
@@ -1319,6 +1377,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           const sync = dungeonInstanceToSync(res.instance)
           setBootDungeon(sync)
           emitGameEvent('dungeonSync', sync)
+          const partyId = partySnapshot?.party.id
+          if (partyId) {
+            dungeonValidatedKeyRef.current = `${character.id}:${mapId}:${partyId}:${sync.instanceId}`
+          }
         }
         if (res.character) {
           await tearDownGameForMapChange()
