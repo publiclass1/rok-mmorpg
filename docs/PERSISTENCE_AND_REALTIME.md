@@ -49,6 +49,8 @@ The browser opens a **WebSocket to `*.supabase.co`** (Supabase Realtime), not to
 | Trade UI updates | Realtime **postgres_changes** on `trade_sessions` / `trade_offers` | Migrations + [`GameView.tsx`](../client/src/components/GameView.tsx), [`TradeModal.tsx`](../client/src/components/TradeModal.tsx) |
 | Party invites / roster | **postgres_changes** on `party_requests`, `party_members`, `parties` | [`20260324100000_m6_social.sql`](../supabase/migrations/20260324100000_m6_social.sql), `party-manage` |
 | Map / party chat | Realtime **Broadcast** (`chat` event on `map:{mapId}` and `party:{partyId}`) | [`mapChat.ts`](../client/src/game/realtime/mapChat.ts), [`partyChannel.ts`](../client/src/game/realtime/partyChannel.ts) |
+| GM `/zeny` chat command | HTTP **`gm-command`** Edge Function (actor must have `characters.is_gm`) | [`gm-command`](../supabase/functions/gm-command/index.ts), [`GameView.tsx`](../client/src/components/GameView.tsx) |
+| Online presence (admin) | HTTP upsert to `character_presence` every ~15s in-world | [`characterPresence.ts`](../client/src/lib/characterPresence.ts), [`admin-panel`](../supabase/functions/admin-panel/index.ts) |
 | Party EXP share (client) | Broadcast `exp_grant` on `party:{partyId}` | [`WorldScene.ts`](../client/src/game/scenes/WorldScene.ts) |
 | Vending listings | **postgres_changes** on `vendor_listings` + `vendor-manage` HTTP | [`VendorShopModal.tsx`](../client/src/components/VendorShopModal.tsx) |
 

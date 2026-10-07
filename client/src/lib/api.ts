@@ -119,3 +119,13 @@ export function vendorManage(payload: Record<string, unknown>) {
     payload,
   )
 }
+
+export function gmCommand(payload: { characterId: string; command: string }) {
+  return invoke<{
+    ok: boolean
+    message: string
+    targetId?: string
+    targetName?: string
+    newZeny?: number
+  }>('gm-command', payload)
+}

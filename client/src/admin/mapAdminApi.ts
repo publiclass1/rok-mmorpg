@@ -1,5 +1,13 @@
 import type { MapPortalDef, MobSpawnSpotJson } from '../content/ro/types'
 import type { TmjMap } from '../lib/tmj'
+import { getAdminPassword } from './adminAuth'
+
+function adminHeaders(): HeadersInit {
+  const headers: Record<string, string> = {}
+  const password = getAdminPassword()
+  if (password) headers['X-Admin-Password'] = password
+  return headers
+}
 
 export type WarpWiringPayload = {
   addToPronteraWarp: boolean
@@ -25,7 +33,7 @@ export type MapMeta = {
 }
 
 export async function fetchMapList(): Promise<MapMeta[]> {
-  const res = await fetch('/__admin/maps')
+  const res = await fetch('/__admin/maps', { headers: adminHeaders() })
   if (!res.ok) throw new Error(await res.text())
   const data = (await res.json()) as { maps: MapMeta[] }
   return data.maps
@@ -37,7 +45,7 @@ export async function fetchMapBundle(mapId: string): Promise<{
   portals: MapPortalDef[]
   mobSpots: MobSpawnSpotJson[]
 }> {
-  const res = await fetch(`/__admin/maps/${encodeURIComponent(mapId)}`)
+  const res = await fetch(`/__admin/maps/${encodeURIComponent(mapId)}`, { headers: adminHeaders() })
   if (!res.ok) throw new Error(await res.text())
   return (await res.json()) as {
     meta: MapMeta | null
@@ -62,7 +70,7 @@ export async function saveMapBundle(payload: {
 }> {
   const res = await fetch('/__admin/maps/save', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...adminHeaders() },
     body: JSON.stringify(payload),
   })
   if (!res.ok) {

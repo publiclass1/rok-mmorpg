@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type { ServerResponse } from 'node:http'
-import type { Plugin } from 'vite'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { loadEnv, type Plugin } from 'vite'
 
 type MapsJson = {
   maps: Array<{ id: string; displayName: string; fieldType: string; sourceUrl: string | null }>
@@ -40,6 +40,22 @@ type SaveBody = {
   portals: PortalEntry[]
   mobSpots?: unknown[]
   warpWiring?: WarpWiringPayload
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, 'utf8')
+  const bb = Buffer.from(b, 'utf8')
+  if (ab.length !== bb.length) return false
+  let diff = 0
+  for (let i = 0; i < ab.length; i++) diff |= ab[i] ^ bb[i]
+  return diff === 0
+}
+
+function adminPasswordFromRequest(req: IncomingMessage, expected: string): boolean {
+  if (!expected) return false
+  const raw = req.headers['x-admin-password']
+  const provided = Array.isArray(raw) ? raw[0] : raw ?? ''
+  return timingSafeEqual(provided, expected)
 }
 
 function isLocalhostHost(host: string | undefined): boolean {
@@ -310,6 +326,7 @@ function buildSqlBundle(
 }
 
 export function mapAdminApiPlugin(repoRoot: string): Plugin {
+  let adminPassword = ''
   const mapsJsonPath = path.join(repoRoot, 'content/ro/maps.json')
   const mapsDir = path.join(repoRoot, 'client/public/maps')
   const sharedPortalsPath = path.join(repoRoot, 'supabase/functions/_shared/mapPortals.json')
@@ -318,6 +335,11 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
 
   return {
     name: 'map-admin-api',
+    config(_config, { mode }) {
+      const clientEnv = loadEnv(mode, path.join(repoRoot, 'client'), '')
+      const rootEnv = loadEnv(mode, repoRoot, '')
+      adminPassword = clientEnv.ADMIN_PANEL_PASSWORD || rootEnv.ADMIN_PANEL_PASSWORD || ''
+    },
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/__admin/maps')) {
@@ -327,6 +349,11 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
 
         if (!isLocalhostHost(req.headers.host)) {
           json(res, 403, { error: 'Admin API only available on localhost' })
+          return
+        }
+
+        if (!adminPasswordFromRequest(req, adminPassword)) {
+          json(res, 401, { error: 'Invalid admin password' })
           return
         }
 

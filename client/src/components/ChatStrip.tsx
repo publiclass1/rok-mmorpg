@@ -8,9 +8,10 @@ type Props = {
   onSend: (tab: Tab, text: string) => boolean
   mapLines: ChatMessage[]
   partyLines: ChatMessage[]
+  mapChatPlaceholder?: string
 }
 
-export function ChatStrip({ partyEnabled, onSend, mapLines, partyLines }: Props) {
+export function ChatStrip({ partyEnabled, onSend, mapLines, partyLines, mapChatPlaceholder }: Props) {
   const [tab, setTab] = useState<Tab>('map')
   const [draft, setDraft] = useState('')
   const [minimized, setMinimized] = useState(false)
@@ -62,7 +63,10 @@ export function ChatStrip({ partyEnabled, onSend, mapLines, partyLines }: Props)
         <>
           <div className="chat-strip-log" ref={scrollRef}>
             {lines.map((line) => (
-              <p key={`${line.at}-${line.characterId}`} className="small chat-line">
+              <p
+                key={`${line.at}-${line.characterId}`}
+                className={`small chat-line${line.characterId === 'system' ? ' chat-line--system' : ''}`}
+              >
                 <strong>{line.name}:</strong> {line.text}
               </p>
             ))}
@@ -70,7 +74,13 @@ export function ChatStrip({ partyEnabled, onSend, mapLines, partyLines }: Props)
           <input
             className="chat-strip-input"
             value={draft}
-            placeholder={tab === 'party' && !partyEnabled ? 'Join a party to chat' : 'Say something…'}
+            placeholder={
+              tab === 'party' && !partyEnabled
+                ? 'Join a party to chat'
+                : tab === 'map' && mapChatPlaceholder
+                  ? mapChatPlaceholder
+                  : 'Say something…'
+            }
             disabled={tab === 'party' && !partyEnabled}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {

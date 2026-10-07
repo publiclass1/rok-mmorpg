@@ -355,6 +355,7 @@ export function MapAdminPage() {
           <button type="button" disabled={loading} onClick={() => void handleSave()}>
             Save map &amp; Supabase SQL
           </button>
+          <a className="map-admin-link" href="/admin">Game admin</a>
           <a className="map-admin-link" href="/">Back to game</a>
         </div>
       </header>

@@ -260,6 +260,9 @@ export class WorldScene extends Phaser.Scene {
   preload() {
     preloadMapDecor(this)
     this.load.tilemapTiledJSON('map', `/maps/${this.character.map_id}.tmj`)
+    this.load.on('progress', (value: number) => {
+      emitGameEvent('worldLoadProgress', { mapId: this.character.map_id, progress: value })
+    })
   }
 
   create() {

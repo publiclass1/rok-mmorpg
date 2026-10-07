@@ -9,6 +9,7 @@ export type CharacterRow = {
   x: number
   y: number
   zeny: number
+  is_gm?: boolean
   gender?: CharacterGender
   body_color?: number
   hair_color?: number

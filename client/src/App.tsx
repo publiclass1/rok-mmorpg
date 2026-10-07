@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import { AuthScreen } from './components/AuthScreen'
 import { CharacterSelect } from './components/CharacterSelect'
 import { GameView } from './components/GameView'
+import { SplashScreen } from './components/SplashScreen'
 import type { CharacterRow } from './types/database'
 import './App.css'
 
@@ -34,7 +35,7 @@ function App() {
   if (booting) {
     return (
       <main className="app-root">
-        <p>Loading…</p>
+        <SplashScreen phase="boot" />
       </main>
     )
   }

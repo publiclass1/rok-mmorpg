@@ -48,6 +48,20 @@ npm run supabase:functions
 
 Functions use `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` from the linked project automatically when deployed via CLI.
 
+Set the admin dashboard password (required for `admin-panel` Edge Function):
+
+```bash
+npx supabase secrets set ADMIN_PANEL_PASSWORD=your-secure-password
+```
+
+Deploy GM and admin functions after schema migration `20261007200000_gm_and_presence.sql`:
+
+```bash
+npx supabase functions deploy gm-command admin-panel
+```
+
+`admin-panel` uses `verify_jwt = false` in [supabase/config.toml](../supabase/config.toml) so `/admin` works without logging into the game. Redeploy after changing that file.
+
 ## 5. Client env
 
 ```bash

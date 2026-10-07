@@ -174,6 +174,7 @@ export type GameEvents = {
   activityLog: ActivityLogEntry
   sessionSync: CharacterSessionState
   worldReady: { mapId: string }
+  worldLoadProgress: { mapId: string; progress: number }
   minimapUi: { expanded: boolean }
   minimapMove: { x: number; y: number }
   minimap: MinimapPayload

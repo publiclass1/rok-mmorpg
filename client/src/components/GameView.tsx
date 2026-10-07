@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Phaser from 'phaser'
-import { dungeonManage, partyManage, portalWarp, savePoint, teleport } from '../lib/api'
+import { dungeonManage, gmCommand, partyManage, portalWarp, savePoint, teleport } from '../lib/api'
+import { clearCharacterPresence, upsertCharacterPresence } from '../lib/characterPresence'
 import { loadGuildForCharacter, type GuildSnapshot } from '../lib/guildState'
 import { loadPartyForCharacter, type PartySnapshot } from '../lib/partyState'
 import { MapChatChannel, type ChatMessage } from '../game/realtime/mapChat'
@@ -66,7 +67,7 @@ import { RentalModal } from './RentalModal'
 import { ShopModal } from './ShopModal'
 import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { DeathModal } from './DeathModal'
-import { MapLoadingOverlay } from './MapLoadingOverlay'
+import { SplashScreen } from './SplashScreen'
 import { TradeModal } from './TradeModal'
 import { mapDisplayName } from '../game/world/mapDisplayName'
 import { hudEnterMotion } from './motion/motionPresets'
@@ -167,6 +168,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([])
   const [playerBuffs, setPlayerBuffs] = useState<PlayerBuffPayload[]>([])
   const [mapLoading, setMapLoading] = useState<{ mapId: string; label: string } | null>(null)
+  const mapLoadingRef = useRef(mapLoading)
+  mapLoadingRef.current = mapLoading
+  const [loadProgress, setLoadProgress] = useState<number | undefined>(undefined)
   const [deathModalOpen, setDeathModalOpen] = useState(false)
   const [deathSaveMapId, setDeathSaveMapId] = useState('prontera')
   const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
@@ -608,6 +612,14 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       }),
       onGameEvent('worldReady', ({ mapId }) => {
         setMapLoading((current) => (current?.mapId === mapId ? null : current))
+        setLoadProgress(undefined)
+      }),
+      onGameEvent('worldLoadProgress', ({ mapId, progress }) => {
+        setLoadProgress((prev) => {
+          const activeMapId = mapLoadingRef.current?.mapId ?? characterRef.current.map_id
+          if (mapId !== activeMapId) return prev
+          return progress
+        })
       }),
       onGameEvent('minimap', setMinimap),
       onGameEvent('playerDeath', () => {
@@ -760,8 +772,13 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     return () => window.clearTimeout(t)
   }, [mapLoading])
 
+  useEffect(() => {
+    setLoadProgress(undefined)
+  }, [mapLoading?.mapId, character.map_id])
+
   async function leaveWorld() {
     if (zenySaveTimerRef.current) clearTimeout(zenySaveTimerRef.current)
+    await clearCharacterPresence(character.id)
     await flushZenyToDb()
     try {
       await persistCharacterWorld(character.id, positionRef.current, sessionRef.current)
@@ -785,6 +802,27 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     document.addEventListener('visibilitychange', flushOnHide)
     return () => document.removeEventListener('visibilitychange', flushOnHide)
   }, [sessionReady, character.id, flushZenyToDb])
+
+  useEffect(() => {
+    if (!sessionReady) return
+    const id = character.id
+    const interval = window.setInterval(() => {
+      void upsertCharacterPresence(
+        characterRef.current.id,
+        positionRef.current.mapId,
+        characterRef.current.name,
+      )
+    }, 15_000)
+    return () => {
+      window.clearInterval(interval)
+      void clearCharacterPresence(id)
+    }
+  }, [sessionReady, character.id])
+
+  useEffect(() => {
+    if (!sessionReady) return
+    void upsertCharacterPresence(character.id, position.mapId, character.name)
+  }, [sessionReady, character.id, character.name, position.mapId])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -953,7 +991,30 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     }
   }
 
+  function appendMapSystemLine(text: string) {
+    setMapChatLines((prev) =>
+      [...prev, { characterId: 'system', name: 'System', text, at: Date.now() }].slice(-50),
+    )
+  }
+
   function sendChat(tab: 'map' | 'party', text: string) {
+    const trimmed = text.trim()
+    if (tab === 'map' && trimmed.startsWith('/')) {
+      void (async () => {
+        try {
+          const result = await gmCommand({ characterId: character.id, command: trimmed })
+          appendMapSystemLine(result.message)
+          if (result.targetId === character.id && typeof result.newZeny === 'number') {
+            const updated: CharacterRow = { ...characterRef.current, zeny: result.newZeny }
+            characterRef.current = updated
+            onCharacterUpdated(updated)
+          }
+        } catch (err) {
+          appendMapSystemLine(err instanceof Error ? err.message : 'Command failed')
+        }
+      })()
+      return true
+    }
     const local = { characterId: character.id, name: character.name }
     if (tab === 'map') return mapChatRef.current?.send(local, text) ?? false
     return partyChannelRef.current?.sendChat(local, text) ?? false
@@ -963,20 +1024,48 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const mpRatio = sheet.mpMax > 0 ? Math.min(1, sheet.mp / sheet.mpMax) : 0
   const guildTag = guildSnapshot?.guild.tag
 
+  const splashVisible = !sessionReady || !npcsReady || !dungeonReady || mapLoading !== null
+  const splashConfig = useMemo(() => {
+    if (!splashVisible) return null
+    if (mapLoading) {
+      return {
+        phase: 'map' as const,
+        headline: mapLoading.label,
+        detail: mapLoading.mapId,
+        progress: loadProgress,
+      }
+    }
+    if (!dungeonReady) {
+      return {
+        phase: 'world' as const,
+        detail: isDungeonMapId(character.map_id) ? 'dungeon' : undefined,
+      }
+    }
+    if (!npcsReady) {
+      return { phase: 'world' as const }
+    }
+    return { phase: 'session' as const }
+  }, [
+    splashVisible,
+    mapLoading,
+    dungeonReady,
+    npcsReady,
+    loadProgress,
+    character.map_id,
+  ])
+  const splashKey = mapLoading?.mapId ?? `world-${character.map_id}`
+
   return (
     <div
       ref={shellRef}
       className={`game-shell game-shell--fullscreen${skillsOpen ? ' skills-assign-mode' : ''}`}
     >
+      <AnimatePresence>
+        {splashConfig ? <SplashScreen key={splashKey} {...splashConfig} /> : null}
+      </AnimatePresence>
       <div className="game-stage game-stage--fullscreen" aria-label="Game world">
         <div ref={hostRef} className="game-canvas" />
         <LowHpVignette hp={sheet.hp} hpMax={sheet.hpMax} />
-        <AnimatePresence>
-          {mapLoading && (
-            <MapLoadingOverlay key={mapLoading.mapId} label={mapLoading.label} mapId={mapLoading.mapId} />
-          )}
-        </AnimatePresence>
-        {!sessionReady && !mapLoading && <p className="muted game-loading">Loading character…</p>}
 
         {selectedPlayer && selectedPlayerAnchor && (
           <PlayerTargetPopup
@@ -1140,6 +1229,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               mapLines={mapChatLines}
               partyLines={partyChatLines}
               onSend={sendChat}
+              mapChatPlaceholder={
+                character.is_gm ? 'Say something… or /zeny <player> <amount>' : undefined
+              }
             />
             <div className="game-bottom-dock">
               <ExperienceHud sheet={sheet} />

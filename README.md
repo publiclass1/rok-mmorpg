@@ -94,9 +94,16 @@ npm run icons:weapons   # inventory weapon SVGs from content/ro/items.json
 
 Preview: `docs/maps/prontera-preview.svg`. Tile art source: `client/public/tiles/city-tileset.svg` (runtime procedural strip in `client/src/game/textures.ts`). Edit maps in [Tiled](https://www.mapeditor.org/) using exported JSON in `client/public/maps/`.
 
+### Game admin and GM commands
+
+1. Set `ADMIN_PANEL_PASSWORD` in Supabase secrets and in `client/.env` (same value for local map API).
+2. Apply migrations and deploy `gm-command` / `admin-panel` (see [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)).
+3. Open `/admin` (password) → toggle **GM** on a character.
+4. In-game map chat as that character: `/zeny <player> <amount>`.
+
 ### Map admin (dev only)
 
-1. Run `npm run dev` and open `http://localhost:5173/admin/maps`.
+1. Run `npm run dev` and open `http://localhost:5173/admin/maps` (same admin password as `/admin`).
 2. **New blank map** → set a unique **id** (lowercase, underscores) and **display name**.
 3. Paint tiles, drag decor onto the canvas, place portals/NPCs. Tools are in the **icon bar above the map**.
 4. Under **Warp wiring**, enable **Add to Prontera Warp Agent** and set arrival X/Y on your map.
