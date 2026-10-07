@@ -9,6 +9,8 @@ const NOVICE_LOIN_DARK = 0x4a5242
 const SWORDMAN_TUNIC = 0x3d342c
 const SWORDMAN_VEST = 0x5c4632
 const SWORDMAN_PLATE = 0xc9a66b
+const SWORDMAN_PANTS = 0x1e3a5f
+const SWORDMAN_PANTS_SHADE = 0x0f172a
 const SWORDMAN_BOOT = 0x4a3220
 const SWORDMAN_BOOT_HI = 0x7a5438
 const KNIGHT_RED = 0xc62828
@@ -32,7 +34,7 @@ const KNIGHT_BLADE_CORE = 0xbae6fd
 const HILT = 0x5c3d1e
 const EYE_WHITE = 0xf8fafc
 
-type Pal = {
+export type SwordsmanLinePalette = {
   skin: number
   hair: number
   shirt: number
@@ -40,6 +42,10 @@ type Pal = {
   shoes: number
   eyes: number
 }
+
+type Pal = SwordsmanLinePalette
+
+const SHADOW = 0x1a1625
 
 export function isSwordsmanLineJob(avatarKey: PlayerAvatarKey): boolean {
   return avatarKey === 'novice' || avatarKey === 'swordman' || avatarKey === 'knight'
@@ -62,6 +68,11 @@ function stamp(
 }
 
 /** dy: 0 = feet row; negative = upward. */
+/** Pixel legs overlap when spread goes negative; keep width and lift a foot for walk. */
+function swordsmanLineLegSpread(legSpread: number): number {
+  return Math.max(2, Math.abs(legSpread))
+}
+
 export function drawSwordsmanLineDownLegs(
   g: Phaser.GameObjects.Graphics,
   avatarKey: PlayerAvatarKey,
@@ -70,7 +81,7 @@ export function drawSwordsmanLineDownLegs(
   legSpread: number,
   pal: Pal,
 ) {
-  const ls = legSpread
+  const ls = swordsmanLineLegSpread(legSpread)
   if (avatarKey === 'novice') {
     const skin = pal.skin
     const loin = pal.pants
@@ -79,37 +90,45 @@ export function drawSwordsmanLineDownLegs(
       [-7 - ls, -2, skin],
       [-6 - ls, -2, skin],
       [-5 - ls, -2, OUTLINE],
-      [4 + ls, -2, OUTLINE],
-      [5 + ls, -2, skin],
-      [6 + ls, -2, skin],
-      [7 + ls, -2, OUTLINE],
       [-8 - ls, -3, OUTLINE],
       [-7 - ls, -3, skin],
-      [6 + ls, -3, OUTLINE],
-      [5 + ls, -3, skin],
       [-7 - ls, -4, loin],
       [-6 - ls, -4, loin],
       [-5 - ls, -4, NOVICE_LOIN_DARK],
       [-4 - ls, -4, loin],
-      [4 + ls, -4, loin],
-      [5 + ls, -4, loin],
-      [6 + ls, -4, NOVICE_LOIN_DARK],
       [-7 - ls, -5, loin],
       [-6 - ls, -5, NOVICE_LOIN_MID],
       [-5 - ls, -5, loin],
       [-4 - ls, -5, loin],
+      [-3 - ls, -5, NOVICE_LOIN_DARK],
+      [-6 - ls, -6, OUTLINE],
+      [-5 - ls, -6, loin],
+      [-4 - ls, -6, loin],
+      [-3 - ls, -6, loin],
+      [-5 - ls, -7, loin],
+      [-4 - ls, -7, NOVICE_LOIN_DARK],
+      [-4 - ls, -8, OUTLINE],
+      [4 + ls, -2, OUTLINE],
+      [5 + ls, -2, skin],
+      [6 + ls, -2, skin],
+      [7 + ls, -2, OUTLINE],
+      [6 + ls, -3, OUTLINE],
+      [5 + ls, -3, skin],
+      [4 + ls, -4, loin],
+      [5 + ls, -4, loin],
+      [6 + ls, -4, NOVICE_LOIN_DARK],
+      [4 + ls, -5, NOVICE_LOIN_MID],
+      [5 + ls, -5, loin],
+      [4 + ls, -6, loin],
+      [5 + ls, -6, OUTLINE],
+      [4 + ls, -7, loin],
+      [3 + ls, -8, OUTLINE],
       [-3 - ls, -5, NOVICE_LOIN_DARK],
       [-2, -5, loin],
       [-1, -5, loin],
       [0, -5, loin],
       [1, -5, loin],
       [2, -5, loin],
-      [3 + ls, -5, loin],
-      [4 + ls, -5, NOVICE_LOIN_MID],
-      [5 + ls, -5, loin],
-      [-6 - ls, -6, OUTLINE],
-      [-5 - ls, -6, loin],
-      [-4 - ls, -6, loin],
       [-3 - ls, -6, loin],
       [-2, -6, loin],
       [-1, -6, loin],
@@ -117,10 +136,6 @@ export function drawSwordsmanLineDownLegs(
       [1, -6, loin],
       [2, -6, loin],
       [3, -6, loin],
-      [4 + ls, -6, loin],
-      [5 + ls, -6, OUTLINE],
-      [-5 - ls, -7, loin],
-      [-4 - ls, -7, NOVICE_LOIN_DARK],
       [-3, -7, loin],
       [-2, -7, loin],
       [-1, -7, loin],
@@ -128,21 +143,18 @@ export function drawSwordsmanLineDownLegs(
       [1, -7, loin],
       [2, -7, loin],
       [3, -7, loin],
-      [4 + ls, -7, loin],
-      [-4 - ls, -8, OUTLINE],
       [-3, -8, loin],
       [-2, -8, loin],
       [-1, -8, loin],
       [0, -8, loin],
       [1, -8, loin],
       [2, -8, loin],
-      [3 + ls, -8, OUTLINE],
     ])
     return
   }
 
-  const pants = avatarKey === 'knight' ? KNIGHT_PANTS : pal.pants
-  const pantsShade = avatarKey === 'knight' ? KNIGHT_PANTS_SHADE : pal.pants
+  const pants = avatarKey === 'knight' ? KNIGHT_PANTS : SWORDMAN_PANTS
+  const pantsShade = avatarKey === 'knight' ? KNIGHT_PANTS_SHADE : SWORDMAN_PANTS_SHADE
   const boot = avatarKey === 'knight' ? KNIGHT_BOOT : SWORDMAN_BOOT
   const bootHi = avatarKey === 'knight' ? KNIGHT_PLATE_HI : SWORDMAN_BOOT_HI
 
@@ -250,6 +262,15 @@ export function drawSwordsmanLineDownTorso(
 
   if (avatarKey === 'swordman') {
     stamp(g, cx, feetY, [
+      [-5, -9, SWORDMAN_TUNIC],
+      [-4, -9, SWORDMAN_VEST],
+      [-3, -9, SWORDMAN_PLATE],
+      [-2, -9, SWORDMAN_PLATE],
+      [-1, -9, SWORDMAN_PLATE],
+      [0, -9, SWORDMAN_PLATE],
+      [1, -9, SWORDMAN_VEST],
+      [2, -9, SWORDMAN_TUNIC],
+      [3, -9, SWORDMAN_TUNIC],
       [-5, -10, OUTLINE],
       [-4, -10, SWORDMAN_TUNIC],
       [-3, -10, SWORDMAN_TUNIC],
@@ -365,8 +386,11 @@ export function drawSwordsmanLineDownTorso(
     [-6, -14, KNIGHT_PAULDRON],
     [5, -11, KNIGHT_PAULDRON],
     [5, -12, KNIGHT_PLATE_HI],
+    [6, -11, KNIGHT_PAULDRON],
     [6, -12, KNIGHT_PAULDRON],
-    [6, -13, OUTLINE],
+    [6, -13, KNIGHT_PLATE_LO],
+    [7, -12, OUTLINE],
+    [7, -13, OUTLINE],
     [-5, -9, KNIGHT_RED],
     [-4, -9, KNIGHT_RED],
     [3, -9, KNIGHT_RED],
@@ -569,4 +593,34 @@ export function drawSwordsmanLineDownHeldWeapon(
     [-12, -5, OUTLINE],
     [-9, -11, KNIGHT_BLADE_EDGE],
   ])
+}
+
+function drawSwordsmanLineDownShadow(g: Phaser.GameObjects.Graphics, cx: number, feetY: number) {
+  g.fillStyle(SHADOW, 0.35)
+  g.fillEllipse(cx, feetY - 1, 16, 5)
+  g.fillStyle(SHADOW, 0.2)
+  g.fillEllipse(cx + 1, feetY, 12, 3)
+}
+
+/** Full down-facing idle/walk body (reference-style Novice → Swordman → Knight). */
+export function drawSwordsmanLineDownFrame(
+  g: Phaser.GameObjects.Graphics,
+  avatarKey: PlayerAvatarKey,
+  cx: number,
+  feetY: number,
+  legSpread: number,
+  armSwing: number,
+  pal: SwordsmanLinePalette,
+  options?: { blink?: boolean; heldWeapon?: boolean },
+) {
+  const blink = options?.blink ?? false
+  const heldWeapon = options?.heldWeapon ?? true
+  drawSwordsmanLineDownShadow(g, cx, feetY)
+  drawSwordsmanLineDownLegs(g, avatarKey, cx, feetY, legSpread, pal)
+  drawSwordsmanLineDownTorso(g, avatarKey, cx, feetY, pal)
+  drawSwordsmanLineDownArms(g, avatarKey, cx, feetY, armSwing, pal)
+  drawSwordsmanLineDownHead(g, cx, feetY, pal, blink)
+  if (heldWeapon) {
+    drawSwordsmanLineDownHeldWeapon(g, avatarKey, cx, feetY)
+  }
 }

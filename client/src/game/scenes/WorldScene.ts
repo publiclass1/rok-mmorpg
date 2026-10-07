@@ -109,6 +109,7 @@ import {
 } from '../movement/clickToMove'
 import { buildWalkabilityGrid, findWorldPath, trimPathFromPlayer } from '../movement/gridPathfind'
 import { tryJump } from '../movement/jump'
+import { playWalkClickFx } from '../movement/walkClickFx'
 import {
   clearPlayerDeathVisual,
   playPlayerDeath,
@@ -584,6 +585,7 @@ export class WorldScene extends Phaser.Scene {
         this.stopPvpChase()
         this.setSelectedMob(null)
         this.setSelectedPlayer(null)
+        this.playWalkClickMarker(wx, wy)
         this.requestWalkTo(wx, wy)
       }
     })
@@ -642,6 +644,7 @@ export class WorldScene extends Phaser.Scene {
         this.chaseMob = null
         this.setSelectedMob(null)
         this.setSelectedPlayer(null)
+        this.playWalkClickMarker(wx, wy)
         this.requestWalkTo(wx, wy)
       }),
       onGameEvent('socialPresence', (payload) => {
@@ -1247,6 +1250,14 @@ export class WorldScene extends Phaser.Scene {
       this.requestChaseMobPath(mob)
       this.lastChaseRepathAt = now
     }
+  }
+
+  private playWalkClickMarker(wx: number, wy: number) {
+    if (!this.playerDisplay) return
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (Math.hypot(wx - px, wy - py) <= CLICK_MOVE_ARRIVAL_THRESHOLD) return
+    playWalkClickFx(this, wx, wy)
   }
 
   private requestWalkTo(wx: number, wy: number) {

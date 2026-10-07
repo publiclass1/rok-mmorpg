@@ -15,11 +15,7 @@ import {
   type NpcArchetype,
 } from './npcArchetypes'
 import {
-  drawSwordsmanLineDownArms,
-  drawSwordsmanLineDownHead,
-  drawSwordsmanLineDownHeldWeapon,
-  drawSwordsmanLineDownLegs,
-  drawSwordsmanLineDownTorso,
+  drawSwordsmanLineDownFrame,
   isSwordsmanLineJob,
 } from './swordsmanLineDownArt'
 
@@ -54,75 +50,14 @@ type DrawMode =
   | { kind: 'player'; female: boolean; avatarKey: PlayerAvatarKey }
   | { kind: 'npc'; archetype: NpcArchetype }
 
-const PLATE_GRAY = 0x9ca3af
 const KNIGHT_CAPE = 0x5b21b6
 const APRON_TAN = 0xd6d3d1
 const QUIVER_BROWN = 0x78350f
-
-const LEATHER_LIGHT = 0xb8956a
-const LEATHER_DARK = 0x6b4423
-const LEATHER_BOOT = 0x5c3d1e
-const LOINCLOTH_SHADOW = 0x3f4f3a
-const IRON_HIGHLIGHT = 0xc5d4e8
-const IRON_MID = 0x94a3b8
-const IRON_SHADOW = 0x475569
-const KNIGHT_PAULDRON = 0x7eb8da
-const KNIGHT_GEM = 0x22c55e
-const WOOD_CLUB = 0xa16207
-const WOOD_CLUB_DARK = 0x713f12
-const KNIGHT_BLADE_CORE = 0x93c5fd
-const KNIGHT_BLADE_EDGE = 0x334155
 
 const WEAPON_BLADE = 0xc0c8d4
 const WEAPON_HILT = 0x8b5a2b
 const WEAPON_SPEAR = 0x9ca3af
 const CAST_GLOW = 0xa78bfa
-const WIZARD_HAT = 0x8a7a98
-const WIZARD_BEARD = 0xe8e8f0
-const WIZARD_STAFF = 0x5c4033
-
-function drawCastStaff(
-  g: Phaser.GameObjects.Graphics,
-  phase: 0 | 1 | 2,
-  facing: 'down' | 'left' | 'right' | 'up',
-  wx: number,
-  wy: number,
-) {
-  const staffLen = phase === 1 ? 26 : phase === 0 ? 14 : 20
-  g.fillStyle(WIZARD_STAFF, 1)
-  if (facing === 'down') {
-    g.fillRect(wx - 1, wy - staffLen, 3, staffLen)
-    g.fillRect(wx - 3, wy - staffLen - 2, 7, 4)
-    g.fillRect(wx + 2, wy - staffLen - 1, 4, 3)
-  } else if (facing === 'up') {
-    g.fillRect(wx - 1, wy - 4, 3, staffLen)
-    g.fillRect(wx - 3, wy - 6, 7, 4)
-  } else if (facing === 'left') {
-    g.fillRect(wx - staffLen, wy - 1, staffLen, 3)
-    g.fillRect(wx - staffLen - 2, wy - 3, 4, 7)
-    g.fillRect(wx - staffLen - 1, wy + 2, 3, 4)
-  } else {
-    g.fillRect(wx, wy - 1, staffLen, 3)
-    g.fillRect(wx + staffLen - 2, wy - 3, 4, 7)
-    g.fillRect(wx + staffLen - 2, wy + 2, 3, 4)
-  }
-  if (phase >= 1) {
-    g.fillStyle(CAST_GLOW, 0.9)
-    const gx =
-      facing === 'left'
-        ? wx - staffLen - 4
-        : facing === 'right'
-          ? wx + staffLen + 4
-          : wx
-    const gy =
-      facing === 'down'
-        ? wy - staffLen - 6
-        : facing === 'up'
-          ? wy + staffLen + 4
-          : wy - 4
-    g.fillCircle(gx, gy, phase === 2 ? 4 : 3)
-  }
-}
 
 function drawWeapon(
   g: Phaser.GameObjects.Graphics,
@@ -132,7 +67,6 @@ function drawWeapon(
   cx: number,
   feetY: number,
   bodyW: number,
-  avatarKey?: PlayerAvatarKey,
 ) {
   const torsoTop = feetY - 28
   let wx = cx
@@ -185,8 +119,6 @@ function drawWeapon(
       g.lineStyle(1, 0xe2e8f0, 1)
       g.lineBetween(wx - 8, wy, wx + 8, wy)
     }
-  } else if (avatarKey === 'mage' || avatarKey === 'wizard') {
-    drawCastStaff(g, phase, facing, wx, wy)
   } else {
     g.fillStyle(WEAPON_HILT, 1)
     g.fillRect(wx - 2, wy - (phase === 1 ? 14 : 8), 4, phase === 1 ? 18 : 12)
@@ -288,251 +220,6 @@ function drawDefaultLegs(
   g.fillRect(cx + 2 + legSpread, feetY - 14, 7, 12)
 }
 
-function drawNoviceLegs(
-  g: Phaser.GameObjects.Graphics,
-  cx: number,
-  feetY: number,
-  legSpread: number,
-  pal: ChibiPalette,
-) {
-  g.fillStyle(pal.skin, 1)
-  g.fillRect(cx - 10 - legSpread, feetY - 3, 7, 3)
-  g.fillRect(cx + 3 + legSpread, feetY - 3, 7, 3)
-
-  g.fillStyle(pal.pants, 1)
-  g.fillRect(cx - 9 - legSpread, feetY - 13, 8, 10)
-  g.fillRect(cx + 1 + legSpread, feetY - 13, 8, 10)
-  g.fillStyle(LOINCLOTH_SHADOW, 1)
-  g.fillRect(cx - 3, feetY - 11, 2, 8)
-  g.fillRect(cx + 1, feetY - 11, 2, 8)
-}
-
-function drawLeatherBootLegs(
-  g: Phaser.GameObjects.Graphics,
-  cx: number,
-  feetY: number,
-  legSpread: number,
-  pal: ChibiPalette,
-) {
-  g.fillStyle(pal.pants, 1)
-  g.fillRect(cx - 9 - legSpread, feetY - 14, 7, 12)
-  g.fillRect(cx + 2 + legSpread, feetY - 14, 7, 12)
-
-  g.fillStyle(LEATHER_BOOT, 1)
-  g.fillRect(cx - 10 - legSpread, feetY - 7, 8, 7)
-  g.fillRect(cx + 2 + legSpread, feetY - 7, 8, 7)
-  g.fillStyle(LEATHER_LIGHT, 1)
-  g.fillRect(cx - 10 - legSpread, feetY - 7, 8, 2)
-  g.fillRect(cx + 2 + legSpread, feetY - 7, 8, 2)
-  g.fillStyle(LEATHER_DARK, 1)
-  g.fillRect(cx - 3 - legSpread, feetY - 4, 2, 4)
-  g.fillRect(cx + 1 + legSpread, feetY - 4, 2, 4)
-}
-
-function drawIronBootLegs(
-  g: Phaser.GameObjects.Graphics,
-  cx: number,
-  feetY: number,
-  legSpread: number,
-  pal: ChibiPalette,
-) {
-  g.fillStyle(pal.pants, 1)
-  g.fillRect(cx - 9 - legSpread, feetY - 15, 7, 13)
-  g.fillRect(cx + 2 + legSpread, feetY - 15, 7, 13)
-
-  g.fillStyle(IRON_SHADOW, 1)
-  g.fillRect(cx - 11 - legSpread, feetY - 8, 9, 8)
-  g.fillRect(cx + 2 + legSpread, feetY - 8, 9, 8)
-  g.fillStyle(IRON_MID, 1)
-  g.fillRect(cx - 10 - legSpread, feetY - 8, 8, 7)
-  g.fillRect(cx + 2 + legSpread, feetY - 8, 8, 7)
-  g.fillStyle(IRON_HIGHLIGHT, 1)
-  g.fillRect(cx - 10 - legSpread, feetY - 8, 8, 2)
-  g.fillRect(cx + 2 + legSpread, feetY - 8, 8, 2)
-}
-
-function drawNoviceTorso(
-  g: Phaser.GameObjects.Graphics,
-  cx: number,
-  feetY: number,
-  bodyW: number,
-  pal: ChibiPalette,
-  facing: 'down' | 'left' | 'right' | 'up',
-) {
-  g.fillStyle(pal.skin, 1)
-  g.fillRoundedRect(cx - bodyW / 2, feetY - 28, bodyW, 14, 3)
-  g.fillStyle(pal.pants, 1)
-  g.fillRect(cx - bodyW / 2 + 1, feetY - 16, bodyW - 2, 6)
-  g.fillStyle(LOINCLOTH_SHADOW, 1)
-  if (facing === 'left') {
-    g.fillRect(cx - bodyW / 2 + 1, feetY - 15, 2, 5)
-  } else if (facing === 'right') {
-    g.fillRect(cx + bodyW / 2 - 3, feetY - 15, 2, 5)
-  } else {
-    g.fillRect(cx - 2, feetY - 14, 4, 4)
-  }
-}
-
-function drawSwordmanPauldrons(
-  g: Phaser.GameObjects.Graphics,
-  cx: number,
-  feetY: number,
-  bodyW: number,
-  facing: 'down' | 'left' | 'right' | 'up',
-) {
-  const y = feetY - 27
-  g.fillStyle(LEATHER_DARK, 1)
-  g.fillRect(cx - bodyW / 2 - 3, y, 5, 7)
-  g.fillRect(cx + bodyW / 2 - 2, y, 5, 7)
-  g.fillStyle(LEATHER_LIGHT, 1)
-  g.fillRect(cx - bodyW / 2 - 2, y, 3, 3)
-  g.fillRect(cx + bodyW / 2 - 1, y, 3, 3)
-  if (facing === 'left') {
-    g.fillRect(cx - bodyW / 2 - 4, y + 1, 3, 6)
-  } else if (facing === 'right') {
-    g.fillRect(cx + bodyW / 2 + 1, y + 1, 3, 6)
-  }
-}
-
-function drawKnightPauldrons(
-  g: Phaser.GameObjects.Graphics,
-  cx: number,
-  feetY: number,
-  bodyW: number,
-  facing: 'down' | 'left' | 'right' | 'up',
-) {
-  const y = feetY - 29
-  g.fillStyle(IRON_SHADOW, 1)
-  g.fillRect(cx - bodyW / 2 - 4, y, 6, 9)
-  g.fillRect(cx + bodyW / 2 - 2, y, 6, 9)
-  g.fillStyle(KNIGHT_PAULDRON, 1)
-  g.fillRect(cx - bodyW / 2 - 3, y, 5, 8)
-  g.fillRect(cx + bodyW / 2 - 2, y, 5, 8)
-  g.fillStyle(IRON_HIGHLIGHT, 1)
-  g.fillRect(cx - bodyW / 2 - 3, y, 5, 2)
-  g.fillRect(cx + bodyW / 2 - 2, y, 5, 2)
-  if (facing === 'left') {
-    g.fillRect(cx - bodyW / 2 - 5, y + 2, 4, 7)
-  } else if (facing === 'right') {
-    g.fillRect(cx + bodyW / 2 + 1, y + 2, 4, 7)
-  }
-}
-
-function drawIdleStaff(
-  g: Phaser.GameObjects.Graphics,
-  facing: 'down' | 'left' | 'right' | 'up',
-  cx: number,
-  torsoTop: number,
-  bodyW: number,
-) {
-  g.fillStyle(WIZARD_STAFF, 1)
-  if (facing === 'down') {
-    const sx = cx - bodyW / 2 - 4
-    g.fillRect(sx, torsoTop - 4, 3, 22)
-    g.fillRect(sx - 2, torsoTop - 6, 7, 4)
-    g.fillRect(sx + 2, torsoTop - 5, 4, 3)
-  } else if (facing === 'left') {
-    const sy = torsoTop + 6
-    g.fillRect(cx - bodyW / 2 - 14, sy, 16, 3)
-    g.fillRect(cx - bodyW / 2 - 16, sy - 2, 4, 7)
-  } else if (facing === 'right') {
-    const sy = torsoTop + 6
-    g.fillRect(cx + bodyW / 2 - 2, sy, 16, 3)
-    g.fillRect(cx + bodyW / 2 + 12, sy - 2, 4, 7)
-  } else {
-    g.fillRect(cx - 6, torsoTop - 18, 3, 16)
-    g.fillRect(cx - 8, torsoTop - 20, 7, 4)
-  }
-}
-
-function drawPlayerJobHeldWeapon(
-  g: Phaser.GameObjects.Graphics,
-  avatarKey: PlayerAvatarKey,
-  facing: 'down' | 'left' | 'right' | 'up',
-  cx: number,
-  feetY: number,
-  bodyW: number,
-) {
-  const torsoTop = feetY - 28
-
-  if (avatarKey === 'mage' || avatarKey === 'wizard') {
-    drawIdleStaff(g, facing, cx, torsoTop, bodyW)
-    return
-  }
-
-  if (avatarKey !== 'novice' && avatarKey !== 'swordman' && avatarKey !== 'knight') return
-
-  if (avatarKey === 'novice') {
-    g.fillStyle(WOOD_CLUB_DARK, 1)
-    if (facing === 'down') {
-      g.fillRect(cx + bodyW / 2 + 1, torsoTop + 6, 3, 10)
-      g.fillRect(cx + bodyW / 2, torsoTop + 2, 5, 5)
-      g.fillStyle(WOOD_CLUB, 1)
-      g.fillRect(cx + bodyW / 2 + 1, torsoTop + 3, 3, 3)
-    } else if (facing === 'left') {
-      g.fillRect(cx - bodyW / 2 - 5, torsoTop + 8, 4, 3)
-      g.fillRect(cx - bodyW / 2 - 6, torsoTop + 6, 3, 4)
-    } else if (facing === 'right') {
-      g.fillRect(cx + bodyW / 2 + 1, torsoTop + 8, 4, 3)
-      g.fillRect(cx + bodyW / 2 + 3, torsoTop + 6, 3, 4)
-    } else {
-      g.fillRect(cx + 4, torsoTop - 2, 3, 6)
-    }
-    return
-  }
-
-  const bladeW = avatarKey === 'knight' ? 4 : 3
-  const bladeH = avatarKey === 'knight' ? 14 : 12
-
-  if (facing === 'down') {
-    const hx = cx + bodyW / 2 + 1
-    const hy = torsoTop + 4
-    g.fillStyle(WEAPON_HILT, 1)
-    g.fillRect(hx, hy, 4, 5)
-    g.fillStyle(avatarKey === 'knight' ? KNIGHT_BLADE_EDGE : WEAPON_BLADE, 1)
-    g.fillRect(hx + 1, hy + 5, bladeW, bladeH)
-    if (avatarKey === 'knight') {
-      g.fillStyle(KNIGHT_BLADE_CORE, 1)
-      g.fillRect(hx + 2, hy + 6, 2, bladeH - 2)
-    }
-  } else if (facing === 'left') {
-    g.fillStyle(WEAPON_HILT, 1)
-    g.fillRect(cx - bodyW / 2 - 6, torsoTop + 10, 4, 3)
-    g.fillStyle(avatarKey === 'knight' ? KNIGHT_BLADE_EDGE : WEAPON_BLADE, 1)
-    g.fillRect(cx - bodyW / 2 - 10, torsoTop + 9, 5, bladeW)
-  } else if (facing === 'right') {
-    g.fillStyle(WEAPON_HILT, 1)
-    g.fillRect(cx + bodyW / 2 + 2, torsoTop + 10, 4, 3)
-    g.fillStyle(avatarKey === 'knight' ? KNIGHT_BLADE_EDGE : WEAPON_BLADE, 1)
-    g.fillRect(cx + bodyW / 2 + 5, torsoTop + 9, 5, bladeW)
-  } else {
-    g.fillStyle(WEAPON_HILT, 1)
-    g.fillRect(cx + 5, torsoTop - 4, 3, 4)
-    g.fillStyle(avatarKey === 'knight' ? KNIGHT_BLADE_EDGE : WEAPON_BLADE, 1)
-    g.fillRect(cx + 6, torsoTop - 10, bladeW, 7)
-  }
-}
-
-function drawKnightArmCuffs(
-  g: Phaser.GameObjects.Graphics,
-  cx: number,
-  feetY: number,
-  bodyW: number,
-  facing: 'down' | 'left' | 'right' | 'up',
-) {
-  if (facing === 'up') return
-  const torsoTop = feetY - 28
-  g.fillStyle(IRON_MID, 1)
-  if (facing === 'down') {
-    g.fillRect(cx - bodyW / 2 - 5, torsoTop + 9, 4, 2)
-    g.fillRect(cx + bodyW / 2 + 1, torsoTop + 9, 4, 2)
-  } else if (facing === 'left') {
-    g.fillRect(cx - bodyW / 2 - 3, torsoTop + 10, 4, 2)
-  } else {
-    g.fillRect(cx + bodyW / 2 - 1, torsoTop + 10, 4, 2)
-  }
-}
-
 function drawKnightCape(
   g: Phaser.GameObjects.Graphics,
   cx: number,
@@ -564,13 +251,7 @@ function drawPlayerJobBody(
     drawKnightCape(g, cx, feetY, bodyW, facing)
   }
 
-  if (facing === 'down' && isSwordsmanLineJob(avatarKey)) {
-    drawSwordsmanLineDownLegs(g, avatarKey, cx, feetY, legSpread, pal)
-    drawSwordsmanLineDownTorso(g, avatarKey, cx, feetY, pal)
-    return
-  }
-
-  if (avatarKey === 'acolyte' || avatarKey === 'wizard') {
+  if (avatarKey === 'mage' || avatarKey === 'acolyte') {
     g.fillStyle(pal.shoes, 1)
     g.fillRect(cx - 6, feetY - 4, 12, 4)
     g.fillStyle(pal.shirt, 1)
@@ -579,60 +260,26 @@ function drawPlayerJobBody(
       g.fillStyle(0xf8fafc, 1)
       g.fillRect(cx - 2, feetY - 24, 4, 4)
     }
-    if (avatarKey === 'wizard' && (facing === 'down' || facing === 'up')) {
-      g.fillStyle(pal.shirt, 0.9)
-      g.fillRect(cx - bodyW / 2 - 4, feetY - 22, 5, 6)
-      g.fillRect(cx + bodyW / 2 - 1, feetY - 22, 5, 6)
-    }
     return
   }
 
-  if (avatarKey === 'mage') {
-    drawDefaultLegs(g, cx, feetY, legSpread, pal)
-    g.fillStyle(pal.shirt, 1)
-    g.fillRoundedRect(cx - bodyW / 2 - 1, feetY - 24, bodyW + 2, 20, 3)
-    return
-  }
-
-  if (avatarKey === 'novice') {
-    drawNoviceLegs(g, cx, feetY, legSpread, pal)
-    drawNoviceTorso(g, cx, feetY, bodyW, pal, facing)
-    return
-  }
-  if (avatarKey === 'swordman') {
-    drawLeatherBootLegs(g, cx, feetY, legSpread, pal)
-  } else if (avatarKey === 'knight') {
-    drawIronBootLegs(g, cx, feetY, legSpread, pal)
-  } else {
-    drawDefaultLegs(g, cx, feetY, legSpread, pal)
-  }
+  drawDefaultLegs(g, cx, feetY, legSpread, pal)
 
   g.fillStyle(pal.shirt, 1)
   g.fillRoundedRect(cx - bodyW / 2, feetY - 28, bodyW, 16, 3)
 
   switch (avatarKey) {
     case 'swordman':
-      g.fillStyle(LEATHER_LIGHT, 1)
-      g.fillRect(cx - bodyW / 2 + 1, feetY - 26, bodyW - 2, 11)
-      g.fillStyle(LEATHER_DARK, 1)
-      g.fillRect(cx + bodyW / 2 - 3, feetY - 25, 2, 9)
-      g.fillRect(cx - bodyW / 2, feetY - 14, bodyW, 4)
-      g.fillStyle(LEATHER_DARK, 1)
-      g.fillRect(cx - 4, feetY - 13, 8, 2)
-      drawSwordmanPauldrons(g, cx, feetY, bodyW, facing)
+      g.fillStyle(0x9ca3af, 1)
+      g.fillRect(cx - bodyW / 2 - 3, feetY - 27, 5, 7)
+      g.fillRect(cx + bodyW / 2 - 2, feetY - 27, 5, 7)
+      g.fillRect(cx - bodyW / 2, feetY - 14, bodyW, 5)
       break
     case 'knight':
-      g.fillStyle(pal.shirt, 1)
-      g.fillRect(cx - bodyW / 2 + 2, feetY - 28, bodyW - 4, 4)
-      g.fillStyle(IRON_SHADOW, 1)
-      g.fillRect(cx - bodyW / 2 - 1, feetY - 25, bodyW + 2, 16)
-      g.fillStyle(IRON_MID, 1)
-      g.fillRect(cx - bodyW / 2, feetY - 24, bodyW, 14)
-      g.fillStyle(IRON_HIGHLIGHT, 1)
-      g.fillRect(cx - bodyW / 2 + 1, feetY - 24, bodyW - 2, 3)
-      g.fillStyle(KNIGHT_GEM, 1)
-      g.fillRect(cx - 2, feetY - 18, 4, 4)
-      drawKnightPauldrons(g, cx, feetY, bodyW, facing)
+      g.fillStyle(0x9ca3af, 1)
+      g.fillRect(cx - bodyW / 2 - 2, feetY - 28, bodyW + 4, 18)
+      g.fillStyle(pal.shirt, 0.35)
+      g.fillRect(cx - bodyW / 2 + 2, feetY - 26, bodyW - 4, 10)
       break
     case 'archer':
       if (facing === 'left' || facing === 'right') {
@@ -691,44 +338,8 @@ function drawPlayerJobHeadAccessory(
         g.fillRect(cx - 5, headY - 7, 10, 2)
       }
       break
-    case 'wizard':
-      g.fillStyle(WIZARD_HAT, 1)
-      if (facing === 'down') {
-        g.fillRect(cx - 9, headY - 9, 18, 3)
-        g.fillTriangle(cx - 6, headY - 9, cx + 1, headY - 21, cx + 7, headY - 9)
-        g.fillRect(cx + 5, headY - 16, 5, 3)
-      } else if (facing === 'up') {
-        g.fillRect(cx - 8, headY - 10, 16, 3)
-        g.fillTriangle(cx - 5, headY - 10, cx, headY - 20, cx + 5, headY - 10)
-      } else if (facing === 'left') {
-        g.fillRect(cx - 10, headY - 11, 14, 3)
-        g.fillTriangle(cx - 8, headY - 11, cx - 2, headY - 20, cx + 2, headY - 11)
-      } else {
-        g.fillRect(cx - 4, headY - 11, 14, 3)
-        g.fillTriangle(cx - 2, headY - 11, cx + 4, headY - 20, cx + 8, headY - 11)
-        g.fillRect(cx + 6, headY - 15, 4, 3)
-      }
-      break
     default:
       break
-  }
-}
-
-function drawWizardBeard(
-  g: Phaser.GameObjects.Graphics,
-  cx: number,
-  headY: number,
-  facing: 'down' | 'left' | 'right' | 'up',
-) {
-  if (facing === 'up') return
-  g.fillStyle(WIZARD_BEARD, 1)
-  if (facing === 'down') {
-    g.fillRect(cx - 4, headY - 3, 8, 5)
-    g.fillRect(cx - 5, headY + 1, 10, 10)
-  } else if (facing === 'left') {
-    g.fillRect(cx - 7, headY - 2, 6, 12)
-  } else {
-    g.fillRect(cx + 1, headY - 2, 6, 12)
   }
 }
 
@@ -1017,11 +628,34 @@ function drawChibiFrame(
     armSwing = idlePose.armSwing
   }
 
-  feetY += bob
+  const useSwordsmanLineDown =
+    isPlayer && isSwordsmanLineJob(mode.avatarKey) && facing === 'down'
 
-  const swordsmanLineDownBody =
-    isPlayer && facing === 'down' && isSwordsmanLineJob(mode.avatarKey)
-  const swordsmanLineDownPose = swordsmanLineDownBody && !attackMotion
+  if (!useSwordsmanLineDown) {
+    feetY += bob
+  } else if (motion.kind === 'idle') {
+    feetY += bob
+  }
+
+  if (useSwordsmanLineDown) {
+    const blink = motion.kind === 'idle' && motion.idleBlink
+    const attacking = motion.kind === 'attack'
+    let pixelLegSpread = legSpread
+    if (motion.kind === 'walk') {
+      const idleStep = (walkStep === 2 ? 1 : 0) as 0 | 1
+      pixelLegSpread = idleSpritePose(mode.avatarKey, idleStep).legSpread
+    } else if (motion.kind !== 'idle') {
+      pixelLegSpread = idleSpritePose(mode.avatarKey, 0).legSpread
+    }
+    drawSwordsmanLineDownFrame(g, mode.avatarKey, cx, feetY, pixelLegSpread, armSwing, pal, {
+      blink,
+      heldWeapon: !attacking,
+    })
+    if (attacking && attackMotion) {
+      drawWeapon(g, attackMotion.style, attackMotion.phase, facing, cx, feetY, bodyW)
+    }
+    return
+  }
 
   if (isPlayer) {
     drawPlayerJobBody(g, mode.avatarKey, cx, feetY, bodyW, legSpread, facing, pal)
@@ -1032,77 +666,46 @@ function drawChibiFrame(
     drawArchetypeOverlay(g, mode.archetype, cx, feetY)
   }
 
-  if (swordsmanLineDownPose) {
-    drawSwordsmanLineDownArms(g, mode.avatarKey, cx, feetY, armSwing, pal)
+  drawArms(
+    g,
+    pal.skin,
+    cx,
+    feetY,
+    bodyW,
+    facing,
+    armSwing,
+    attackMotion && isPlayer
+      ? { style: attackMotion.style, phase: attackMotion.phase }
+      : undefined,
+  )
+
+  g.fillStyle(pal.skin, 1)
+  g.fillCircle(cx, feetY - 34, female ? 7 : 8)
+
+  g.fillStyle(pal.hair, 1)
+  if (female) {
+    g.fillEllipse(cx, feetY - 38, femaleHairWidth(mode), 10)
   } else {
-    drawArms(
-      g,
-      pal.skin,
-      cx,
-      feetY,
-      bodyW,
-      facing,
-      armSwing,
-      attackMotion && isPlayer
-        ? { style: attackMotion.style, phase: attackMotion.phase }
-        : undefined,
-    )
+    g.fillEllipse(cx, feetY - 39, 14, 8)
   }
 
-  if (isPlayer && mode.avatarKey === 'knight' && !attackMotion && !swordsmanLineDownPose) {
-    drawKnightArmCuffs(g, cx, feetY, bodyW, facing)
+  if (isPlayer) {
+    drawPlayerJobHeadAccessory(g, mode.avatarKey, cx, feetY - 34, facing)
   }
+
+  let eyeDx = 0
+  if (facing === 'left') eyeDx = -2
+  if (facing === 'right') eyeDx = 2
 
   const blink = motion.kind === 'idle' && motion.idleBlink
-
-  if (swordsmanLineDownPose) {
-    drawSwordsmanLineDownHead(g, cx, feetY, pal, blink)
-  } else {
-    g.fillStyle(pal.skin, 1)
-    g.fillCircle(cx, feetY - 34, female ? 7 : 8)
-
-    g.fillStyle(pal.hair, 1)
-    if (female) {
-      g.fillEllipse(cx, feetY - 38, femaleHairWidth(mode), 10)
-    } else {
-      g.fillEllipse(cx, feetY - 39, 14, 8)
-    }
-
-    if (isPlayer) {
-      drawPlayerJobHeadAccessory(g, mode.avatarKey, cx, feetY - 34, facing)
-      if (mode.avatarKey === 'wizard') {
-        drawWizardBeard(g, cx, feetY - 34, facing)
-      }
-    }
-
-    let eyeDx = 0
-    if (facing === 'left') eyeDx = -2
-    if (facing === 'right') eyeDx = 2
-
-    if (!blink) {
-      g.fillStyle(pal.eyes, 1)
-      g.fillRect(cx - 4 + eyeDx, feetY - 35, 2, 2)
-      g.fillRect(cx + 2 + eyeDx, feetY - 35, 2, 2)
-    }
+  if (!blink) {
+    g.fillStyle(pal.eyes, 1)
+    g.fillRect(cx - 4 + eyeDx, feetY - 35, 2, 2)
+    g.fillRect(cx + 2 + eyeDx, feetY - 35, 2, 2)
   }
 
   if (attackMotion && isPlayer) {
-    drawWeapon(
-      g,
-      attackMotion.style,
-      attackMotion.phase,
-      facing,
-      cx,
-      feetY,
-      bodyW,
-      mode.avatarKey,
-    )
-  } else if (isPlayer) {
-    if (swordsmanLineDownPose) {
-      drawSwordsmanLineDownHeldWeapon(g, mode.avatarKey, cx, feetY)
-    } else {
-      drawPlayerJobHeldWeapon(g, mode.avatarKey, facing, cx, feetY, bodyW)
-    }
+    drawWeapon(g, attackMotion.style, attackMotion.phase, facing, cx, feetY, bodyW)
   }
 }
 

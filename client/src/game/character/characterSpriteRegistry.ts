@@ -220,7 +220,8 @@ export function stripFrameIndex(
 }
 
 export function playerTextureKey(def: CharacterSpriteDef, appearanceKey: string): string {
-  return `${def.id}_${appearanceKey.replace(/\|/g, '_')}`
+  // Tie swapped sheets to master version so art updates are not stuck on cached palettes.
+  return `${def.masterTextureKey}__${appearanceKey.replace(/\|/g, '_')}`
 }
 
 export function npcTextureKey(def: CharacterSpriteDef): string {
