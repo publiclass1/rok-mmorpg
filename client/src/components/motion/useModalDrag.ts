@@ -6,6 +6,7 @@ export function useModalDrag(
   panelRef: RefObject<HTMLElement | null>,
   enabled: boolean,
   getInitialPosition?: (panel: HTMLElement) => PanelPosition,
+  placementDeps: unknown[] = [],
 ) {
   const [pos, setPos] = useState<PanelPosition | null>(null)
   const posRef = useRef({ x: 0, y: 0 })
@@ -36,7 +37,7 @@ export function useModalDrag(
       placePanel()
     })
     return () => cancelAnimationFrame(id)
-  }, [panelRef])
+  }, [panelRef, ...placementDeps])
 
   useEffect(() => {
     const panel = panelRef.current

@@ -3,7 +3,7 @@ import type { CharacterSessionState } from './character/characterState'
 import type { CharacterRow, NpcRow } from '../types/database'
 import { WorldScene } from './scenes/WorldScene'
 
-/** Internal render size; Scale.FIT scales this canvas to the fullscreen host. */
+/** Initial render size; Scale.RESIZE grows/shrinks with the fullscreen host. */
 export const GAME_VIEW_WIDTH = 1280
 export const GAME_VIEW_HEIGHT = 720
 
@@ -27,7 +27,7 @@ export function createPhaserGame(
       },
     },
     scale: {
-      mode: Phaser.Scale.FIT,
+      mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
     scene: [WorldScene],

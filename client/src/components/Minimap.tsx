@@ -80,8 +80,8 @@ function MinimapRadar({ data, size }: { data: MinimapPayload; size: number }) {
 export function Minimap({ data }: Props) {
   const [expanded, setExpanded] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  const pos = useModalDrag(panelRef, true, minimapInitialPosition)
   const size = expanded ? EXPANDED_SIZE : COMPACT_SIZE
+  const pos = useModalDrag(panelRef, true, minimapInitialPosition, [Boolean(data), data?.mapId, size])
 
   if (!data || data.view.width <= 0 || data.view.height <= 0) return null
 

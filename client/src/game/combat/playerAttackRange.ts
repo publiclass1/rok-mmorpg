@@ -1,7 +1,7 @@
 import type { WeaponClass } from '../../content/ro/types'
 import type { EquipSlot } from '../character/characterState'
 import { getItemWeaponClass } from '../character/itemCatalog'
-import type { CharacterPose } from '../player/playerCharacterRig'
+import type { CharacterPose } from '../character/characterPose'
 
 export const MAP_TILE_SIZE = 32
 

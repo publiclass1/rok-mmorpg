@@ -1,6 +1,6 @@
 import type { CharacterAppearance } from './character/characterAppearance'
 import type { CharacterSessionState, EquipSlot, PrimaryStat, SessionInventorySlot } from './character/characterState'
-import type { CharacterPose } from './player/playerCharacterRig'
+import type { CharacterPose } from './character/characterPose'
 import type { NpcRow } from '../types/database'
 import type { MinimapPayload } from './world/minimapTypes'
 

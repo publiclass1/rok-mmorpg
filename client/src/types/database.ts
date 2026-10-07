@@ -36,6 +36,8 @@ export type NpcRow = {
     stock?: Array<{ itemId: string; price: number }>
     buys?: Array<{ itemId: string; price: number }>
     zenyCost?: number
+    spriteKey?: string
+    facing?: 'up' | 'down' | 'left' | 'right'
   }
 }
 

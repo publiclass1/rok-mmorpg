@@ -1,4 +1,4 @@
-import type { CharacterPose } from '../player/playerCharacterRig'
+import type { CharacterPose } from '../character/characterPose'
 
 export type MapCombatSkillId = 'basic_attack' | 'bash'
 

@@ -113,6 +113,23 @@
       "sourceUrl": "https://irowiki.org/wiki/Saber"
     },
     {
+      "id": "spear",
+      "name": "Spear",
+      "type": "weapon",
+      "weight": 70,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x78716c",
+      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "weaponAtk": 28,
+      "weaponSize": "medium",
+      "weaponClass": "spear",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 2,
+      "requiredJobIds": ["swordman"],
+      "sourceUrl": "https://irowiki.org/wiki/Spear"
+    },
+    {
       "id": "rod",
       "name": "Rod",
       "type": "weapon",

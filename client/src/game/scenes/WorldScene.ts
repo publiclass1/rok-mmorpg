@@ -48,6 +48,7 @@ import {
   usesTargetedAttack,
 } from '../combat/playerAttackRange'
 import { appearanceFromCharacterRow } from '../character/characterAppearance'
+import { ensureMasterCharacterSheets } from '../character/characterSpriteAssets'
 import { getItemDisplayName } from '../character/itemCatalog'
 import { addItemsToSessionInventory } from '../character/sessionInventory'
 import type { MobInstance } from '../combat/mobTypes'
@@ -105,6 +106,7 @@ import {
 import { cameraWorldViewRect, viewBoundsWithMargin } from '../world/viewportCull'
 import { ensureMobTexture, ensureTilesTexture, TILESET_TILE_COUNT } from '../textures'
 import { saveCharacterSession, saveCharacterWorldPosition } from '../../lib/characterProgress'
+import { createNpcWorldVisual, type NpcWorldVisual } from '../npc/npcWorldVisual'
 import type { CharacterRow, NpcRow } from '../../types/database'
 
 const INTERACT_RANGE = 64
@@ -113,12 +115,6 @@ const PARTY_EXP_RANGE = 120
 const PLAYER_FEET_OFFSET = 2
 const MOB_FEET_ANCHOR_ADJUST = 14
 
-type NpcVisual = {
-  rect: Phaser.GameObjects.Rectangle
-  label: Phaser.GameObjects.Text
-  feetY: number
-}
-
 export class WorldScene extends Phaser.Scene {
   private character!: CharacterRow
   private playerDisplay!: PlayerDisplay
@@ -126,7 +122,7 @@ export class WorldScene extends Phaser.Scene {
   private eventUnsubs: Array<() => void> = []
 
   private npcs: NpcRow[] = []
-  private npcVisuals: NpcVisual[] = []
+  private npcVisuals: NpcWorldVisual[] = []
   private playerShadow!: Phaser.GameObjects.Ellipse
   private presence: MapPresenceChannel | null = null
   private remotePlayers = new Map<string, RemotePlayerEntity>()
@@ -199,6 +195,7 @@ export class WorldScene extends Phaser.Scene {
   create() {
     ensureTilesTexture(this)
     ensureMobTexture(this)
+    ensureMasterCharacterSheets(this)
 
     const map = this.make.tilemap({ key: 'map' })
     const tileset = map.addTilesetImage('tiles', 'tiles', 32, 32, 0, 0, TILESET_TILE_COUNT)
@@ -258,7 +255,7 @@ export class WorldScene extends Phaser.Scene {
     updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
 
     this.playerLabel = this.add
-      .text(spawn.x, spawn.y - 28, this.character.name, {
+      .text(spawn.x, spawn.y - 46, this.character.name, {
         fontSize: '11px',
         color: '#bfdbfe',
       })
@@ -335,14 +332,7 @@ export class WorldScene extends Phaser.Scene {
     })
 
     for (const npc of this.npcs) {
-      const feetY = npc.y + 18
-      const rect = this.add.rectangle(npc.x, feetY - 18, 28, 36, 0xf59e0b)
-      rect.setStrokeStyle(2, 0xffffff)
-      rect.setInteractive({ useHandCursor: true })
-      const label = this.add
-        .text(npc.x, feetY - 46, npc.label, { fontSize: '11px', color: '#fff' })
-        .setOrigin(0.5)
-      this.npcVisuals.push({ rect, label, feetY })
+      this.npcVisuals.push(createNpcWorldVisual(this, npc))
     }
 
     this.spawnMapMobs()
@@ -542,7 +532,7 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
-    this.playerLabel.setPosition(this.playerDisplay.container.x, this.playerDisplay.container.y - 28)
+    this.playerLabel.setPosition(this.playerDisplay.container.x, this.playerDisplay.container.y - 46)
 
     if (!this.isPlayerDead && !this.isSitting && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
       const jumped = tryJump(this, this.playerDisplay.container, () => this.isJumping, (v) => {
@@ -625,7 +615,8 @@ export class WorldScene extends Phaser.Scene {
     }
 
     for (const npc of this.npcVisuals) {
-      setNpcViewportVisible(npc, entityInView(bounds, npc.rect.x, npc.feetY))
+      const x = npc.sprite.x
+      setNpcViewportVisible(npc, entityInView(bounds, x, npc.feetY))
     }
 
     for (const decor of this.mapDecorSprites) {
@@ -782,7 +773,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     for (const npc of this.npcVisuals) {
-      setDepthByFeet(npc.rect, npc.feetY)
+      setDepthByFeet(npc.sprite, npc.feetY)
       setDepthByFeet(npc.label, npc.feetY, 0.05)
     }
 

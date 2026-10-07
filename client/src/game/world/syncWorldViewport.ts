@@ -1,12 +1,8 @@
 import Phaser from 'phaser'
 import type { MobInstance } from '../combat/mobTypes'
 import type { RemotePlayerEntity } from '../realtime/remotePlayers'
+import type { NpcWorldVisual } from '../npc/npcWorldVisual'
 import { pointInView, type ViewBounds } from './viewportCull'
-
-type NpcVisual = {
-  rect: Phaser.GameObjects.Rectangle
-  label: Phaser.GameObjects.Text
-}
 
 export function setMobViewportVisible(mob: MobInstance, inView: boolean) {
   const dying = !mob.alive && mob.sprite.visible && mob.sprite.alpha > 0.01
@@ -28,8 +24,8 @@ export function setRemoteViewportVisible(entity: RemotePlayerEntity, inView: boo
   entity.label.setVisible(inView)
 }
 
-export function setNpcViewportVisible(npc: NpcVisual, inView: boolean) {
-  npc.rect.setVisible(inView)
+export function setNpcViewportVisible(npc: NpcWorldVisual, inView: boolean) {
+  npc.sprite.setVisible(inView)
   npc.label.setVisible(inView)
 }
 

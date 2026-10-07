@@ -57,7 +57,7 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
 
   const labelText = payload.isVending ? `${payload.name} [Shop]` : payload.name
   const label = scene.add
-    .text(payload.x, payload.y - 28, labelText, { fontSize: '11px', color: payload.isVending ? '#fbbf24' : '#fff' })
+    .text(payload.x, payload.y - 46, labelText, { fontSize: '11px', color: payload.isVending ? '#fbbf24' : '#fff' })
     .setOrigin(0.5)
 
   return {
@@ -109,7 +109,7 @@ export function tickRemotePlayer(entity: RemotePlayerEntity, now: number, smooth
   const labelText = p.isVending ? `${p.name} [Shop]` : p.name
   entity.label.setText(labelText)
   entity.label.setColor(p.isVending ? '#fbbf24' : '#ffffff')
-  entity.label.setPosition(container.x, container.y - 28)
+  entity.label.setPosition(container.x, container.y - 46)
 }
 
 export function destroyRemotePlayer(entity: RemotePlayerEntity) {
