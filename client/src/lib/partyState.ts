@@ -12,26 +12,42 @@ export type PartySnapshot = {
 } | null
 
 export async function loadPartyForCharacter(characterId: string): Promise<PartySnapshot> {
-  const { data: membership } = await supabase
+  const { data: membership, error: membershipError } = await supabase
     .from('party_members')
     .select('party_id')
     .eq('character_id', characterId)
     .maybeSingle()
 
+  if (membershipError) {
+    throw new Error(membershipError.message)
+  }
   if (!membership) return null
 
-  const { data: party } = await supabase.from('parties').select('*').eq('id', membership.party_id).maybeSingle()
+  const { data: party, error: partyError } = await supabase
+    .from('parties')
+    .select('*')
+    .eq('id', membership.party_id)
+    .maybeSingle()
+  if (partyError) {
+    throw new Error(partyError.message)
+  }
   if (!party) return null
 
-  const { data: memberRows } = await supabase
+  const { data: memberRows, error: membersError } = await supabase
     .from('party_members')
     .select('character_id')
     .eq('party_id', membership.party_id)
+  if (membersError) {
+    throw new Error(membersError.message)
+  }
 
   const ids = (memberRows ?? []).map((m) => m.character_id)
   if (ids.length === 0) return { party, members: [] }
 
-  const { data: chars } = await supabase.from('characters').select('id, name').in('id', ids)
+  const { data: chars, error: charsError } = await supabase.from('characters').select('id, name').in('id', ids)
+  if (charsError) {
+    throw new Error(charsError.message)
+  }
   const members: PartyMemberInfo[] = (chars ?? []).map((c) => ({
     characterId: c.id,
     name: c.name,

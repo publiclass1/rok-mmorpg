@@ -192,8 +192,15 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     !!vendorShopTarget
 
   const refreshParty = () => {
-    void loadPartyForCharacter(character.id).then(setPartySnapshot)
+    void loadPartyForCharacter(character.id)
+      .then(setPartySnapshot)
+      .catch((err) => setMessage(err instanceof Error ? err.message : 'Could not load party'))
   }
+
+  useEffect(() => {
+    if (!partyOpen) return
+    refreshParty()
+  }, [partyOpen, character.id])
 
   const refreshGuild = () => {
     void loadGuildForCharacter(character.id).then(setGuildSnapshot)
