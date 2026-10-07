@@ -17,6 +17,7 @@ import { emitGameEvent } from '../game/events'
 import { supabase } from '../lib/supabase'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   characterId: string
@@ -94,6 +95,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
   return (
     <AnimatedModal onClose={onClose} panelClassName="panel modal inventory-modal">
         <ModalHeader title="Inventory" onClose={onClose} />
+        <ModalScrollBody>
         <p className="muted small">Double-click session items to use or equip. Account storage is view-only.</p>
         <div className="inv-grid">
           {cells.map((cell) => {
@@ -132,6 +134,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
           {cells.length === 0 && <p className="muted">No items.</p>}
         </div>
         {selectedItemId && <RolledItemDetails itemId={selectedItemId} />}
+        </ModalScrollBody>
     </AnimatedModal>
   )
 }

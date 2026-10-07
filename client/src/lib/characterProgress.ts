@@ -250,20 +250,45 @@ export type CharacterWorldPosition = {
   mapId: string
 }
 
+const POSITION_NOOP_ERROR = 'character update limited to position and map'
+
+export function normalizeCharacterWorldPosition(world: CharacterWorldPosition): CharacterWorldPosition {
+  return {
+    x: Math.round(world.x),
+    y: Math.round(world.y),
+    mapId: world.mapId,
+  }
+}
+
+function worldPositionMatches(a: CharacterWorldPosition, b: CharacterWorldPosition): boolean {
+  const left = normalizeCharacterWorldPosition(a)
+  const right = normalizeCharacterWorldPosition(b)
+  return left.x === right.x && left.y === right.y && left.mapId === right.mapId
+}
+
 export async function saveCharacterWorldPosition(
   characterId: string,
   world: CharacterWorldPosition,
+  baseline?: CharacterWorldPosition | null,
 ): Promise<void> {
+  const normalized = normalizeCharacterWorldPosition(world)
+  if (baseline != null && worldPositionMatches(normalized, baseline)) {
+    return
+  }
+
   const { error } = await supabase
     .from('characters')
     .update({
-      x: world.x,
-      y: world.y,
-      map_id: world.mapId,
+      x: normalized.x,
+      y: normalized.y,
+      map_id: normalized.mapId,
     })
     .eq('id', characterId)
 
   if (error) {
+    if (error.message.includes(POSITION_NOOP_ERROR)) {
+      return
+    }
     throw new Error(error.message)
   }
 }
@@ -273,8 +298,12 @@ export async function persistCharacterWorld(
   characterId: string,
   world: CharacterWorldPosition,
   state: CharacterSessionState,
+  baseline?: CharacterWorldPosition | null,
 ): Promise<void> {
-  await Promise.all([saveCharacterWorldPosition(characterId, world), saveCharacterSession(characterId, state)])
+  await Promise.all([
+    saveCharacterWorldPosition(characterId, world, baseline),
+    saveCharacterSession(characterId, state),
+  ])
 }
 
 let sessionSaveChain: Promise<void> = Promise.resolve()

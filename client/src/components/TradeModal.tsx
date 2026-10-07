@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { CharacterRow, ItemRow, TradeOfferRow, TradeSessionRow } from '../types/database'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   character: CharacterRow
@@ -118,6 +119,7 @@ export function TradeModal({ character, partner, initialTrade, onClose, onComple
           onClose={() => void run('cancel').then(onClose)}
           closeLabel="Cancel trade"
         />
+        <ModalScrollBody>
         {error && <p className="error">{error}</p>}
         {trade && <p className="muted">State: {trade.state}</p>}
 
@@ -189,6 +191,7 @@ export function TradeModal({ character, partner, initialTrade, onClose, onComple
             </button>
           )}
         </footer>
+        </ModalScrollBody>
     </AnimatedModal>
   )
 }

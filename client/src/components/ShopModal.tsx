@@ -21,6 +21,7 @@ import { spendCharacterZeny } from '../lib/zeny'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalCloseButton } from './motion/ModalCloseButton'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   character: CharacterRow
@@ -260,7 +261,9 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
     return (
       <AnimatedModal onClose={onClose} panelClassName="panel modal wide shop-modal">
         <ModalHeader title={npc.label} onClose={onClose} closeLabel="Cancel" />
-        <p className="muted">This shop has nothing configured.</p>
+        <ModalScrollBody>
+          <p className="muted">This shop has nothing configured.</p>
+        </ModalScrollBody>
       </AnimatedModal>
     )
   }
@@ -270,7 +273,7 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
 
   return (
     <AnimatedModal onClose={onClose} panelClassName="panel modal wide shop-modal">
-      <div className="shop-modal__header row spread modal-drag-handle">
+      <div className="shop-modal__header row spread modal-drag-handle modal-header">
         <div>
           <h2 className="modal-title">{npc.label}</h2>
           <p className="muted small" style={{ margin: '0.15rem 0 0' }}>
@@ -304,6 +307,7 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
         </div>
       </div>
 
+      <ModalScrollBody>
       <div className="shop-modal__grid two-col">
         {isBuy ? (
           <>
@@ -362,6 +366,7 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
           )}
         </div>
       </div>
+      </ModalScrollBody>
     </AnimatedModal>
   )
 }

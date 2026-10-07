@@ -14,6 +14,7 @@ import type { CharacterRow, NpcRow } from '../types/database'
 import { spendCharacterZeny } from '../lib/zeny'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   character: CharacterRow
@@ -67,6 +68,7 @@ export function RentalModal({ character, npc, sheet, onClose, onCharacterUpdated
   return (
     <AnimatedModal onClose={onClose}>
       <ModalHeader title={npc.label} onClose={onClose} />
+      <ModalScrollBody>
       <p className="muted small">Equipment rental · one active rental at a time</p>
       {active ? (
         <div className="panel" style={{ marginBottom: 12 }}>
@@ -103,6 +105,7 @@ export function RentalModal({ character, npc, sheet, onClose, onCharacterUpdated
       <p className="muted small" style={{ marginTop: 8 }}>
         Job: {progress.jobId} · Zeny: {character.zeny}
       </p>
+      </ModalScrollBody>
     </AnimatedModal>
   )
 }

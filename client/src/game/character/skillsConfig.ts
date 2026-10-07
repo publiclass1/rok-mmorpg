@@ -64,6 +64,10 @@ export function generalActionSkills(): SkillDefinition[] {
   )
 }
 
+export const SKILL_WINDOW_GENERAL_TAB_ID = 'general'
+
+export type SkillWindowTabEntry = { id: string; label: string }
+
 export function skillWindowTabs(jobId: string): string[] {
   const tabs = jobAncestorIds(jobId)
     .filter((id) => id !== 'novice')
@@ -72,6 +76,14 @@ export function skillWindowTabs(jobId: string): string[] {
   if (tabs.length > 0) return tabs
   if (skillsForJob(jobId).length > 0) return [jobId]
   return [jobId]
+}
+
+export function skillWindowTabEntries(jobId: string): SkillWindowTabEntry[] {
+  const jobTabs = skillWindowTabs(jobId).map((id) => ({
+    id,
+    label: JOB_NAMES[id] ?? id,
+  }))
+  return [{ id: SKILL_WINDOW_GENERAL_TAB_ID, label: 'General' }, ...jobTabs]
 }
 
 export function skillUsableByJob(skillId: string, jobId: string): boolean {

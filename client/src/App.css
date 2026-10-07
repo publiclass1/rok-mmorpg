@@ -1611,27 +1611,6 @@ button:disabled {
   border-radius: 2px 0 0 0;
 }
 
-.skill-unassign-zone {
-  margin: 0.5rem 0;
-  padding: 0.35rem 0.5rem;
-  text-align: center;
-  font-size: 0.72rem;
-  color: #9ca3af;
-  border: 1px dashed #4b5563;
-  border-radius: 4px;
-}
-
-.skill-unassign-zone--compact {
-  margin-top: 0.35rem;
-  padding: 0.3rem 0.4rem;
-}
-
-.skill-unassign-zone--active {
-  border-color: #f87171;
-  color: #fecaca;
-  background: rgba(127, 29, 29, 0.25);
-}
-
 .npc-options-list {
   list-style: none;
   padding: 0;
@@ -1646,6 +1625,15 @@ button:disabled {
   text-align: left;
 }
 
+.skills-modal-chrome {
+  flex-shrink: 0;
+  background: #111827;
+  margin-left: -0.65rem;
+  margin-right: -0.65rem;
+  padding: 0 0.65rem 0.5rem;
+  border-bottom: 1px solid #374151;
+}
+
 .skills-modal-meta {
   margin: 0.25rem 0 0;
 }
@@ -1654,6 +1642,21 @@ button:disabled {
   margin: 0.15rem 0 0;
   font-size: 0.7rem;
   opacity: 0.85;
+}
+
+.skills-modal-scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-left: -0.65rem;
+  margin-right: -0.65rem;
+  padding: 0.35rem 0.65rem 0;
+}
+
+.skills-modal-scroll.skills-modal-scroll--general {
+  overflow-y: auto;
 }
 
 .skills-window-tabs {
@@ -1722,8 +1725,9 @@ button:disabled {
 .skill-tree-viewport {
   position: relative;
   overflow: auto;
-  min-height: 280px;
-  max-height: 360px;
+  flex: 1;
+  min-height: min(280px, 40vh);
+  max-height: min(52vh, 480px);
   border: 1px solid #374151;
   border-radius: 6px;
   background: #0f1419;
@@ -1760,11 +1764,19 @@ button:disabled {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  padding: 0.25rem;
+  gap: 0.1rem;
+  padding: 0.15rem 0.2rem;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   text-align: center;
+}
+
+.skill-tree-node__main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 100%;
 }
 
 .skill-tree-node--learnable {
@@ -1782,27 +1794,48 @@ button:disabled {
 }
 
 .skill-tree-node-name {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.1;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
 }
 
 .skill-tree-node-level {
-  font-size: 0.65rem;
+  font-size: 0.58rem;
+  line-height: 1;
 }
 
 .skill-tree-node-btn {
-  min-width: 1.75rem;
-  padding: 0.15rem 0.35rem;
-  font-size: 0.75rem;
+  flex-shrink: 0;
+  min-width: 1.35rem;
+  padding: 0.1rem 0.25rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  margin-top: 0.1rem;
+}
+
+.skills-general-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  padding: 0.35rem 0;
+}
+
+.skills-general-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 4rem;
+}
+
+.skills-general-name {
+  font-size: 0.68rem;
+  text-align: center;
+  line-height: 1.15;
+  color: #cbd5e1;
 }
 
 .floating-detail-tooltip,
@@ -2481,6 +2514,21 @@ body.chat-strip-resizing {
   align-items: center;
   gap: 0.4rem;
   margin-bottom: 0.35rem;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #111827;
+  margin-left: -0.65rem;
+  margin-right: -0.65rem;
+  padding: 0.5rem 0.65rem 0.35rem;
+  margin-top: -0.5rem;
+}
+
+.modal-scroll-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .modal-header__end {
@@ -2571,9 +2619,9 @@ body.chat-strip-resizing {
 
 /* Skills modal: panel height cap when assigning to skill bar */
 .modal.skills-modal {
-  max-height: min(70vh, 520px);
-  min-width: min(94vw, 440px);
-  max-width: min(94vw, 640px);
+  max-height: min(82vh, 640px);
+  min-width: min(94vw, 720px);
+  max-width: min(94vw, 800px);
   display: flex;
   flex-direction: column;
 }
@@ -2608,7 +2656,10 @@ body.chat-strip-resizing {
 .modal {
   width: min(720px, 100%);
   max-height: 90vh;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .modal.wide {

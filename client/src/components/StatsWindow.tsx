@@ -9,6 +9,7 @@ import { spendCharacterZeny } from '../lib/zeny'
 import type { CharacterRow } from '../types/database'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 import { ModalResetButton } from './motion/ModalResetButton'
 
 type Props = {
@@ -99,6 +100,7 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
           />
         }
       />
+      <ModalScrollBody>
       <p className="muted small stats-window__meta">
         Points: <strong>{sheet.statPointsUnspent}</strong>
         <span className="stats-window__meta-sep">·</span>
@@ -166,6 +168,7 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
           </ul>
         </section>
       </div>
+      </ModalScrollBody>
     </AnimatedModal>
   )
 }

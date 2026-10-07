@@ -3,6 +3,7 @@ import { guildManage } from '../lib/api'
 import type { GuildSnapshot } from '../lib/guildState'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   characterId: string
@@ -70,7 +71,7 @@ export function GuildModal({
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="panel modal guild-modal">
       <ModalHeader title="Guild" onClose={onClose} className="guild-modal__header" />
-
+      <ModalScrollBody>
       {snapshot ? (
         <>
           <p>
@@ -114,6 +115,7 @@ export function GuildModal({
           </div>
         </div>
       )}
+      </ModalScrollBody>
     </AnimatedModal>
   )
 }

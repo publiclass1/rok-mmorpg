@@ -8,6 +8,7 @@ import { toCharacterSheetPayload } from '../game/character/characterSheet'
 import { emitGameEvent } from '../game/events'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   buyer: CharacterRow
@@ -86,6 +87,7 @@ export function VendorShopModal({
   return (
     <AnimatedModal onClose={onClose}>
       <ModalHeader title={stallTitle ?? `${sellerName}'s shop`} onClose={onClose} />
+      <ModalScrollBody>
       <div className="modal-panel">
         {error && <p className="small">{error}</p>}
         <ul className="item-list">
@@ -106,6 +108,7 @@ export function VendorShopModal({
           {listings.length === 0 && <li className="muted small">No items listed</li>}
         </ul>
       </div>
+      </ModalScrollBody>
     </AnimatedModal>
   )
 }

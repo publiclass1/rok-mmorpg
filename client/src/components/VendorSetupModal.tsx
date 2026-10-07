@@ -5,6 +5,7 @@ import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type DraftRow = { itemId: string; quantity: number; price: string }
 
@@ -102,6 +103,7 @@ export function VendorSetupModal({
   return (
     <AnimatedModal onClose={onClose}>
       <ModalHeader title="Vending" onClose={onClose} />
+      <ModalScrollBody>
       <div className="modal-panel vendor-setup">
         <label className="small">
           Shop title
@@ -153,6 +155,7 @@ export function VendorSetupModal({
           </button>
         </div>
       </div>
+      </ModalScrollBody>
     </AnimatedModal>
   )
 }

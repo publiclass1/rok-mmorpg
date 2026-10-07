@@ -3,6 +3,7 @@ import { partyManage } from '../lib/api'
 import { createParty as createPartyRpc, type PartySnapshot } from '../lib/partyState'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   characterId: string
@@ -59,7 +60,7 @@ export function PartyWindow({ characterId, snapshot, onClose, onChanged, onMessa
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="panel modal party-modal">
       <ModalHeader title="Party" onClose={onClose} className="party-modal__header" />
-
+      <ModalScrollBody>
       {snapshot ? (
         <>
           <p className="party-modal__title">
@@ -207,6 +208,7 @@ export function PartyWindow({ characterId, snapshot, onClose, onChanged, onMessa
           </div>
         </div>
       )}
+      </ModalScrollBody>
     </AnimatedModal>
   )
 }

@@ -5,6 +5,7 @@ import type { CharacterSheetPayload } from '../game/events'
 import { CharacterEquipReadOnly } from './CharacterEquipReadOnly'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   sheet: CharacterSheetPayload
@@ -20,12 +21,14 @@ export function EquipmentWindow({ sheet, appearance, onClose }: Props) {
   return (
     <AnimatedModal onClose={onClose} panelClassName="panel modal equipment-modal">
       <ModalHeader title="Equipment" onClose={onClose} />
-      <CharacterEquipReadOnly
-        equipment={sheet.equipment}
-        appearance={appearance}
-        jobId={sheet.jobId}
-        onUnequip={unequip}
-      />
+      <ModalScrollBody>
+        <CharacterEquipReadOnly
+          equipment={sheet.equipment}
+          appearance={appearance}
+          jobId={sheet.jobId}
+          onUnequip={unequip}
+        />
+      </ModalScrollBody>
     </AnimatedModal>
   )
 }

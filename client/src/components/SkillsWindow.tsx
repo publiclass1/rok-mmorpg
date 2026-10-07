@@ -3,17 +3,22 @@ import { sessionFromSheetPayload } from '../game/character/characterSheet'
 import { hasAllocatedSkillPoints } from '../game/character/characterState'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import { getCharacterSession, setCharacterSession } from '../game/character/characterSessionBridge'
-import { isSkillBarDragEvent, readSkillBarDrag } from '../game/character/skillBarDrag'
-import { JOB_NAMES, skillsForJob, skillWindowTabs } from '../game/character/skillsConfig'
+import {
+  JOB_NAMES,
+  skillsForJob,
+  SKILL_WINDOW_GENERAL_TAB_ID,
+  skillWindowTabEntries,
+} from '../game/character/skillsConfig'
 import { SKILL_RESET_ZENY_COST } from '../game/character/statFormulas'
 import { emitGameEvent, type CharacterSheetPayload } from '../game/events'
 import { spendCharacterZeny } from '../lib/zeny'
 import type { CharacterRow } from '../types/database'
+import { GeneralSkillsPanel } from './GeneralSkillsPanel'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
 import { ModalResetButton } from './motion/ModalResetButton'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 import { SkillTreePanel } from './SkillTreePanel'
-import { SkillUtilityRow } from './SkillUtilityRow'
 
 type Props = {
   character: CharacterRow
@@ -24,24 +29,18 @@ type Props = {
 
 export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: Props) {
   const jobName = JOB_NAMES[sheet.jobId] ?? sheet.jobId
-  const tabs = skillWindowTabs(sheet.jobId)
-  const defaultTab = tabs.includes(sheet.jobId) ? sheet.jobId : tabs[tabs.length - 1]!
+  const tabs = skillWindowTabEntries(sheet.jobId)
+  const defaultTab =
+    tabs.find((t) => t.id === sheet.jobId)?.id ??
+    tabs.find((t) => t.id !== SKILL_WINDOW_GENERAL_TAB_ID)?.id ??
+    SKILL_WINDOW_GENERAL_TAB_ID
   const [activeTab, setActiveTab] = useState(defaultTab)
-  const [unassignHover, setUnassignHover] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const tabSkills = skillsForJob(activeTab)
-  const showTabBar = tabs.length > 1
+  const isGeneralTab = activeTab === SKILL_WINDOW_GENERAL_TAB_ID
+  const tabSkills = isGeneralTab ? [] : skillsForJob(activeTab)
   const canReset = hasAllocatedSkillPoints(sheet.skills)
   const resetTitle = `Reset skills (${SKILL_RESET_ZENY_COST.toLocaleString()} zeny)`
-
-  function handleUnassignDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setUnassignHover(false)
-    const payload = readSkillBarDrag(e.dataTransfer)
-    if (!payload || payload.source !== 'bar') return
-    dispatchCharacterAction({ type: 'assignSkillBar', slot: payload.slot, skillId: null })
-  }
 
   async function resetSkills() {
     if (busy) return
@@ -80,50 +79,41 @@ export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: 
           />
         }
       />
-      <p className="muted small skills-modal-meta">
-        {jobName} · Job Lv {sheet.jobLevel} · SP {sheet.skillPointsUnspent} · drag icons to
-        the bar below · Reset: {SKILL_RESET_ZENY_COST.toLocaleString()}z
-      </p>
-      <p className="muted small skills-modal-legend">
-        Bright border = can add a point · Lines = suggested prerequisite path
-      </p>
-
-      {showTabBar && (
-        <div className="skills-window-tabs" role="tablist" aria-label="Job skills">
-          {tabs.map((tabId) => (
+      <div className="skills-modal-chrome">
+        <p className="muted small skills-modal-meta">
+          {jobName} · Job Lv {sheet.jobLevel} · SP {sheet.skillPointsUnspent} · drag icons to the bar
+          below · Reset: {SKILL_RESET_ZENY_COST.toLocaleString()}z
+        </p>
+        <p className="muted small skills-modal-legend">
+          Bright border = can add a point · Lines = suggested prerequisite path
+        </p>
+        <div className="skills-window-tabs" role="tablist" aria-label="Skill categories">
+          {tabs.map((tab) => (
             <button
-              key={tabId}
+              key={tab.id}
               type="button"
               role="tab"
-              aria-selected={activeTab === tabId}
-              className={`skills-window-tab${activeTab === tabId ? ' skills-window-tab--active' : ''}`}
-              onClick={() => setActiveTab(tabId)}
+              aria-selected={activeTab === tab.id}
+              className={`skills-window-tab${activeTab === tab.id ? ' skills-window-tab--active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
             >
-              {JOB_NAMES[tabId] ?? tabId}
+              {tab.label}
             </button>
           ))}
         </div>
-      )}
+      </div>
 
-      <SkillUtilityRow sheet={sheet} />
-
-      <div
-        className={`skill-unassign-zone skill-unassign-zone--compact${unassignHover ? ' skill-unassign-zone--active' : ''}`}
-        onDragOver={(e) => {
-          if (!isSkillBarDragEvent(e.dataTransfer)) return
-          e.preventDefault()
-          e.dataTransfer.dropEffect = 'move'
-          setUnassignHover(true)
-        }}
-        onDragLeave={() => setUnassignHover(false)}
-        onDrop={handleUnassignDrop}
+      <ModalScrollBody
+        className={`skills-modal-scroll${isGeneralTab ? ' skills-modal-scroll--general' : ''}`}
       >
-        Drop bar skill here to remove
-      </div>
-
-      <div className="skills-window-tab-panel" role="tabpanel">
-        <SkillTreePanel skills={tabSkills} sheet={sheet} tabJobId={activeTab} />
-      </div>
+        <div className="skills-window-tab-panel" role="tabpanel">
+          {isGeneralTab ? (
+            <GeneralSkillsPanel sheet={sheet} />
+          ) : (
+            <SkillTreePanel skills={tabSkills} sheet={sheet} tabJobId={activeTab} />
+          )}
+        </div>
+      </ModalScrollBody>
     </AnimatedModal>
   )
 }

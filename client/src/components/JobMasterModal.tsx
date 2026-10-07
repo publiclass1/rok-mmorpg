@@ -6,6 +6,7 @@ import type { CharacterRow, NpcRow } from '../types/database'
 import { spendCharacterZeny } from '../lib/zeny'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   character: CharacterRow
@@ -50,6 +51,7 @@ export function JobMasterModal({ character, npc, sheet, onClose, onCharacterUpda
   return (
     <AnimatedModal onClose={onClose}>
         <ModalHeader title={npc.label} onClose={onClose} />
+        <ModalScrollBody>
         <p className="muted small">
           Current: {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Job Lv {sheet.jobLevel} · Base Lv {sheet.baseLevel}
         </p>
@@ -74,6 +76,7 @@ export function JobMasterModal({ character, npc, sheet, onClose, onCharacterUpda
             })}
           </ul>
         )}
+        </ModalScrollBody>
     </AnimatedModal>
   )
 }

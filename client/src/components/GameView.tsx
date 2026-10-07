@@ -672,6 +672,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [])
 
   useEffect(() => {
+    if (!gameRef.current) return
     emitGameEvent('uiPointerLock', modalOpen)
   }, [modalOpen])
 
@@ -877,11 +878,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     emitGameEvent('pvpRespawnInArena', coords)
     setSheet(toCharacterSheetPayload(getCharacterSession()))
     try {
-      await saveCharacterWorldPosition(characterRef.current.id, {
-        x: coords.x,
-        y: coords.y,
-        mapId: characterRef.current.map_id,
-      })
+      const ch = characterRef.current
+      await saveCharacterWorldPosition(
+        ch.id,
+        { x: coords.x, y: coords.y, mapId: ch.map_id },
+        { x: ch.x, y: ch.y, mapId: ch.map_id },
+      )
       const { data, error } = await supabase
         .from('characters')
         .update({ x: coords.x, y: coords.y })
@@ -1055,7 +1057,13 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     await clearCharacterPresence(character.id)
     await flushZenyToDb()
     try {
-      await persistCharacterWorld(character.id, positionRef.current, sessionRef.current)
+      const ch = characterRef.current
+      await persistCharacterWorld(
+        character.id,
+        positionRef.current,
+        sessionRef.current,
+        { x: ch.x, y: ch.y, mapId: ch.map_id },
+      )
     } catch (err) {
       console.warn('Failed to save character progress', err)
     }
@@ -1068,7 +1076,13 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     function flushOnHide() {
       if (document.visibilityState !== 'hidden') return
       void flushZenyToDb()
-      void persistCharacterWorld(character.id, positionRef.current, sessionRef.current).catch((err) => {
+      const ch = characterRef.current
+      void persistCharacterWorld(
+        character.id,
+        positionRef.current,
+        sessionRef.current,
+        { x: ch.x, y: ch.y, mapId: ch.map_id },
+      ).catch((err) => {
         console.warn('Background save failed', err)
       })
     }

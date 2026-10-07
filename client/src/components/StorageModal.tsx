@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { CharacterRow, ItemRow, NpcRow, StorageRow } from '../types/database'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
+import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type InvRow = { item_id: string; quantity: number }
 
@@ -63,6 +64,7 @@ export function StorageModal({ character, npc, position, onClose }: Props) {
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="modal panel">
         <ModalHeader title={`${npc.label} — Storage`} onClose={onClose} />
+        <ModalScrollBody>
         {error && <p className="error">{error}</p>}
         <div className="two-col">
           <section>
@@ -96,6 +98,7 @@ export function StorageModal({ character, npc, position, onClose }: Props) {
             </ul>
           </section>
         </div>
+        </ModalScrollBody>
     </AnimatedModal>
   )
 }

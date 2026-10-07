@@ -187,7 +187,12 @@ import {
   registerMobDeathAnimation,
   TILESET_TILE_COUNT,
 } from '../textures'
-import { saveCharacterSession, saveCharacterWorldPosition } from '../../lib/characterProgress'
+import {
+  normalizeCharacterWorldPosition,
+  saveCharacterSession,
+  saveCharacterWorldPosition,
+  type CharacterWorldPosition,
+} from '../../lib/characterProgress'
 import { ensureNpcGuildTextures } from '../npc/npcGuildBadge'
 import {
   createNpcWorldVisual,
@@ -295,6 +300,7 @@ export class WorldScene extends Phaser.Scene {
   private collisionLayer: Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer | null = null
   private portalWarpCooldownUntil = 0
   private worldPersistDisabled = false
+  private lastPersistedWorld: CharacterWorldPosition | null = null
   private sfx = new SfxPlayer()
   private socialPresence: SocialPresencePayload = {}
   private partySync: PartySyncPayload = {
@@ -1060,6 +1066,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private refreshCursor() {
+    if (!this.sys.isActive() || !this.input?.manager) return
     let next: GameCursor = 'default'
     if (!this.uiPointerLocked && !this.isPlayerDead) {
       const p = this.input.activePointer
@@ -3788,11 +3795,29 @@ export class WorldScene extends Phaser.Scene {
     }, 2000)
   }
 
+  private worldPersistBaseline(): CharacterWorldPosition {
+    if (this.lastPersistedWorld) return this.lastPersistedWorld
+    return {
+      x: this.character.x,
+      y: this.character.y,
+      mapId: this.character.map_id,
+    }
+  }
+
   private async persistWorldState() {
     if (this.worldPersistDisabled || !this.sys.isActive()) return
     const world = this.getPlayerPosition()
-    await saveCharacterWorldPosition(this.character.id, world)
-    if (this.worldPersistDisabled || !this.sys.isActive()) return
+    try {
+      await saveCharacterWorldPosition(this.character.id, world, this.worldPersistBaseline())
+      if (this.worldPersistDisabled || !this.sys.isActive()) return
+      const normalized = normalizeCharacterWorldPosition(world)
+      this.lastPersistedWorld = normalized
+      this.character.x = normalized.x
+      this.character.y = normalized.y
+      this.character.map_id = normalized.mapId
+    } catch (err) {
+      console.warn('World position save failed', err)
+    }
   }
 
   getNearestNpc() {

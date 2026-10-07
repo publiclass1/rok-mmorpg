@@ -62,19 +62,21 @@ export function SkillTreeNode({
         title=""
       />
       <span className="skill-tree-node-name">{skill.name}</span>
-      <span className="skill-tree-node-level muted small">
-        {level}/{skill.maxLevel}
-      </span>
-      {showLearnButton && (
-        <button
-          type="button"
-          className="skill-tree-node-btn"
-          disabled={!can}
-          onClick={() => dispatchCharacterAction({ type: 'learnSkill', skillId: skill.id })}
-        >
-          {level === 0 ? '+' : '↑'}
-        </button>
-      )}
+      <div className="skill-tree-node__main">
+        <span className="skill-tree-node-level muted small">
+          {level}/{skill.maxLevel}
+        </span>
+        {showLearnButton && (
+          <button
+            type="button"
+            className="skill-tree-node-btn"
+            disabled={!can}
+            onClick={() => dispatchCharacterAction({ type: 'learnSkill', skillId: skill.id })}
+          >
+            {level === 0 ? '+' : '↑'}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

@@ -151,10 +151,10 @@ export function computeSkillTreeLayout(skills: SkillDefinition[]): SkillTreeLayo
 }
 
 /** Pixel layout constants for the skills tree viewport. */
-export const SKILL_TREE_CELL_W = 80
-export const SKILL_TREE_CELL_H = 100
-export const SKILL_TREE_COL_GAP = 20
-export const SKILL_TREE_ROW_GAP = 52
+export const SKILL_TREE_CELL_W = 72
+export const SKILL_TREE_CELL_H = 76
+export const SKILL_TREE_COL_GAP = 14
+export const SKILL_TREE_ROW_GAP = 32
 export const SKILL_TREE_PAD = 20
 
 export function skillTreeNodeCenter(
