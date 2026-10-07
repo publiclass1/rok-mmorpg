@@ -185,10 +185,14 @@ function parseSessionInventory(raw: unknown): string[] {
   return out
 }
 
-function parseRolledBaseItemId(id: string): string | null {
-  const idx = id.indexOf('::')
-  if (idx <= 0) return null
-  return id.slice(0, idx)
+const ROLLED_ITEM_PREFIX = 'ri:'
+
+function parseRolledBaseItemId(itemId: string): string | null {
+  if (!itemId.startsWith(ROLLED_ITEM_PREFIX)) return null
+  const rest = itemId.slice(ROLLED_ITEM_PREFIX.length)
+  const lastColon = rest.lastIndexOf(':')
+  if (lastColon <= 0) return null
+  return rest.slice(0, lastColon)
 }
 
 function isKnownItemId(itemId: string): boolean {

@@ -3604,14 +3604,35 @@ export class WorldScene extends Phaser.Scene {
     this.killMobVisualOnly(mob, !isDungeonMapId(this.character.map_id))
   }
 
+  private setMobPhysicsEnabled(mob: MobInstance, enabled: boolean) {
+    const sprite = mob.sprite
+    if (!sprite.scene) return
+    if (enabled) {
+      if (!sprite.body) {
+        this.physics.world.enable(sprite)
+      } else {
+        sprite.body.enable = true
+      }
+      return
+    }
+    sprite.setVelocity(0, 0)
+    if (sprite.body) {
+      sprite.body.enable = false
+    }
+  }
+
   /** Hide mob and respawn locally; no loot/EXP (remote observers). */
   private killMobVisualOnly(mob: MobInstance, broadcastRespawn = false) {
     if (!mob.alive) return
+    if (!mob.sprite.scene) {
+      mob.alive = false
+      return
+    }
     const def = MOB_DEFS[mob.defId]
 
     mob.alive = false
     mob.state = 'wander'
-    mob.sprite.body.enable = false
+    this.setMobPhysicsEnabled(mob, false)
     mob.hpBarBg.setVisible(false)
     mob.hpBarFill.setVisible(false)
     mob.label.setVisible(false)
@@ -3639,7 +3660,7 @@ export class WorldScene extends Phaser.Scene {
     mob.alive = true
     mob.sprite.setPosition(mob.spawnX, mob.spawnY)
     mob.sprite.setVisible(true)
-    mob.sprite.body.enable = true
+    this.setMobPhysicsEnabled(mob, true)
     mob.sprite.setTint(def.color)
     mob.sprite.setFrame(0)
     mob.sprite.setAlpha(1)
