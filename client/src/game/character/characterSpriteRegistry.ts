@@ -125,6 +125,21 @@ const NPC_SPRITES: Record<string, CharacterSpriteDef> = {
   job_master: npcSpriteDef('job_master'),
   merchant: npcSpriteDef('merchant'),
   healer: npcSpriteDef('healer'),
+  dungeon_guide: npcSpriteDef('dungeon_guide'),
+}
+
+export const NPC_SPRITE_LABELS: Record<NpcArchetype, string> = {
+  kafra: 'Kafra',
+  warp_agent: 'Warp Agent',
+  save_priest: 'Save Priest',
+  job_master: 'Job Master',
+  merchant: 'Merchant',
+  healer: 'Healer',
+  dungeon_guide: 'Dungeon Guide',
+}
+
+export function listNpcSpriteKeys(): NpcArchetype[] {
+  return Object.keys(NPC_SPRITES) as NpcArchetype[]
 }
 
 export function resolvePlayerSpriteDef(appearance: CharacterAppearance): CharacterSpriteDef {

@@ -3,7 +3,7 @@
     {
       "id": "prontera",
       "displayName": "Prontera",
-      "fieldType": "town",
+      "fieldType": "custom",
       "sourceUrl": "https://irowiki.org/wiki/Prontera"
     },
     {
@@ -1677,7 +1677,8 @@
         "y": 656,
         "defId": "loli_ruri"
       }
-    ]
+    ],
+    "prontera": []
   },
   "portals": {
     "new_map_rfpp": [],
@@ -1764,6 +1765,7 @@
         "label": "Prontera",
         "mode": "walk"
       }
-    ]
+    ],
+    "prontera": []
   }
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { loadRoContent } from '../content/ro/loadContent'
 import type { MapPortalDef } from '../content/ro/types'
 import {
@@ -9,17 +9,22 @@ import {
   npcDefsFromMap,
   portalDefsFromMap,
   resizeTmjMap,
-  serializeTmj,
   type TmjMap,
 } from '../lib/tmj'
 import { supabase } from '../lib/supabase'
 import type { NpcObjectNpcType, NpcObjectProps } from '../lib/tmj/types'
+import {
+  listNpcSpriteKeys,
+  NPC_SPRITE_LABELS,
+} from '../game/character/characterSpriteRegistry'
+import { npcArchetypeFromNpcType } from '../game/character/npcArchetypes'
 import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../lib/tmj/properties'
 import { getObjectGroup } from '../lib/tmj/parse'
 import { fetchMapBundle, fetchMapList, saveMapBundle, type MapMeta } from './mapAdminApi'
 import { MapEditorCanvas, type EditorTool } from './mapEditor/MapEditorCanvas'
 import { MapEditorToolbar } from './mapEditor/MapEditorToolbar'
 import { MapEditorViewport } from './mapEditor/MapEditorViewport'
+import { TOOL_LABELS } from './mapEditor/toolIcons'
 import type { WarpWiringPayload } from './mapAdminApi'
 import { readDecorAssetId } from '../lib/mapDecor/decorProps'
 import { GID_GRASS_A, GID_GRASS_B, GID_PATH, GID_WALL } from '../lib/tmj'
@@ -46,12 +51,7 @@ export function MapAdminPage() {
   const [showPortals, setShowPortals] = useState(true)
   const [showNpcs, setShowNpcs] = useState(true)
   const [selectedObjectId, setSelectedObjectId] = useState<number | null>(null)
-  const [jsonText, setJsonText] = useState('')
-  const [jsonDirty, setJsonDirty] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
-  const [fullSql, setFullSql] = useState('')
-  const [migrationFileName, setMigrationFileName] = useState('')
-  const [migrationWritten, setMigrationWritten] = useState(false)
   const [loading, setLoading] = useState(false)
   const [addToPronteraWarp, setAddToPronteraWarp] = useState(true)
   const [hubSpawnX, setHubSpawnX] = useState(320)
@@ -60,7 +60,6 @@ export function MapAdminPage() {
   const [returnPronteraX, setReturnPronteraX] = useState(640)
   const [returnPronteraY, setReturnPronteraY] = useState(360)
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
-  const [sqlSectionOpen, setSqlSectionOpen] = useState(true)
   const panResetRef = useRef<(() => void) | null>(null)
   const [newMapWidth, setNewMapWidth] = useState(30)
   const [newMapHeight, setNewMapHeight] = useState(20)
@@ -87,12 +86,6 @@ export function MapAdminPage() {
   useEffect(() => {
     void refreshList()
   }, [refreshList])
-
-  useEffect(() => {
-    if (!jsonDirty) {
-      setJsonText(serializeTmj(tmj))
-    }
-  }, [tmj, jsonDirty])
 
   const portalsForSave = useMemo((): MapPortalDef[] => portalDefsFromMap(tmj, meta.id), [tmj, meta.id])
   const npcMarkersForSave = useMemo(() => npcDefsFromMap(tmj, meta.id), [tmj, meta.id])
@@ -145,12 +138,8 @@ export function MapAdminPage() {
         setStatus(npcCount > 0 ? `Loaded ${mapId} (${npcCount} NPCs from DB)` : `Loaded ${mapId}`)
       }
 
-      setJsonDirty(false)
       setSelectedObjectId(null)
       setEditingMapId(mapId)
-      setFullSql('')
-      setMigrationFileName('')
-      setMigrationWritten(false)
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Load failed')
     } finally {
@@ -173,13 +162,7 @@ export function MapAdminPage() {
     setStatus(null)
     try {
       const mapMeta = { ...meta, id: mapId }
-      let mapToSave = tmj
-      if (jsonDirty) {
-        mapToSave = parseTmj(JSON.parse(jsonText))
-        ensureObjectGroups(mapToSave)
-        setTmj(mapToSave)
-        setJsonDirty(false)
-      }
+      const mapToSave = tmj
       const portals = portalDefsFromMap(mapToSave, mapId)
       const warpWiring: WarpWiringPayload = {
         addToPronteraWarp,
@@ -191,10 +174,6 @@ export function MapAdminPage() {
       }
       const res = await saveMapBundle({ mapMeta, tmj: mapToSave, portals, warpWiring })
       setMeta(res.mapMeta)
-      setFullSql(res.sqlBundle.fullSql)
-      setMigrationFileName(res.sqlBundle.migrationFileName)
-      setMigrationWritten(res.sqlBundle.migrationWritten)
-      setSqlSectionOpen(true)
       const fileList = res.filesWritten.join(', ')
       setStatus(
         `Saved ${mapId}. Files: ${fileList}. Apply SQL via Supabase SQL Editor or supabase db push, then hard-refresh the game.`,
@@ -205,18 +184,6 @@ export function MapAdminPage() {
       setStatus(err instanceof Error ? err.message : 'Save failed')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const applyJson = () => {
-    try {
-      const parsed = parseTmj(JSON.parse(jsonText))
-      ensureObjectGroups(parsed)
-      setTmj(parsed)
-      setJsonDirty(false)
-      setStatus('JSON applied to editor')
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Invalid JSON')
     }
   }
 
@@ -289,10 +256,8 @@ export function MapAdminPage() {
       sourceUrl: null,
     })
     setTmj(createEmptyMap(w, h))
-    setJsonDirty(false)
     setSelectedObjectId(null)
     setEditingMapId(null)
-    setFullSql('')
     setStatus(`New blank map (${w}×${h}) — set id and save`)
   }
 
@@ -350,8 +315,7 @@ export function MapAdminPage() {
             )}
           </p>
 
-          <fieldset className="map-admin-fieldset">
-            <legend>Create new map</legend>
+          <CollapsibleSection title="Create new map">
             <div className="map-admin-size-row">
               <label>
                 W (tiles)
@@ -377,11 +341,10 @@ export function MapAdminPage() {
             <button type="button" className="map-admin-new-btn" disabled={loading} onClick={createNewMap}>
               New blank map
             </button>
-            <p className="muted small">Resets the canvas. Set a unique id below, then Save to disk.</p>
-          </fieldset>
+            <p className="muted small">Resets the canvas. Set a unique id below, then save.</p>
+          </CollapsibleSection>
 
-          <fieldset className="map-admin-fieldset">
-            <legend>Resize current map</legend>
+          <CollapsibleSection title="Resize current map">
             <p className="muted small">Current: {tmj.width}×{tmj.height} tiles</p>
             <div className="map-admin-size-row">
               <label>
@@ -408,26 +371,27 @@ export function MapAdminPage() {
             <button type="button" disabled={loading} onClick={applyResizeMap}>
               Resize map
             </button>
-            <p className="muted small">Extends or crops from the top-left. Shift tiles near edges with the tiles tool first if needed.</p>
-          </fieldset>
+            <p className="muted small">Extends or crops from the top-left. Shift tiles with the tiles tool first if needed.</p>
+          </CollapsibleSection>
 
-          <label>
-            Load existing map
-            <select
-              value=""
-              onChange={(e) => {
-                if (e.target.value) void loadMap(e.target.value)
-              }}
-            >
-              <option value="">Select…</option>
-              {mapList.map((m) => (
-                <option key={m.id} value={m.id}>{m.displayName} ({m.id})</option>
-              ))}
-            </select>
-          </label>
+          <CollapsibleSection title="Load map" defaultOpen>
+            <label>
+              Existing map
+              <select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) void loadMap(e.target.value)
+                }}
+              >
+                <option value="">Select…</option>
+                {mapList.map((m) => (
+                  <option key={m.id} value={m.id}>{m.displayName} ({m.id})</option>
+                ))}
+              </select>
+            </label>
+          </CollapsibleSection>
 
-          <fieldset className="map-admin-fieldset">
-            <legend>Map metadata</legend>
+          <CollapsibleSection title="Map metadata" defaultOpen>
             <label>
               id
               <input value={meta.id} onChange={(e) => setMeta({ ...meta, id: e.target.value })} />
@@ -445,10 +409,9 @@ export function MapAdminPage() {
                 <option value="dungeon">dungeon</option>
               </select>
             </label>
-          </fieldset>
+          </CollapsibleSection>
 
-          <fieldset className="map-admin-fieldset">
-            <legend>Warp wiring</legend>
+          <CollapsibleSection title="Warp wiring">
             <label className="map-admin-check">
               <input type="checkbox" checked={addToPronteraWarp} onChange={(e) => setAddToPronteraWarp(e.target.checked)} />
               Add to Prontera Warp Agent
@@ -481,70 +444,16 @@ export function MapAdminPage() {
                 </label>
               </div>
             )}
-          </fieldset>
+          </CollapsibleSection>
 
-          <fieldset className="map-admin-fieldset">
-            <legend>Tool options</legend>
-            {tool === 'ground' && (
-              <label>
-                Ground tile
-                <select value={groundGid} onChange={(e) => setGroundGid(Number(e.target.value))}>
-                  <option value={GID_WALL}>Wall (1)</option>
-                  <option value={GID_GRASS_A}>Grass A (2)</option>
-                  <option value={GID_GRASS_B}>Grass B (3)</option>
-                  <option value={GID_PATH}>Path (4)</option>
-                </select>
-              </label>
-            )}
-            {tool === 'collision' && (
-              <label className="map-admin-check">
-                <input
-                  type="checkbox"
-                  checked={collisionBlocked}
-                  onChange={(e) => setCollisionBlocked(e.target.checked)}
-                />
-                Paint blocked
-              </label>
-            )}
-          </fieldset>
-
-          <fieldset className="map-admin-fieldset">
-            <legend>Layers</legend>
+          <CollapsibleSection title="Layers" defaultOpen>
             <label className="map-admin-check"><input type="checkbox" checked={showGround} onChange={(e) => setShowGround(e.target.checked)} /> Ground</label>
             <label className="map-admin-check"><input type="checkbox" checked={showCollision} onChange={(e) => setShowCollision(e.target.checked)} /> Collision</label>
             <label className="map-admin-check"><input type="checkbox" checked={showDecor} onChange={(e) => setShowDecor(e.target.checked)} /> Decor</label>
             <label className="map-admin-check"><input type="checkbox" checked={showObstacles} onChange={(e) => setShowObstacles(e.target.checked)} /> Obstacles</label>
             <label className="map-admin-check"><input type="checkbox" checked={showPortals} onChange={(e) => setShowPortals(e.target.checked)} /> Portals</label>
             <label className="map-admin-check"><input type="checkbox" checked={showNpcs} onChange={(e) => setShowNpcs(e.target.checked)} /> NPCs</label>
-          </fieldset>
-
-          {selectedPortalObject && (
-            <fieldset className="map-admin-fieldset">
-              <legend>Portal</legend>
-              <PortalFields object={selectedPortalObject} mapIds={allMapIds} onChange={updateSelectedPortal} />
-              <button type="button" className="danger" onClick={deleteSelectedObject}>Delete object</button>
-            </fieldset>
-          )}
-
-          {selectedDecorObject && (
-            <fieldset className="map-admin-fieldset">
-              <legend>Decor</legend>
-              <p className="muted small">{readDecorAssetId(selectedDecorObject) ?? 'unknown'}</p>
-              <button type="button" className="danger" onClick={deleteSelectedObject}>Delete decor</button>
-            </fieldset>
-          )}
-
-          {selectedNpcObject && (
-            <fieldset className="map-admin-fieldset">
-              <legend>NPC</legend>
-              <NpcFields object={selectedNpcObject} onChange={updateSelectedNpc} />
-              <button type="button" className="danger" onClick={deleteSelectedObject}>Delete NPC</button>
-            </fieldset>
-          )}
-
-          {selectedObjectId != null && !selectedPortalObject && !selectedDecorObject && !selectedNpcObject && (
-            <button type="button" className="danger" onClick={deleteSelectedObject}>Delete obstacle</button>
-          )}
+          </CollapsibleSection>
 
           <p className="muted small">Walk portals: {portalsForSave.filter((p) => p.mode === 'walk' || p.mode === 'both').length}</p>
           <p className="muted small">NPC markers: {npcMarkersForSave.length}</p>
@@ -578,9 +487,9 @@ export function MapAdminPage() {
           <p className="muted small map-admin-pan-hint">Space + drag or middle-mouse drag to pan the map view.</p>
         </section>
 
-        <aside className={`map-admin-json panel${rightPanelCollapsed ? ' map-admin-json--collapsed' : ''}`}>
-          <div className="map-admin-json-header">
-            {!rightPanelCollapsed && <span className="map-admin-json-title">Output</span>}
+        <aside className={`map-admin-props panel${rightPanelCollapsed ? ' map-admin-props--collapsed' : ''}`}>
+          <div className="map-admin-props-header">
+            {!rightPanelCollapsed && <span className="map-admin-props-title">Properties</span>}
             <button
               type="button"
               className="secondary map-admin-panel-toggle"
@@ -591,42 +500,95 @@ export function MapAdminPage() {
             </button>
           </div>
           {!rightPanelCollapsed && (
-            <>
-              <details className="map-admin-collapse" open={jsonDirty}>
-                <summary>TMJ JSON</summary>
-                <textarea
-                  className="map-admin-json-editor"
-                  value={jsonText}
-                  onChange={(e) => {
-                    setJsonText(e.target.value)
-                    setJsonDirty(true)
-                  }}
-                />
-                <button type="button" onClick={applyJson}>Apply JSON</button>
-              </details>
-
-              {fullSql && (
-                <details className="map-admin-collapse" open={sqlSectionOpen} onToggle={(e) => setSqlSectionOpen(e.currentTarget.open)}>
-                  <summary>SQL bundle</summary>
-                  {migrationFileName && (
+            <div className="map-admin-props-body">
+              {selectedPortalObject ? (
+                <section className="map-admin-props-section">
+                  <h3 className="map-admin-props-heading">Portal</h3>
+                  <PortalFields object={selectedPortalObject} mapIds={allMapIds} onChange={updateSelectedPortal} />
+                  <button type="button" className="danger" onClick={deleteSelectedObject}>Delete portal</button>
+                </section>
+              ) : selectedDecorObject ? (
+                <section className="map-admin-props-section">
+                  <h3 className="map-admin-props-heading">Decor</h3>
+                  <p className="muted small">{readDecorAssetId(selectedDecorObject) ?? 'unknown'}</p>
+                  <button type="button" className="danger" onClick={deleteSelectedObject}>Delete decor</button>
+                </section>
+              ) : selectedNpcObject ? (
+                <section className="map-admin-props-section">
+                  <h3 className="map-admin-props-heading">NPC</h3>
+                  <NpcFields object={selectedNpcObject} onChange={updateSelectedNpc} />
+                  <button type="button" className="danger" onClick={deleteSelectedObject}>Delete NPC</button>
+                </section>
+              ) : selectedObjectId != null ? (
+                <section className="map-admin-props-section">
+                  <h3 className="map-admin-props-heading">Obstacle</h3>
+                  <button type="button" className="danger" onClick={deleteSelectedObject}>Delete obstacle</button>
+                </section>
+              ) : (
+                <section className="map-admin-props-section">
+                  <h3 className="map-admin-props-heading">{TOOL_LABELS[tool]}</h3>
+                  {tool === 'ground' && (
+                    <label>
+                      Ground tile
+                      <select value={groundGid} onChange={(e) => setGroundGid(Number(e.target.value))}>
+                        <option value={GID_WALL}>Wall (1)</option>
+                        <option value={GID_GRASS_A}>Grass A (2)</option>
+                        <option value={GID_GRASS_B}>Grass B (3)</option>
+                        <option value={GID_PATH}>Path (4)</option>
+                      </select>
+                    </label>
+                  )}
+                  {tool === 'collision' && (
+                    <label className="map-admin-check">
+                      <input
+                        type="checkbox"
+                        checked={collisionBlocked}
+                        onChange={(e) => setCollisionBlocked(e.target.checked)}
+                      />
+                      Paint blocked
+                    </label>
+                  )}
+                  {tool === 'tiles' && (
                     <p className="muted small">
-                      {migrationWritten ? 'Written: ' : ''}
-                      supabase/migrations/{migrationFileName}
-                      <br />
-                      supabase/seed/custom_maps/{meta.id.trim()}.sql
+                      Drag on the map to select tiles. Drag inside the selection to move them. Press Escape to clear.
                     </p>
                   )}
-                  <textarea className="map-admin-json-editor map-admin-sql" readOnly value={fullSql} />
-                  <button type="button" onClick={() => void navigator.clipboard.writeText(fullSql)}>
-                    Copy all SQL
-                  </button>
-                </details>
+                  {tool === 'obstacle' && (
+                    <p className="muted small">Drag to draw a rectangular obstacle. Use Select to move or resize.</p>
+                  )}
+                  {tool === 'portal' && (
+                    <p className="muted small">Drag to draw a portal zone, then edit targets here after placing.</p>
+                  )}
+                  {tool === 'npc' && (
+                    <p className="muted small">Click the map to place an NPC marker, then edit fields here.</p>
+                  )}
+                  {tool === 'select' && (
+                    <p className="muted small">Click objects to select. Space + drag or middle-mouse to pan the view.</p>
+                  )}
+                </section>
               )}
-            </>
+            </div>
           )}
         </aside>
       </div>
     </main>
+  )
+}
+
+function CollapsibleSection({
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  title: string
+  defaultOpen?: boolean
+  children: ReactNode
+}) {
+  return (
+    <details className="map-admin-fieldset-collapse" open={defaultOpen}>
+      <summary>{title}</summary>
+      <div className="map-admin-fieldset-body stack compact">{children}</div>
+    </details>
   )
 }
 
@@ -672,6 +634,7 @@ function NpcFields({
           <option value="job_master">job_master</option>
           <option value="shop">shop</option>
           <option value="healer">healer</option>
+          <option value="dungeon">dungeon (Dungeon Guide)</option>
         </select>
       </label>
       <label>
@@ -689,13 +652,25 @@ function NpcFields({
         </select>
       </label>
       <label>
-        sprite key (optional)
-        <input
+        sprite design
+        <select
           value={props.spriteKey}
-          placeholder="auto from type"
           onChange={(e) => onChange({ spriteKey: e.target.value })}
-        />
+        >
+          <option value="">Auto (from NPC type)</option>
+          {listNpcSpriteKeys().map((key) => (
+            <option key={key} value={key}>{NPC_SPRITE_LABELS[key]}</option>
+          ))}
+        </select>
       </label>
+      <p className="muted small">
+        {props.spriteKey
+          ? `Override: ${NPC_SPRITE_LABELS[props.spriteKey as keyof typeof NPC_SPRITE_LABELS] ?? props.spriteKey}`
+          : (() => {
+              const auto = npcArchetypeFromNpcType(props.npcType)
+              return auto ? `Auto uses ${NPC_SPRITE_LABELS[auto]}.` : 'Auto: no default sprite for this type.'
+            })()}
+      </p>
       <label>
         config JSON
         <textarea
@@ -710,6 +685,13 @@ function NpcFields({
         <p className="muted small">
           Teleport: use destinations array, e.g.{' '}
           {`{"destinations":[{"map_id":"prontera","label":"Prontera","x":640,"y":360}]}`}
+        </p>
+      )}
+      {props.npcType === 'dungeon' && (
+        <p className="muted small">
+          Dungeon: optional floors filter, e.g.{' '}
+          {`{"floors":["dun_f1","dun_f2","dun_f3","dun_f4","dun_f5"]}`}
+          . Omit floors to list all from content.
         </p>
       )}
       {configError && <p className="muted small" style={{ color: '#f87171' }}>{configError}</p>}

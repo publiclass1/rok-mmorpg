@@ -2064,11 +2064,52 @@ body:has(.map-admin-root) #root {
 }
 
 .map-admin-sidebar,
-.map-admin-json {
+.map-admin-props {
   max-width: none;
   width: 100%;
   min-height: 0;
   overflow-y: auto;
+}
+
+.map-admin-fieldset-collapse {
+  border: 1px solid #374151;
+  border-radius: 8px;
+  margin: 0.75rem 0 0;
+}
+
+.map-admin-fieldset-collapse summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 0.55rem 0.65rem;
+  user-select: none;
+  list-style: none;
+}
+
+.map-admin-fieldset-collapse summary::-webkit-details-marker {
+  display: none;
+}
+
+.map-admin-fieldset-collapse summary::before {
+  content: '▸ ';
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.map-admin-fieldset-collapse[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.map-admin-fieldset-collapse .map-admin-fieldset-body {
+  padding: 0 0.65rem 0.65rem;
+}
+
+.map-admin-fieldset-collapse .map-admin-fieldset-body > label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
 }
 
 .map-admin-fieldset {
@@ -2264,21 +2305,44 @@ body:has(.map-admin-root) #root {
   margin-right: 0.5rem;
 }
 
-.map-admin-json-header {
+.map-admin-props-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.5rem;
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 1;
 }
 
-.map-admin-json-title {
+.map-admin-props-title {
   font-weight: 600;
 }
 
-.map-admin-json--collapsed {
+.map-admin-props--collapsed {
   width: 48px !important;
   min-width: 48px;
   padding: 0.5rem 0.35rem;
+}
+
+.map-admin-props-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.map-admin-props-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.map-admin-props-heading {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e5e7eb;
 }
 
 .map-admin-panel-toggle {

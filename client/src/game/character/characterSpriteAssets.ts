@@ -187,6 +187,12 @@ function drawArchetypeOverlay(
       g.fillRect(cx - 1, feetY - 26, 2, 6)
       g.fillRect(cx - 3, feetY - 24, 6, 2)
       break
+    case 'dungeon_guide':
+      g.fillStyle(0xe2e8f0, 1)
+      g.fillRect(cx - 5, feetY - 25, 10, 7)
+      g.fillStyle(0xa78bfa, 1)
+      g.fillRect(cx - 3, feetY - 23, 6, 2)
+      break
   }
 }
 
