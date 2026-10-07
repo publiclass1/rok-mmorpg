@@ -24,10 +24,10 @@ export const PVP_ROOM_EXIT_TELEPORT = {
 
 export const PVP_KILL_STREAK_WINDOW_MS = 15_000
 
-/** Sit (and passive) HP/SP regen tick interval in PVP maps (ms). */
+/** Standing passive HP/SP regen tick interval in PVP maps (ms); sit uses sitRegen.ts. */
 export const PVP_HP_SP_REGEN_INTERVAL_MS = 10_000
 
-/** Fraction of max HP/SP restored each PVP regen tick (0.1 = 10%). */
+/** Fraction of max HP/SP restored each PVP passive regen tick (0.1 = 10%). */
 export const PVP_HP_SP_REGEN_PERCENT = 0.1
 
 export type PvpKillStreakKind = 'first_blood' | 'double' | 'triple' | 'ultra' | 'rampage'

@@ -164,7 +164,12 @@ import {
 } from '../player/playerSprites'
 import { capturePlayerHudPortrait } from '../player/playerHudPortrait'
 import { resolveJobAvatarKey } from '../player/playerJobAvatar'
-import { sitRegenAmounts, sitRegenIntervalMs } from '../character/sitRegen'
+import {
+  pvpPassiveRegenAmounts,
+  pvpPassiveRegenIntervalMs,
+  sitRegenAmounts,
+  sitRegenIntervalMs,
+} from '../character/sitRegen'
 import {
   flushActiveMapPresenceLeave,
   registerActiveMapPresence,
@@ -2739,14 +2744,11 @@ export class WorldScene extends Phaser.Scene {
   private applyHpSpRegen(
     sheet: ReturnType<typeof toCharacterSheetPayload>,
     logPrefix: string,
+    amounts: { hp: number; mp: number },
   ): boolean {
     if (this.session.hp >= sheet.hpMax && this.session.mp >= sheet.mpMax) return false
 
-    const { hp, mp } = sitRegenAmounts(sheet.effectiveVit, sheet.effectiveInt, {
-      mapId: this.character.map_id,
-      hpMax: sheet.hpMax,
-      mpMax: sheet.mpMax,
-    })
+    const { hp, mp } = amounts
     const nextHp = Math.min(sheet.hpMax, this.session.hp + hp)
     const nextMp = Math.min(sheet.mpMax, this.session.mp + mp)
     if (nextHp === this.session.hp && nextMp === this.session.mp) return false
@@ -2758,20 +2760,24 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private tickSitRegen(now: number, sheet: ReturnType<typeof toCharacterSheetPayload>) {
-    const interval = sitRegenIntervalMs(this.character.map_id)
+    const interval = sitRegenIntervalMs()
     if (now - this.lastSitRegenAt < interval) return
     this.lastSitRegenAt = now
-    this.applyHpSpRegen(sheet, 'Resting…')
+    this.applyHpSpRegen(sheet, 'Resting…', sitRegenAmounts(sheet.hpMax, sheet.mpMax))
   }
 
-  /** In PVP, slow passive HP/SP recovery while alive (same 10s cadence as sit regen). */
+  /** In PVP, slow passive HP/SP recovery while standing idle (not sitting). */
   private tickPvpPassiveRegen(now: number, sheet: ReturnType<typeof toCharacterSheetPayload>) {
     if (!isPvpMap(this.character.map_id)) return
     if (this.chasePvpOpponent || this.chaseMob?.alive || this.chaseDuelOpponent) return
-    const interval = sitRegenIntervalMs(this.character.map_id)
+    const interval = pvpPassiveRegenIntervalMs()
     if (now - this.lastPvpPassiveRegenAt < interval) return
     this.lastPvpPassiveRegenAt = now
-    this.applyHpSpRegen(sheet, 'Recovering…')
+    this.applyHpSpRegen(
+      sheet,
+      'Recovering…',
+      pvpPassiveRegenAmounts(sheet.hpMax, sheet.mpMax),
+    )
   }
 
   private spendMp(cost: number): boolean {

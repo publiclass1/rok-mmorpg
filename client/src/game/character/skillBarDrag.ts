@@ -3,6 +3,7 @@ export const SKILL_BAR_DRAG_MIME = 'application/x-browser-ro-skill-bar'
 export type SkillBarDragPayload =
   | { source: 'list'; skillId: string }
   | { source: 'bar'; skillId: string; slot: number }
+  | { source: 'autoRotation'; skillId: string; slot: number }
   | { source: 'inventory'; itemId: string }
 
 function parseSkillBarDragJson(raw: string): SkillBarDragPayload | null {
@@ -11,7 +12,7 @@ function parseSkillBarDragJson(raw: string): SkillBarDragPayload | null {
     if (parsed.source === 'list' && typeof parsed.skillId === 'string') return parsed
     if (parsed.source === 'inventory' && typeof parsed.itemId === 'string') return parsed
     if (
-      parsed.source === 'bar' &&
+      (parsed.source === 'bar' || parsed.source === 'autoRotation') &&
       typeof parsed.skillId === 'string' &&
       typeof parsed.slot === 'number'
     ) {

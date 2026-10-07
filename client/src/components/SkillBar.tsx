@@ -46,6 +46,7 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
     setDropTarget(null)
     const payload = readSkillBarDrag(e.dataTransfer)
     if (!payload) return
+    if (payload.source === 'autoRotation') return
 
     if (payload.source === 'list') {
       if (!canPlaceOnSkillBar(payload.skillId, sheet.jobId, sheet.skills)) return

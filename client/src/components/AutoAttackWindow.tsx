@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { SkillIcon } from './SkillIcon'
 import {
   AUTO_ATTACK_PATROL_RADIUS_MAX,
@@ -8,7 +8,11 @@ import {
   type AutoAttackMovementMode,
 } from '../game/combat/autoAttackConfig'
 import { mobFilterDefIds, mobsOnMap } from '../game/combat/autoAttackTargeting'
-import { isSkillBarDragEvent, readSkillBarDrag } from '../game/character/skillBarDrag'
+import {
+  isSkillBarDragEvent,
+  readSkillBarDrag,
+  writeSkillBarDrag,
+} from '../game/character/skillBarDrag'
 import {
   JOB_NAMES,
   autoAttackAssignableSkills,
@@ -42,6 +46,9 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
   const [activeTab, setActiveTab] = useState<AutoAttackTab>('rotation')
   const [dropTarget, setDropTarget] = useState<number | null>(null)
   const [selectedSlotIndex, setSelectedSlotIndex] = useState(0)
+  const dragSourceSlotRef = useRef<number | null>(null)
+  const dropHandledRef = useRef(false)
+  const suppressClickRef = useRef(false)
   const mapMobs = useMemo(() => mobsOnMap(mapId), [mapId])
   const assignableSkills = useMemo(() => autoAttackAssignableSkills(sheet), [sheet])
 
@@ -84,11 +91,41 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
     else if (index < AUTO_ATTACK_ROTATION_SLOTS - 1) setSelectedSlotIndex(index + 1)
   }
 
+  function clearRotationDragSourceIfNeeded() {
+    const from = dragSourceSlotRef.current
+    dragSourceSlotRef.current = null
+    if (from == null || dropHandledRef.current) return
+    setRotationSlot(from, null)
+  }
+
+  function handleRotationGutterDrop(e: React.DragEvent) {
+    e.preventDefault()
+    dropHandledRef.current = true
+    setDropTarget(null)
+    const payload = readSkillBarDrag(e.dataTransfer)
+    if (!payload || payload.source !== 'autoRotation') return
+    setRotationSlot(payload.slot, null)
+  }
+
   function handleRotationDrop(index: number, e: React.DragEvent) {
     e.preventDefault()
+    e.stopPropagation()
+    dropHandledRef.current = true
     setDropTarget(null)
     const payload = readSkillBarDrag(e.dataTransfer)
     if (!payload) return
+
+    if (payload.source === 'autoRotation') {
+      if (payload.slot === index) return
+      const rotation = [...config.rotation]
+      while (rotation.length < AUTO_ATTACK_ROTATION_SLOTS) rotation.push(null)
+      rotation[index] = payload.skillId
+      rotation[payload.slot] = null
+      patch({ rotation })
+      setSelectedSlotIndex(index)
+      return
+    }
+
     const skillId =
       payload.source === 'list' || payload.source === 'bar' ? payload.skillId : null
     if (!skillId) return
@@ -157,14 +194,17 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
         <section className="auto-attack-card auto-attack-tab-panel" role="tabpanel">
           <h3 className="auto-attack-section__title">Skill rotation</h3>
           <p className="muted small auto-attack-hint">
-            Click a slot, then pick a skill below. You can also drag from the Skills window (Alt+K).
+            Click a slot, then pick a skill below. Drag from Skills (Alt+K) or drag a slot skill
+            outside the row to remove.
           </p>
           <div
             className="skill-bar auto-attack-rotation"
             onDragOver={(e) => {
               if (!isSkillBarDragEvent(e.dataTransfer)) return
               e.preventDefault()
+              e.dataTransfer.dropEffect = 'move'
             }}
+            onDrop={handleRotationGutterDrop}
           >
             {Array.from({ length: AUTO_ATTACK_ROTATION_SLOTS }, (_, index) => {
               const skillId = config.rotation[index] ?? null
@@ -172,23 +212,54 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
               const level = skillId ? sheet.skills[skillId] ?? 0 : 0
               const isDropTarget = dropTarget === index
               const selected = selectedSlotIndex === index
+              const canDrag = Boolean(skillId && allowed)
               return (
                 <div
                   key={index}
-                  className={`skill-slot${!allowed ? ' skill-slot--inactive' : ''}${isDropTarget ? ' skill-slot--drop-target' : ''}${selected ? ' skill-slot--selected' : ''}`}
+                  className={`skill-slot${!allowed ? ' skill-slot--inactive' : ''}${isDropTarget ? ' skill-slot--drop-target' : ''}${selected ? ' skill-slot--selected' : ''}${canDrag ? ' skill-slot--draggable' : ''}`}
                   title={
                     skillId
-                      ? skillTooltipTitle(skillId, level)
+                      ? `${skillTooltipTitle(skillId, level)} · drag to move or remove`
                       : `Rotation slot ${index + 1}`
                   }
+                  draggable={canDrag}
+                  onDragStart={(e) => {
+                    if (!canDrag || !skillId) {
+                      e.preventDefault()
+                      return
+                    }
+                    e.stopPropagation()
+                    suppressClickRef.current = false
+                    dropHandledRef.current = false
+                    dragSourceSlotRef.current = index
+                    writeSkillBarDrag(e.dataTransfer, {
+                      source: 'autoRotation',
+                      skillId,
+                      slot: index,
+                    })
+                  }}
+                  onDrag={(e) => {
+                    if (e.clientX !== 0 || e.clientY !== 0) suppressClickRef.current = true
+                  }}
+                  onDragEnd={() => {
+                    setDropTarget(null)
+                    clearRotationDragSourceIfNeeded()
+                  }}
                   onDragOver={(e) => {
                     if (!isSkillBarDragEvent(e.dataTransfer)) return
                     e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
                     setDropTarget(index)
                   }}
                   onDragLeave={() => setDropTarget((c) => (c === index ? null : c))}
                   onDrop={(e) => handleRotationDrop(index, e)}
-                  onClick={() => setSelectedSlotIndex(index)}
+                  onClick={() => {
+                    if (suppressClickRef.current) {
+                      suppressClickRef.current = false
+                      return
+                    }
+                    setSelectedSlotIndex(index)
+                  }}
                   onDoubleClick={() => skillId && setRotationSlot(index, null)}
                   onKeyDown={(e) => {
                     if (e.key === 'Backspace' || e.key === 'Delete') setRotationSlot(index, null)
