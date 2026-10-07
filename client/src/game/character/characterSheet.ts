@@ -104,3 +104,15 @@ export function sessionFromSheetPayload(
     jobId: sheet.jobId,
   })
 }
+
+/**
+ * Merge combat/stat sheet updates from Phaser without reverting skill bar layout.
+ * Bar changes go through dispatchCharacterAction (which updates session before emitting sheet).
+ */
+export function mergeSheetIntoSession(
+  sheet: CharacterSheetPayload,
+  prev: CharacterSessionState,
+): CharacterSessionState {
+  const merged = sessionFromSheetPayload(sheet, prev)
+  return { ...merged, skillBar: [...prev.skillBar] }
+}

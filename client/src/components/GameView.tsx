@@ -27,7 +27,8 @@ import {
   getCharacterSession,
   registerCharacterSessionBridge,
 } from '../game/character/characterSessionBridge'
-import { sessionFromSheetPayload, toCharacterSheetPayload } from '../game/character/characterSheet'
+import { mergeSheetIntoSession, toCharacterSheetPayload } from '../game/character/characterSheet'
+import { setCharacterSession } from '../game/character/characterSessionBridge'
 import { createInitialCharacterState } from '../game/character/characterState'
 import { isChatStripInputFocused } from '../game/chatInputFocus'
 import { createPhaserGame } from '../game/createGame'
@@ -267,8 +268,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     let cancelled = false
     void loadCharacterSession(character.id).then((loaded) => {
       if (cancelled) return
-      sessionRef.current = loaded
-      setSheet(toCharacterSheetPayload(loaded))
+      setCharacterSession(loaded)
+      setSheet(toCharacterSheetPayload(getCharacterSession()))
       setSessionReady(true)
     })
     return () => {
@@ -697,6 +698,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       persistSession: (state) => {
         void saveCharacterSession(character.id, state).catch((err) => {
           console.warn('Progress save failed', err)
+          emitGameEvent('status', 'Could not save progress — skill bar and stats may not persist.')
         })
       },
     })
@@ -745,15 +747,15 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       onGameEvent('characterSheet', (payload) => {
         const ref = sessionRef.current
         if (payload.jobId !== ref.jobId) {
-          const merged = sessionFromSheetPayload(payload, ref)
+          const merged = mergeSheetIntoSession(payload, ref)
           merged.jobId = ref.jobId
-          sessionRef.current = merged
-          setSheet({ ...payload, jobId: ref.jobId })
-          emitGameEvent('sessionSync', structuredClone(sessionRef.current))
+          setCharacterSession(merged)
+          setSheet(toCharacterSheetPayload(getCharacterSession()))
+          emitGameEvent('sessionSync', structuredClone(getCharacterSession()))
           return
         }
-        sessionRef.current = sessionFromSheetPayload(payload, ref)
-        setSheet(payload)
+        setCharacterSession(mergeSheetIntoSession(payload, ref))
+        setSheet(toCharacterSheetPayload(getCharacterSession()))
         if (isPvpMap(characterRef.current.map_id) && payload.hp > 0) {
           setPvpDeathModalOpen(false)
         }
