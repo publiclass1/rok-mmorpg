@@ -2,9 +2,11 @@ import Phaser from 'phaser'
 import { playPlayerAttackSlash } from '../combat/combatFx'
 import type { AttackStyle } from '../character/characterSpriteRegistry'
 import type { Facing } from '../movement/clickToMove'
+import { stopIdleRigTween } from './playerIdleMotion'
 import {
   playPlayerAnim,
   setPlayerAttackPhase,
+  setPlayerDeadFrame,
   setPlayerToIdle,
   type PlayerDisplay,
 } from './playerSprites'
@@ -102,19 +104,39 @@ export function playPlayerFlinch(
   })
 }
 
+export function clearPlayerDeathVisual(display: PlayerDisplay) {
+  stopIdleRigTween(display, true)
+  display.bodyRig.setAngle(0)
+  display.riderLayer.setAngle(0)
+  display.bodyRig.setPosition(0, 0)
+}
+
 export function playPlayerDeath(scene: Phaser.Scene, display: PlayerDisplay, facing: Facing) {
   const container = display.container
   const startY = container.y
 
+  stopIdleRigTween(display, true)
+  display.bodyRig.setAngle(0)
+  display.bodyRig.setPosition(0, 0)
+
   playPlayerAnim(display, 'flinch', facing)
+
+  scene.time.delayedCall(90, () => {
+    if (display.pose.anim !== 'flinch' && display.pose.anim !== 'dead') return
+    display.pose = { ...display.pose, anim: 'dead', deadFrame: 0 }
+    setPlayerDeadFrame(display, 0)
+  })
 
   scene.tweens.add({
     targets: container,
-    y: startY + 6,
-    duration: 180,
+    y: startY + 10,
+    duration: 220,
     ease: 'Quad.easeIn',
-    onComplete: () => {
-      playPlayerAnim(display, 'dead', facing)
-    },
+  })
+
+  scene.time.delayedCall(220, () => {
+    if (display.pose.anim !== 'dead' && display.pose.anim !== 'flinch') return
+    playPlayerAnim(display, 'dead', facing)
+    setPlayerDeadFrame(display, 1)
   })
 }

@@ -30,6 +30,8 @@ type FrameMotion =
   | { kind: 'walk'; walkStep: number }
   | { kind: 'sit' }
   | { kind: 'attack'; style: AttackStyle; phase: 0 | 1 | 2 }
+  | { kind: 'flinch' }
+  | { kind: 'dead'; frame: 0 | 1 }
 
 type ChibiPalette = {
   skin: number
@@ -390,6 +392,100 @@ function drawArchetypeOverlay(
   }
 }
 
+function drawChibiFlinch(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  feetY: number,
+  facing: 'down' | 'left' | 'right' | 'up',
+  pal: ChibiPalette,
+  bodyW: number,
+  female: boolean,
+) {
+  const torsoTop = feetY - 26
+  g.fillStyle(pal.shoes, 1)
+  g.fillRect(cx - 9, feetY - 4, 7, 4)
+  g.fillRect(cx + 2, feetY - 4, 7, 4)
+  g.fillStyle(pal.pants, 1)
+  g.fillRect(cx - 8, feetY - 14, 6, 12)
+  g.fillRect(cx + 2, feetY - 14, 6, 12)
+  g.fillStyle(pal.shirt, 1)
+  g.fillRoundedRect(cx - bodyW / 2 + 2, torsoTop, bodyW - 2, 14, 3)
+  g.fillStyle(pal.skin, 1)
+  if (facing === 'down') {
+    g.fillRect(cx - bodyW / 2 - 6, torsoTop + 2, 5, 10)
+    g.fillRect(cx + bodyW / 2 + 2, torsoTop + 6, 5, 10)
+  } else if (facing === 'left') {
+    g.fillRect(cx - bodyW / 2 - 4, torsoTop + 4, 5, 9)
+    g.fillRect(cx + bodyW / 2 - 2, torsoTop, 5, 9)
+  } else if (facing === 'right') {
+    g.fillRect(cx - bodyW / 2 + 1, torsoTop, 5, 9)
+    g.fillRect(cx + bodyW / 2 - 1, torsoTop + 4, 5, 9)
+  } else {
+    g.fillRect(cx - bodyW / 2, torsoTop + 2, 4, 8)
+    g.fillRect(cx + bodyW / 2 - 4, torsoTop + 2, 4, 8)
+  }
+  g.fillCircle(cx + (facing === 'left' ? -2 : facing === 'right' ? 2 : 0), torsoTop - 6, female ? 7 : 8)
+  g.fillStyle(pal.hair, 1)
+  g.fillEllipse(cx, torsoTop - 10, female ? 16 : 14, 8)
+  g.fillStyle(0xffffff, 1)
+  g.fillRect(cx - 5, torsoTop - 7, 10, 3)
+}
+
+function drawChibiDead(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  feetY: number,
+  facing: 'down' | 'left' | 'right' | 'up',
+  pal: ChibiPalette,
+  bodyW: number,
+  female: boolean,
+  frame: 0 | 1,
+) {
+  const groundY = feetY - 2
+  const collapse = frame === 0
+
+  if (facing === 'down' || facing === 'up') {
+    const headX = cx + (collapse ? 0 : 10)
+    const headY = groundY - (collapse ? 22 : 10)
+    const torsoX = cx - (collapse ? 0 : 6)
+    const torsoY = groundY - (collapse ? 14 : 8)
+
+    g.fillStyle(pal.shoes, 1)
+    g.fillRect(cx - 14, groundY - 5, 8, 4)
+    g.fillRect(cx + 6, groundY - 5, 8, 4)
+    g.fillStyle(pal.pants, 1)
+    g.fillRect(cx - 12, groundY - (collapse ? 12 : 8), 10, collapse ? 8 : 5)
+    g.fillRect(cx + 2, groundY - (collapse ? 10 : 6), 10, collapse ? 6 : 4)
+    g.fillStyle(pal.shirt, 1)
+    g.fillRoundedRect(torsoX - bodyW / 2, torsoY - 6, bodyW, collapse ? 12 : 8, 3)
+    g.fillStyle(pal.skin, 1)
+    g.fillCircle(headX, headY, female ? 7 : 8)
+    g.fillStyle(pal.hair, 1)
+    g.fillEllipse(headX, headY - 4, female ? 16 : 14, 8)
+    if (!collapse) {
+      g.fillStyle(pal.eyes, 1)
+      g.fillRect(headX - 1, headY - 1, 2, 1)
+      g.fillRect(headX + 2, headY - 1, 2, 1)
+    }
+    return
+  }
+
+  const side = facing === 'left' ? -1 : 1
+  const headX = cx + side * (collapse ? 4 : 14)
+  const headY = groundY - (collapse ? 20 : 12)
+  g.fillStyle(pal.shoes, 1)
+  g.fillRect(cx - 6, groundY - 4, 5, 4)
+  g.fillRect(cx + 1, groundY - 4, 5, 4)
+  g.fillStyle(pal.pants, 1)
+  g.fillRect(cx - 8, groundY - (collapse ? 10 : 6), 16, collapse ? 7 : 4)
+  g.fillStyle(pal.shirt, 1)
+  g.fillRoundedRect(cx - bodyW / 2, groundY - (collapse ? 18 : 12), bodyW, collapse ? 10 : 7, 3)
+  g.fillStyle(pal.skin, 1)
+  g.fillCircle(headX, headY, female ? 7 : 8)
+  g.fillStyle(pal.hair, 1)
+  g.fillEllipse(headX + side * 2, headY - 3, female ? 14 : 12, 7)
+}
+
 function drawChibiMountedSit(
   g: Phaser.GameObjects.Graphics,
   cx: number,
@@ -492,6 +588,16 @@ function drawChibiFrame(
 
   if (motion.kind === 'sit') {
     drawChibiMountedSit(g, cx, feetY, facing, pal, bodyW, female, mode)
+    return
+  }
+
+  if (motion.kind === 'flinch' && isPlayer) {
+    drawChibiFlinch(g, cx, feetY, facing, pal, bodyW, female)
+    return
+  }
+
+  if (motion.kind === 'dead' && isPlayer) {
+    drawChibiDead(g, cx, feetY, facing, pal, bodyW, female, motion.frame)
     return
   }
 
@@ -606,6 +712,13 @@ function motionForColumn(def: CharacterSpriteDef, col: number): FrameMotion {
       const phase = (col - strip.offset) as 0 | 1 | 2
       return { kind: 'attack', style, phase }
     }
+  }
+  if (col >= def.strips.flinch.offset && col < def.strips.flinch.offset + def.strips.flinch.count) {
+    return { kind: 'flinch' }
+  }
+  if (col >= def.strips.dead.offset && col < def.strips.dead.offset + def.strips.dead.count) {
+    const frame = (col - def.strips.dead.offset) as 0 | 1
+    return { kind: 'dead', frame }
   }
   return { kind: 'idle', walkStep: 0, idleStep: 0, idleBlink: false }
 }

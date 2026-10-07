@@ -3,7 +3,8 @@ import type { PvpKillStreakKind } from '../game/world/pvpConfig'
 import { PVP_KILL_STREAK_LABELS } from '../game/world/pvpConfig'
 
 type Announce = {
-  streak: PvpKillStreakKind
+  announceId: number
+  streak: PvpKillStreakKind | null
   killerName: string
   victimName: string
 }
@@ -21,16 +22,22 @@ export function PvpKillAnnounceOverlay({ announce }: Props) {
       return
     }
     setVisible(true)
-    const id = window.setTimeout(() => setVisible(false), 3200)
+    const id = window.setTimeout(() => setVisible(false), 4000)
     return () => window.clearTimeout(id)
-  }, [announce?.streak, announce?.killerName, announce?.victimName])
+  }, [announce?.announceId])
 
   if (!announce || !visible) return null
 
+  const streakLabel = announce.streak ? PVP_KILL_STREAK_LABELS[announce.streak] : null
+
   return (
-    <div className="pvp-kill-announce-overlay" aria-live="polite">
+    <div className="pvp-kill-announce-overlay" aria-live="assertive">
       <div className="pvp-kill-announce-overlay__inner">
-        <p className="pvp-kill-announce-overlay__streak">{PVP_KILL_STREAK_LABELS[announce.streak]}</p>
+        {streakLabel ? (
+          <p className="pvp-kill-announce-overlay__streak">{streakLabel}</p>
+        ) : (
+          <p className="pvp-kill-announce-overlay__streak pvp-kill-announce-overlay__streak--plain">Kill!</p>
+        )}
         <p className="pvp-kill-announce-overlay__detail">
           <strong>{announce.killerName}</strong> defeated <strong>{announce.victimName}</strong>
         </p>

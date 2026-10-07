@@ -225,7 +225,8 @@ export type GameEvents = {
   playerDeath: Record<string, never>
   pvpDeath: { mapId: string }
   pvpAnnounce: {
-    streak: PvpKillStreakKind
+    announceId: number
+    streak: PvpKillStreakKind | null
     killerCharacterId: string
     killerName: string
     victimName: string

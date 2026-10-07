@@ -182,7 +182,14 @@ export function playPlayerAnim(display: PlayerDisplay, key: string, facing: Faci
     attackPhase: resolved === 'attack' ? display.pose.attackPhase : 0,
     bash: resolved === 'attack' ? display.pose.bash : false,
     hitFlash: resolved === 'flinch' ? display.pose.hitFlash : false,
+    deadFrame: resolved === 'dead' ? display.pose.deadFrame : 0,
   }
+  syncSpritePose(display)
+}
+
+export function setPlayerDeadFrame(display: PlayerDisplay, deadFrame: 0 | 1) {
+  if (display.pose.anim !== 'dead') return
+  display.pose = { ...display.pose, deadFrame }
   syncSpritePose(display)
 }
 

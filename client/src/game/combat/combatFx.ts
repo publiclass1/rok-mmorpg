@@ -7,12 +7,12 @@ import type { AttackVariant } from '../player/playerCombatAnim'
 
 export type FloatStyle = 'hit' | 'crit' | 'critMagic' | 'miss' | 'mobHitPlayer'
 
-export type DamageFloatVariant = 'hit' | 'critPhysical' | 'critMagic' | 'miss'
+export type DamageFloatVariant = 'hit' | 'critPhysical' | 'critMagic' | 'miss' | 'blood' | 'bloodCrit'
 
 const STYLE_COLORS: Record<Exclude<FloatStyle, 'crit' | 'critMagic'>, string> = {
   hit: '#fef08a',
   miss: '#9ca3af',
-  mobHitPlayer: '#fca5a5',
+  mobHitPlayer: '#ef4444',
 }
 
 /** RO physical crit: yellow digits on thick black stroke over brown-red jagged burst. */
@@ -90,16 +90,22 @@ export function showDamageFloat(
     return
   }
 
-  const isCritPhysical = variant === 'critPhysical'
+  const isBloodCrit = variant === 'bloodCrit'
+  const isCritPhysical = variant === 'critPhysical' || isBloodCrit
   const isCritMagic = variant === 'critMagic'
   const isCrit = isCritPhysical || isCritMagic
+  const isBlood = variant === 'blood'
   const label = String(damage)
 
-  const textStyle = isCritPhysical
-    ? CRIT_PHYSICAL_TEXT
-    : isCritMagic
-      ? CRIT_MAGIC_TEXT
-      : { fill: STYLE_COLORS.hit, stroke: '#1f2937' }
+  const textStyle = isBloodCrit
+    ? { fill: '#ff2d2d', stroke: '#000000' }
+    : isCritPhysical && !isBloodCrit
+      ? CRIT_PHYSICAL_TEXT
+      : isCritMagic
+        ? CRIT_MAGIC_TEXT
+        : isBlood
+          ? { fill: '#ef4444', stroke: '#450a0a' }
+          : { fill: STYLE_COLORS.hit, stroke: '#1f2937' }
 
   const duration = isCrit ? 2000 : 550
   const rise = isCrit ? -42 : -28
@@ -149,10 +155,11 @@ export function showDamageFloat(
 
   const text = scene.add
     .text(x, y, label, {
-      fontSize: '12px',
+      fontSize: isBlood ? '14px' : '12px',
       color: textStyle.fill,
       stroke: textStyle.stroke,
-      strokeThickness: 1,
+      strokeThickness: isBlood ? 3 : 1,
+      fontStyle: isBlood ? 'bold' : 'normal',
     })
     .setOrigin(0.5)
 

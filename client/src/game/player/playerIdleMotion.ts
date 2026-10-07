@@ -146,7 +146,10 @@ export function stopIdleRigTween(display: IdleRigMotionHost, resetRig: boolean) 
 /** Looping body rig offset while standing; stopped for walk, combat, mount, etc. */
 export function syncPlayerIdleRigMotion(scene: Phaser.Scene, display: IdleRigMotionHost) {
   if (!shouldRunIdleRigTween(display)) {
-    const reset = display.pose.anim !== 'attack' && display.pose.anim !== 'flinch'
+    const reset =
+      display.pose.anim !== 'attack' &&
+      display.pose.anim !== 'flinch' &&
+      display.pose.anim !== 'dead'
     stopIdleRigTween(display, reset)
     return
   }

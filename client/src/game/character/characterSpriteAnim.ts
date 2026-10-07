@@ -100,7 +100,7 @@ export function poseToFrameIndex(def: CharacterSpriteDef, pose: CharacterPose): 
     case 'flinch':
       return stripFrameIndex(def, facing, def.strips.flinch, 0)
     case 'dead':
-      return stripFrameIndex(def, facing, def.strips.dead, 0)
+      return stripFrameIndex(def, facing, def.strips.dead, pose.deadFrame)
     default:
       return stripFrameIndex(def, facing, def.strips.idle, 0)
   }

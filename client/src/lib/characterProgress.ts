@@ -7,6 +7,7 @@ import {
   createInitialCharacterState,
   normalizeEquipment,
   parseSessionInventory,
+  reconcileProgressBudgetForSave,
   type CharacterSessionState,
   type EquipSlot,
 } from '../game/character/characterState'
@@ -281,7 +282,7 @@ export async function saveCharacterSession(characterId: string, state: Character
 }
 
 async function writeCharacterSession(characterId: string, state: CharacterSessionState): Promise<void> {
-  const synced = syncDerivedVitals(state)
+  const synced = syncDerivedVitals(reconcileProgressBudgetForSave(state))
   const progressPayload = {
     character_id: characterId,
     job_id: synced.jobId,

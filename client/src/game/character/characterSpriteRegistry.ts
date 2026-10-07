@@ -5,7 +5,7 @@ import type { CharacterAppearance } from './characterAppearance'
 import type { Facing } from '../movement/clickToMove'
 import { npcArchetypeFromNpcType, type NpcArchetype } from './npcArchetypes'
 
-const PLAYER_MASTER_VERSION = 'v8'
+const PLAYER_MASTER_VERSION = 'v9'
 
 export type AttackStyle = 'swing' | 'thrust' | 'bow' | 'cast'
 
@@ -66,11 +66,11 @@ const PLAYER_STRIPS = {
     cast: { offset: 15, count: 3 },
   },
   jump: { offset: 0, count: 1 },
-  flinch: { offset: 0, count: 1 },
-  dead: { offset: 1, count: 1 },
+  flinch: { offset: 19, count: 1 },
+  dead: { offset: 20, count: 2 },
 }
 
-const PLAYER_FRAMES_PER_ROW = 19
+const PLAYER_FRAMES_PER_ROW = 22
 
 const NPC_ATTACK_ONE: Record<AttackStyle, AnimStrip> = {
   swing: { offset: 0, count: 1 },

@@ -10,6 +10,8 @@ export type CharacterPose = {
   bash: boolean
   hitFlash: boolean
   mounted: boolean
+  /** Frame within the dead strip (collapse vs lying). */
+  deadFrame: 0 | 1
 }
 
 export function defaultCharacterPose(facing: Facing = 'down'): CharacterPose {
@@ -22,5 +24,6 @@ export function defaultCharacterPose(facing: Facing = 'down'): CharacterPose {
     bash: false,
     hitFlash: false,
     mounted: false,
+    deadFrame: 0,
   }
 }

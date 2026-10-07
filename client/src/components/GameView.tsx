@@ -82,6 +82,7 @@ import { isRarityTabShop } from '../game/character/npcServices'
 import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { DeathModal } from './DeathModal'
 import { PvpDeathModal } from './PvpDeathModal'
+import { preloadKillStreakAudio } from '../game/combat/killStreakAudio'
 import { PvpKillAnnounceOverlay } from './PvpKillAnnounceOverlay'
 import { isPvpMap, PVP_ROOM_EXIT_TELEPORT, randomPvpRespawnPoint } from '../game/world/pvpConfig'
 import { SplashScreen } from './SplashScreen'
@@ -181,6 +182,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [pvpDeathModalOpen, setPvpDeathModalOpen] = useState(false)
   const [deathSaveMapId, setDeathSaveMapId] = useState('prontera')
   const [pvpAnnounce, setPvpAnnounce] = useState<GameEvents['pvpAnnounce'] | null>(null)
+  const [pvpKillCount, setPvpKillCount] = useState(0)
   const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
   const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
   const [selectedPlayerAnchor, setSelectedPlayerAnchor] = useState<{ x: number; y: number } | null>(null)
@@ -212,6 +214,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     skillsOpen ||
     inventoryOpen ||
     equipmentOpen ||
+    deathModalOpen ||
+    pvpDeathModalOpen ||
     !!storageNpc ||
     !!jobMasterNpc ||
     !!shopNpc ||
@@ -646,6 +650,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [modalOpen])
 
   useEffect(() => {
+    preloadKillStreakAudio()
+  }, [])
+
+  useEffect(() => {
+    if (!isPvpMap(character.map_id)) {
+      setPvpKillCount(0)
+    }
+  }, [character.map_id])
+
+  useEffect(() => {
     if (!statsOpen && !skillsOpen) return
     setSheet(toCharacterSheetPayload(getCharacterSession()))
   }, [statsOpen, skillsOpen])
@@ -722,6 +736,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         }
         sessionRef.current = sessionFromSheetPayload(payload, ref)
         setSheet(payload)
+        if (isPvpMap(characterRef.current.map_id) && payload.hp > 0) {
+          setPvpDeathModalOpen(false)
+        }
       }),
       onGameEvent('playerStats', (p) => {
         setSheet((s) => ({ ...s, ...p }))
@@ -758,10 +775,19 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         })
       }),
       onGameEvent('pvpDeath', () => {
-        setPvpDeathModalOpen(true)
+        if (getCharacterSession().hp <= 0) {
+          setPvpDeathModalOpen(true)
+        }
+      }),
+      onGameEvent('pvpRespawned', () => {
+        setPvpDeathModalOpen(false)
+        setSheet(toCharacterSheetPayload(getCharacterSession()))
       }),
       onGameEvent('pvpAnnounce', (payload) => {
         setPvpAnnounce(payload)
+        if (payload.killerCharacterId === characterRef.current.id) {
+          setPvpKillCount((n) => n + 1)
+        }
       }),
       onGameEvent('duelCompleteRequest', ({ duelSessionId, winnerCharacterId }) => {
         void duelManage({
@@ -812,45 +838,56 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }
 
   async function respawnInPvpArena() {
+    setPvpDeathModalOpen(false)
     const coords = randomPvpRespawnPoint()
     emitGameEvent('pvpRespawnInArena', coords)
-    const session = getCharacterSession()
-    await saveCharacterSession(characterRef.current.id, session)
-    await saveCharacterWorldPosition(characterRef.current.id, {
-      x: coords.x,
-      y: coords.y,
-      mapId: characterRef.current.map_id,
-    })
-    const { data, error } = await supabase
-      .from('characters')
-      .update({ x: coords.x, y: coords.y })
-      .eq('id', characterRef.current.id)
-      .select('*')
-      .single()
-    if (error || !data) throw new Error(error?.message ?? 'Respawn failed')
-    onCharacterUpdated(data as CharacterRow)
-    setPosition({ x: coords.x, y: coords.y, mapId: characterRef.current.map_id })
-    setPvpDeathModalOpen(false)
-    setMessage('Respawned in the PVP arena with full HP and SP.')
+    setSheet(toCharacterSheetPayload(getCharacterSession()))
+    try {
+      await saveCharacterWorldPosition(characterRef.current.id, {
+        x: coords.x,
+        y: coords.y,
+        mapId: characterRef.current.map_id,
+      })
+      const { data, error } = await supabase
+        .from('characters')
+        .update({ x: coords.x, y: coords.y })
+        .eq('id', characterRef.current.id)
+        .select('*')
+        .single()
+      if (error || !data) throw new Error(error?.message ?? 'Respawn failed')
+      onCharacterUpdated(data as CharacterRow)
+      setPosition({ x: coords.x, y: coords.y, mapId: characterRef.current.map_id })
+      setMessage('Respawned in the PVP arena with full HP and SP.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not save respawn position'
+      setMessage(msg)
+      throw err
+    }
   }
 
   async function leavePvpRoom() {
-    const exit = PVP_ROOM_EXIT_TELEPORT
-    setMapLoading({ mapId: exit.destinationMapId, label: mapDisplayName(exit.destinationMapId) })
-    const res = await teleport({
-      characterId: characterRef.current.id,
-      mapId: exit.mapId,
-      x: exit.npcX,
-      y: exit.npcY,
-      npcId: exit.npcId,
-      destinationMapId: exit.destinationMapId,
-    })
-    dispatchCharacterAction({ type: 'respawnPartial' })
-    destroyActiveGame()
-    setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
-    onCharacterUpdated(res.character)
     setPvpDeathModalOpen(false)
-    setMessage(`Left PVP room — warped to ${mapDisplayName(exit.destinationMapId)}.`)
+    try {
+      const exit = PVP_ROOM_EXIT_TELEPORT
+      setMapLoading({ mapId: exit.destinationMapId, label: mapDisplayName(exit.destinationMapId) })
+      const res = await teleport({
+        characterId: characterRef.current.id,
+        mapId: exit.mapId,
+        x: exit.npcX,
+        y: exit.npcY,
+        npcId: exit.npcId,
+        destinationMapId: exit.destinationMapId,
+      })
+      dispatchCharacterAction({ type: 'respawnPartial' })
+      destroyActiveGame()
+      setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
+      onCharacterUpdated(res.character)
+      setMessage(`Left PVP room — warped to ${mapDisplayName(exit.destinationMapId)}.`)
+    } catch (err) {
+      setMapLoading(null)
+      setPvpDeathModalOpen(true)
+      throw err
+    }
   }
 
   useEffect(() => {
@@ -1311,8 +1348,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         <div ref={hostRef} className="game-canvas" />
         <LowHpVignette hp={sheet.hp} hpMax={sheet.hpMax} />
         {duelSync && <DuelCountdownOverlay duel={duelSync} />}
-        <PvpKillAnnounceOverlay announce={pvpAnnounce} />
-
         {selectedPlayer && selectedPlayerAnchor && (
           <PlayerTargetPopup
             player={selectedPlayer}
@@ -1336,10 +1371,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         )}
 
         <div className="game-hud-overlay" aria-label="Game HUD">
+          <PvpKillAnnounceOverlay announce={pvpAnnounce} />
           <SkillBar sheet={sheet} onOpenSkills={() => setSkillsOpen(true)} />
           <Minimap data={minimap} />
           <BuffBar buffs={playerBuffs} />
           <div className="game-hud-top-cluster">
+            <div className="game-hud-vitals-column">
             <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>
               <p className="game-hud-name">
                 <strong>
@@ -1392,6 +1429,17 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
                 </button>
               )}
             </motion.div>
+            {isPvpMap(character.map_id) && (
+              <motion.div
+                className="game-hud-panel game-hud-pvp-kills"
+                {...hudEnterMotion}
+                transition={{ ...hudEnterMotion.transition, delay: 0.1 }}
+              >
+                <span className="game-hud-pvp-kills__label">Kills</span>
+                <strong className="game-hud-pvp-kills__value">{pvpKillCount}</strong>
+              </motion.div>
+            )}
+            </div>
 
             {selectedMob ? (
               <motion.div

@@ -946,10 +946,44 @@ button:disabled {
   pointer-events: auto;
 }
 
-.game-hud-vitals {
+.game-hud-vitals-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
   flex: 1 1 auto;
   min-width: min(240px, 48vw);
   max-width: min(320px, 70vw);
+}
+
+.game-hud-vitals {
+  align-self: stretch;
+  width: 100%;
+}
+
+.game-hud-pvp-kills {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  min-width: 7rem;
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(69, 10, 10, 0.75);
+}
+
+.game-hud-pvp-kills__label {
+  font-size: 0.75rem;
+  color: #fecaca;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.game-hud-pvp-kills__value {
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #fef2f2;
+  font-variant-numeric: tabular-nums;
 }
 
 .game-hud-minimap {
@@ -1933,11 +1967,23 @@ button:disabled {
 
 .pvp-kill-announce-overlay {
   position: absolute;
-  top: 18%;
+  top: 14%;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 12;
+  z-index: 35;
   pointer-events: none;
+  animation: pvp-kill-announce-pop 0.35s ease-out;
+}
+
+@keyframes pvp-kill-announce-pop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
 }
 
 .pvp-kill-announce-overlay__inner {
@@ -1951,10 +1997,16 @@ button:disabled {
 
 .pvp-kill-announce-overlay__streak {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #fef2f2;
   letter-spacing: 0.03em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.pvp-kill-announce-overlay__streak--plain {
+  font-size: 1.2rem;
+  color: #fde68a;
 }
 
 .pvp-kill-announce-overlay__detail {

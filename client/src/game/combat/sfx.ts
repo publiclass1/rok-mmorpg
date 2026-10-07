@@ -1,3 +1,6 @@
+import { playKillStreakAudio } from './killStreakAudio'
+import type { PvpKillStreakKind } from '../world/pvpConfig'
+
 const NEARBY_COMBAT_AUDIO_RANGE = 480
 
 export function isWithinCombatAudioRange(
@@ -70,17 +73,8 @@ export class SfxPlayer {
     this.playMiss(0.035)
   }
 
-  playKillStreak(streak: string) {
-    const patterns: Record<string, number[]> = {
-      first_blood: [440, 554, 659],
-      double: [523, 659],
-      triple: [587, 740, 880],
-      ultra: [659, 831, 988, 1175],
-      rampage: [392, 523, 659, 784, 988],
-    }
-    const freqs = patterns[streak] ?? [440, 660]
-    freqs.forEach((f, i) => {
-      window.setTimeout(() => this.beep(f, 120, 'square', 0.1), i * 90)
-    })
+  playKillStreak(streak: PvpKillStreakKind | null) {
+    void this.ensureContext()
+    playKillStreakAudio(streak)
   }
 }

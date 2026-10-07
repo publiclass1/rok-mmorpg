@@ -138,6 +138,28 @@ export function skillPointsSpentOnSkills(skills: Record<string, number>): number
   return spent
 }
 
+/** Match server validateProgress unspent pools before writing character_progress. */
+export function reconcileProgressBudgetForSave(state: CharacterSessionState): CharacterSessionState {
+  let earnedStat = 0
+  for (let lv = 2; lv <= state.progress.baseLevel; lv++) {
+    earnedStat += statPointsForReachingBaseLevel(lv)
+  }
+  let spentStat = 0
+  for (const stat of PRIMARY_STATS) {
+    spentStat += statPointsSpentRaising(state[stat])
+  }
+  const earnedSkill = Math.max(0, (state.progress.jobLevel - 1) * SKILL_POINTS_PER_JOB_LEVEL)
+  let spentSkill = 0
+  for (const [skillId, level] of Object.entries(state.skills)) {
+    spentSkill += level - (skillId === 'basic_attack' ? 1 : 0)
+  }
+  return {
+    ...state,
+    statPointsUnspent: earnedStat - spentStat,
+    skillPointsUnspent: earnedSkill - spentSkill,
+  }
+}
+
 export function hasAllocatedSkillPoints(skills: Record<string, number>): boolean {
   return skillPointsSpentOnSkills(skills) > 0
 }

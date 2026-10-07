@@ -75,7 +75,8 @@ export type MapCombatPayload =
     }
   | {
       kind: 'pvp_announce'
-      streak: PvpKillStreakKind
+      announceId: number
+      streak: PvpKillStreakKind | null
       killerCharacterId: string
       killerName: string
       victimName: string
@@ -177,17 +178,22 @@ export function normalizeMapCombatPayload(raw: unknown): MapCombatPayload | null
     return { kind: 'map_pickup', dropId: o.dropId, characterId: o.characterId }
   }
   if (kind === 'pvp_announce') {
-    const streak = o.streak
-    if (
-      streak !== 'first_blood' &&
-      streak !== 'double' &&
-      streak !== 'triple' &&
-      streak !== 'ultra' &&
-      streak !== 'rampage'
-    ) {
-      return null
+    const rawStreak = o.streak
+    let streak: PvpKillStreakKind | null = null
+    if (rawStreak != null) {
+      if (
+        rawStreak !== 'first_blood' &&
+        rawStreak !== 'double' &&
+        rawStreak !== 'triple' &&
+        rawStreak !== 'ultra' &&
+        rawStreak !== 'rampage'
+      ) {
+        return null
+      }
+      streak = rawStreak
     }
     if (
+      typeof o.announceId !== 'number' ||
       typeof o.killerCharacterId !== 'string' ||
       typeof o.killerName !== 'string' ||
       typeof o.victimName !== 'string'
@@ -196,6 +202,7 @@ export function normalizeMapCombatPayload(raw: unknown): MapCombatPayload | null
     }
     return {
       kind: 'pvp_announce',
+      announceId: o.announceId,
       streak,
       killerCharacterId: o.killerCharacterId,
       killerName: o.killerName,

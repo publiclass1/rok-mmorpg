@@ -37,6 +37,7 @@ import {
   playMobHitShake,
   showDamageFloat,
   showFloatingText,
+  type DamageFloatVariant,
 } from '../combat/combatFx'
 import {
   colliderWithObstacles,
@@ -52,6 +53,7 @@ import {
   calcMobVsPlayerDamage,
   calcPlayerSkillVsMobDamage,
   calcPlayerVsMobDamage,
+  calcPlayerVsPlayerDamage,
 } from '../combat/damage'
 import { playSkillCastFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
@@ -102,7 +104,12 @@ import {
 } from '../movement/clickToMove'
 import { buildWalkabilityGrid, findWorldPath, trimPathFromPlayer } from '../movement/gridPathfind'
 import { tryJump } from '../movement/jump'
-import { playPlayerDeath, playPlayerFlinch, startPlayerAttackAnim } from '../player/playerCombatAnim'
+import {
+  clearPlayerDeathVisual,
+  playPlayerDeath,
+  playPlayerFlinch,
+  startPlayerAttackAnim,
+} from '../player/playerCombatAnim'
 import { isOnPecoMount } from '../player/mountState'
 import {
   attachPecoMountToDisplay,
@@ -113,6 +120,7 @@ import {
 import {
   createPlayerDisplay,
   playPlayerAnim,
+  setPlayerDeadFrame,
   setPlayerJobAvatar,
   setPlayerMounted,
   setPlayerSitting,
@@ -121,7 +129,7 @@ import {
   type PlayerDisplay,
 } from '../player/playerSprites'
 import { resolveJobAvatarKey } from '../player/playerJobAvatar'
-import { SIT_REGEN_INTERVAL_MS, sitRegenAmounts } from '../character/sitRegen'
+import { sitRegenAmounts, sitRegenIntervalMs } from '../character/sitRegen'
 import { MapPresenceChannel } from '../realtime/mapChannel'
 import type { MapCombatPayload, MapCombatSkillId } from '../realtime/mapCombatTypes'
 import {
@@ -268,6 +276,7 @@ export class WorldScene extends Phaser.Scene {
   private isSitting = false
   private isPlayerDead = false
   private lastSitRegenAt = 0
+  private lastPvpPassiveRegenAt = 0
   private activeBuffs: PlayerStatusBuff[] = []
   private mobs: MobInstance[] = []
   private mobBySpawnIndex: (MobInstance | undefined)[] = []
@@ -492,7 +501,29 @@ export class WorldScene extends Phaser.Scene {
         const py = this.playerDisplay.container.y
         const rx = remote.display.container.x
         const ry = remote.display.container.y
-        if (Phaser.Math.Distance.Between(px, py, rx, ry) > INTERACT_RANGE) {
+        const inInteractRange = Phaser.Math.Distance.Between(px, py, rx, ry) <= INTERACT_RANGE
+        const pvpTargetId = remote.lastPayload.characterId
+        const canPvpAttack =
+          this.isPvpActive() &&
+          this.canAttackPlayer(pvpTargetId) &&
+          !this.isRemotePlayerDead(pvpTargetId)
+
+        if (canPvpAttack) {
+          this.chaseMob = null
+          this.setSelectedMob(null)
+          this.beginChasePvpOpponent(remote)
+          if (inInteractRange) {
+            clearMoveTarget(this.moveTarget)
+            this.stopPlayerMotion()
+            this.setSelectedPlayer(remote)
+            this.faceToward(rx, ry)
+          } else {
+            this.setSelectedPlayer(null)
+          }
+          return
+        }
+
+        if (!inInteractRange) {
           emitGameEvent('status', 'Too far from player — move closer.')
           return
         }
@@ -508,12 +539,6 @@ export class WorldScene extends Phaser.Scene {
           remote.lastPayload.characterId === this.duelSync.opponentCharacterId
         ) {
           this.beginChaseDuelOpponent(remote)
-        } else if (
-          this.isPvpActive() &&
-          this.canAttackPlayer(remote.lastPayload.characterId) &&
-          !this.isRemotePlayerDead(remote.lastPayload.characterId)
-        ) {
-          this.beginChasePvpOpponent(remote)
         }
         return
       }
@@ -528,6 +553,7 @@ export class WorldScene extends Phaser.Scene {
         }
         this.chaseMob = null
         this.queuedSkillCast = null
+        this.stopPvpChase()
         this.setSelectedMob(null)
         this.setSelectedPlayer(null)
         this.requestWalkTo(wx, wy)
@@ -637,6 +663,7 @@ export class WorldScene extends Phaser.Scene {
       onGameEvent('playerRevived', ({ x, y }) => {
         this.isPlayerDead = false
         if (this.playerDisplay) {
+          clearPlayerDeathVisual(this.playerDisplay)
           this.playerDisplay.container.setPosition(x, y)
           playPlayerAnim(this.playerDisplay, 'idle', this.facing)
         }
@@ -657,9 +684,9 @@ export class WorldScene extends Phaser.Scene {
         const sheet = toCharacterSheetPayload(this.session)
         this.session = { ...this.session, hp: sheet.hpMax, mp: sheet.mpMax }
         this.isPlayerDead = false
-        this.chasePvpOpponent = null
-        this.queuedPvpSkillCast = null
+        this.stopPvpChase()
         if (this.playerDisplay) {
+          clearPlayerDeathVisual(this.playerDisplay)
           this.playerDisplay.container.setPosition(x, y)
           playPlayerAnim(this.playerDisplay, 'idle', this.facing)
         }
@@ -669,6 +696,7 @@ export class WorldScene extends Phaser.Scene {
         })
         logActivity('combat', 'Respawned in the PVP arena.')
         emitGameEvent('status', 'Respawned with full HP and SP.')
+        emitGameEvent('pvpRespawned', { x, y })
       }),
       onGameEvent('vendorPosSync', () => {
         if (!this.vendingOpen) return
@@ -801,9 +829,8 @@ export class WorldScene extends Phaser.Scene {
     this.queuedSkillCast = null
     if (this.isSitting) this.standUp()
     this.chaseMob = null
-    this.chasePvpOpponent = null
+    this.stopPvpChase()
     this.chaseDuelOpponent = null
-    this.queuedPvpSkillCast = null
     this.queuedDuelSkillCast = null
     this.isAttacking = false
     clearMoveTarget(this.moveTarget)
@@ -812,6 +839,7 @@ export class WorldScene extends Phaser.Scene {
       playPlayerDeath(this, this.playerDisplay, this.facing)
     } else {
       playPlayerAnim(this.playerDisplay, 'dead', this.facing)
+      setPlayerDeadFrame(this.playerDisplay, 1)
     }
     logActivity('combat', 'You have been defeated.')
     if (isPvpMap(this.character.map_id)) {
@@ -843,7 +871,11 @@ export class WorldScene extends Phaser.Scene {
     this.tickStatusEffects(wallNow)
 
     if (this.isPlayerDead) {
-      playPlayerAnim(this.playerDisplay, 'dead', this.facing)
+      const pose = this.playerDisplay.pose
+      if (pose.anim !== 'flinch' && pose.anim !== 'dead') {
+        playPlayerAnim(this.playerDisplay, 'dead', this.facing)
+        setPlayerDeadFrame(this.playerDisplay, 1)
+      }
       this.stopPlayerMotion()
       clearMoveTarget(this.moveTarget)
     } else if (this.isSitting) {
@@ -852,6 +884,7 @@ export class WorldScene extends Phaser.Scene {
       clearMoveTarget(this.moveTarget)
       this.tickSitRegen(now, sheet)
     } else if (!this.isAttacking && !this.isJumping) {
+      this.tickPvpPassiveRegen(now, sheet)
       if (this.chaseMob?.alive) {
         this.tickChaseMob(now)
       } else if (this.chaseDuelOpponent) {
@@ -969,7 +1002,7 @@ export class WorldScene extends Phaser.Scene {
         next = this.pendingSkill.def.target === 'ground' ? 'aoe' : 'skillTarget'
       } else if (this.findNpcAt(p.worldX, p.worldY)) {
         next = 'npc'
-      } else if (this.isPvpActive()) {
+      } else if (this.findAttackableRemotePlayerAt(p.worldX, p.worldY)) {
         next = 'mob'
       } else if (this.findMobAt(p.worldX, p.worldY)) {
         next = 'mob'
@@ -1871,7 +1904,11 @@ export class WorldScene extends Phaser.Scene {
           this.emitCharacterSheet()
           return
         }
-        this.strikeDuelOpponent(remote, snapshot, skillLabel, skillId, skillLevel)
+        if (this.isPvpActive() && this.canAttackPlayer(remote.lastPayload.characterId)) {
+          this.strikePvpOpponent(remote, snapshot, skillLabel, skillId, skillLevel)
+        } else {
+          this.strikeDuelOpponent(remote, snapshot, skillLabel, skillId, skillLevel)
+        }
         this.emitCharacterSheet()
       },
       onComplete: () => {
@@ -2072,19 +2109,42 @@ export class WorldScene extends Phaser.Scene {
     logActivity('character', 'Sitting to recover HP and SP.')
   }
 
-  private tickSitRegen(now: number, sheet: ReturnType<typeof toCharacterSheetPayload>) {
-    if (now - this.lastSitRegenAt < SIT_REGEN_INTERVAL_MS) return
-    this.lastSitRegenAt = now
-    if (this.session.hp >= sheet.hpMax && this.session.mp >= sheet.mpMax) return
+  private applyHpSpRegen(
+    sheet: ReturnType<typeof toCharacterSheetPayload>,
+    logPrefix: string,
+  ): boolean {
+    if (this.session.hp >= sheet.hpMax && this.session.mp >= sheet.mpMax) return false
 
-    const { hp, mp } = sitRegenAmounts(sheet.effectiveVit, sheet.effectiveInt)
+    const { hp, mp } = sitRegenAmounts(sheet.effectiveVit, sheet.effectiveInt, {
+      mapId: this.character.map_id,
+      hpMax: sheet.hpMax,
+      mpMax: sheet.mpMax,
+    })
     const nextHp = Math.min(sheet.hpMax, this.session.hp + hp)
     const nextMp = Math.min(sheet.mpMax, this.session.mp + mp)
-    if (nextHp === this.session.hp && nextMp === this.session.mp) return
+    if (nextHp === this.session.hp && nextMp === this.session.mp) return false
 
     this.session = { ...this.session, hp: nextHp, mp: nextMp }
     this.emitCharacterSheet()
-    logActivity('character', `Resting… HP ${nextHp}/${sheet.hpMax}, SP ${nextMp}/${sheet.mpMax}.`)
+    logActivity('character', `${logPrefix} HP ${nextHp}/${sheet.hpMax}, SP ${nextMp}/${sheet.mpMax}.`)
+    return true
+  }
+
+  private tickSitRegen(now: number, sheet: ReturnType<typeof toCharacterSheetPayload>) {
+    const interval = sitRegenIntervalMs(this.character.map_id)
+    if (now - this.lastSitRegenAt < interval) return
+    this.lastSitRegenAt = now
+    this.applyHpSpRegen(sheet, 'Resting…')
+  }
+
+  /** In PVP, slow passive HP/SP recovery while alive (same 10s cadence as sit regen). */
+  private tickPvpPassiveRegen(now: number, sheet: ReturnType<typeof toCharacterSheetPayload>) {
+    if (!isPvpMap(this.character.map_id)) return
+    if (this.chasePvpOpponent || this.chaseMob?.alive || this.chaseDuelOpponent) return
+    const interval = sitRegenIntervalMs(this.character.map_id)
+    if (now - this.lastPvpPassiveRegenAt < interval) return
+    this.lastPvpPassiveRegenAt = now
+    this.applyHpSpRegen(sheet, 'Recovering…')
   }
 
   private spendMp(cost: number): boolean {
@@ -2253,6 +2313,18 @@ export class WorldScene extends Phaser.Scene {
       }
     }
     return null
+  }
+
+  private findAttackableRemotePlayerAt(wx: number, wy: number): RemotePlayerEntity | null {
+    if (!this.isPvpActive()) return null
+    const entity = this.findRemotePlayerAt(wx, wy)
+    if (!entity || !this.canAttackPlayer(entity.lastPayload.characterId)) return null
+    return entity
+  }
+
+  private stopPvpChase() {
+    this.chasePvpOpponent = null
+    this.queuedPvpSkillCast = null
   }
 
   private findMobAt(wx: number, wy: number): MobInstance | null {
@@ -2646,12 +2718,17 @@ export class WorldScene extends Phaser.Scene {
       const tx = targetEntity?.display.container.x ?? listener.x
       const ty = (targetEntity?.display.container.y ?? listener.y) - 40
       const remoteCrit = payload.critical === true
-      showDamageFloat(this, tx, ty, payload.damage, remoteCrit ? 'critPhysical' : 'hit')
+      const pvpFloat = this.isPvpActive()
+        ? remoteCrit
+          ? 'bloodCrit'
+          : 'blood'
+        : remoteCrit
+          ? 'critPhysical'
+          : 'hit'
+      showDamageFloat(this, tx, ty, payload.damage, pvpFloat)
       this.sfx.playHitNearby(listener.x, listener.y, tx, ty)
-      if (payload.targetCharacterId === this.character.id) {
-        if (!this.isDuelCombatAllowed()) {
-          this.applyIncomingPvpDamage(payload.damage, payload.characterId)
-        }
+      if (payload.targetCharacterId === this.character.id && this.isPvpActive()) {
+        this.applyIncomingPvpDamage(payload.damage, payload.characterId)
       }
       return
     }
@@ -2665,7 +2742,7 @@ export class WorldScene extends Phaser.Scene {
       const entity = this.remotePlayers.get(payload.characterId)
       if (entity) {
         entity.lastPayload = { ...entity.lastPayload, anim: 'dead' }
-        playPlayerAnim(entity.display, 'dead', entity.lastPayload.facing)
+        playPlayerDeath(this, entity.display, entity.lastPayload.facing)
       }
       if (payload.characterId !== this.character.id) {
         const dropId = `skull_${payload.characterId}_${Math.round(payload.x)}_${Math.round(payload.y)}`
@@ -2674,9 +2751,7 @@ export class WorldScene extends Phaser.Scene {
       if (payload.killerCharacterId === this.character.id) {
         const victimName = entity?.lastPayload.name ?? 'Unknown'
         const streak = this.pvpKillStreak.onLocalKill()
-        if (streak) {
-          this.broadcastPvpAnnounce(streak, this.character.name, victimName)
-        }
+        this.broadcastPvpAnnounce(streak, this.character.name, victimName)
       }
       return
     }
@@ -2695,17 +2770,7 @@ export class WorldScene extends Phaser.Scene {
       if (payload.streak === 'first_blood') {
         this.pvpKillStreak.noteFirstBloodTaken()
       }
-      emitGameEvent('pvpAnnounce', {
-        streak: payload.streak,
-        killerCharacterId: payload.killerCharacterId,
-        killerName: payload.killerName,
-        victimName: payload.victimName,
-      })
-      this.sfx.playKillStreak(payload.streak)
-      logActivity(
-        'combat',
-        `${PVP_KILL_STREAK_LABELS[payload.streak]} ${payload.killerName} killed ${payload.victimName}.`,
-      )
+      this.showPvpKillAnnounce(payload)
       return
     }
   }
@@ -2746,15 +2811,9 @@ export class WorldScene extends Phaser.Scene {
       this.chasePvpOpponent && this.canAttackPlayer(this.chasePvpOpponent.lastPayload.characterId)
         ? this.chasePvpOpponent
         : null
-    const selected =
-      this.selectedRemoteId && this.canAttackPlayer(this.selectedRemoteId)
-        ? this.remotePlayers.get(this.selectedRemoteId) ?? null
-        : null
-    const candidate = chase ?? selected
-    if (!candidate) return null
-    if (this.duelOpponentInStrikeRange(candidate)) return candidate
-    if (chase || selected) return candidate
-    return null
+    if (!chase) return null
+    if (this.duelOpponentInStrikeRange(chase)) return chase
+    return chase
   }
 
   private beginChasePvpOpponent(entity: RemotePlayerEntity) {
@@ -2831,24 +2890,39 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private broadcastPvpAnnounce(
-    streak: import('../world/pvpConfig').PvpKillStreakKind,
+    streak: import('../world/pvpConfig').PvpKillStreakKind | null,
     killerName: string,
     victimName: string,
   ) {
-    this.presence?.sendCombat({
-      kind: 'pvp_announce',
+    const announceId = Date.now()
+    const payload = {
+      kind: 'pvp_announce' as const,
+      announceId,
       streak,
       killerCharacterId: this.character.id,
       killerName,
       victimName,
-    })
-    emitGameEvent('pvpAnnounce', {
-      streak,
-      killerCharacterId: this.character.id,
-      killerName,
-      victimName,
-    })
-    this.sfx.playKillStreak(streak)
+    }
+    this.presence?.sendCombat(payload)
+    this.showPvpKillAnnounce(payload)
+  }
+
+  private showPvpKillAnnounce(payload: {
+    announceId: number
+    streak: import('../world/pvpConfig').PvpKillStreakKind | null
+    killerCharacterId: string
+    killerName: string
+    victimName: string
+  }) {
+    emitGameEvent('pvpAnnounce', payload)
+    this.sfx.playKillStreak(payload.streak)
+    const streakLabel = payload.streak ? PVP_KILL_STREAK_LABELS[payload.streak] : null
+    logActivity(
+      'combat',
+      streakLabel
+        ? `${streakLabel} ${payload.killerName} defeated ${payload.victimName}.`
+        : `${payload.killerName} defeated ${payload.victimName}.`,
+    )
   }
 
   private broadcastPlayerDeath(killerCharacterId: string | null, x: number, y: number) {
@@ -3075,6 +3149,37 @@ export class WorldScene extends Phaser.Scene {
     emitGameEvent('status', 'Duel lost.')
   }
 
+  private pvpDamageFloatVariant(critical: boolean): DamageFloatVariant {
+    return critical ? 'bloodCrit' : 'blood'
+  }
+
+  private strikePvpOpponent(
+    target: RemotePlayerEntity,
+    snapshot: DuelCombatSnapshot,
+    skillLabel: string,
+    skillId?: string,
+    skillLevel?: number,
+  ) {
+    const tx = target.display.container.x
+    const ty = target.display.container.y - 40
+    let result = calcPlayerVsPlayerDamage(this.session, snapshot)
+    if (skillId && skillLevel != null) {
+      result = calcPlayerSkillVsMobDamage(result, skillId, skillLevel)
+    }
+    const { damage, hit, critical } = result
+    if (!hit || damage <= 0) {
+      showFloatingText(this, tx, ty, 'MISS', 'miss')
+      this.sfx.playMiss()
+      this.broadcastPlayerMiss(target.lastPayload.characterId, tx, ty)
+      logActivity('combat', `${skillLabel} missed ${target.lastPayload.name} in PVP.`)
+      return
+    }
+    showDamageFloat(this, tx, ty, damage, this.pvpDamageFloatVariant(critical))
+    this.sfx.playHit()
+    this.broadcastPlayerHit(target.lastPayload.characterId, damage, skillLabel, critical)
+    logActivity('combat', `${skillLabel} hit ${target.lastPayload.name} for ${damage} in PVP.`)
+  }
+
   private strikeDuelOpponent(
     target: RemotePlayerEntity,
     _snapshot: DuelCombatSnapshot,
@@ -3139,13 +3244,9 @@ export class WorldScene extends Phaser.Scene {
     const pvpSnapshot = pvpTarget ? this.getRemotePvpSnapshot(pvpTarget) : null
     const pvpMode =
       this.isPvpActive() &&
+      Boolean(this.chasePvpOpponent) &&
       Boolean(pvpSnapshot) &&
-      Boolean(pvpTarget) &&
-      (Boolean(this.chasePvpOpponent) ||
-        (this.selectedRemoteId !== null &&
-          this.canAttackPlayer(this.selectedRemoteId) &&
-          this.selectedRemoteId === pvpTarget.lastPayload.characterId) ||
-        Boolean(pvpTarget))
+      Boolean(pvpTarget)
     if (!duelMode && !pvpMode && this.hasFocusedMobTarget() && !this.resolveAttackTargetMob()) return
     this.lastAttackAt = now
     this.isAttacking = true
@@ -3206,7 +3307,7 @@ export class WorldScene extends Phaser.Scene {
             logActivity('combat', 'Attack missed.')
             return
           }
-          this.strikeDuelOpponent(target, snap, 'Attack')
+          this.strikePvpOpponent(target, snap, 'Attack')
           return
         }
 

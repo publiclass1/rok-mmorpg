@@ -12,6 +12,7 @@ import { resolveJobAvatarKey, type PlayerAvatarKey } from '../player/playerJobAv
 import {
   createPlayerDisplay,
   playPlayerAnim,
+  setPlayerDeadFrame,
   setPlayerAppearance,
   setPlayerJobAvatar,
   setPlayerMounted,
@@ -99,6 +100,8 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
   playPlayerAnim(display, payload.anim, payload.facing)
   if (payload.anim === 'walk') {
     setPlayerWalkFrame(display, payload.walkFrame)
+  } else if (payload.anim === 'dead') {
+    setPlayerDeadFrame(display, 1)
   }
 
   const labelText = payload.isVending ? `${payload.name} [Shop]` : payload.name
@@ -177,6 +180,9 @@ export function tickRemotePlayer(entity: RemotePlayerEntity, _now: number, smoot
   if (!localAttack || forcePresenceAnim) {
     if (poseChanged || forcePresenceAnim) {
       playPlayerAnim(entity.display, p.anim, p.facing)
+      if (p.anim === 'dead') {
+        setPlayerDeadFrame(entity.display, 1)
+      }
     }
     if (p.anim === 'walk' && (poseChanged || pose.walkFrame !== walkFrame)) {
       setPlayerWalkFrame(entity.display, walkFrame)
