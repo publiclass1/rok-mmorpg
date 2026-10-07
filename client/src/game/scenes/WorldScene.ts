@@ -35,6 +35,7 @@ import {
   playMobDeath,
   playMobHitImpact,
   playMobHitShake,
+  showDamageFloat,
   showFloatingText,
 } from '../combat/combatFx'
 import {
@@ -1471,7 +1472,7 @@ export class WorldScene extends Phaser.Scene {
           this.emitCharacterSheet()
           return
         }
-        const { damage: baseDamage, hit } = this.calcPlayerVsMobDamageForSession(def)
+        const { damage: baseDamage, hit, critical } = this.calcPlayerVsMobDamageForSession(def)
         const damage =
           hit && baseDamage > 0
             ? Math.max(1, Math.floor(baseDamage * (1 + skillLevel * 0.15)) + skillLevel * 3)
@@ -1485,7 +1486,7 @@ export class WorldScene extends Phaser.Scene {
           return
         }
 
-        this.applyDamageToMob(target, damage, def, 'Bash')
+        this.applyDamageToMob(target, damage, def, 'Bash', { critical })
         this.emitCharacterSheet()
       },
       onComplete: () => {
@@ -1499,7 +1500,10 @@ export class WorldScene extends Phaser.Scene {
     damage: number,
     def: (typeof MOB_DEFS)[string],
     skillLabel: string,
+    options?: { critical?: boolean; criticalMagic?: boolean },
   ) {
+    const critical = options?.critical === true
+    const criticalMagic = options?.criticalMagic === true
     target.hp -= damage
     provokeMob(target)
     playMobHitImpact(
@@ -1510,16 +1514,22 @@ export class WorldScene extends Phaser.Scene {
       this.playerDisplay.container.y,
     )
     this.sfx.playHit()
-    showFloatingText(this, target.sprite.x, target.sprite.y - 40, `-${damage}`, 'hit')
+    const floatVariant = critical
+      ? criticalMagic
+        ? 'critMagic'
+        : 'critPhysical'
+      : 'hit'
+    showDamageFloat(this, target.sprite.x, target.sprite.y - 40, damage, floatVariant)
+    const critNote = critical ? ' (critical)' : ''
     logActivity(
       'combat',
-      `${skillLabel} dealt ${damage} damage to Lv ${target.level} ${target.name} (HP ${Math.max(0, target.hp)}/${target.maxHp}).`,
+      `${skillLabel} dealt ${damage} damage${critNote} to Lv ${target.level} ${target.name} (HP ${Math.max(0, target.hp)}/${target.maxHp}).`,
     )
     this.updateMobHpBar(target)
     if (this.selectedMob === target) {
       this.emitSelectedMobPayload(target)
     }
-    this.broadcastMobHit(target, damage, skillLabel)
+    this.broadcastMobHit(target, damage, skillLabel, critical, criticalMagic)
     if (target.hp <= 0) {
       if (this.selectedMob === target) this.setSelectedMob(null)
       this.chaseMob = null
@@ -1896,7 +1906,13 @@ export class WorldScene extends Phaser.Scene {
     })
   }
 
-  private broadcastMobHit(target: MobInstance, damage: number, skillLabel: string) {
+  private broadcastMobHit(
+    target: MobInstance,
+    damage: number,
+    skillLabel: string,
+    critical?: boolean,
+    criticalMagic?: boolean,
+  ) {
     this.presence?.sendCombat({
       kind: 'mob_hit',
       characterId: this.character.id,
@@ -1904,6 +1920,8 @@ export class WorldScene extends Phaser.Scene {
       damage,
       hpAfter: Math.max(0, target.hp),
       skillLabel,
+      critical: critical ? true : undefined,
+      criticalMagic: critical && criticalMagic ? true : undefined,
     })
   }
 
@@ -1962,7 +1980,13 @@ export class WorldScene extends Phaser.Scene {
       const def = MOB_DEFS[mob.defId]
       if (def) playMobHitImpact(this, mob.sprite, def.color)
       this.sfx.playHitNearby(listener.x, listener.y, mob.sprite.x, mob.sprite.y)
-      showFloatingText(this, mob.sprite.x, mob.sprite.y - 40, `-${payload.damage}`, 'hit')
+      const remoteCrit = payload.critical === true
+      const remoteVariant = remoteCrit
+        ? payload.criticalMagic
+          ? 'critMagic'
+          : 'critPhysical'
+        : 'hit'
+      showDamageFloat(this, mob.sprite.x, mob.sprite.y - 40, payload.damage, remoteVariant)
       this.updateMobHpBar(mob)
       if (this.selectedMob === mob) {
         this.emitSelectedMobPayload(mob)
@@ -2039,7 +2063,7 @@ export class WorldScene extends Phaser.Scene {
 
         const def = MOB_DEFS[target.defId]
         if (!def) return
-        const { damage, hit } = this.calcPlayerVsMobDamageForSession(def)
+        const { damage, hit, critical } = this.calcPlayerVsMobDamageForSession(def)
         if (!hit || damage <= 0) {
           showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
           this.sfx.playMiss()
@@ -2048,7 +2072,7 @@ export class WorldScene extends Phaser.Scene {
           return
         }
 
-        this.applyDamageToMob(target, damage, def, 'Attack')
+        this.applyDamageToMob(target, damage, def, 'Attack', { critical })
       },
       onComplete: () => {
         this.isAttacking = false
@@ -2228,8 +2252,6 @@ export class WorldScene extends Phaser.Scene {
     const beforeBase = this.session.progress.baseLevel
     const beforeJob = this.session.progress.jobLevel
     updateCharacterSession((s) => syncDerivedVitals(addExperience(s, shareBase, shareJob).state))
-    showFloatingText(this, fx, fy - 52, `+${shareBase} Base EXP`, 'exp')
-    showFloatingText(this, fx, fy - 68, `+${shareJob} Job EXP`, 'exp')
     logActivity('exp', `Gained ${shareBase} Base EXP and ${shareJob} Job EXP.`)
     if (this.session.progress.baseLevel > beforeBase) {
       emitGameEvent('status', `Base level up! Lv ${this.session.progress.baseLevel}`)
@@ -2258,7 +2280,6 @@ export class WorldScene extends Phaser.Scene {
     updateCharacterSession((s) =>
       syncDerivedVitals(addExperience(s, payload.baseExp, payload.jobExp).state),
     )
-    showFloatingText(this, px, py - 52, `+${payload.baseExp} Party EXP`, 'exp')
     logActivity('exp', `Party share: ${payload.baseExp} Base / ${payload.jobExp} Job EXP.`)
     if (this.session.progress.baseLevel > beforeBase) {
       emitGameEvent('status', `Base level up! Lv ${this.session.progress.baseLevel}`)

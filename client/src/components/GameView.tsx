@@ -49,7 +49,7 @@ import { PartyRequestModal } from './PartyRequestModal'
 import { PartyWindow } from './PartyWindow'
 import { VendorSetupModal } from './VendorSetupModal'
 import { VendorShopModal } from './VendorShopModal'
-import { ActivityLog } from './ActivityLog'
+import { ActivityLogModal } from './ActivityLogModal'
 import { BuffBar } from './BuffBar'
 import { SkillBar } from './SkillBar'
 import { ExperienceHud } from './ExperienceHud'
@@ -170,7 +170,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [deathModalOpen, setDeathModalOpen] = useState(false)
   const [deathSaveMapId, setDeathSaveMapId] = useState('prontera')
   const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
-  const [logOpen, setLogOpen] = useState(false)
+  const [activityLogOpen, setActivityLogOpen] = useState(false)
   const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
   const [selectedPlayerAnchor, setSelectedPlayerAnchor] = useState<{ x: number; y: number } | null>(null)
   const [partySnapshot, setPartySnapshot] = useState<PartySnapshot>(null)
@@ -204,6 +204,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     !!tradePartner ||
     !!partyRequest ||
     partyOpen ||
+    activityLogOpen ||
     guildOpen ||
     vendorSetupOpen ||
     !!vendorShopTarget
@@ -1070,6 +1071,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             <button type="button" className="secondary hud-btn" onClick={() => setPartyOpen(true)}>
               Party
             </button>
+            <button type="button" className="secondary hud-btn" onClick={() => setActivityLogOpen(true)}>
+              Log
+            </button>
             <button type="button" className="secondary hud-btn" onClick={() => setGuildOpen(true)}>
               Guild
             </button>
@@ -1131,29 +1135,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 360, damping: 30, delay: 0.2 }}
           >
-            <div className="game-hud-log-row">
-              <button
-                type="button"
-                className="secondary hud-btn hud-log-toggle"
-                onClick={() => setLogOpen((o) => !o)}
-              >
-                {logOpen ? 'Hide log' : 'Log'}
-              </button>
-              <AnimatePresence>
-                {logOpen && (
-                  <motion.div
-                    key="activity-log"
-                    className="activity-log-motion-wrap"
-                    initial={{ opacity: 0, y: 8, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: 'auto' }}
-                    exit={{ opacity: 0, y: 6, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ActivityLog entries={activityLog} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
             <ChatStrip
               partyEnabled={!!partySnapshot}
               mapLines={mapChatLines}
@@ -1257,6 +1238,13 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             onClose={() => setPartyOpen(false)}
             onChanged={refreshParty}
             onMessage={setMessage}
+          />
+        )}
+        {activityLogOpen && (
+          <ActivityLogModal
+            key="activity-log"
+            entries={activityLog}
+            onClose={() => setActivityLogOpen(false)}
           />
         )}
         {guildOpen && (

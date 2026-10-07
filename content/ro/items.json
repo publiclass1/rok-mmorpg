@@ -453,6 +453,7 @@
       "equipSlot": "accLeft",
       "layerColor": "0xf59e0b",
       "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 1 },
+      "combatBonuses": { "critChance": 7 },
       "sourceUrl": "https://irowiki.org/wiki/Clip"
     },
     {

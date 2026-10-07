@@ -2,7 +2,13 @@ import { loadRoContent } from '../../content/ro/loadContent'
 import type { GearRarityId, RoDungeonFloor, RoItem } from '../../content/ro/types'
 import type { PrimaryStat } from '../character/characterState'
 
-export type RolledEffectKind = 'melee' | 'range' | 'magic'
+export type RolledDamageEffectKind = 'melee' | 'range' | 'magic'
+
+export type RolledEffectKind = RolledDamageEffectKind | 'critChance'
+
+export type RolledItemEffect =
+  | { kind: RolledDamageEffectKind; percent: number }
+  | { kind: 'critChance'; percent: number }
 
 export type RolledItem = {
   id: string
@@ -10,7 +16,7 @@ export type RolledItem = {
   rarity: GearRarityId
   requiredBaseLevel: number
   stats: Partial<Record<PrimaryStat, number>>
-  effect: { kind: RolledEffectKind; percent: number }
+  effect: RolledItemEffect
   slots: 2
   cards: [string | null, string | null]
 }

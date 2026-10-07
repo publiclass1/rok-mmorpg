@@ -48,6 +48,18 @@ Implement in order:
 
 **Today:** `combat/damage.ts` — HIT/FLEE, soft DEF + VIT reduction, element/size modifiers; mob ATK from `mobs.json`.
 
+## Critical hits
+
+Inspired by [iRO Wiki Classic — Attacks](https://irowiki.org/classic/Attacks); **custom** chance and LUK scaling:
+
+- **Chance:** Sum of equipped `combatBonuses.critChance` (items + rolled `critChance` effects) − `floor(targetLUK/5)`. No crit without gear (0% base).
+- **Order:** Crit before hit/miss; crit always connects (ignores FLEE).
+- **Damage:** `1.4 + floor(LUK/3)×0.01` on post-DEF (or post-MDEF) damage; physical crit ignores DEF; magic crit ignores MDEF and uses max MATK.
+
+**Custom:** Bash and offensive magic use the same crit roll.
+
+**Today:** `critBonuses.ts`, `calcCritDamageMultiplier`, `calcPlayerVsMobDamage`, `calcPlayerMagicVsMobDamage` in `client/src/game/combat/damage.ts`.
+
 ## Mob EXP
 
 Kill reward uses mob base EXP and job EXP from data ([Poring](https://irowiki.org/wiki/Poring) and other mob pages).
@@ -60,4 +72,5 @@ Kill reward uses mob base EXP and job EXP from data ([Poring](https://irowiki.or
 - [x] Pre-Renewal stat point cost + grants
 - [x] Job-aware HP/SP (novice table; extend per job in content as needed)
 - [x] HIT/FLEE and damage pipeline in combat
+- [x] LUK-based critical hits (physical + magic helper)
 - [x] Drops from `mobs.json` `drops[]`

@@ -18,6 +18,8 @@ export type MapCombatPayload =
       damage: number
       hpAfter: number
       skillLabel?: string
+      critical?: boolean
+      criticalMagic?: boolean
     }
   | {
       kind: 'mob_miss'
@@ -63,6 +65,8 @@ export function normalizeMapCombatPayload(raw: unknown): MapCombatPayload | null
       damage: typeof o.damage === 'number' ? o.damage : 0,
       hpAfter: typeof o.hpAfter === 'number' ? o.hpAfter : 0,
       skillLabel: typeof o.skillLabel === 'string' ? o.skillLabel : undefined,
+      critical: o.critical === true ? true : undefined,
+      criticalMagic: o.criticalMagic === true ? true : undefined,
     }
   }
   if (kind === 'mob_miss') {

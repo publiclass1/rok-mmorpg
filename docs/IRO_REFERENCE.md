@@ -30,7 +30,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Items & equipment | [Items](https://irowiki.org/wiki/Items), [Equipment](https://irowiki.org/wiki/Equipment) | partial | `content/ro/items.json` (`requiredBaseLevel`, `requiredJobIds`); equip enforced in `equipRequirements.ts` / `applyCharacterAction.ts`; `equipmentConfig.ts` |
 | Inventory weight | [Weight](https://irowiki.org/wiki/Weight) | planned | — |
 | Monsters & drops | [Monsters](https://irowiki.org/wiki/Monsters) | implemented | `mobs.json` drops (rAthena pre-re rates) + `loot.json` zeny QoL & level bands; `combat/drops.ts` |
-| Combat & damage | [Damage](https://irowiki.org/wiki/Damage) | partial | `combat/damage.ts`, `WorldScene.ts` (HIT/FLEE, DEF, element/size); mob `runtime.*` still tunes movement/aggro |
+| Combat & damage | [Damage](https://irowiki.org/wiki/Damage) | partial | `combat/damage.ts` (gear crit chance, LUK crit damage mult), `WorldScene.ts` (HIT/FLEE, DEF, element/size); mob `runtime.*` still tunes movement/aggro |
 | Status effects | [Status](https://irowiki.org/wiki/Status) | planned | — |
 | Maps & warps | [Maps](https://irowiki.org/wiki/Category:Maps) | implemented | Tiled `.tmj`, `maps.json`, `prt_fild01`, **`prt_sewb1` Culvert** (`npm run maps:culvert`); NPC teleport warps |
 | NPC Kafra storage | [Kafra](https://irowiki.org/wiki/Kafra) | implemented | `StorageModal.tsx`, `storage-transfer` function |

@@ -5,13 +5,86 @@ import type { PlayerDisplay } from '../player/playerSprites'
 import { setPlayerHitFlash } from '../player/playerSprites'
 import type { AttackVariant } from '../player/playerCombatAnim'
 
-export type FloatStyle = 'hit' | 'miss' | 'exp' | 'mobHitPlayer'
+export type FloatStyle = 'hit' | 'crit' | 'critMagic' | 'miss' | 'mobHitPlayer'
 
-const STYLE_COLORS: Record<FloatStyle, string> = {
+export type DamageFloatVariant = 'hit' | 'critPhysical' | 'critMagic' | 'miss'
+
+const STYLE_COLORS: Record<Exclude<FloatStyle, 'crit' | 'critMagic'>, string> = {
   hit: '#fef08a',
   miss: '#9ca3af',
-  exp: '#67e8f9',
   mobHitPlayer: '#fca5a5',
+}
+
+const CRIT_PHYSICAL = { fill: '#c4a574', stroke: '#5c4033' }
+const CRIT_MAGIC = { fill: '#7dd3fc', stroke: '#1e3a5f' }
+
+function drawCritBurst(scene: Phaser.Scene, x: number, y: number, magic: boolean) {
+  const g = scene.add.graphics()
+  g.setPosition(x, y)
+  const color = magic ? 0x7dd3fc : 0xc4a574
+  g.lineStyle(2, color, 0.85)
+  for (let i = 0; i < 8; i++) {
+    const a = (Math.PI * 2 * i) / 8
+    g.lineBetween(0, 0, Math.cos(a) * 14, Math.sin(a) * 10)
+  }
+  scene.tweens.add({
+    targets: g,
+    alpha: 0,
+    scaleX: 1.35,
+    scaleY: 1.35,
+    duration: 400,
+    onComplete: () => g.destroy(),
+  })
+}
+
+export function showDamageFloat(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  damage: number,
+  variant: DamageFloatVariant,
+) {
+  if (variant === 'miss') {
+    showFloatingText(scene, x, y, 'MISS', 'miss')
+    return
+  }
+
+  const isCritPhysical = variant === 'critPhysical'
+  const isCritMagic = variant === 'critMagic'
+  const isCrit = isCritPhysical || isCritMagic
+  const label = String(damage)
+
+  if (isCrit) {
+    drawCritBurst(scene, x, y - 4, isCritMagic)
+  }
+
+  const style = isCritPhysical ? CRIT_PHYSICAL : isCritMagic ? CRIT_MAGIC : { fill: STYLE_COLORS.hit, stroke: '#1f2937' }
+  const text = scene.add
+    .text(x, y, label, {
+      fontSize: isCrit ? '14px' : '12px',
+      color: style.fill,
+      fontStyle: isCrit ? 'bold' : undefined,
+      stroke: style.stroke,
+      strokeThickness: isCrit ? 3 : 1,
+    })
+    .setOrigin(0.5)
+
+  const duration = isCrit ? 2000 : 550
+  const rise = isCrit ? -36 : -28
+
+  scene.tweens.add({
+    targets: text,
+    y: y + rise,
+    duration,
+    ease: isCrit ? 'Sine.easeOut' : 'Linear',
+  })
+  scene.tweens.add({
+    targets: text,
+    alpha: 0,
+    delay: isCrit ? duration - 400 : 0,
+    duration: isCrit ? 400 : duration,
+    onComplete: () => text.destroy(),
+  })
 }
 
 export function showFloatingText(
@@ -21,8 +94,27 @@ export function showFloatingText(
   text: string,
   style: FloatStyle,
 ) {
+  if (style === 'crit' || style === 'critMagic') {
+    const n = Number(text.replace(/^-/, ''))
+    if (!Number.isNaN(n)) {
+      showDamageFloat(scene, x, y, n, style === 'critMagic' ? 'critMagic' : 'critPhysical')
+      return
+    }
+  }
+
+  const color =
+    style === 'crit'
+      ? CRIT_PHYSICAL.fill
+      : style === 'critMagic'
+        ? CRIT_MAGIC.fill
+        : STYLE_COLORS[style as keyof typeof STYLE_COLORS] ?? STYLE_COLORS.hit
+
   const label = scene.add
-    .text(x, y, text, { fontSize: style === 'miss' ? '11px' : '12px', color: STYLE_COLORS[style] })
+    .text(x, y, text, {
+      fontSize: style === 'miss' ? '11px' : style === 'crit' || style === 'critMagic' ? '14px' : '12px',
+      color,
+      fontStyle: style === 'crit' || style === 'critMagic' ? 'bold' : undefined,
+    })
     .setOrigin(0.5)
   scene.tweens.add({
     targets: label,

@@ -1,37 +1,25 @@
 import { useState } from 'react'
-import { SkillIcon } from './SkillIcon'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import { isSkillBarDragEvent, readSkillBarDrag } from '../game/character/skillBarDrag'
-import { canLearnSkill, JOB_NAMES, SKILLS, barAssignableSkills, skillsForJob } from '../game/character/skillsConfig'
+import { JOB_NAMES, skillsForJob, skillWindowTabs } from '../game/character/skillsConfig'
 import type { CharacterSheetPayload } from '../game/events'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { SkillTreePanel } from './SkillTreePanel'
 
 type Props = {
   sheet: CharacterSheetPayload
   onClose: () => void
 }
 
-function skillDetailTitle(skillId: string): string {
-  const skill = SKILLS[skillId]
-  if (!skill) return skillId
-  const parts = [skill.description, `Requires Job Lv ${skill.requiredJobLevel}`]
-  if (skill.prerequisites.length > 0) {
-    parts.push(
-      skill.prerequisites
-        .map((p) => `${SKILLS[p.skillId]?.name ?? p.skillId} Lv ${p.level}`)
-        .join(', '),
-    )
-  }
-  return parts.join(' · ')
-}
-
 export function SkillsWindow({ sheet, onClose }: Props) {
   const jobName = JOB_NAMES[sheet.jobId] ?? sheet.jobId
-  const jobSkills = skillsForJob(sheet.jobId)
-  const jobIds = new Set(jobSkills.map((s) => s.id))
-  const extraBarSkills = barAssignableSkills(sheet).filter((s) => !jobIds.has(s.id))
-  const skills = [...extraBarSkills, ...jobSkills]
+  const tabs = skillWindowTabs(sheet.jobId)
+  const defaultTab = tabs.includes(sheet.jobId) ? sheet.jobId : tabs[tabs.length - 1]!
+  const [activeTab, setActiveTab] = useState(defaultTab)
   const [unassignHover, setUnassignHover] = useState(false)
+
+  const tabSkills = skillsForJob(activeTab)
+  const showTabBar = tabs.length > 1
 
   function handleUnassignDrop(e: React.DragEvent) {
     e.preventDefault()
@@ -43,75 +31,54 @@ export function SkillsWindow({ sheet, onClose }: Props) {
 
   return (
     <AnimatedModal onClose={onClose} panelClassName="panel modal skills-modal">
-        <div className="row spread modal-drag-handle">
-          <h2 style={{ margin: 0 }}>Skills</h2>
-          <button type="button" className="secondary" onClick={onClose}>
-            Close
-          </button>
-        </div>
-        <p className="muted small skills-modal-meta">
-          {jobName} · Job Lv {sheet.jobLevel} · SP {sheet.skillPointsUnspent} · drag icons to the bar below
-        </p>
+      <div className="row spread modal-drag-handle">
+        <h2 style={{ margin: 0 }}>Skills</h2>
+        <button type="button" className="secondary" onClick={onClose}>
+          Close
+        </button>
+      </div>
+      <p className="muted small skills-modal-meta">
+        {jobName} · Job Lv {sheet.jobLevel} · SP {sheet.skillPointsUnspent} · drag icons to
+        the bar below
+      </p>
+      <p className="muted small skills-modal-legend">
+        Bright border = can add a point · Lines = suggested prerequisite path
+      </p>
 
-        <div
-          className={`skill-unassign-zone skill-unassign-zone--compact${unassignHover ? ' skill-unassign-zone--active' : ''}`}
-          onDragOver={(e) => {
-            if (!isSkillBarDragEvent(e.dataTransfer)) return
-            e.preventDefault()
-            e.dataTransfer.dropEffect = 'move'
-            setUnassignHover(true)
-          }}
-          onDragLeave={() => setUnassignHover(false)}
-          onDrop={handleUnassignDrop}
-        >
-          Drop bar skill here to remove
+      {showTabBar && (
+        <div className="skills-window-tabs" role="tablist" aria-label="Job skills">
+          {tabs.map((tabId) => (
+            <button
+              key={tabId}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tabId}
+              className={`skills-window-tab${activeTab === tabId ? ' skills-window-tab--active' : ''}`}
+              onClick={() => setActiveTab(tabId)}
+            >
+              {JOB_NAMES[tabId] ?? tabId}
+            </button>
+          ))}
         </div>
+      )}
 
-        <div className="skills-grid">
-          {skills.map((skill) => {
-            const level = sheet.skills[skill.id] ?? 0
-            const can = jobIds.has(skill.id)
-              ? canLearnSkill(
-                  skill,
-                  sheet.jobId,
-                  sheet.jobLevel,
-                  level,
-                  sheet.skillPointsUnspent,
-                  sheet.skills,
-                )
-              : false
-            const learned = level >= 1
-            const iconDraggable = skill.type === 'active' && learned
-            return (
-              <div key={skill.id} className="skill-cell">
-                <SkillIcon
-                  skillId={skill.id}
-                  level={learned ? level : undefined}
-                  dimmed={!learned || skill.type === 'passive'}
-                  draggable={iconDraggable}
-                  drag={iconDraggable ? { source: 'list', skillId: skill.id } : undefined}
-                  title={skillDetailTitle(skill.id)}
-                />
-                <div className="skill-cell-info">
-                  <span className="skill-cell-name">{skill.name}</span>
-                  <span className="muted small">
-                    Lv {level}/{skill.maxLevel}
-                    {skill.type === 'passive' ? ' · passive' : ''}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="skill-cell-btn"
-                  disabled={!can}
-                  hidden={!jobIds.has(skill.id)}
-                  onClick={() => dispatchCharacterAction({ type: 'learnSkill', skillId: skill.id })}
-                >
-                  {level === 0 ? '+' : '↑'}
-                </button>
-              </div>
-            )
-          })}
-        </div>
+      <div
+        className={`skill-unassign-zone skill-unassign-zone--compact${unassignHover ? ' skill-unassign-zone--active' : ''}`}
+        onDragOver={(e) => {
+          if (!isSkillBarDragEvent(e.dataTransfer)) return
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'move'
+          setUnassignHover(true)
+        }}
+        onDragLeave={() => setUnassignHover(false)}
+        onDrop={handleUnassignDrop}
+      >
+        Drop bar skill here to remove
+      </div>
+
+      <div className="skills-window-tab-panel" role="tabpanel">
+        <SkillTreePanel skills={tabSkills} sheet={sheet} tabJobId={activeTab} />
+      </div>
     </AnimatedModal>
   )
 }

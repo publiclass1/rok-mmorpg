@@ -2,9 +2,21 @@ import type { CharacterSessionState } from '../character/characterState'
 import { effectiveStats } from '../character/effectiveStats'
 import { getItemCombatStats } from '../character/itemCatalog'
 import { getItemWeaponClass } from '../character/itemCatalog'
+import { sumEquippedCritChancePercent } from './critBonuses'
 import { sumEquippedRolledDamagePercent } from '../items/rolledItemCombat'
 import type { MobDefinition } from './mobConfig'
 import { SKILLS } from '../character/skillsConfig'
+
+/** Base Pre-Renewal crit damage before LUK bonus (iRO 140%). */
+export const CRITICAL_DAMAGE_BASE = 1.4
+
+/** +1% crit damage per 3 LUK (custom; stacks on 140% base). */
+export function calcCritDamageMultiplier(effectiveLuk: number): number {
+  return CRITICAL_DAMAGE_BASE + Math.floor(effectiveLuk / 3) * 0.01
+}
+
+/** @deprecated Use calcCritDamageMultiplier */
+export const CRITICAL_DAMAGE_MULTIPLIER = CRITICAL_DAMAGE_BASE
 
 /** Pre-Renewal physical hit chance (see iRO Wiki / Damage). */
 export function calcHit(attackerLevel: number, dex: number, luk: number): number {
@@ -19,6 +31,41 @@ export function calcFlee(defenderLevel: number, agi: number, luk: number): numbe
 export function rollHitSuccess(attackerHit: number, defenderFlee: number, rng = Math.random): boolean {
   const chance = Math.min(95, Math.max(5, 80 + attackerHit - defenderFlee))
   return rng() * 100 < chance
+}
+
+export type CritChanceOptions = {
+  critModifier?: number
+  defenderLuk?: number
+  /** Default 0; no crit without gear. */
+  minChancePercent?: number
+}
+
+/** Crit % from equipment (flat %) × modifier − floor(targetLUK/5). */
+export function calcCritChancePercent(equipCritBonus: number, options?: CritChanceOptions): number {
+  const critModifier = options?.critModifier ?? 1
+  const defenderLuk = options?.defenderLuk ?? 0
+  const minChance = options?.minChancePercent ?? 0
+  const raw = equipCritBonus * critModifier - Math.floor(defenderLuk / 5)
+  return Math.max(minChance, raw)
+}
+
+export function rollCriticalHit(chancePercent: number, rng: () => number): boolean {
+  if (chancePercent <= 0) return false
+  return rng() * 100 < chancePercent
+}
+
+function rollPlayerCritVsMob(
+  equipCritBonus: number,
+  defenderLuk: number,
+  rng: () => number,
+): boolean {
+  const chance = calcCritChancePercent(equipCritBonus, { defenderLuk })
+  return rollCriticalHit(chance, rng)
+}
+
+function applyCriticalDamageMultiplier(damage: number, critical: boolean, effectiveLuk: number): number {
+  if (!critical) return damage
+  return Math.floor(damage * calcCritDamageMultiplier(effectiveLuk))
 }
 
 const ELEMENT_TABLE: Record<string, Record<string, number>> = {
@@ -54,6 +101,17 @@ function statusAtk(baseLevel: number, str: number, dex: number, luk: number): nu
   return baseLevel + str + Math.floor(dex / 5) + Math.floor(luk / 3)
 }
 
+/** Pre-Renewal status MATK from INT (iRO Wiki Classic / INT). */
+export function calcStatusMatkMin(int: number): number {
+  const term = Math.floor(int / 7)
+  return int + term * term
+}
+
+export function calcStatusMatkMax(int: number): number {
+  const term = Math.floor(int / 5)
+  return int + term * term
+}
+
 function softDef(vit: number): number {
   return vit
 }
@@ -64,27 +122,44 @@ function damageAfterDef(atk: number, def: number, vit: number): number {
   return Math.max(1, afterSoft - vitReduce)
 }
 
+function damageAfterMdef(matk: number, mdef: number, skillModifier: number): number {
+  const scaled = matk * skillModifier * (1 - mdef / 100)
+  return Math.max(1, Math.floor(scaled))
+}
+
+function sampleMatk(int: number, critical: boolean, rng: () => number): number {
+  const min = calcStatusMatkMin(int)
+  const max = calcStatusMatkMax(int)
+  if (critical) return max
+  if (min >= max) return min
+  return min + Math.floor(rng() * (max - min + 1))
+}
+
 export function calcPlayerVsMobDamage(
   state: CharacterSessionState,
   mob: MobDefinition,
-  options?: { attackElementOverride?: string; rng?: () => number },
-): { damage: number; hit: boolean } {
+  options?: { attackElementOverride?: string; rng?: () => number; defenderLuk?: number },
+): { damage: number; hit: boolean; critical: boolean } {
   const rng = options?.rng ?? Math.random
   const stats = effectiveStats(state)
+  const equipCrit = sumEquippedCritChancePercent(state.equipment)
+  const defenderLuk = options?.defenderLuk ?? 0
   const weapon = state.equipment.weapon ? getItemCombatStats(state.equipment.weapon) : null
   const weaponAtk = weapon?.weaponAtk ?? 0
   const weaponElement = options?.attackElementOverride ?? weapon?.attackElement ?? 'neutral'
   const weaponSize = weapon?.weaponSize ?? 'medium'
 
-  const hit = rollHitSuccess(
-    calcHit(state.progress.baseLevel, stats.dex, stats.luk),
-    mob.flee,
-    rng,
-  )
-  if (!hit) return { damage: 0, hit: false }
+  const critical = rollPlayerCritVsMob(equipCrit, defenderLuk, rng)
+  let hit = critical
+  if (!hit) {
+    hit = rollHitSuccess(calcHit(state.progress.baseLevel, stats.dex, stats.luk), mob.flee, rng)
+  }
+  if (!hit) return { damage: 0, hit: false, critical: false }
 
   const atk = statusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk) + weaponAtk
-  let damage = damageAfterDef(atk, mob.def, 0)
+  const def = critical ? 0 : mob.def
+  let damage = damageAfterDef(atk, def, 0)
+  damage = applyCriticalDamageMultiplier(damage, critical, stats.luk)
   damage = Math.floor(damage * elementMultiplier(weaponElement, mob.element))
   damage = Math.floor(damage * sizeMultiplier(weaponSize, mob.size))
   const weaponClass = state.equipment.weapon ? getItemWeaponClass(state.equipment.weapon) : null
@@ -93,7 +168,37 @@ export function calcPlayerVsMobDamage(
   if (bonusPct > 0) {
     damage = Math.floor(damage * (1 + bonusPct / 100))
   }
-  return { damage: Math.max(1, damage), hit: true }
+  return { damage: Math.max(1, damage), hit: true, critical }
+}
+
+export function calcPlayerMagicVsMobDamage(
+  state: CharacterSessionState,
+  mob: MobDefinition,
+  options?: {
+    skillModifier?: number
+    attackElement?: string
+    rng?: () => number
+    defenderLuk?: number
+  },
+): { damage: number; critical: boolean } {
+  const rng = options?.rng ?? Math.random
+  const stats = effectiveStats(state)
+  const equipCrit = sumEquippedCritChancePercent(state.equipment)
+  const defenderLuk = options?.defenderLuk ?? 0
+  const skillModifier = options?.skillModifier ?? 1
+  const attackElement = options?.attackElement ?? 'neutral'
+
+  const critical = rollPlayerCritVsMob(equipCrit, defenderLuk, rng)
+  const matk = sampleMatk(stats.int, critical, rng)
+  const mdef = critical ? 0 : mob.mdef
+  let damage = damageAfterMdef(matk, mdef, skillModifier)
+  damage = applyCriticalDamageMultiplier(damage, critical, stats.luk)
+  damage = Math.floor(damage * elementMultiplier(attackElement, mob.element))
+  const bonusPct = sumEquippedRolledDamagePercent(state.equipment, 'magic')
+  if (bonusPct > 0) {
+    damage = Math.floor(damage * (1 + bonusPct / 100))
+  }
+  return { damage: Math.max(1, damage), critical }
 }
 
 export function calcMobVsPlayerDamage(mob: MobDefinition, state: CharacterSessionState, rng = Math.random): number {

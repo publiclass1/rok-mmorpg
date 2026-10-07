@@ -1,5 +1,5 @@
 import { loadRoContent } from '../../content/ro/loadContent'
-import { jobCanUseSkillFromJob } from './jobLineage'
+import { jobAncestorIds, jobCanUseSkillFromJob } from './jobLineage'
 import type { RoSkillSelfBuff, SkillPrerequisite } from '../../content/ro/types'
 
 export type SkillDefinition = {
@@ -53,6 +53,17 @@ export const JOB_NAMES: Record<string, string> = Object.fromEntries(ro.jobs.map(
 
 export function skillsForJob(jobId: string): SkillDefinition[] {
   return Object.values(SKILLS).filter((s) => s.jobId === jobId)
+}
+
+/** Job ids for skills window tabs: first job → current (excludes novice). */
+export function skillWindowTabs(jobId: string): string[] {
+  const tabs = jobAncestorIds(jobId)
+    .filter((id) => id !== 'novice')
+    .filter((id) => skillsForJob(id).length > 0)
+    .reverse()
+  if (tabs.length > 0) return tabs
+  if (skillsForJob(jobId).length > 0) return [jobId]
+  return [jobId]
 }
 
 export function skillUsableByJob(skillId: string, jobId: string): boolean {

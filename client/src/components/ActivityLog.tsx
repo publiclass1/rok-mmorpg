@@ -3,6 +3,9 @@ import { ItemIcon } from './ItemIcon'
 
 type Props = {
   entries: ActivityLogEntry[]
+  maxEntries?: number
+  showTitle?: boolean
+  className?: string
 }
 
 function formatTime(at: number) {
@@ -13,12 +16,13 @@ function formatTime(at: number) {
   })
 }
 
-export function ActivityLog({ entries }: Props) {
-  const visible = entries.slice(-50).reverse()
+export function ActivityLog({ entries, maxEntries = 50, showTitle = true, className }: Props) {
+  const visible = entries.slice(-maxEntries).reverse()
+  const rootClass = className ? `activity-log ${className}` : 'activity-log'
 
   return (
-    <div className="activity-log">
-      <h3>Activity</h3>
+    <div className={rootClass}>
+      {showTitle && <h3>Activity</h3>}
       {visible.length === 0 ? (
         <p className="muted small">No activity yet.</p>
       ) : (

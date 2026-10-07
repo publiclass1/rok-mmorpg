@@ -1308,6 +1308,191 @@ button:disabled {
   margin: 0.25rem 0 0;
 }
 
+.skills-modal-legend {
+  margin: 0.15rem 0 0;
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+
+.skills-window-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.skills-window-tab {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: #1f2937;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.skills-window-tab--active {
+  border-color: #60a5fa;
+  background: #1e3a5f;
+  color: #fff;
+}
+
+.skills-window-tab-panel {
+  margin-top: 0.35rem;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.skill-tree-viewport {
+  position: relative;
+  overflow: auto;
+  min-height: 280px;
+  max-height: 360px;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: #0f1419;
+}
+
+.skill-tree-viewport--grid {
+  min-height: auto;
+  max-height: none;
+  padding: 0.35rem;
+}
+
+.skill-tree-canvas {
+  position: relative;
+  margin: 0 auto;
+}
+
+.skill-tree-edges {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+.skill-tree-edge {
+  stroke: #4b5563;
+  stroke-width: 2;
+}
+
+.skill-tree-edge--on-path {
+  stroke: #60a5fa;
+  stroke-width: 2.5;
+  opacity: 0.95;
+}
+
+.skill-tree-node-wrap {
+  position: absolute;
+}
+
+.skill-tree-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.skill-tree-node--learnable {
+  border-color: #34d399;
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.35), 0 0 12px rgba(52, 211, 153, 0.25);
+}
+
+.skill-tree-node--on-path {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.skill-tree-node--maxed {
+  opacity: 0.92;
+}
+
+.skill-tree-node-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.skill-tree-node-level {
+  font-size: 0.65rem;
+}
+
+.skill-tree-node-btn {
+  min-width: 1.75rem;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 0.1rem;
+}
+
+.skills-grid--tab {
+  margin-top: 0;
+}
+
+.skills-grid--tab .skill-tree-node {
+  border: 1px solid #374151;
+  background: #111827;
+  padding: 0.5rem;
+}
+
+.skill-detail-tooltip {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  background: #1f2937;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.skill-detail-tooltip-name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.skill-detail-tooltip-level,
+.skill-detail-tooltip-desc,
+.skill-detail-tooltip-stats {
+  margin: 0.25rem 0 0;
+}
+
+.skill-detail-tooltip-reqs {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.75rem;
+}
+
+.skill-req-met {
+  color: #6ee7b7;
+}
+
+.skill-req-unmet {
+  color: #fca5a5;
+}
+
+.skill-req-neutral {
+  color: #9ca3af;
+}
+
+.skill-detail-tooltip-blockers {
+  margin: 0.35rem 0 0;
+  color: #fcd34d;
+}
+
 .skills-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1530,6 +1715,29 @@ button:disabled {
   margin: 0.15rem 0;
 }
 
+.activity-log-modal {
+  width: min(440px, 92vw);
+  max-height: min(72vh, 540px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activity-log-modal__header {
+  flex-shrink: 0;
+}
+
+.activity-log-modal__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.activity-log-modal__body .activity-log-list {
+  max-height: min(56vh, 440px);
+}
+
 .activity-log {
   padding: 0.4rem 0.5rem 0.5rem;
   background: #0b1220;
@@ -1673,7 +1881,11 @@ button:disabled {
 
 /* Skills modal: panel height cap when assigning to skill bar */
 .modal.skills-modal {
-  max-height: min(55vh, 420px);
+  max-height: min(70vh, 520px);
+  min-width: min(92vw, 420px);
+  max-width: min(92vw, 520px);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Legacy — prefer .modal-layer */

@@ -54,6 +54,10 @@ export type StatBonusJson = {
   luk: number
 }
 
+export type RoCombatBonuses = {
+  critChance?: number
+}
+
 export type RoConsumableEffect = {
   healHp?: number
   healSp?: number
@@ -70,6 +74,7 @@ export type RoItem = {
   equipSlot: string | null
   layerColor: string | null
   bonuses: StatBonusJson | null
+  combatBonuses?: RoCombatBonuses
   weaponAtk?: number
   weaponSize?: 'small' | 'medium' | 'large'
   attackElement?: string
@@ -262,7 +267,7 @@ export type RoDungeonsConfig = {
   gear: {
     dropSlots: string[]
     rarities: Record<GearRarityId, RoGearRarity>
-    effectKinds: Array<'melee' | 'range' | 'magic'>
+    effectKinds: Array<'melee' | 'range' | 'magic' | 'critChance'>
   }
   floors: RoDungeonFloor[]
 }

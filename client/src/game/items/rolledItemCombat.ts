@@ -1,10 +1,10 @@
 import type { EquipSlot } from '../character/characterState'
 import { getRolledItem } from './rolledItemRegistry'
-import type { RolledEffectKind } from './rolledItem'
+import type { RolledDamageEffectKind } from './rolledItem'
 
 export function sumEquippedRolledDamagePercent(
   equipment: Record<EquipSlot, string | null>,
-  kind: RolledEffectKind,
+  kind: RolledDamageEffectKind,
 ): number {
   let total = 0
   for (const itemId of Object.values(equipment)) {

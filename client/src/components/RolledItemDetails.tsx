@@ -20,7 +20,9 @@ export function RolledItemDetails({ itemId }: Props) {
       </p>
       {statLines.length > 0 && <p className="muted" style={{ margin: 0 }}>{statLines.join(' · ')}</p>}
       <p className="muted" style={{ margin: 0 }}>
-        +{rolled.effect.percent}% {rolled.effect.kind} damage
+        {rolled.effect.kind === 'critChance'
+          ? `+${rolled.effect.percent}% critical hit chance`
+          : `+${rolled.effect.percent}% ${rolled.effect.kind} damage`}
       </p>
       <p className="muted" style={{ margin: 0 }}>Card slots: [ ] [ ]</p>
     </div>
