@@ -290,6 +290,32 @@ export function grantRolledGear(
   }
 }
 
+export function grantAndEquipRolledGear(
+  state: CharacterSessionState,
+  rolled: RolledItem,
+  slot: EquipSlot,
+): CharacterSessionState {
+  return {
+    ...state,
+    rolledItems: addRolledItemToSession(state.rolledItems, rolled),
+    equipment: { ...state.equipment, [slot]: rolled.id },
+  }
+}
+
+const ALL_EQUIP_SLOTS = Object.keys(createDefaultEquipment()) as EquipSlot[]
+
+export function stashAllEquipment(state: CharacterSessionState): CharacterSessionState {
+  let sessionInventory = state.sessionInventory
+  const equipment = createDefaultEquipment()
+  for (const slot of ALL_EQUIP_SLOTS) {
+    const itemId = state.equipment[slot]
+    if (itemId) {
+      sessionInventory = addItemsToSessionInventory(sessionInventory, [itemId])
+    }
+  }
+  return { ...state, equipment, sessionInventory }
+}
+
 export function assignSkillBarSlot(state: CharacterSessionState, index: number, skillId: string | null): CharacterSessionState {
   if (index < 0 || index > 8) return state
   const skillBar = [...state.skillBar]

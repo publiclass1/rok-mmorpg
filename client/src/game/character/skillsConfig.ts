@@ -1,4 +1,5 @@
 import { loadRoContent } from '../../content/ro/loadContent'
+import { jobCanUseSkillFromJob } from './jobLineage'
 import type { RoSkillSelfBuff, SkillPrerequisite } from '../../content/ro/types'
 
 export type SkillDefinition = {
@@ -57,7 +58,7 @@ export function skillsForJob(jobId: string): SkillDefinition[] {
 export function skillUsableByJob(skillId: string, jobId: string): boolean {
   if (skillId === 'basic_attack' || skillId === 'sit') return true
   const skill = SKILLS[skillId]
-  return skill != null && skill.jobId === jobId
+  return skill != null && jobCanUseSkillFromJob(jobId, skill.jobId)
 }
 
 export function meetsSkillPrerequisites(
@@ -90,6 +91,20 @@ export function canPlaceSkillOnBar(
   if (!skillUsableByJob(skillId, jobId)) return false
   const def = SKILLS[skillId]
   return def != null && def.type === 'active'
+}
+
+/** Active enemy-target skills that reuse the Bash melee stub in WorldScene until dedicated logic exists. */
+const MELEE_SKILL_STUBS = new Set([
+  'bash',
+  'pierce',
+  'brandish_spear',
+  'spear_stab',
+  'spear_boomerang',
+  'bowling_bash',
+])
+
+export function isMeleeSkillStub(skillId: string): boolean {
+  return MELEE_SKILL_STUBS.has(skillId)
 }
 
 export function canLearnSkill(

@@ -81,6 +81,29 @@ export type RoItem = {
   /** When set, current job must be one of these ids; omitted means all jobs. */
   requiredJobIds?: string[]
   sourceUrl?: string | null
+  /** Override path under public root; weapons default to `/items/weapons/{id}.svg` */
+  iconFile?: string | null
+}
+
+export type RoJobStarterPiece = {
+  slot: string
+  baseItemId: string
+}
+
+export type RoJobStarterGearConfig = {
+  kits: Record<string, { pieces: RoJobStarterPiece[] }>
+}
+
+export type RoJobChangeOfferJson = {
+  jobId: string
+  fromJobId?: string
+  requiredJobLevel: number
+  requiredBaseLevel?: number
+  zenyCost?: number
+}
+
+export type RoJobMasterConfig = {
+  offersByNpcId: Record<string, RoJobChangeOfferJson[]>
 }
 
 export type RoExpTables = {
@@ -239,4 +262,6 @@ export type RoContentPack = {
   expTables: RoExpTables
   loot: RoLootConfig
   dungeons: RoDungeonsConfig
+  jobStarterGear: RoJobStarterGearConfig
+  jobMaster: RoJobMasterConfig
 }

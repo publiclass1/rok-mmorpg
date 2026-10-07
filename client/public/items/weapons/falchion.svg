@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  
+  <defs>
+    <linearGradient id="falchion-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="falchion-steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="35%" stop-color="#cbd5e1"/>
+      <stop offset="70%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <linearGradient id="falchion-steel-dark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="50%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+    <linearGradient id="falchion-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="50%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+    <linearGradient id="falchion-wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a16207"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <linearGradient id="falchion-leather" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#78716c"/>
+      <stop offset="100%" stop-color="#292524"/>
+    </linearGradient>
+    <radialGradient id="falchion-gem" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#e9d5ff"/>
+      <stop offset="45%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#5b21b6"/>
+    </radialGradient>
+    <filter id="falchion-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="0.6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="32" height="32" rx="5" fill="url(#falchion-bg)"/>
+  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#78716c" stroke-opacity="0.35" stroke-width="0.5"/>
+  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
+  <path d="M12 6 C14 5 18 5 20 7 L21 19 C21 21 17 23 14 22 L11 10 Z" fill="url(#falchion-steel)"/>
+  <path d="M13 7 C15 6.5 18 7 19 8 L19.5 18 C19.5 19.5 17 20.5 15 20 L12.5 11 Z" fill="#f8fafc" opacity="0.35"/>
+  <path d="M14 8 L18 9 L17 17 L15 16 Z" fill="#94a3b8" opacity="0.25"/>
+  <rect x="11" y="21" width="9" height="2" fill="url(#falchion-gold)"/>
+  <rect x="13" y="23" width="5" height="4" fill="url(#falchion-leather)"/>
+  <circle cx="15.5" cy="25.5" r="1.5" fill="url(#falchion-gold)"/>
+  </svg>

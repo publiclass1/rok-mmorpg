@@ -1,7 +1,13 @@
 import { loadRoContent } from '../../content/ro/loadContent'
+import { createRolledGearFromBase } from '../items/rolledItem'
 import { progressFromLevels } from '../combat/exp'
 import { SKILLS } from './skillsConfig'
-import type { CharacterSessionState } from './characterState'
+import type { CharacterSessionState, EquipSlot } from './characterState'
+import {
+  grantAndEquipRolledGear,
+  stashAllEquipment,
+} from './characterState'
+import { isAdvancedJobChange, jobCanUseSkillFromJob } from './jobLineage'
 
 export type JobChangeOffer = {
   jobId: string
@@ -9,6 +15,21 @@ export type JobChangeOffer = {
   requiredJobLevel: number
   requiredBaseLevel?: number
   zenyCost?: number
+}
+
+/** Content `jobMaster.json` overrides DB/TMJ config when present (canonical job paths). */
+export function jobChangeOffersForNpc(npcId: string, config: unknown): JobChangeOffer[] {
+  const fromContent = loadRoContent().jobMaster.offersByNpcId[npcId]
+  if (fromContent?.length) {
+    return fromContent.map((o) => ({
+      jobId: o.jobId,
+      fromJobId: o.fromJobId,
+      requiredJobLevel: o.requiredJobLevel,
+      requiredBaseLevel: o.requiredBaseLevel ?? 1,
+      zenyCost: o.zenyCost ?? 0,
+    }))
+  }
+  return jobChangeOffersFromNpcConfig(config)
 }
 
 export function jobChangeOffersFromNpcConfig(config: unknown): JobChangeOffer[] {
@@ -60,35 +81,70 @@ export function canAcceptJobChange(
   return { ok: true }
 }
 
+function skillsAfterJobChange(state: CharacterSessionState, targetJobId: string): Record<string, number> {
+  const next: Record<string, number> = { basic_attack: 1, sit: 1 }
+  if (!isAdvancedJobChange(targetJobId)) {
+    return next
+  }
+  for (const [skillId, level] of Object.entries(state.skills)) {
+    if (skillId === 'basic_attack' || skillId === 'sit') continue
+    const def = SKILLS[skillId]
+    if (!def || level < 1) continue
+    if (jobCanUseSkillFromJob(targetJobId, def.jobId)) {
+      next[skillId] = level
+    }
+  }
+  return next
+}
+
 function sanitizeSkillBar(state: CharacterSessionState): (string | null)[] {
   return state.skillBar.map((skillId) => {
     if (!skillId) return null
     if (skillId === 'basic_attack' || skillId === 'sit') return skillId
     const def = SKILLS[skillId]
-    if (!def || def.jobId !== state.jobId) return null
+    if (!def || !jobCanUseSkillFromJob(state.jobId, def.jobId)) return null
     if ((state.skills[skillId] ?? 0) < 1) return null
     return skillId
   })
 }
 
-/** Novice → 1st job: reset job progress, strip old job skills, keep base stats and unspent skill points. */
+function applyStarterGear(state: CharacterSessionState, targetJobId: string): CharacterSessionState {
+  const kit = loadRoContent().jobStarterGear.kits[targetJobId]
+  if (!kit) return state
+  let next = state
+  const reqLevel = Math.max(1, state.progress.baseLevel)
+  for (const piece of kit.pieces) {
+    const rolled = createRolledGearFromBase(piece.baseItemId, {
+      rarity: 'common',
+      requiredBaseLevel: reqLevel,
+    })
+    if (!rolled) continue
+    next = grantAndEquipRolledGear(next, rolled, piece.slot as EquipSlot)
+  }
+  return next
+}
+
+/** Job change: reset job progress; 2nd jobs keep prior class skills; grant common rolled starter kit. */
 export function applyJobChange(state: CharacterSessionState, targetJobId: string): CharacterSessionState {
-  const next: CharacterSessionState = {
-    ...state,
+  const stashed = stashAllEquipment(state)
+  const skills = skillsAfterJobChange(stashed, targetJobId)
+  let next: CharacterSessionState = {
+    ...stashed,
     jobId: targetJobId,
     progress: progressFromLevels(
-      state.progress.baseLevel,
-      state.progress.baseExp,
+      stashed.progress.baseLevel,
+      stashed.progress.baseExp,
       1,
       0,
       targetJobId,
     ),
-    skills: { basic_attack: 1, sit: 1 },
+    skills,
     skillBar: sanitizeSkillBar({
-      ...state,
+      ...stashed,
       jobId: targetJobId,
-      skills: { basic_attack: 1, sit: 1 },
+      skills,
     }),
   }
+  next = applyStarterGear(next, targetJobId)
   return next
 }

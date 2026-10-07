@@ -11,7 +11,13 @@ import {
   setCharacterSession,
   updateCharacterSession,
 } from '../character/characterSessionBridge'
-import { SKILLS, selfBuffDurationMs, skillUsableByJob, type SkillDefinition } from '../character/skillsConfig'
+import {
+  SKILLS,
+  isMeleeSkillStub,
+  selfBuffDurationMs,
+  skillUsableByJob,
+  type SkillDefinition,
+} from '../character/skillsConfig'
 import {
   applySelfBuff,
   buffsEqual,
@@ -1120,7 +1126,7 @@ export class WorldScene extends Phaser.Scene {
       this.beginSkillTargeting(skillId, level, def)
       return
     }
-    if (skillId === 'bash') {
+    if (isMeleeSkillStub(skillId)) {
       this.tryBash(level, def.mpCost)
       return
     }
@@ -1174,7 +1180,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private castSkillById(skillId: string, level: number, def: SkillDefinition) {
-    if (skillId === 'bash') {
+    if (isMeleeSkillStub(skillId)) {
       this.tryBash(level, def.mpCost)
       return
     }
@@ -1662,7 +1668,7 @@ export class WorldScene extends Phaser.Scene {
     if (!rolled) return
     this.session = grantRolledGear(this.session, rolled)
     const label = rolledItemDisplayName(rolled)
-    logActivity('combat', `Obtained ${label}.`)
+    logActivity('combat', `Obtained ${label}.`, rolled.id)
     emitGameEvent('sessionSync', structuredClone(this.session))
     this.scheduleProgressSave()
   }
@@ -1958,7 +1964,7 @@ export class WorldScene extends Phaser.Scene {
           sessionInventory: addItemsToSessionInventory(this.session.sessionInventory, loot.itemIds),
         }
         for (const itemId of loot.itemIds) {
-          logActivity('combat', `Obtained ${getItemDisplayName(itemId)}.`)
+          logActivity('combat', `Obtained ${getItemDisplayName(itemId)}.`, itemId)
         }
       }
 

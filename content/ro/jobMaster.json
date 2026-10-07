@@ -1,0 +1,55 @@
+{
+  "offersByNpcId": {
+    "prontera_job_master": [
+      {
+        "jobId": "swordman",
+        "fromJobId": "novice",
+        "requiredJobLevel": 10,
+        "requiredBaseLevel": 1,
+        "zenyCost": 0
+      },
+      {
+        "jobId": "mage",
+        "fromJobId": "novice",
+        "requiredJobLevel": 10,
+        "requiredBaseLevel": 1,
+        "zenyCost": 0
+      },
+      {
+        "jobId": "archer",
+        "fromJobId": "novice",
+        "requiredJobLevel": 10,
+        "requiredBaseLevel": 1,
+        "zenyCost": 0
+      },
+      {
+        "jobId": "acolyte",
+        "fromJobId": "novice",
+        "requiredJobLevel": 10,
+        "requiredBaseLevel": 1,
+        "zenyCost": 0
+      },
+      {
+        "jobId": "merchant",
+        "fromJobId": "novice",
+        "requiredJobLevel": 10,
+        "requiredBaseLevel": 1,
+        "zenyCost": 0
+      },
+      {
+        "jobId": "thief",
+        "fromJobId": "novice",
+        "requiredJobLevel": 10,
+        "requiredBaseLevel": 1,
+        "zenyCost": 0
+      },
+      {
+        "jobId": "knight",
+        "fromJobId": "swordman",
+        "requiredJobLevel": 40,
+        "requiredBaseLevel": 40,
+        "zenyCost": 0
+      }
+    ]
+  }
+}

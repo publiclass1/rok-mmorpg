@@ -25876,7 +25876,7 @@
             {
               "name": "configJson",
               "type": "string",
-              "value": "{\"offers\":[{\"jobId\":\"swordman\",\"zenyCost\":0,\"fromJobId\":\"novice\",\"requiredJobLevel\":10,\"requiredBaseLevel\":1}]}"
+              "value": "{\"offers\":[{\"jobId\":\"swordman\",\"zenyCost\":0,\"fromJobId\":\"novice\",\"requiredJobLevel\":10,\"requiredBaseLevel\":1},{\"jobId\":\"knight\",\"zenyCost\":0,\"fromJobId\":\"swordman\",\"requiredJobLevel\":40,\"requiredBaseLevel\":40}]}"
             }
           ]
         },

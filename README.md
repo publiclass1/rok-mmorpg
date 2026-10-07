@@ -2,7 +2,7 @@
 
 A simple browser MMORPG inspired by Ragnarok Online — for fun and game-dev learning. Shared 2D tile maps, account/characters, Kafra-style storage, NPC warps, and player trading.
 
-**Design reference:** [iRO Wiki](https://irowiki.org/) (Pre-Renewal / Classic). See [docs/IRO_REFERENCE.md](docs/IRO_REFERENCE.md) for system status, [docs/MILESTONES.md](docs/MILESTONES.md) for the step-by-step roadmap, [docs/PERSISTENCE_AND_REALTIME.md](docs/PERSISTENCE_AND_REALTIME.md) for save vs multiplayer realtime (Netlify + Supabase), and [content/ro/](content/ro/) for curated game data. Validate content with `npm run content:validate`.
+**Design reference:** [iRO Wiki](https://irowiki.org/) (Pre-Renewal / Classic). See [docs/IRO_REFERENCE.md](docs/IRO_REFERENCE.md) for system status, [docs/MILESTONES.md](docs/MILESTONES.md) for the step-by-step roadmap, [docs/PERSISTENCE_AND_REALTIME.md](docs/PERSISTENCE_AND_REALTIME.md) for save vs multiplayer realtime (Netlify + Supabase), and [content/ro/](content/ro/) for curated game data. Validate content with `npm run content:validate`. Regenerate icons with `npm run icons` or `icons:skills` / `icons:weapons` ([`docs/ASSET_ICONS.md`](docs/ASSET_ICONS.md)).
 
 ## Features
 
@@ -89,6 +89,7 @@ Regenerate Prontera from the layout file:
 
 ```bash
 npm run maps:prontera
+npm run icons:weapons   # inventory weapon SVGs from content/ro/items.json
 ```
 
 Preview: `docs/maps/prontera-preview.svg`. Tile art source: `client/public/tiles/city-tileset.svg` (runtime procedural strip in `client/src/game/textures.ts`). Edit maps in [Tiled](https://www.mapeditor.org/) using exported JSON in `client/public/maps/`.

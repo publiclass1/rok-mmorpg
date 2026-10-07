@@ -25,7 +25,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Accounts & characters | — | implemented | `client/src/lib/accountAuth.ts`, `supabase/migrations/*` |
 | Stats (STR–LUK) | [Stats](https://irowiki.org/wiki/Stats) | partial | Pre-Renewal HP/SP tables + stat point grants in `statFormulas.ts` / `content/ro/expTables.json` |
 | Base / job EXP | [Experience](https://irowiki.org/wiki/Experience) | implemented | `content/ro/expTables.json`, `combat/exp.ts` (Pre-Renewal tables, cap 99) |
-| Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `content/ro/jobs.json`; Job Master NPC + client job change (`jobChange.ts`, `JobMasterModal.tsx`) |
+| Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `jobs.json`, Knight skills in `skills.json`; Job Master offers in `jobMaster.json` (overrides DB); starter kit `jobStarterGear.json` |
 | Skills | [Skills](https://irowiki.org/wiki/Skills) | partial | `content/ro/skills.json`; Swordman tree + prerequisites; Bash usable in combat |
 | Items & equipment | [Items](https://irowiki.org/wiki/Items), [Equipment](https://irowiki.org/wiki/Equipment) | partial | `content/ro/items.json` (`requiredBaseLevel`, `requiredJobIds`); equip enforced in `equipRequirements.ts` / `applyCharacterAction.ts`; `equipmentConfig.ts` |
 | Inventory weight | [Weight](https://irowiki.org/wiki/Weight) | planned | — |
@@ -77,8 +77,9 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 
 1. Open the matching iRO Wiki page (Pre-Renewal values).
 2. Add or update a row in `content/ro/*.json`; set `sourceUrl` when helpful.
-3. Run `npm run content:validate` from the repo root.
-4. Gameplay modules should read data through `loadRoContent()` / bridged configs (`skillsConfig`, `equipmentConfig`, `mobConfig`) — avoid duplicating ids or stats in TypeScript.
+3. For new **skills** / **weapons**, run `npm run icons:skills` / `npm run icons:weapons` (see [`ASSET_ICONS.md`](ASSET_ICONS.md)).
+4. Run `npm run content:validate` from the repo root (includes weapon icon check).
+5. Gameplay modules should read data through `loadRoContent()` / bridged configs (`skillsConfig`, `equipmentConfig`, `mobConfig`) — avoid duplicating ids or stats in TypeScript.
 
 ## Related docs
 

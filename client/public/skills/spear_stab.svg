@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  
+  <defs>
+    <linearGradient id="spearstab-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="spearstab-steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="40%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <linearGradient id="spearstab-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="55%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+    <linearGradient id="spearstab-fire" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#fde047"/>
+    </linearGradient>
+    <linearGradient id="spearstab-holy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="45%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+    <linearGradient id="spearstab-wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a16207"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <radialGradient id="spearstab-gem" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="50%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </radialGradient>
+    <filter id="spearstab-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="32" height="32" rx="5" fill="url(#spearstab-bg)"/>
+  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#1d4ed8" stroke-opacity="0.45" stroke-width="0.6"/>
+  <path d="M3 27 Q16 23 29 27" stroke="#000" stroke-opacity="0.3" stroke-width="1" fill="none"/>
+  <line x1="10" y1="26" x2="22" y2="10" stroke="url(#spearstab-wood)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M21 9 L26 8 L23 14 L20 13 Z" fill="url(#spearstab-steel)"/>
+  <path d="M22 10 L28 10" stroke="#f8fafc" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M24 8 L30 7 L28 11 Z" fill="#e2e8f0" opacity="0.6"/>
+  <rect x="8" y="24" width="6" height="2" fill="#ef4444" opacity="0.5" transform="rotate(-45 11 25)"/>
+  </svg>

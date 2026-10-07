@@ -62,7 +62,7 @@ values
     816,
     'job_master',
     'Job Master',
-    '{"offers":[{"jobId":"swordman","zenyCost":0,"fromJobId":"novice","requiredJobLevel":10,"requiredBaseLevel":1}],"facing":"down"}'::jsonb
+    '{"offers":[{"jobId":"swordman","zenyCost":0,"fromJobId":"novice","requiredJobLevel":10,"requiredBaseLevel":1},{"jobId":"mage","zenyCost":0,"fromJobId":"novice","requiredJobLevel":10,"requiredBaseLevel":1},{"jobId":"archer","zenyCost":0,"fromJobId":"novice","requiredJobLevel":10,"requiredBaseLevel":1},{"jobId":"acolyte","zenyCost":0,"fromJobId":"novice","requiredJobLevel":10,"requiredBaseLevel":1},{"jobId":"merchant","zenyCost":0,"fromJobId":"novice","requiredJobLevel":10,"requiredBaseLevel":1},{"jobId":"thief","zenyCost":0,"fromJobId":"novice","requiredJobLevel":10,"requiredBaseLevel":1},{"jobId":"knight","zenyCost":0,"fromJobId":"swordman","requiredJobLevel":40,"requiredBaseLevel":40}],"facing":"down"}'::jsonb
   ),
   (
     'prontera_dungeon_guide',

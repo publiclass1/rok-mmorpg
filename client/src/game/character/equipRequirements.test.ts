@@ -14,6 +14,9 @@ function run() {
   const swordOk = checkCanEquipItem({ baseLevel: 2, jobId: 'swordman' }, 'sword')
   assert.equal(swordOk.ok, true)
 
+  const knightSword = checkCanEquipItem({ baseLevel: 40, jobId: 'knight' }, 'sword')
+  assert.equal(knightSword.ok, true, 'knight inherits swordman weapon reqs')
+
   const levelFail = checkCanEquipItem({ baseLevel: 3, jobId: 'archer' }, 'composite_bow')
   assert.equal(levelFail.ok, false)
   if (!levelFail.ok) {

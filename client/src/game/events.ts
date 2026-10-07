@@ -137,6 +137,7 @@ export type ActivityLogEntry = {
   at: number
   kind: ActivityLogKind
   message: string
+  itemId?: string
 }
 
 export type GameEvents = {

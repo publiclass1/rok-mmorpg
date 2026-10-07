@@ -8,6 +8,8 @@ import lootJson from '../../../../content/ro/loot.json'
 import expTablesJson from '../../../../content/ro/expTables.json'
 import dungeonMobsJson from '../../../../content/ro/dungeonMobs.json'
 import dungeonsJson from '../../../../content/ro/dungeons.json'
+import jobStarterGearJson from '../../../../content/ro/jobStarterGear.json'
+import jobMasterJson from '../../../../content/ro/jobMaster.json'
 import type {
   RoContentPack,
   RoJob,
@@ -20,6 +22,8 @@ import type {
   RoExpTables,
   RoLootConfig,
   RoDungeonsConfig,
+  RoJobStarterGearConfig,
+  RoJobMasterConfig,
 } from './types'
 import { validateRoContent } from './validateRoContent'
 
@@ -72,6 +76,8 @@ export function loadRoContent(): RoContentPack {
     expTables: expTablesJson as RoExpTables,
     loot: lootJson as RoLootConfig,
     dungeons: dungeonsJson as RoDungeonsConfig,
+    jobStarterGear: jobStarterGearJson as RoJobStarterGearConfig,
+    jobMaster: jobMasterJson as RoJobMasterConfig,
   }
 
   validateRoContent(pack)

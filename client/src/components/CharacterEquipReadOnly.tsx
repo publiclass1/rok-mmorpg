@@ -1,6 +1,7 @@
 import type { EquipSlot } from '../game/character/characterState'
 import { EQUIPMENT } from '../game/character/equipmentConfig'
-import { getItemDisplayName } from '../game/character/itemCatalog'
+import { getItemDisplayName, isWeaponItem } from '../game/character/itemCatalog'
+import { ItemIcon } from './ItemIcon'
 import type { CharacterAppearance } from '../game/character/characterAppearance'
 import { CharacterAppearancePreview } from './CharacterAppearancePreview'
 import { CharacterEquipPreview } from './CharacterEquipPreview'
@@ -29,16 +30,29 @@ type SlotCellProps = {
 }
 
 function EquipSlotCell({ slot, itemId, compact, onUnequip }: SlotCellProps) {
+  const weaponIcon = itemId ? isWeaponItem(itemId) : false
   const color = itemId ? EQUIPMENT[itemId]?.layerColor ?? 0x4b5563 : 0x1f2937
   return (
     <div className={`equip-slot-cell${compact ? ' equip-slot-cell--compact' : ''}`}>
       <span className="muted small equip-slot-label">{EQUIP_SLOT_LABELS[slot]}</span>
       <div
-        className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''} ${itemId ? 'filled' : ''}`}
-        style={{ backgroundColor: itemId ? `#${color.toString(16).padStart(6, '0')}` : undefined }}
+        className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''} ${itemId ? 'filled' : ''}${weaponIcon ? ' inv-slot--has-icon' : ''}`}
+        style={
+          itemId && !weaponIcon
+            ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
+            : undefined
+        }
         title={itemId ? getItemDisplayName(itemId) : 'Empty'}
       >
-        {itemId ? getItemDisplayName(itemId).slice(0, 3) : '—'}
+        {itemId ? (
+          weaponIcon && slot === 'weapon' ? (
+            <ItemIcon itemId={itemId} size={compact ? 28 : 36} alt="" />
+          ) : (
+            getItemDisplayName(itemId).slice(0, 3)
+          )
+        ) : (
+          '—'
+        )}
       </div>
       {itemId && onUnequip && (
         <button type="button" className="secondary small-btn" onClick={() => onUnequip(slot)}>

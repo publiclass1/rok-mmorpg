@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  
+  <defs>
+    <linearGradient id="axe-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="axe-steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="35%" stop-color="#cbd5e1"/>
+      <stop offset="70%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <linearGradient id="axe-steel-dark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="50%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+    <linearGradient id="axe-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="50%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+    <linearGradient id="axe-wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a16207"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <linearGradient id="axe-leather" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#78716c"/>
+      <stop offset="100%" stop-color="#292524"/>
+    </linearGradient>
+    <radialGradient id="axe-gem" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#e9d5ff"/>
+      <stop offset="45%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#5b21b6"/>
+    </radialGradient>
+    <filter id="axe-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="0.6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="32" height="32" rx="5" fill="url(#axe-bg)"/>
+  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#57534e" stroke-opacity="0.35" stroke-width="0.5"/>
+  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
+  <rect x="15" y="12" width="2.5" height="16" rx="0.5" fill="url(#axe-wood)"/>
+  <path d="M10 9 L18 7 L19 13 L13 16 L10 12 Z" fill="url(#axe-steel)"/>
+       <path d="M17 7 L20 9 L18 13 L17 10 Z" fill="#94a3b8"/>
+  <path d="M11 11 L17 9" stroke="#f8fafc" stroke-width="0.5" opacity="0.4"/>
+  <rect x="14" y="26" width="4" height="2" fill="url(#axe-leather)"/>
+  </svg>

@@ -101,6 +101,22 @@ export function getEquipColor(itemId: string): number {
   return getEquipmentDefinition(itemId)?.layerColor ?? 0x6b7280
 }
 
+export function getItemIconUrl(itemId: string): string | null {
+  const baseId = isRolledItemId(itemId) ? parseRolledBaseItemId(itemId) : itemId
+  if (!baseId) return null
+  const item = ITEMS_BY_ID[baseId]
+  if (!item) return null
+  if (item.iconFile) return item.iconFile
+  if (item.type === 'weapon') return `/items/weapons/${baseId}.svg`
+  return null
+}
+
+export function isWeaponItem(itemId: string): boolean {
+  const baseId = isRolledItemId(itemId) ? parseRolledBaseItemId(itemId) : itemId
+  if (!baseId) return false
+  return ITEMS_BY_ID[baseId]?.type === 'weapon'
+}
+
 export function getRolledItemOrNull(itemId: string): RolledItem | null {
   return getRolledItem(itemId)
 }

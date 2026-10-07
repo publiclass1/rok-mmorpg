@@ -6,7 +6,9 @@ import {
   getRolledItemOrNull,
   isConsumable,
   isEquippable,
+  isWeaponItem,
 } from '../game/character/itemCatalog'
+import { ItemIcon } from './ItemIcon'
 import { rarityColor } from '../game/items/rolledItem'
 import { RolledItemDetails } from './RolledItemDetails'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
@@ -98,6 +100,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
         <div className="inv-grid">
           {cells.map((cell) => {
             const equippable = isEquippable(cell.itemId)
+            const weaponIcon = isWeaponItem(cell.itemId)
             const color = getEquipColor(cell.itemId)
             const rolled = getRolledItemOrNull(cell.itemId)
             const nameColor = rolled ? rarityColor(rolled.rarity) : undefined
@@ -105,19 +108,25 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
               <button
                 key={cell.key}
                 type="button"
-                className={`inv-slot ${equippable ? 'equippable' : ''}`}
+                className={`inv-slot ${equippable ? 'equippable' : ''}${weaponIcon ? ' inv-slot--has-icon' : ''}`}
                 onClick={() => setSelectedItemId(cell.itemId)}
                 style={
-                  equippable
+                  equippable && !weaponIcon
                     ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
-                    : undefined
+                    : equippable && weaponIcon
+                      ? { borderColor: nameColor ?? `#${color.toString(16).padStart(6, '0')}` }
+                      : undefined
                 }
                 title={`${getItemDisplayName(cell.itemId)}${cell.quantity > 1 ? ` ×${cell.quantity}` : ''}`}
                 onDoubleClick={() => onDoubleClick(cell)}
               >
-                <span className="inv-slot-label" style={nameColor ? { color: nameColor } : undefined}>
-                  {getItemDisplayName(cell.itemId).slice(0, 4)}
-                </span>
+                {weaponIcon ? (
+                  <ItemIcon itemId={cell.itemId} size={36} alt="" />
+                ) : (
+                  <span className="inv-slot-label" style={nameColor ? { color: nameColor } : undefined}>
+                    {getItemDisplayName(cell.itemId).slice(0, 4)}
+                  </span>
+                )}
                 {cell.quantity > 1 && <span className="inv-slot-qty">{cell.quantity}</span>}
               </button>
             )

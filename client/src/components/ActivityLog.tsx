@@ -1,4 +1,5 @@
 import type { ActivityLogEntry } from '../game/events'
+import { ItemIcon } from './ItemIcon'
 
 type Props = {
   entries: ActivityLogEntry[]
@@ -25,6 +26,7 @@ export function ActivityLog({ entries }: Props) {
           {visible.map((entry) => (
             <li key={entry.id} className={`activity-log-item kind-${entry.kind}`}>
               <span className="activity-log-time">{formatTime(entry.at)}</span>
+              {entry.itemId && <ItemIcon itemId={entry.itemId} size={20} className="activity-log-item-icon" />}
               <span className="activity-log-msg">{entry.message}</span>
             </li>
           ))}

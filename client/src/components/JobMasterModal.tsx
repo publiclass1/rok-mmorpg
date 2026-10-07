@@ -1,5 +1,5 @@
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
-import { canAcceptJobChange, jobChangeOffersFromNpcConfig, type JobChangeOffer } from '../game/character/jobChange'
+import { canAcceptJobChange, jobChangeOffersForNpc, type JobChangeOffer } from '../game/character/jobChange'
 import { JOB_NAMES } from '../game/character/skillsConfig'
 import type { CharacterSheetPayload } from '../game/events'
 import type { CharacterRow, NpcRow } from '../types/database'
@@ -28,7 +28,7 @@ function describeOffer(offer: JobChangeOffer): string {
 }
 
 export function JobMasterModal({ character, npc, sheet, onClose, onCharacterUpdated }: Props) {
-  const offers = jobChangeOffersFromNpcConfig(npc.config)
+  const offers = jobChangeOffersForNpc(npc.id, npc.config)
   const progress = { jobId: sheet.jobId, jobLevel: sheet.jobLevel, baseLevel: sheet.baseLevel }
 
   async function accept(offer: JobChangeOffer) {

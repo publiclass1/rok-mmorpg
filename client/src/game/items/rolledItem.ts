@@ -90,6 +90,32 @@ function baseItemsForSlot(slot: string): RoItem[] {
   return items.filter((i) => i.equipSlot === slot && i.bonuses && i.layerColor)
 }
 
+export type CreateRolledGearOptions = {
+  rarity: GearRarityId
+  requiredBaseLevel: number
+}
+
+export function createRolledGearFromBase(
+  baseItemId: string,
+  options: CreateRolledGearOptions,
+  rng = Math.random,
+): RolledItem | null {
+  const base = loadRoContent().items.find((i) => i.id === baseItemId)
+  if (!base?.equipSlot || !base.bonuses || !base.layerColor) return null
+  const id = `${ROLLED_PREFIX}${baseItemId}:${randomId8(rng)}`
+  const rarity = options.rarity
+  return {
+    id,
+    baseItemId,
+    rarity,
+    requiredBaseLevel: options.requiredBaseLevel,
+    stats: rollStats(rarity, rng),
+    effect: rollEffect(rarity, rng),
+    slots: 2,
+    cards: [null, null],
+  }
+}
+
 export function rollDungeonGear(floor: RoDungeonFloor, isMvp: boolean, rng = Math.random): RolledItem | null {
   const rolls = isMvp ? floor.gearDrop.mvpRolls : 1
   let result: RolledItem | null = null

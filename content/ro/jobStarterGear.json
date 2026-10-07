@@ -1,0 +1,54 @@
+{
+  "kits": {
+    "swordman": {
+      "pieces": [
+        { "slot": "weapon", "baseItemId": "sword" },
+        { "slot": "armor", "baseItemId": "wooden_mail" },
+        { "slot": "boots", "baseItemId": "shoes" }
+      ]
+    },
+    "knight": {
+      "pieces": [
+        { "slot": "weapon", "baseItemId": "spear" },
+        { "slot": "armor", "baseItemId": "coat" },
+        { "slot": "offhand", "baseItemId": "buckler" },
+        { "slot": "garment", "baseItemId": "mantle" }
+      ]
+    },
+    "mage": {
+      "pieces": [
+        { "slot": "weapon", "baseItemId": "rod" },
+        { "slot": "armor", "baseItemId": "silk_robe" },
+        { "slot": "boots", "baseItemId": "shoes" }
+      ]
+    },
+    "archer": {
+      "pieces": [
+        { "slot": "weapon", "baseItemId": "bow" },
+        { "slot": "armor", "baseItemId": "adventurers_suit" },
+        { "slot": "boots", "baseItemId": "shoes" }
+      ]
+    },
+    "acolyte": {
+      "pieces": [
+        { "slot": "weapon", "baseItemId": "mace" },
+        { "slot": "armor", "baseItemId": "cotton_shirt" },
+        { "slot": "boots", "baseItemId": "shoes" }
+      ]
+    },
+    "merchant": {
+      "pieces": [
+        { "slot": "weapon", "baseItemId": "axe" },
+        { "slot": "armor", "baseItemId": "adventurers_suit" },
+        { "slot": "boots", "baseItemId": "shoes" }
+      ]
+    },
+    "thief": {
+      "pieces": [
+        { "slot": "weapon", "baseItemId": "main_gauche" },
+        { "slot": "armor", "baseItemId": "adventurers_suit" },
+        { "slot": "boots", "baseItemId": "shoes" }
+      ]
+    }
+  }
+}

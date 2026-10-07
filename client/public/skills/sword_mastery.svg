@@ -1,6 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="4" fill="#1e3a5f"/>
-  <path d="M16 6 L18 22 L16 24 L14 22 Z" fill="#cbd5e1"/>
-  <path d="M10 22 H22 V25 H10 Z" fill="#64748b"/>
-  <circle cx="16" cy="8" r="2" fill="#94a3b8"/>
-</svg>
+  
+  <defs>
+    <linearGradient id="swordmastery-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="swordmastery-steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="40%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <linearGradient id="swordmastery-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="55%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+    <linearGradient id="swordmastery-fire" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#fde047"/>
+    </linearGradient>
+    <linearGradient id="swordmastery-holy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="45%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+    <linearGradient id="swordmastery-wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a16207"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <radialGradient id="swordmastery-gem" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="50%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </radialGradient>
+    <filter id="swordmastery-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="32" height="32" rx="5" fill="url(#swordmastery-bg)"/>
+  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#1e3a5f" stroke-opacity="0.45" stroke-width="0.6"/>
+  <path d="M3 27 Q16 23 29 27" stroke="#000" stroke-opacity="0.3" stroke-width="1" fill="none"/>
+  <path d="M11 8 L13 22 L16 23 L15 9 Z" fill="url(#swordmastery-steel)"/>
+  <path d="M19 8 L21 22 L18 23 L17 9 Z" fill="url(#swordmastery-steel)"/>
+  <path d="M12 9 L14 20" stroke="#f8fafc" stroke-width="0.5" opacity="0.6"/>
+  <path d="M20 9 L18 20" stroke="#f8fafc" stroke-width="0.5" opacity="0.6"/>
+  <rect x="9" y="21" width="14" height="2" fill="url(#swordmastery-gold)"/>
+  <path d="M8 12 L24 12" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/>
+  </svg>

@@ -1,3 +1,4 @@
+import { loadRoContent } from '../../content/ro/loadContent'
 import { logActivity } from '../activityLog'
 import type { CharacterActionPayload } from '../events'
 import { syncDerivedVitals, toCharacterSheetPayload } from './characterSheet'
@@ -74,6 +75,9 @@ export function applyCharacterAction(
     const next = syncDerivedVitals(applyJobChange(state, action.jobId))
     const jobName = JOB_NAMES[action.jobId] ?? action.jobId
     logActivity('character', `Job change complete — now a ${jobName}.`)
+    if (loadRoContent().jobStarterGear.kits[action.jobId]) {
+      logActivity('character', 'Received starter equipment.')
+    }
     return { state: next, changed: true, message: `You are now a ${jobName}!` }
   }
 

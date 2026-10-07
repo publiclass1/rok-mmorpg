@@ -15,6 +15,13 @@
       "sourceUrl": "https://irowiki.org/wiki/Swordman"
     },
     {
+      "id": "knight",
+      "name": "Knight",
+      "maxJobLevel": 50,
+      "parentJobId": "swordman",
+      "sourceUrl": "https://irowiki.org/wiki/Knight"
+    },
+    {
       "id": "mage",
       "name": "Mage",
       "maxJobLevel": 50,

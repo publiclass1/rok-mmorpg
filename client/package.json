@@ -8,8 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "content:validate": "tsx src/content/ro/validateContent.ts",
-    "test": "tsx src/game/combat/exp.test.ts && tsx src/game/combat/playerAttackRange.test.ts && tsx src/game/character/statusEffects.test.ts && tsx src/game/character/equipRequirements.test.ts && tsx src/game/items/rolledItem.test.ts"
+    "content:validate": "tsx src/content/ro/validateContent.ts && node ../scripts/generate-weapon-icons.mjs --check && node ../scripts/generate-skill-icons.mjs --check",
+    "icons:weapons": "node ../scripts/generate-weapon-icons.mjs",
+    "icons:skills": "node ../scripts/generate-skill-icons.mjs",
+    "test": "tsx src/game/combat/exp.test.ts && tsx src/game/combat/playerAttackRange.test.ts && tsx src/game/character/statusEffects.test.ts && tsx src/game/character/equipRequirements.test.ts && tsx src/game/character/jobChange.test.ts && tsx src/game/items/rolledItem.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

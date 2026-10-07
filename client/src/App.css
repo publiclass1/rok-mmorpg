@@ -1550,6 +1550,7 @@ body.game-active .game-canvas canvas {
 
 .activity-log-item {
   display: flex;
+  align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.5rem;
   font-size: 0.72rem;
@@ -1884,6 +1885,29 @@ body.game-active .game-canvas canvas {
   grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
   gap: 0.5rem;
   margin-top: 0.75rem;
+}
+
+.inv-slot .item-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+  pointer-events: none;
+}
+
+.inv-slot--has-icon {
+  background: #111827;
+}
+
+.activity-log-item-icon {
+  flex-shrink: 0;
+}
+
+.character-equip-preview__weapon--icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
 }
 
 .inv-slot {

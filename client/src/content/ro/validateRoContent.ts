@@ -134,6 +134,39 @@ export function validateRoContent(pack: RoContentPack): void {
     assert(hasBase, `dungeon gear drop slot ${slot} has no base items in items.json`)
   }
 
+  const equipSlots = new Set([
+    'weapon',
+    'headTop',
+    'headMiddle',
+    'headLower',
+    'armor',
+    'garment',
+    'boots',
+    'offhand',
+    'accLeft',
+    'accRight',
+  ])
+  for (const [npcId, offers] of Object.entries(pack.jobMaster.offersByNpcId)) {
+    assert(Boolean(npcId), 'jobMaster offer npc id required')
+    for (const offer of offers) {
+      assert(jobIds.has(offer.jobId), `jobMaster ${npcId} unknown target job ${offer.jobId}`)
+      if (offer.fromJobId) {
+        assert(jobIds.has(offer.fromJobId), `jobMaster ${npcId} unknown fromJobId ${offer.fromJobId}`)
+      }
+      assert(offer.requiredJobLevel >= 1, `jobMaster ${npcId} offer ${offer.jobId} invalid job level`)
+    }
+  }
+
+  for (const [jobId, kit] of Object.entries(pack.jobStarterGear.kits)) {
+    assert(jobIds.has(jobId), `jobStarterGear kit references unknown job ${jobId}`)
+    for (const piece of kit.pieces) {
+      assert(equipSlots.has(piece.slot), `jobStarterGear ${jobId} invalid slot ${piece.slot}`)
+      assert(itemIds.has(piece.baseItemId), `jobStarterGear ${jobId} unknown item ${piece.baseItemId}`)
+      const item = pack.items.find((i) => i.id === piece.baseItemId)
+      assert(item?.equipSlot === piece.slot, `jobStarterGear ${jobId} item ${piece.baseItemId} slot mismatch`)
+    }
+  }
+
   for (const [mapId, portalList] of Object.entries(pack.portals)) {
     if (mapIds.size > 0 && !mapIds.has(mapId)) {
       assert(false, `portals key ${mapId} has no matching map entry`)

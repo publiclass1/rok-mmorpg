@@ -1,4 +1,5 @@
 import { getItemEquipRequirementsFromCatalog } from './itemCatalog'
+import { jobAncestorIds } from './jobLineage'
 import { JOB_NAMES } from './skillsConfig'
 
 export type ItemEquipRequirements = {
@@ -24,9 +25,13 @@ export function checkCanEquipItem(
     }
   }
 
-  if (reqs.requiredJobIds && !reqs.requiredJobIds.includes(params.jobId)) {
-    const names = reqs.requiredJobIds.map((id) => JOB_NAMES[id] ?? id).join(', ')
-    return { ok: false, reason: `Requires ${names} job.` }
+  if (reqs.requiredJobIds) {
+    const lineage = new Set(jobAncestorIds(params.jobId))
+    const allowed = reqs.requiredJobIds.some((id) => lineage.has(id))
+    if (!allowed) {
+      const names = reqs.requiredJobIds.map((id) => JOB_NAMES[id] ?? id).join(', ')
+      return { ok: false, reason: `Requires ${names} job.` }
+    }
   }
 
   return { ok: true }
