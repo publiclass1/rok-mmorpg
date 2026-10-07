@@ -3,9 +3,16 @@ import type { EquipSlot } from '../character/characterState'
 import type { PlayerPresencePayload } from '../events'
 import { appearanceKey } from '../character/characterAppearance'
 import {
+  attachPecoMountToDisplay,
+  createPecoMount,
+  syncPecoMountGfx,
+  type PecoMountGfx,
+} from '../player/pecoMountVisual'
+import {
   createPlayerDisplay,
   playPlayerAnim,
   setPlayerAppearance,
+  setPlayerMounted,
   setPlayerWalkFrame,
   updatePlayerEquipmentLayers,
   type PlayerDisplay,
@@ -32,6 +39,7 @@ const EQUIP_SLOTS: EquipSlot[] = [
 
 export type RemotePlayerEntity = {
   display: PlayerDisplay
+  pecoMountGfx: PecoMountGfx
   label: Phaser.GameObjects.Text
   targetX: number
   targetY: number
@@ -45,8 +53,22 @@ function equipmentKey(equipment: Record<EquipSlot, string | null>): string {
   return EQUIP_SLOTS.map((s) => equipment[s] ?? '').join('|')
 }
 
+function syncRemotePecoMount(entity: RemotePlayerEntity, payload: PlayerPresencePayload, walkFrame: 0 | 1) {
+  const mounted = Boolean(payload.mounted)
+  setPlayerMounted(entity.display, mounted)
+  syncPecoMountGfx(
+    entity.pecoMountGfx,
+    mounted,
+    payload.facing,
+    payload.anim,
+    walkFrame,
+  )
+}
+
 export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePayload): RemotePlayerEntity {
   const display = createPlayerDisplay(scene, payload.x, payload.y, payload.appearance)
+  const pecoMountGfx = createPecoMount(scene)
+  attachPecoMountToDisplay(display, pecoMountGfx)
   const body = display.container.body as Phaser.Physics.Arcade.Body | null
   if (body) {
     body.enable = false
@@ -65,8 +87,9 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
   positionPlayerNameLabel(label, payload.x, payload.y)
   label.setVisible(false)
 
-  return {
+  const entity: RemotePlayerEntity = {
     display,
+    pecoMountGfx,
     label,
     targetX: payload.x,
     targetY: payload.y,
@@ -75,6 +98,8 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
     appearanceKey: appearanceKey(payload.appearance),
     inViewport: true,
   }
+  syncRemotePecoMount(entity, payload, payload.walkFrame)
+  return entity
 }
 
 export function applyRemotePresence(entity: RemotePlayerEntity, payload: PlayerPresencePayload) {
@@ -111,6 +136,7 @@ export function tickRemotePlayer(entity: RemotePlayerEntity, now: number, smooth
   if (p.anim === 'walk') {
     setPlayerWalkFrame(entity.display, walkFrame)
   }
+  syncRemotePecoMount(entity, p, walkFrame)
 
   const labelText = p.isVending ? `${p.name} [Shop]` : p.name
   entity.label.setText(labelText)

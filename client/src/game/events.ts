@@ -16,6 +16,7 @@ export type PositionPayload = {
 export type PlayerPresencePayload = PositionPayload & {
   anim: CharacterPose['anim']
   walkFrame: 0 | 1
+  mounted?: boolean
   equipment: Record<EquipSlot, string | null>
   appearance: CharacterAppearance
   guildTag?: string | null

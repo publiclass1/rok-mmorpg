@@ -48,8 +48,15 @@ export function registerNpcIdleAnimations(scene: Phaser.Scene, textureKey: strin
   }
 }
 
+function mountedRiderFrame(def: CharacterSpriteDef, facing: Facing): number {
+  return stripFrameIndex(def, facing, def.strips.sit, 0)
+}
+
 export function poseToFrameIndex(def: CharacterSpriteDef, pose: CharacterPose): number {
   const { facing, anim } = pose
+  if (pose.mounted && (anim === 'idle' || anim === 'walk')) {
+    return mountedRiderFrame(def, facing)
+  }
   switch (anim) {
     case 'idle':
       return stripFrameIndex(def, facing, def.strips.idle, 0)
@@ -78,7 +85,7 @@ export function applyPoseToSprite(
   def: CharacterSpriteDef,
   pose: CharacterPose,
 ) {
-  if (pose.anim === 'idle') {
+  if (pose.anim === 'idle' && !pose.mounted) {
     const key = animKey(textureKey, 'idle', pose.facing)
     if (sprite.anims.currentAnim?.key !== key) {
       sprite.play(key)

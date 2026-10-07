@@ -994,7 +994,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         )}
 
         <div className="game-hud-overlay" aria-label="Game HUD">
-          <SkillBar sheet={sheet} />
+          <SkillBar sheet={sheet} onOpenSkills={() => setSkillsOpen(true)} />
           <Minimap data={minimap} />
           <BuffBar buffs={playerBuffs} />
           <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>

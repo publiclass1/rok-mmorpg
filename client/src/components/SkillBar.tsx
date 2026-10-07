@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { SkillIcon } from './SkillIcon'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
-import { readSkillBarDrag } from '../game/character/skillBarDrag'
+import { isSkillBarDragEvent, readSkillBarDrag, writeSkillBarDrag } from '../game/character/skillBarDrag'
 import { canPlaceSkillOnBar, SKILLS, skillUsableByJob } from '../game/character/skillsConfig'
 import { skillTooltipTitle } from '../game/character/skillIconUrl'
 import type { CharacterSheetPayload } from '../game/events'
@@ -13,6 +13,7 @@ const SKILL_BAR_ABOVE_EXP = 76
 
 type Props = {
   sheet: CharacterSheetPayload
+  onOpenSkills: () => void
 }
 
 function skillBarInitialPosition(panel: HTMLElement) {
@@ -24,7 +25,7 @@ function skillBarInitialPosition(panel: HTMLElement) {
   }
 }
 
-export function SkillBar({ sheet }: Props) {
+export function SkillBar({ sheet, onOpenSkills }: Props) {
   const [dropTarget, setDropTarget] = useState<number | null>(null)
   const suppressClickRef = useRef(false)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -45,6 +46,19 @@ export function SkillBar({ sheet }: Props) {
     if (payload.source === 'bar' && payload.slot !== slot) {
       dispatchCharacterAction({ type: 'moveSkillBar', from: payload.slot, to: slot })
     }
+  }
+
+  function activateSlot(index: number, skillId: string | null, inactive: boolean) {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false
+      return
+    }
+    if (inactive) return
+    if (skillId == null) {
+      onOpenSkills()
+      return
+    }
+    emitGameEvent('useSkillSlot', { slot: index })
   }
 
   return (
@@ -79,16 +93,34 @@ export function SkillBar({ sheet }: Props) {
             ? inactive
               ? `${skill.name} — not available`
               : `${skillTooltipTitle(skillId!, level)} · drag to move`
-            : 'Drop skill icon here'
+            : 'Click to open Skills · or drop a skill here'
 
           return (
-            <button
+            <div
               key={index}
-              type="button"
-              className={`skill-slot${inactive ? ' skill-slot--inactive' : ''}${isDropTarget ? ' skill-slot--drop-target' : ''}`}
+              role="button"
+              tabIndex={inactive ? -1 : 0}
+              aria-disabled={inactive || undefined}
+              className={`skill-slot${inactive ? ' skill-slot--inactive' : ''}${isDropTarget ? ' skill-slot--drop-target' : ''}${canDrag ? ' skill-slot--draggable' : ''}`}
               title={slotTitle}
-              disabled={inactive}
+              draggable={canDrag}
+              onDragStart={(e) => {
+                if (!canDrag || !skillId) {
+                  e.preventDefault()
+                  return
+                }
+                e.stopPropagation()
+                suppressClickRef.current = false
+                writeSkillBarDrag(e.dataTransfer, { source: 'bar', skillId, slot: index })
+              }}
+              onDrag={(e) => {
+                if (e.clientX !== 0 || e.clientY !== 0) suppressClickRef.current = true
+              }}
+              onDragEnd={() => {
+                setDropTarget(null)
+              }}
               onDragOver={(e) => {
+                if (!isSkillBarDragEvent(e.dataTransfer)) return
                 e.preventDefault()
                 e.dataTransfer.dropEffect = 'move'
                 setDropTarget(index)
@@ -97,39 +129,22 @@ export function SkillBar({ sheet }: Props) {
                 setDropTarget((current) => (current === index ? null : current))
               }}
               onDrop={(e) => handleDrop(index, e)}
-              onClick={() => {
-                if (suppressClickRef.current) {
-                  suppressClickRef.current = false
-                  return
-                }
-                if (inactive) return
-                emitGameEvent('useSkillSlot', { slot: index })
+              onClick={() => activateSlot(index, skillId, inactive)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return
+                e.preventDefault()
+                activateSlot(index, skillId, inactive)
               }}
             >
               <span className="skill-key">{index + 1}</span>
               {skillId && !inactive ? (
-                <SkillIcon
-                  skillId={skillId}
-                  level={level}
-                  size="xs"
-                  draggable={canDrag}
-                  drag={canDrag ? { source: 'bar', skillId, slot: index } : undefined}
-                  onDragStarted={() => {
-                    suppressClickRef.current = false
-                  }}
-                  onDragMoved={() => {
-                    suppressClickRef.current = true
-                  }}
-                  onDragEnded={() => {
-                    setDropTarget(null)
-                  }}
-                />
+                <SkillIcon skillId={skillId} level={level} size="xs" draggable={false} />
               ) : (
                 <span className="skill-slot-empty" aria-hidden>
                   ·
                 </span>
               )}
-            </button>
+            </div>
           )
         })}
       </div>

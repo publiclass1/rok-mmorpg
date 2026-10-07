@@ -31,6 +31,7 @@ function normalizePresence(raw: Partial<PlayerPresencePayload>): PlayerPresenceP
     facing: raw.facing ?? 'down',
     anim: raw.anim ?? 'idle',
     walkFrame: raw.walkFrame === 1 ? 1 : 0,
+    mounted: Boolean(raw.mounted),
     equipment: raw.equipment ?? createDefaultEquipment(),
     appearance: normalizeAppearance(raw.appearance),
     guildTag: raw.guildTag ?? null,

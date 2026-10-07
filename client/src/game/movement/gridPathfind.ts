@@ -195,3 +195,43 @@ export function findWorldPath(
   }
   return waypoints
 }
+
+export type PathPoint = { x: number; y: number }
+
+export type TrimPathFromPlayerOptions = {
+  nearThreshold?: number
+}
+
+/** Drop waypoints the player has already passed or is standing on (avoids backtracking on repath). */
+export function trimPathFromPlayer(
+  path: PathPoint[],
+  px: number,
+  py: number,
+  options?: TrimPathFromPlayerOptions,
+): PathPoint[] {
+  if (path.length === 0) return []
+
+  const nearThreshold = options?.nearThreshold ?? 10
+  const goal = path[path.length - 1]
+  let start = 0
+
+  while (start < path.length - 1) {
+    const wp = path[start]
+    if (Math.hypot(wp.x - px, wp.y - py) >= nearThreshold) break
+    start += 1
+  }
+
+  const toGoalX = goal.x - px
+  const toGoalY = goal.y - py
+  const goalLen = Math.hypot(toGoalX, toGoalY)
+  if (goalLen > 0.01) {
+    while (start < path.length - 1) {
+      const wp = path[start]
+      const dot = (wp.x - px) * toGoalX + (wp.y - py) * toGoalY
+      if (dot > 0) break
+      start += 1
+    }
+  }
+
+  return path.slice(start)
+}

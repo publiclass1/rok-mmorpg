@@ -4,14 +4,7 @@ export type SkillBarDragPayload =
   | { source: 'list'; skillId: string }
   | { source: 'bar'; skillId: string; slot: number }
 
-export function writeSkillBarDrag(dataTransfer: DataTransfer, payload: SkillBarDragPayload) {
-  dataTransfer.setData(SKILL_BAR_DRAG_MIME, JSON.stringify(payload))
-  dataTransfer.effectAllowed = 'move'
-}
-
-export function readSkillBarDrag(dataTransfer: DataTransfer): SkillBarDragPayload | null {
-  const raw = dataTransfer.getData(SKILL_BAR_DRAG_MIME)
-  if (!raw) return null
+function parseSkillBarDragJson(raw: string): SkillBarDragPayload | null {
   try {
     const parsed = JSON.parse(raw) as SkillBarDragPayload
     if (parsed.source === 'list' && typeof parsed.skillId === 'string') return parsed
@@ -25,5 +18,29 @@ export function readSkillBarDrag(dataTransfer: DataTransfer): SkillBarDragPayloa
   } catch {
     return null
   }
+  return null
+}
+
+/** True when a drag in progress may be a skill-bar assignment (for dragover gating). */
+export function isSkillBarDragEvent(dataTransfer: DataTransfer): boolean {
+  const types = dataTransfer.types
+  return types.includes(SKILL_BAR_DRAG_MIME) || types.includes('text/plain')
+}
+
+export function writeSkillBarDrag(dataTransfer: DataTransfer, payload: SkillBarDragPayload) {
+  const json = JSON.stringify(payload)
+  dataTransfer.setData(SKILL_BAR_DRAG_MIME, json)
+  dataTransfer.setData('text/plain', json)
+  dataTransfer.effectAllowed = 'move'
+}
+
+export function readSkillBarDrag(dataTransfer: DataTransfer): SkillBarDragPayload | null {
+  const custom = dataTransfer.getData(SKILL_BAR_DRAG_MIME)
+  if (custom) {
+    const parsed = parseSkillBarDragJson(custom)
+    if (parsed) return parsed
+  }
+  const plain = dataTransfer.getData('text/plain')
+  if (plain) return parseSkillBarDragJson(plain)
   return null
 }

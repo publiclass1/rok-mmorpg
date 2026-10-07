@@ -1,5 +1,7 @@
 import Phaser from 'phaser'
 
+export const CLICK_MOVE_ARRIVAL_THRESHOLD = 6
+
 export type Facing = 'up' | 'down' | 'left' | 'right'
 
 export type MoveWaypoint = { x: number; y: number }
@@ -53,7 +55,7 @@ export function updateClickMove(
   posY: number,
   target: MoveTarget,
   speed: number,
-  threshold = 6,
+  threshold = CLICK_MOVE_ARRIVAL_THRESHOLD,
 ): { moving: boolean; facing: Facing | null } {
   if (!target.active) {
     body.setVelocity(0, 0)
@@ -64,6 +66,7 @@ export function updateClickMove(
   const dy = target.y - posY
   const dist = Math.hypot(dx, dy)
   if (dist <= threshold) {
+    body.setVelocity(0, 0)
     if (advanceWaypoint(target)) {
       const ndx = target.x - posX
       const ndy = target.y - posY

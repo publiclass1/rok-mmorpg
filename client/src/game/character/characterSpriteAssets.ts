@@ -25,7 +25,17 @@ export const PALETTE_SOURCE = {
 
 type FrameMotion =
   | { kind: 'idle' | 'walk'; walkStep: number; idleBlink?: boolean }
+  | { kind: 'sit' }
   | { kind: 'attack'; style: AttackStyle; phase: 0 | 1 | 2 }
+
+type ChibiPalette = {
+  skin: number
+  hair: number
+  shirt: number
+  pants: number
+  shoes: number
+  eyes: number
+}
 
 type DrawMode = { kind: 'player'; female: boolean } | { kind: 'npc'; archetype: NpcArchetype }
 
@@ -202,6 +212,80 @@ function drawArchetypeOverlay(
   }
 }
 
+function drawChibiMountedSit(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  feetY: number,
+  facing: 'down' | 'left' | 'right' | 'up',
+  pal: ChibiPalette,
+  bodyW: number,
+  female: boolean,
+  mode: DrawMode,
+) {
+  const torsoTop = feetY - 30
+
+  g.fillStyle(pal.shoes, 1)
+  if (facing === 'down') {
+    g.fillRect(cx - 11, feetY - 10, 6, 4)
+    g.fillRect(cx + 5, feetY - 10, 6, 4)
+    g.fillStyle(pal.pants, 1)
+    g.fillRect(cx - 12, feetY - 16, 8, 8)
+    g.fillRect(cx + 4, feetY - 16, 8, 8)
+  } else if (facing === 'up') {
+    g.fillRect(cx - 8, feetY - 12, 5, 4)
+    g.fillRect(cx + 3, feetY - 12, 5, 4)
+    g.fillStyle(pal.pants, 1)
+    g.fillRect(cx - 10, feetY - 18, 7, 8)
+    g.fillRect(cx + 3, feetY - 18, 7, 8)
+  } else {
+    const side = facing === 'left' ? -1 : 1
+    g.fillRect(cx + side * 4, feetY - 12, 6, 4)
+    g.fillRect(cx - side * 10, feetY - 14, 6, 4)
+    g.fillStyle(pal.pants, 1)
+    g.fillRect(cx + side * 2, feetY - 20, 9, 8)
+    g.fillRect(cx - side * 8, feetY - 18, 8, 7)
+  }
+
+  g.fillStyle(pal.shirt, 1)
+  g.fillRoundedRect(cx - bodyW / 2, torsoTop, bodyW, 14, 3)
+  if (mode.kind === 'npc') {
+    drawArchetypeOverlay(g, mode.archetype, cx, feetY - 4)
+  }
+
+  g.fillStyle(pal.skin, 1)
+  const armH = 8
+  const armW = 4
+  if (facing === 'down') {
+    g.fillRect(cx - bodyW / 2 - armW, torsoTop + 4, armW, armH)
+    g.fillRect(cx + bodyW / 2, torsoTop + 4, armW, armH)
+  } else if (facing === 'left') {
+    g.fillRect(cx - bodyW / 2 + 1, torsoTop + 5, armW, armH)
+    g.fillRect(cx + bodyW / 2 - 5, torsoTop + 3, armW, armH - 1)
+  } else if (facing === 'right') {
+    g.fillRect(cx - bodyW / 2 + 1, torsoTop + 3, armW, armH - 1)
+    g.fillRect(cx + bodyW / 2 - armW, torsoTop + 5, armW, armH)
+  } else {
+    g.fillRect(cx - bodyW / 2 + 2, torsoTop + 5, armW - 1, armH - 2)
+    g.fillRect(cx + bodyW / 2 - armW, torsoTop + 5, armW - 1, armH - 2)
+  }
+
+  g.fillCircle(cx, torsoTop - 6, female ? 7 : 8)
+
+  g.fillStyle(pal.hair, 1)
+  if (female) {
+    g.fillEllipse(cx, torsoTop - 10, femaleHairWidth(mode), 10)
+  } else {
+    g.fillEllipse(cx, torsoTop - 11, 14, 8)
+  }
+
+  let eyeDx = 0
+  if (facing === 'left') eyeDx = -2
+  if (facing === 'right') eyeDx = 2
+  g.fillStyle(pal.eyes, 1)
+  g.fillRect(cx - 4 + eyeDx, torsoTop - 7, 2, 2)
+  g.fillRect(cx + 2 + eyeDx, torsoTop - 7, 2, 2)
+}
+
 function drawChibiFrame(
   g: Phaser.GameObjects.Graphics,
   ox: number,
@@ -212,7 +296,7 @@ function drawChibiFrame(
 ) {
   const isPlayer = mode.kind === 'player'
   const female = isPlayer ? mode.female : NPC_ARCHETYPE_PALETTES[mode.archetype].female
-  const pal = isPlayer
+  const pal: ChibiPalette = isPlayer
     ? {
         skin: PALETTE_SOURCE.skin,
         hair: PALETTE_SOURCE.hair,
@@ -222,6 +306,15 @@ function drawChibiFrame(
         eyes: PALETTE_SOURCE.eyes,
       }
     : NPC_ARCHETYPE_PALETTES[mode.archetype]
+
+  const cx = ox + SPRITE_FRAME_WIDTH / 2
+  const bodyW = female ? 18 : 20
+  let feetY = oy + SPRITE_FRAME_HEIGHT - 4
+
+  if (motion.kind === 'sit') {
+    drawChibiMountedSit(g, cx, feetY, facing, pal, bodyW, female, mode)
+    return
+  }
 
   const attackMotion = motion.kind === 'attack' ? motion : null
   const walkStep = motion.kind === 'walk' ? motion.walkStep : 0
@@ -239,9 +332,7 @@ function drawChibiFrame(
   const armSwing =
     motion.kind === 'walk' ? (walkStep === 0 || walkStep === 2 ? -2 : 2) : 0
 
-  const cx = ox + SPRITE_FRAME_WIDTH / 2
-  const feetY = oy + SPRITE_FRAME_HEIGHT - 4 + bob
-  const bodyW = female ? 18 : 20
+  feetY += bob
 
   g.fillStyle(pal.shoes, 1)
   g.fillRect(cx - 10 - legSpread, feetY - 4, 8, 4)
@@ -316,6 +407,9 @@ function motionForColumn(def: CharacterSpriteDef, col: number, npcSheet: boolean
   }
   if (col >= def.strips.walk.offset && col < def.strips.walk.offset + def.strips.walk.count) {
     return { kind: 'walk', walkStep: col - def.strips.walk.offset }
+  }
+  if (col >= def.strips.sit.offset && col < def.strips.sit.offset + def.strips.sit.count) {
+    return { kind: 'sit' }
   }
   const attackStyles: AttackStyle[] = ['swing', 'thrust', 'bow', 'cast']
   for (const style of attackStyles) {

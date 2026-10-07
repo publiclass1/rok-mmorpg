@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { SkillIcon } from './SkillIcon'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
-import { readSkillBarDrag, SKILL_BAR_DRAG_MIME } from '../game/character/skillBarDrag'
+import { isSkillBarDragEvent, readSkillBarDrag } from '../game/character/skillBarDrag'
 import { canLearnSkill, JOB_NAMES, SKILLS, barAssignableSkills, skillsForJob } from '../game/character/skillsConfig'
 import type { CharacterSheetPayload } from '../game/events'
 import { AnimatedModal } from './motion/AnimatedModal'
@@ -56,7 +56,7 @@ export function SkillsWindow({ sheet, onClose }: Props) {
         <div
           className={`skill-unassign-zone skill-unassign-zone--compact${unassignHover ? ' skill-unassign-zone--active' : ''}`}
           onDragOver={(e) => {
-            if (!e.dataTransfer.types.includes(SKILL_BAR_DRAG_MIME)) return
+            if (!isSkillBarDragEvent(e.dataTransfer)) return
             e.preventDefault()
             e.dataTransfer.dropEffect = 'move'
             setUnassignHover(true)

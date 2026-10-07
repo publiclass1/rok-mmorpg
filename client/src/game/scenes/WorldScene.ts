@@ -75,6 +75,7 @@ import {
 } from '../events'
 import { vendorManage } from '../../lib/api'
 import {
+  CLICK_MOVE_ARRIVAL_THRESHOLD,
   clearMoveTarget,
   createMoveTarget,
   setMoveTarget,
@@ -82,12 +83,20 @@ import {
   type Facing,
   type MoveTarget,
 } from '../movement/clickToMove'
-import { buildWalkabilityGrid, findWorldPath } from '../movement/gridPathfind'
+import { buildWalkabilityGrid, findWorldPath, trimPathFromPlayer } from '../movement/gridPathfind'
 import { tryJump } from '../movement/jump'
 import { playPlayerDeath, playPlayerFlinch, startPlayerAttackAnim } from '../player/playerCombatAnim'
+import { isOnPecoMount } from '../player/mountState'
+import {
+  attachPecoMountToDisplay,
+  createPecoMount,
+  syncPecoMountGfx,
+  type PecoMountGfx,
+} from '../player/pecoMountVisual'
 import {
   createPlayerDisplay,
   playPlayerAnim,
+  setPlayerMounted,
   setPlayerSitting,
   setPlayerWalkFrame,
   updatePlayerEquipmentLayers,
@@ -166,7 +175,7 @@ export class WorldScene extends Phaser.Scene {
   private npcs: NpcRow[] = []
   private npcVisuals: NpcWorldVisual[] = []
   private playerShadow!: Phaser.GameObjects.Ellipse
-  private rentalPecoGfx!: Phaser.GameObjects.Ellipse
+  private pecoMountGfx!: PecoMountGfx
   private rentalCartGfx!: Phaser.GameObjects.Rectangle
   private rentalFalconGfx!: Phaser.GameObjects.Arc
   private rentalFalconAngle = 0
@@ -291,7 +300,8 @@ export class WorldScene extends Phaser.Scene {
       .setDepth(0.5)
 
     this.playerDisplay = createPlayerDisplay(this, spawn.x, spawn.y, appearanceFromCharacterRow(this.character))
-    this.rentalPecoGfx = this.add.ellipse(spawn.x, spawn.y, 38, 22, 0x854d0e, 0.92).setVisible(false)
+    this.pecoMountGfx = createPecoMount(this)
+    attachPecoMountToDisplay(this.playerDisplay, this.pecoMountGfx)
     this.rentalCartGfx = this.add.rectangle(spawn.x, spawn.y, 20, 14, 0x78716c, 1).setVisible(false)
     this.rentalFalconGfx = this.add.circle(spawn.x, spawn.y, 6, 0x1e293b, 1).setVisible(false)
     const playerBody = this.playerDisplay.container.body as Phaser.Physics.Arcade.Body
@@ -837,6 +847,9 @@ export class WorldScene extends Phaser.Scene {
     if (!this.playerDisplay) return
     const px = this.playerDisplay.container.x
     const py = this.playerDisplay.container.y
+    if (Math.hypot(wx - px, wy - py) <= CLICK_MOVE_ARRIVAL_THRESHOLD) {
+      return
+    }
     if (!this.walkGrid) {
       setMoveTarget(this.moveTarget, wx, wy)
       return
@@ -856,16 +869,19 @@ export class WorldScene extends Phaser.Scene {
       setMoveTarget(this.moveTarget, wx, wy)
       return
     }
-    let start = 0
-    while (
-      start < path.length - 1 &&
-      Math.hypot(path[start].x - px, path[start].y - py) < 10
-    ) {
-      start += 1
-    }
-    const trimmed = path.slice(start)
+    const trimmed = trimPathFromPlayer(path, px, py)
     if (trimmed.length === 0) {
-      setMoveTarget(this.moveTarget, wx, wy)
+      clearMoveTarget(this.moveTarget)
+      this.stopPlayerMotion()
+      return
+    }
+    const goal = trimmed[trimmed.length - 1]
+    if (
+      trimmed.length === 1 &&
+      Math.hypot(goal.x - px, goal.y - py) <= CLICK_MOVE_ARRIVAL_THRESHOLD
+    ) {
+      clearMoveTarget(this.moveTarget)
+      this.stopPlayerMotion()
       return
     }
     setMoveTarget(this.moveTarget, wx, wy, trimmed)
@@ -1012,6 +1028,7 @@ export class WorldScene extends Phaser.Scene {
         facing: 'down',
         anim: 'idle',
         walkFrame: 0,
+        mounted: false,
         equipment: this.session.equipment,
         appearance: appearanceFromCharacterRow(this.character),
         guildTag: this.socialPresence.guildTag ?? null,
@@ -1040,6 +1057,7 @@ export class WorldScene extends Phaser.Scene {
       facing: this.facing,
       anim,
       walkFrame,
+      mounted: isOnPecoMount(this.session, this.activeBuffs),
       equipment: this.session.equipment,
       appearance: appearanceFromCharacterRow(this.character),
       guildTag: this.socialPresence.guildTag ?? null,
@@ -1069,7 +1087,7 @@ export class WorldScene extends Phaser.Scene {
     )
     setDepthByFeet(this.playerDisplay.container, playerFeet)
     setDepthByFeet(this.playerLabel, playerFeet + PLAYER_NAME_OFFSET_BELOW, 0.05)
-    this.syncRentalVisuals(playerFeet)
+    this.syncMountVisuals(playerFeet)
 
     for (const mob of this.mobs) {
       if (!mob.alive) continue
@@ -1250,22 +1268,21 @@ export class WorldScene extends Phaser.Scene {
     ])
   }
 
-  private syncRentalVisuals(playerFeet: number) {
+  private syncMountVisuals(playerFeet: number) {
     const active = activeRentalAt(this.session, Date.now())
     const px = this.playerDisplay.container.x
     const py = this.playerDisplay.container.y
-    const showPeco = active?.kind === 'peco_peco'
+    const onPeco = isOnPecoMount(this.session, this.activeBuffs)
     const showCart = active?.kind === 'cart'
     const showFalcon = active?.kind === 'falcon'
 
-    this.rentalPecoGfx.setVisible(showPeco)
+    setPlayerMounted(this.playerDisplay, onPeco)
+    const pose = this.playerDisplay.pose
+    syncPecoMountGfx(this.pecoMountGfx, onPeco, pose.facing, pose.anim, pose.walkFrame)
+
     this.rentalCartGfx.setVisible(showCart)
     this.rentalFalconGfx.setVisible(showFalcon)
 
-    if (showPeco) {
-      this.rentalPecoGfx.setPosition(px, py + 6)
-      setDepthByFeet(this.rentalPecoGfx, playerFeet, -0.4)
-    }
     if (showCart) {
       const backX = this.facing === 'left' ? px + 14 : this.facing === 'right' ? px - 14 : px
       const backY = this.facing === 'up' ? py + 12 : this.facing === 'down' ? py - 10 : py

@@ -1168,6 +1168,16 @@ body.game-active .game-canvas canvas {
   border: 1px solid #4b5563;
   min-height: 2.5rem;
   border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.skill-slot--draggable {
+  cursor: grab;
+}
+
+.skill-slot--draggable:active {
+  cursor: grabbing;
 }
 
 .skill-key {

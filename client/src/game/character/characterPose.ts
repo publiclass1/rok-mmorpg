@@ -9,6 +9,7 @@ export type CharacterPose = {
   attackStyle: AttackStyle
   bash: boolean
   hitFlash: boolean
+  mounted: boolean
 }
 
 export function defaultCharacterPose(facing: Facing = 'down'): CharacterPose {
@@ -20,5 +21,6 @@ export function defaultCharacterPose(facing: Facing = 'down'): CharacterPose {
     attackStyle: 'swing',
     bash: false,
     hitFlash: false,
+    mounted: false,
   }
 }

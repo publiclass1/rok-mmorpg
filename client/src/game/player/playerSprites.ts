@@ -13,6 +13,9 @@ import type { Facing } from '../movement/clickToMove'
 export type { CharacterPose } from '../character/characterPose'
 export { defaultCharacterPose } from '../character/characterPose'
 
+/** Rider anchor lift so seated legs rest on the peco saddle (see pecoMountVisual saddle ~y-24). */
+export const MOUNT_BODY_Y_OFFSET = -10
+
 export type PlayerVisualLayer = 'weapon' | 'armor' | 'head' | 'offhand'
 
 export type PlayerDisplay = {
@@ -26,6 +29,7 @@ export type PlayerDisplay = {
 }
 
 function syncSpritePose(display: PlayerDisplay) {
+  display.body.setY(display.pose.mounted ? MOUNT_BODY_Y_OFFSET : 0)
   applyPoseToSprite(display.body, display.textureKey, display.spriteDef, display.pose)
   if (display.pose.hitFlash) {
     display.body.setTint(0xffffff)
@@ -156,6 +160,15 @@ export function playPlayerAnim(display: PlayerDisplay, key: string, facing: Faci
 export function setPlayerWalkFrame(display: PlayerDisplay, walkFrame: 0 | 1) {
   if (display.pose.anim !== 'walk') return
   display.pose = { ...display.pose, walkFrame }
+  syncSpritePose(display)
+}
+
+export function setPlayerMounted(display: PlayerDisplay, mounted: boolean) {
+  if (display.pose.mounted === mounted) {
+    if (mounted) syncSpritePose(display)
+    return
+  }
+  display.pose = { ...display.pose, mounted }
   syncSpritePose(display)
 }
 

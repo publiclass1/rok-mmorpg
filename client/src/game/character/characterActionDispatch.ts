@@ -39,7 +39,11 @@ export function dispatchCharacterAction(action: CharacterActionPayload) {
   const { sheet } = publishSessionState(result.state)
   context.setSheet(sheet)
   emitGameEvent('sessionSync', result.state)
-  if (action.type === 'changeJob') {
+  if (
+    action.type === 'changeJob' ||
+    action.type === 'assignSkillBar' ||
+    action.type === 'moveSkillBar'
+  ) {
     context.persistSession?.(result.state)
   }
   if (result.message && action.type === 'changeJob') {

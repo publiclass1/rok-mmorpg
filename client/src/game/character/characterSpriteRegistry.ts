@@ -55,7 +55,7 @@ export const FACING_ROW: Record<Facing, number> = {
 const PLAYER_STRIPS = {
   idle: { offset: 0, count: 2 },
   walk: { offset: 2, count: 4 },
-  sit: { offset: 0, count: 1 },
+  sit: { offset: 18, count: 1 },
   attack: {
     swing: { offset: 6, count: 3 },
     thrust: { offset: 9, count: 3 },
@@ -67,7 +67,7 @@ const PLAYER_STRIPS = {
   dead: { offset: 1, count: 1 },
 }
 
-const PLAYER_FRAMES_PER_ROW = 18
+const PLAYER_FRAMES_PER_ROW = 19
 
 const NPC_ATTACK_ONE: Record<AttackStyle, AnimStrip> = {
   swing: { offset: 0, count: 1 },
@@ -100,7 +100,7 @@ function npcSpriteDef(archetype: NpcArchetype): CharacterSpriteDef {
 
 export const PLAYER_SPRITE_MALE: CharacterSpriteDef = {
   id: 'player_male',
-  masterTextureKey: 'master_player_male_v3',
+  masterTextureKey: 'master_player_male_v4',
   framesPerRow: PLAYER_FRAMES_PER_ROW,
   facingRow: FACING_ROW,
   strips: PLAYER_STRIPS,
@@ -109,7 +109,7 @@ export const PLAYER_SPRITE_MALE: CharacterSpriteDef = {
 
 export const PLAYER_SPRITE_FEMALE: CharacterSpriteDef = {
   id: 'player_female',
-  masterTextureKey: 'master_player_female_v3',
+  masterTextureKey: 'master_player_female_v4',
   framesPerRow: PLAYER_FRAMES_PER_ROW,
   facingRow: FACING_ROW,
   strips: PLAYER_STRIPS,
