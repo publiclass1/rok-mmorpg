@@ -1,10 +1,11 @@
 import type Phaser from 'phaser'
 
-export type GameCursor = 'default' | 'npc' | 'mob' | 'skillTarget' | 'aoe'
+export type GameCursor = 'default' | 'npc' | 'loot' | 'mob' | 'skillTarget' | 'aoe'
 
 const CSS: Record<GameCursor, string> = {
   default: "url('/cursors/game-pointer.png') 2 2, default",
   npc: "url('/cursors/cursor-npc.png') 2 2, pointer",
+  loot: "url('/cursors/cursor-grab.png') 2 2, grab",
   mob: "url('/cursors/cursor-sword.png') 2 2, crosshair",
   skillTarget: "url('/cursors/cursor-skill-target.png') 2 2, crosshair",
   aoe: "url('/cursors/cursor-aoe.png') 16 16, crosshair",

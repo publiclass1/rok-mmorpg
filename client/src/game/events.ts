@@ -238,6 +238,7 @@ export type GameEvents = {
   dungeonSync: DungeonSyncPayload
   dungeonMobKilled: { instanceId: string; spawnIndex: number }
   dungeonMvpKilled: { instanceId: string }
+  mapDropHover: { itemId: string; screenX: number; screenY: number } | null
 }
 
 type Listener = (payload: unknown) => void

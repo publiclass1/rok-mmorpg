@@ -1,13 +1,17 @@
 import Phaser from 'phaser'
 import { addItemsToSessionInventory } from '../character/sessionInventory'
 import type { CharacterSessionState } from '../character/characterState'
+import { ensureItemEquipIconTexture } from '../player/itemEquipIconTexture'
+import { createMapDropRarityFx, destroyMapDropRarityFx, type MapDropRarityFx } from './mapDropRarityFx'
 
 const PICKUP_RANGE = 48
+const HOVER_RADIUS = 18
 
 export type MapDropVisual = {
   dropId: string
   itemId: string
   sprite: Phaser.GameObjects.Image
+  rarityFx?: MapDropRarityFx
   x: number
   y: number
 }
@@ -22,6 +26,17 @@ export class MapDropManager {
     this.onPickup = onPickup
   }
 
+  findDropAt(wx: number, wy: number): { dropId: string; itemId: string; x: number; y: number } | null {
+    let best: { dropId: string; itemId: string; x: number; y: number; dist: number } | null = null
+    for (const d of this.drops.values()) {
+      const dist = Phaser.Math.Distance.Between(wx, wy, d.x, d.y)
+      if (dist <= HOVER_RADIUS && (!best || dist < best.dist)) {
+        best = { dropId: d.dropId, itemId: d.itemId, x: d.x, y: d.y, dist }
+      }
+    }
+    return best ? { dropId: best.dropId, itemId: best.itemId, x: best.x, y: best.y } : null
+  }
+
   spawnDrop(dropId: string, itemId: string, x: number, y: number) {
     if (this.drops.has(dropId)) return
     const key = this.textureKey(itemId)
@@ -29,20 +44,34 @@ export class MapDropManager {
     sprite.setDisplaySize(24, 24)
     sprite.setOrigin(0.5, 0.5)
     sprite.setDepth(y)
-    sprite.setInteractive({ useHandCursor: true })
+    sprite.setInteractive({ useHandCursor: false })
     sprite.on('pointerdown', () => this.tryPickup(dropId))
-    this.drops.set(dropId, { dropId, itemId, sprite, x, y })
+
+    const rarityFx = createMapDropRarityFx(this.scene, x, y, itemId, y - 2)
+
+    this.drops.set(dropId, { dropId, itemId, sprite, rarityFx, x, y })
+
+    ensureItemEquipIconTexture(this.scene, itemId, (iconKey) => {
+      const d = this.drops.get(dropId)
+      if (!d) return
+      d.sprite.setTexture(iconKey)
+      d.sprite.setDisplaySize(24, 24)
+    })
   }
 
   removeDrop(dropId: string) {
     const d = this.drops.get(dropId)
     if (!d) return
+    destroyMapDropRarityFx(d.rarityFx)
     d.sprite.destroy()
     this.drops.delete(dropId)
   }
 
   clear() {
-    for (const d of this.drops.values()) d.sprite.destroy()
+    for (const d of this.drops.values()) {
+      destroyMapDropRarityFx(d.rarityFx)
+      d.sprite.destroy()
+    }
     this.drops.clear()
   }
 

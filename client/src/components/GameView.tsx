@@ -89,6 +89,10 @@ import { SplashScreen } from './SplashScreen'
 import { TradeModal } from './TradeModal'
 import { mapDisplayName } from '../game/world/mapDisplayName'
 import { hudEnterMotion } from './motion/motionPresets'
+import { buildItemTooltipDetail } from '../game/character/itemTooltipDetail'
+import { ItemDetailTooltip } from './ItemDetailTooltip'
+import { FloatingTooltipPortal } from './tooltip/FloatingTooltipPortal'
+import { floatingTooltipPositionFromPoint } from './tooltip/floatingTooltipPosition'
 
 type Props = {
   character: CharacterRow
@@ -186,6 +190,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
   const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
   const [selectedPlayerAnchor, setSelectedPlayerAnchor] = useState<{ x: number; y: number } | null>(null)
+  const [mapDropHover, setMapDropHover] = useState<GameEvents['mapDropHover']>(null)
   const [partySnapshot, setPartySnapshot] = useState<PartySnapshot>(null)
   const [guildSnapshot, setGuildSnapshot] = useState<GuildSnapshot>(null)
   const [partyRequest, setPartyRequest] = useState<{ request: PartyRequestRow; fromName: string } | null>(
@@ -753,6 +758,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         if (!player) setSelectedPlayerAnchor(null)
       }),
       onGameEvent('selectedPlayerAnchor', setSelectedPlayerAnchor),
+      onGameEvent('mapDropHover', setMapDropHover),
       onGameEvent('activityLog', (entry) => {
         setActivityLog((prev) => [...prev, entry].slice(-100))
       }),
@@ -1336,6 +1342,21 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   ])
   const splashKey = mapLoading?.mapId ?? `world-${character.map_id}`
 
+  const mapDropTooltipStyle = useMemo(() => {
+    if (!mapDropHover) return null
+    const rect = hostRef.current?.getBoundingClientRect()
+    if (!rect) return null
+    return floatingTooltipPositionFromPoint(
+      rect.left + mapDropHover.screenX,
+      rect.top + mapDropHover.screenY,
+    )
+  }, [mapDropHover])
+
+  const mapDropTooltipDetail = useMemo(
+    () => (mapDropHover ? buildItemTooltipDetail(mapDropHover.itemId) : null),
+    [mapDropHover],
+  )
+
   return (
     <div
       ref={shellRef}
@@ -1346,6 +1367,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       </AnimatePresence>
       <div className="game-stage game-stage--fullscreen" aria-label="Game world">
         <div ref={hostRef} className="game-canvas" />
+        {mapDropTooltipDetail && mapDropTooltipStyle && (
+          <FloatingTooltipPortal style={mapDropTooltipStyle}>
+            <ItemDetailTooltip detail={mapDropTooltipDetail} />
+          </FloatingTooltipPortal>
+        )}
         <LowHpVignette hp={sheet.hp} hpMax={sheet.hpMax} />
         {duelSync && <DuelCountdownOverlay duel={duelSync} />}
         {selectedPlayer && selectedPlayerAnchor && (

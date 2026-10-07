@@ -250,6 +250,7 @@ export class WorldScene extends Phaser.Scene {
   private uiPointerLocked = false
   private uiKeyboardLocked = false
   private currentCursor: GameCursor = 'default'
+  private lastMapDropHoverKey: string | null = null
   private pendingSkill: { skillId: string; level: number; def: SkillDefinition } | null = null
   private queuedSkillCast: {
     skillId: string
@@ -991,7 +992,46 @@ export class WorldScene extends Phaser.Scene {
     this.syncViewportVisibility()
     this.refreshPlayerNameLabels()
     this.refreshCursor()
+    this.refreshMapDropHover()
     this.emitMinimap(now)
+  }
+
+  private worldToCanvasScreen(worldX: number, worldY: number): { x: number; y: number } {
+    const cam = this.cameras.main
+    return {
+      x: (worldX - cam.scrollX) * cam.zoom + cam.width * 0.5,
+      y: (worldY - cam.scrollY) * cam.zoom + cam.height * 0.5,
+    }
+  }
+
+  private refreshMapDropHover() {
+    if (this.uiPointerLocked || this.isPlayerDead) {
+      this.emitMapDropHoverIfChanged(null)
+      return
+    }
+    const p = this.input.activePointer
+    const hit = this.mapDropManager?.findDropAt(p.worldX, p.worldY)
+    if (!hit) {
+      this.emitMapDropHoverIfChanged(null)
+      return
+    }
+    const screen = this.worldToCanvasScreen(hit.x, hit.y - 22)
+    this.emitMapDropHoverIfChanged({
+      itemId: hit.itemId,
+      screenX: screen.x,
+      screenY: screen.y,
+    })
+  }
+
+  private emitMapDropHoverIfChanged(
+    payload: { itemId: string; screenX: number; screenY: number } | null,
+  ) {
+    const key = payload
+      ? `${payload.itemId}:${Math.round(payload.screenX)}:${Math.round(payload.screenY)}`
+      : null
+    if (key === this.lastMapDropHoverKey) return
+    this.lastMapDropHoverKey = key
+    emitGameEvent('mapDropHover', payload)
   }
 
   private refreshCursor() {
@@ -1002,6 +1042,8 @@ export class WorldScene extends Phaser.Scene {
         next = this.pendingSkill.def.target === 'ground' ? 'aoe' : 'skillTarget'
       } else if (this.findNpcAt(p.worldX, p.worldY)) {
         next = 'npc'
+      } else if (this.mapDropManager?.findDropAt(p.worldX, p.worldY)) {
+        next = 'loot'
       } else if (this.findAttackableRemotePlayerAt(p.worldX, p.worldY)) {
         next = 'mob'
       } else if (this.findMobAt(p.worldX, p.worldY)) {

@@ -29,3 +29,14 @@ export function floatingTooltipPosition(
 
   return { left, top, maxWidth }
 }
+
+/** Position a floating tooltip near a screen point (e.g. Phaser canvas hover). */
+export function floatingTooltipPositionFromPoint(
+  screenX: number,
+  screenY: number,
+  preferredWidth = DEFAULT_WIDTH,
+): { left: number; top: number; maxWidth: number } {
+  const pad = 4
+  const anchor = new DOMRect(screenX - pad, screenY - pad, pad * 2, pad * 2)
+  return floatingTooltipPosition(anchor, preferredWidth)
+}
