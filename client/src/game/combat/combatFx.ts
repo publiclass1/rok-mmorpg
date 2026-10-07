@@ -48,15 +48,17 @@ export function playMobHitShake(scene: Phaser.Scene, sprite: Phaser.GameObjects.
   })
 }
 
-function drawHitSparks(scene: Phaser.Scene, x: number, y: number) {
+function drawHitSparks(scene: Phaser.Scene, x: number, y: number, depth: number) {
   const sparks = scene.add.graphics()
+  sparks.setPosition(x, y)
+  sparks.setDepth(depth)
   sparks.lineStyle(2, 0xfff7ed, 0.95)
   for (let i = 0; i < 4; i++) {
     const a = (Math.PI / 2) * i + 0.2
-    sparks.lineBetween(x, y, x + Math.cos(a) * 10, y + Math.sin(a) * 10)
+    sparks.lineBetween(0, 0, Math.cos(a) * 10, Math.sin(a) * 10)
   }
   sparks.fillStyle(0xffffff, 0.8)
-  sparks.fillCircle(x, y, 3)
+  sparks.fillCircle(0, 0, 3)
   scene.tweens.add({
     targets: sparks,
     alpha: 0,
@@ -88,7 +90,7 @@ export function playMobHitImpact(
     yoyo: true,
   })
 
-  drawHitSparks(scene, cx, cy)
+  drawHitSparks(scene, cx, cy, sprite.depth + 0.08)
 
   if (fromX !== undefined && fromY !== undefined) {
     const dx = cx - fromX
@@ -198,61 +200,78 @@ export function flashPlayerHit(scene: Phaser.Scene, display: PlayerDisplay) {
   scene.time.delayedCall(120, () => setPlayerHitFlash(display, false))
 }
 
+type SlashArcSpec = {
+  outerStart: number
+  outerEnd: number
+  innerStart: number
+  innerEnd: number
+}
+
+function slashArcSpec(facing: Facing, swing: boolean): SlashArcSpec {
+  if (facing === 'left' || facing === 'right') {
+    if (facing === 'right') {
+      return swing
+        ? { outerStart: -0.9, outerEnd: 0.9, innerStart: -0.7, innerEnd: 0.7 }
+        : { outerStart: -0.8, outerEnd: 0.8, innerStart: -0.8, innerEnd: 0.8 }
+    }
+    return swing
+      ? { outerStart: Math.PI - 0.9, outerEnd: Math.PI + 0.9, innerStart: Math.PI - 0.7, innerEnd: Math.PI + 0.7 }
+      : { outerStart: Math.PI - 0.8, outerEnd: Math.PI + 0.8, innerStart: Math.PI - 0.8, innerEnd: Math.PI + 0.8 }
+  }
+  if (facing === 'down') {
+    return swing
+      ? { outerStart: 0.2, outerEnd: Math.PI - 0.2, innerStart: 0.35, innerEnd: Math.PI - 0.35 }
+      : { outerStart: 0.3, outerEnd: Math.PI - 0.3, innerStart: 0.3, innerEnd: Math.PI - 0.3 }
+  }
+  return swing
+    ? { outerStart: Math.PI + 0.2, outerEnd: -0.2, innerStart: Math.PI + 0.35, innerEnd: -0.35 }
+    : { outerStart: Math.PI + 0.3, outerEnd: -0.3, innerStart: Math.PI + 0.3, innerEnd: -0.3 }
+}
+
+function strokeSlashArcAt(
+  g: Phaser.GameObjects.Graphics,
+  arcR: number,
+  spec: SlashArcSpec,
+  outerColor: number,
+  outerWidth: number,
+  innerColor: number,
+  innerWidth: number,
+  innerRadiusDelta: number,
+) {
+  g.lineStyle(outerWidth, outerColor, 0.85)
+  g.beginPath()
+  g.arc(0, 0, arcR, spec.outerStart, spec.outerEnd, false)
+  g.strokePath()
+  g.lineStyle(innerWidth, innerColor, 0.95)
+  g.beginPath()
+  g.arc(0, 0, arcR - innerRadiusDelta, spec.innerStart, spec.innerEnd, false)
+  g.strokePath()
+}
+
 function drawSwingSlash(
   scene: Phaser.Scene,
   sx: number,
   sy: number,
   facing: Facing,
   bash: boolean,
+  depth: number,
 ) {
   const slash = scene.add.graphics()
+  slash.setPosition(sx, sy)
+  slash.setDepth(depth)
   const outer = bash ? 0xfbbf24 : 0xe2e8f0
   const inner = bash ? 0xfffbeb : 0xffffff
   const arcR = bash ? 24 : 20
-  slash.lineStyle(bash ? 5 : 4, outer, 0.85)
-  slash.beginPath()
-  if (facing === 'left' || facing === 'right') {
-    slash.arc(
-      sx,
-      sy,
-      arcR,
-      facing === 'right' ? -0.9 : Math.PI - 0.9,
-      facing === 'right' ? 0.9 : Math.PI + 0.9,
-      false,
-    )
-  } else {
-    slash.arc(
-      sx,
-      sy,
-      arcR,
-      facing === 'down' ? 0.2 : Math.PI + 0.2,
-      facing === 'down' ? Math.PI - 0.2 : -0.2,
-      false,
-    )
-  }
-  slash.strokePath()
-  slash.lineStyle(2, inner, 0.95)
-  slash.beginPath()
-  if (facing === 'left' || facing === 'right') {
-    slash.arc(
-      sx,
-      sy,
-      arcR - 4,
-      facing === 'right' ? -0.7 : Math.PI - 0.7,
-      facing === 'right' ? 0.7 : Math.PI + 0.7,
-      false,
-    )
-  } else {
-    slash.arc(
-      sx,
-      sy,
-      arcR - 4,
-      facing === 'down' ? 0.35 : Math.PI + 0.35,
-      facing === 'down' ? Math.PI - 0.35 : -0.35,
-      false,
-    )
-  }
-  slash.strokePath()
+  strokeSlashArcAt(
+    slash,
+    arcR,
+    slashArcSpec(facing, true),
+    outer,
+    bash ? 5 : 4,
+    inner,
+    2,
+    4,
+  )
 
   const rotStart =
     facing === 'right' ? -0.5 : facing === 'left' ? 0.5 : facing === 'down' ? -0.3 : 0.3
@@ -296,37 +315,27 @@ export function playPlayerAttackSlash(
 
   const sx = playerX + (facing === 'left' ? -20 : facing === 'right' ? 20 : 0)
   const sy = playerY + (facing === 'up' ? -20 : facing === 'down' ? 20 : 0)
+  const slashDepth = container.depth + 0.08
 
   if (options.attackStyle === 'swing') {
-    drawSwingSlash(scene, sx, sy, facing, bash)
+    drawSwingSlash(scene, sx, sy, facing, bash, slashDepth)
   } else {
     const slash = scene.add.graphics()
-    slash.lineStyle(bash ? 4 : 3, bash ? 0xfbbf24 : 0xe2e8f0, 0.95)
+    slash.setPosition(sx, sy)
+    slash.setDepth(slashDepth)
     const arcR = bash ? 24 : 18
+    const color = bash ? 0xfbbf24 : 0xe2e8f0
+    slash.lineStyle(bash ? 4 : 3, color, 0.95)
+    const spec = slashArcSpec(facing, false)
     slash.beginPath()
-    if (facing === 'left' || facing === 'right') {
-      slash.arc(
-        sx,
-        sy,
-        arcR,
-        facing === 'right' ? -0.8 : Math.PI - 0.8,
-        facing === 'right' ? 0.8 : Math.PI + 0.8,
-        false,
-      )
-    } else {
-      slash.arc(
-        sx,
-        sy,
-        arcR,
-        facing === 'down' ? 0.3 : Math.PI + 0.3,
-        facing === 'down' ? Math.PI - 0.3 : -0.3,
-        false,
-      )
-    }
+    slash.arc(0, 0, arcR, spec.outerStart, spec.outerEnd, false)
     slash.strokePath()
+    const thrustRot = options.attackStyle === 'thrust' ? (facing === 'left' ? -0.15 : 0.15) : 0
+    if (thrustRot !== 0) slash.setRotation(thrustRot)
     scene.tweens.add({
       targets: slash,
       alpha: 0,
+      rotation: thrustRot + (options.attackStyle === 'thrust' ? thrustRot * 2 : 0),
       duration: bash ? 200 : 150,
       onComplete: () => slash.destroy(),
     })

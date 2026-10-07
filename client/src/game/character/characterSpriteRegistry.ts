@@ -100,7 +100,7 @@ function npcSpriteDef(archetype: NpcArchetype): CharacterSpriteDef {
 
 export const PLAYER_SPRITE_MALE: CharacterSpriteDef = {
   id: 'player_male',
-  masterTextureKey: 'master_player_male_v4',
+  masterTextureKey: 'master_player_male_v5',
   framesPerRow: PLAYER_FRAMES_PER_ROW,
   facingRow: FACING_ROW,
   strips: PLAYER_STRIPS,
@@ -109,7 +109,7 @@ export const PLAYER_SPRITE_MALE: CharacterSpriteDef = {
 
 export const PLAYER_SPRITE_FEMALE: CharacterSpriteDef = {
   id: 'player_female',
-  masterTextureKey: 'master_player_female_v4',
+  masterTextureKey: 'master_player_female_v5',
   framesPerRow: PLAYER_FRAMES_PER_ROW,
   facingRow: FACING_ROW,
   strips: PLAYER_STRIPS,

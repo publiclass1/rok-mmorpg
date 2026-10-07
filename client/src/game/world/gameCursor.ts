@@ -1,3 +1,5 @@
+import type Phaser from 'phaser'
+
 export type GameCursor = 'default' | 'npc' | 'mob' | 'skillTarget' | 'aoe'
 
 const CSS: Record<GameCursor, string> = {
@@ -10,4 +12,15 @@ const CSS: Record<GameCursor, string> = {
 
 export function cursorCss(cursor: GameCursor): string {
   return CSS[cursor]
+}
+
+/** Apply cursor to Phaser canvas and React host so CSS cannot override via inherit. */
+export function applyGameCursorToDom(game: Phaser.Game, css: string): void {
+  const canvas = game.canvas
+  if (!canvas) return
+  canvas.style.cursor = css
+  const parent = canvas.parentElement
+  if (parent?.classList.contains('game-canvas')) {
+    parent.style.cursor = css
+  }
 }

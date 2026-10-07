@@ -77,6 +77,8 @@ export type PlayerStatsPayload = {
   jobExpToNext: number
 }
 
+export type PlayerBuffDisplayKind = 'buff' | 'status'
+
 export type PlayerBuffPayload = {
   statusId: string
   name: string
@@ -84,6 +86,8 @@ export type PlayerBuffPayload = {
   skillLevel: number
   expiresAt: number
   durationMs: number
+  /** Timed combat buffs use 'buff' (duration ring). Mounts and rentals use 'status'. */
+  displayKind?: PlayerBuffDisplayKind
 }
 
 export type CharacterSheetPayload = PlayerStatsPayload & {

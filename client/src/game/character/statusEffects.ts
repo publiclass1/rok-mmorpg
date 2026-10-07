@@ -1,5 +1,11 @@
 import type { PlayerBuffPayload } from '../events'
 
+export const PECO_RIDE_STATUS_ID = 'peco_ride'
+
+export function isHudStatusPayload(statusId: string): boolean {
+  return statusId === PECO_RIDE_STATUS_ID || statusId.startsWith('rental_')
+}
+
 export type PlayerStatusBuff = {
   statusId: string
   name: string
@@ -21,11 +27,13 @@ export function applySelfBuff(
     iconSkillId: string
     skillLevel: number
     now: number
-    durationMs: number
+    durationMs?: number
+    expiresAt?: number
   },
 ): PlayerStatusBuff[] {
   const startedAt = params.now
-  const expiresAt = params.now + params.durationMs
+  const expiresAt =
+    params.expiresAt ?? params.now + (params.durationMs ?? 0)
   const next: PlayerStatusBuff = {
     statusId: params.statusId,
     name: params.name,
@@ -39,7 +47,11 @@ export function applySelfBuff(
 }
 
 export function pruneExpired(buffs: PlayerStatusBuff[], now: number): PlayerStatusBuff[] {
-  return buffs.filter((b) => b.expiresAt > now)
+  return buffs.filter((b) => !Number.isFinite(b.expiresAt) || b.expiresAt > now)
+}
+
+export function removeStatus(buffs: PlayerStatusBuff[], statusId: string): PlayerStatusBuff[] {
+  return buffs.filter((b) => b.statusId !== statusId)
 }
 
 export function hasStatus(buffs: PlayerStatusBuff[], statusId: string): boolean {
@@ -71,5 +83,6 @@ export function toPlayerBuffPayloads(buffs: PlayerStatusBuff[]): PlayerBuffPaylo
     skillLevel: b.skillLevel,
     expiresAt: b.expiresAt,
     durationMs: buffDurationMs(b),
+    displayKind: isHudStatusPayload(b.statusId) ? 'status' : 'buff',
   }))
 }

@@ -4,7 +4,10 @@ import {
   buffDurationMs,
   buffsEqual,
   hasStatus,
+  PECO_RIDE_STATUS_ID,
   pruneExpired,
+  removeStatus,
+  toPlayerBuffPayloads,
 } from './statusEffects'
 
 function run() {
@@ -50,6 +53,25 @@ function run() {
 
   assert.ok(buffsEqual(buffs, [...buffs]))
   assert.ok(!buffsEqual(buffs, pruned))
+
+  const mounted = applySelfBuff([], {
+    statusId: PECO_RIDE_STATUS_ID,
+    name: 'Peco Peco Ride',
+    iconSkillId: 'peco_peco_ride',
+    skillLevel: 1,
+    now: 1000,
+    expiresAt: Number.POSITIVE_INFINITY,
+  })
+  assert.equal(pruneExpired(mounted, 9_999_999_999).length, 1)
+
+  const payloads = toPlayerBuffPayloads(mounted)
+  assert.equal(payloads[0].displayKind, 'status')
+
+  const endurePayloads = toPlayerBuffPayloads(pruned)
+  assert.equal(endurePayloads[0].displayKind, 'buff')
+
+  const afterDismount = removeStatus(mounted, PECO_RIDE_STATUS_ID)
+  assert.equal(afterDismount.length, 0)
 
   console.log('statusEffects.test.ts: ok')
 }

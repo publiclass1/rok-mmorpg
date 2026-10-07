@@ -132,8 +132,14 @@ export function tickRemotePlayer(entity: RemotePlayerEntity, now: number, smooth
     walkFrame = (Math.floor(now / 150) % 2) as 0 | 1
   }
 
-  playPlayerAnim(entity.display, p.anim, p.facing)
-  if (p.anim === 'walk') {
+  const localAttack = entity.display.pose.anim === 'attack'
+  const forcePresenceAnim = p.anim === 'dead' || p.anim === 'sit'
+  if (!localAttack || forcePresenceAnim) {
+    playPlayerAnim(entity.display, p.anim, p.facing)
+    if (p.anim === 'walk') {
+      setPlayerWalkFrame(entity.display, walkFrame)
+    }
+  } else if (p.anim === 'walk') {
     setPlayerWalkFrame(entity.display, walkFrame)
   }
   syncRemotePecoMount(entity, p, walkFrame)

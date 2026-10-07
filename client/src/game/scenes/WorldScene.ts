@@ -22,7 +22,9 @@ import {
   applySelfBuff,
   buffsEqual,
   hasStatus,
+  PECO_RIDE_STATUS_ID,
   pruneExpired,
+  removeStatus,
   toPlayerBuffPayloads,
   type PlayerStatusBuff,
 } from '../character/statusEffects'
@@ -136,7 +138,7 @@ import {
   setRemoteViewportVisible,
 } from '../world/syncWorldViewport'
 import { cameraWorldViewRect, viewBoundsWithMargin } from '../world/viewportCull'
-import { cursorCss, type GameCursor } from '../world/gameCursor'
+import { applyGameCursorToDom, cursorCss, type GameCursor } from '../world/gameCursor'
 import {
   ensureMobParticleTexture,
   ensureMobTexture,
@@ -362,7 +364,7 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.setZoom(1.35)
 
     this.spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
-    this.input.setDefaultCursor(cursorCss('default'))
+    this.applyGameCursor('default')
     const escKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC)
     escKey.on('down', () => this.cancelSkillTargeting())
 
@@ -626,7 +628,7 @@ export class WorldScene extends Phaser.Scene {
     const now = this.time.now
 
     this.tickActiveRental(wallNow)
-    this.tickStatusEffects(now)
+    this.tickStatusEffects(wallNow)
 
     if (this.isPlayerDead) {
       playPlayerAnim(this.playerDisplay, 'dead', this.facing)
@@ -744,8 +746,14 @@ export class WorldScene extends Phaser.Scene {
     }
     if (next !== this.currentCursor) {
       this.currentCursor = next
-      this.input.setDefaultCursor(cursorCss(next))
+      this.applyGameCursor(next)
     }
+  }
+
+  private applyGameCursor(cursor: GameCursor) {
+    const css = cursorCss(cursor)
+    this.input.setDefaultCursor(css)
+    applyGameCursorToDom(this.game, css)
   }
 
   private refreshPlayerNameLabels() {
@@ -1248,6 +1256,7 @@ export class WorldScene extends Phaser.Scene {
         skillLevel: 1,
         expiresAt: active.expiresAt,
         durationMs,
+        displayKind: 'status',
       },
     ]
   }
@@ -1262,10 +1271,12 @@ export class WorldScene extends Phaser.Scene {
 
   private emitPlayerBuffs() {
     const wallNow = Date.now()
-    emitGameEvent('playerBuffs', [
-      ...toPlayerBuffPayloads(this.activeBuffs),
-      ...this.rentalHudBuffs(wallNow),
-    ])
+    const rental = activeRentalAt(this.session, wallNow)
+    let buffPayloads = toPlayerBuffPayloads(this.activeBuffs)
+    if (rental?.kind === 'peco_peco' && hasStatus(this.activeBuffs, PECO_RIDE_STATUS_ID)) {
+      buffPayloads = buffPayloads.filter((b) => b.statusId !== PECO_RIDE_STATUS_ID)
+    }
+    emitGameEvent('playerBuffs', [...buffPayloads, ...this.rentalHudBuffs(wallNow)])
   }
 
   private syncMountVisuals(playerFeet: number) {
@@ -1315,21 +1326,55 @@ export class WorldScene extends Phaser.Scene {
 
   private trySelfBuffSkill(skillId: string, skillLevel: number, def: SkillDefinition) {
     if (!def.selfBuff) return
+    if (skillId === 'peco_peco_ride') {
+      this.tryPecoRideSkill(skillId, skillLevel, def)
+      return
+    }
     if (this.isAttacking || this.isJumping) return
     if (!this.spendMp(def.mpCost)) return
 
+    const wallNow = Date.now()
     const durationMs = selfBuffDurationMs(def.selfBuff, skillLevel)
     this.activeBuffs = applySelfBuff(this.activeBuffs, {
       statusId: def.selfBuff.statusId,
       name: def.name,
       iconSkillId: skillId,
       skillLevel,
-      now: this.time.now,
+      now: wallNow,
       durationMs,
     })
     const seconds = Math.ceil(durationMs / 1000)
     emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — ${seconds}s`)
     logActivity('character', `${def.name} Lv ${skillLevel} (${seconds}s).`)
+    this.emitPlayerBuffs()
+    this.emitCharacterSheet()
+  }
+
+  private tryPecoRideSkill(skillId: string, skillLevel: number, def: SkillDefinition) {
+    if (!def.selfBuff) return
+    if (this.isAttacking || this.isJumping) return
+
+    const wallNow = Date.now()
+    if (hasStatus(this.activeBuffs, PECO_RIDE_STATUS_ID)) {
+      this.activeBuffs = removeStatus(this.activeBuffs, PECO_RIDE_STATUS_ID)
+      emitGameEvent('status', 'Dismounted.')
+      logActivity('character', 'Dismounted from Peco Peco.')
+      this.emitPlayerBuffs()
+      this.emitCharacterSheet()
+      return
+    }
+
+    if (!this.spendMp(def.mpCost)) return
+    this.activeBuffs = applySelfBuff(this.activeBuffs, {
+      statusId: def.selfBuff.statusId,
+      name: def.name,
+      iconSkillId: skillId,
+      skillLevel,
+      now: wallNow,
+      expiresAt: Number.POSITIVE_INFINITY,
+    })
+    emitGameEvent('status', 'Riding Peco Peco.')
+    logActivity('character', `${def.name} Lv ${skillLevel} — mounted.`)
     this.emitPlayerBuffs()
     this.emitCharacterSheet()
   }

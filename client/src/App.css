@@ -615,15 +615,6 @@ button:disabled {
   grid-template-columns: 1fr 180px;
 }
 
-body.game-active .game-shell {
-  cursor: url('/cursors/game-pointer.png') 2 2, default;
-}
-
-body.game-active .game-canvas,
-body.game-active .game-canvas canvas {
-  cursor: inherit;
-}
-
 .game-shell--fullscreen {
   position: fixed;
   inset: 0;
@@ -818,6 +809,11 @@ body.game-active .game-canvas canvas {
 
 .buff-slot {
   flex-shrink: 0;
+}
+
+.buff-slot--status-active .buff-slot-icon {
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.75);
 }
 
 .buff-slot-icon {

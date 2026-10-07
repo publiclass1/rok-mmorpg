@@ -85,7 +85,10 @@ function drawWeapon(
       g.fillTriangle(wx, wy, bx, by, wx + dir * 3, wy + 8)
     } else {
       const sign = facing === 'down' ? 1 : -1
-      g.fillRect(wx - 2, wy + sign * (phase === 1 ? 4 : 0), 4, sign * bladeLen)
+      const angle = phase === 0 ? (sign > 0 ? -1.1 : 1.1) : phase === 1 ? sign * 0.35 : sign * 0.85
+      const bx = wx + Math.cos(angle) * bladeLen * 0.55
+      const by = wy + sign * Math.sin(Math.abs(angle)) * bladeLen
+      g.fillTriangle(wx, wy, bx, by, wx + sign * 3, wy - sign * 2)
     }
   } else if (style === 'thrust') {
     g.fillStyle(WEAPON_SPEAR, 1)
