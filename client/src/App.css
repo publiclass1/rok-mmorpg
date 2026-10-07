@@ -1377,16 +1377,65 @@ body.game-active .game-canvas canvas {
   padding: 0.2rem 0.45rem;
 }
 
-.party-panel {
-  margin-top: 0.35rem;
-  padding-top: 0.35rem;
-  border-top: 1px solid rgba(55, 65, 81, 0.6);
-  pointer-events: auto;
+.party-modal {
+  width: min(480px, 94vw);
+  padding: 2rem 2.25rem;
 }
 
-.party-panel h3 {
-  margin: 0 0 0.25rem;
-  font-size: 0.75rem;
+.party-modal__header {
+  align-items: center;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.party-modal__title {
+  margin: 0 0 0.75rem;
+}
+
+.party-modal__members {
+  margin-bottom: 1rem;
+}
+
+.party-modal__member-row {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.party-modal__member-actions {
+  flex-shrink: 0;
+}
+
+.party-modal__invite {
+  margin-bottom: 0.75rem;
+}
+
+.party-modal__invite input {
+  flex: 1;
+  min-width: 0;
+}
+
+.party-modal__exp-share {
+  margin-bottom: 0.75rem;
+}
+
+.party-modal__create {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.party-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.party-modal__field input {
+  width: 100%;
+}
+
+.party-modal__actions {
+  margin-top: 0.5rem;
 }
 
 .nearby-selected {

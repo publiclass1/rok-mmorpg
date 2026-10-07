@@ -11,6 +11,7 @@ import {
 } from '../_shared/supabase.ts'
 
 type Action =
+  | 'create'
   | 'invite'
   | 'apply'
   | 'accept'
@@ -19,13 +20,39 @@ type Action =
   | 'kick'
   | 'disband'
   | 'set_exp_share'
+  | 'transfer_leader'
 
 type Body = {
   action: Action
   characterId: string
+  name?: string
   targetCharacterId?: string
+  targetName?: string
   requestId?: string
   expShare?: boolean
+}
+
+function normalizePartyName(raw: string | undefined): string {
+  const name = (raw ?? '').trim()
+  if (name.length < 1 || name.length > 24) {
+    throw new Response(JSON.stringify({ error: 'Party name must be 1–24 characters' }), { status: 400 })
+  }
+  return name
+}
+
+async function resolveCharacterIdByName(
+  service: ReturnType<typeof createServiceClient>,
+  name: string,
+): Promise<string> {
+  const trimmed = name.trim()
+  if (!trimmed) {
+    throw new Response(JSON.stringify({ error: 'Character name required' }), { status: 400 })
+  }
+  const { data } = await service.from('characters').select('id').eq('name', trimmed).maybeSingle()
+  if (!data) {
+    throw new Response(JSON.stringify({ error: 'Character not found' }), { status: 404 })
+  }
+  return data.id
 }
 
 async function getMembership(service: ReturnType<typeof createServiceClient>, characterId: string) {
@@ -88,13 +115,43 @@ Deno.serve(async (req) => {
 
     await getOwnedCharacter(client, user.id, body.characterId)
 
-    if (body.action === 'invite') {
-      if (!body.targetCharacterId) {
-        return new Response(JSON.stringify({ error: 'targetCharacterId required' }), { status: 400 })
+    if (body.action === 'create') {
+      const existing = await getMembership(service, body.characterId)
+      if (existing) {
+        return new Response(JSON.stringify({ error: 'Already in a party' }), { status: 400 })
       }
-      await assertSameMapAndRange(service, body.characterId, body.targetCharacterId)
+      const partyName = normalizePartyName(body.name)
+      const { data: party, error } = await service
+        .from('parties')
+        .insert({ leader_character_id: body.characterId, name: partyName })
+        .select('*')
+        .single()
+      if (error || !party) {
+        return new Response(JSON.stringify({ error: error?.message ?? 'Could not create party' }), {
+          status: 400,
+        })
+      }
+      await service.from('party_members').insert({ party_id: party.id, character_id: body.characterId })
+      return new Response(JSON.stringify({ party }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
-      const targetMember = await getMembership(service, body.targetCharacterId)
+    if (body.action === 'invite') {
+      let targetCharacterId = body.targetCharacterId
+      const inviteByName = Boolean(body.targetName?.trim())
+      if (!targetCharacterId && !inviteByName) {
+        return new Response(JSON.stringify({ error: 'targetCharacterId or targetName required' }), {
+          status: 400,
+        })
+      }
+      if (inviteByName) {
+        targetCharacterId = await resolveCharacterIdByName(service, body.targetName!)
+      } else if (targetCharacterId) {
+        await assertSameMapAndRange(service, body.characterId, targetCharacterId)
+      }
+
+      const targetMember = await getMembership(service, targetCharacterId!)
       if (targetMember) {
         return new Response(JSON.stringify({ error: 'Target is already in a party' }), { status: 400 })
       }
@@ -109,7 +166,7 @@ Deno.serve(async (req) => {
         .from('party_requests')
         .update({ status: 'cancelled', updated_at: new Date().toISOString() })
         .eq('from_character_id', body.characterId)
-        .eq('to_character_id', body.targetCharacterId)
+        .eq('to_character_id', targetCharacterId!)
         .eq('status', 'pending')
 
       const { data, error } = await service
@@ -117,7 +174,7 @@ Deno.serve(async (req) => {
         .insert({
           party_id: party.id,
           from_character_id: body.characterId,
-          to_character_id: body.targetCharacterId,
+          to_character_id: targetCharacterId!,
           kind: 'invite',
         })
         .select('*')
@@ -300,6 +357,46 @@ Deno.serve(async (req) => {
       await service.from('party_members').delete().eq('party_id', party.id)
       await service.from('parties').delete().eq('id', party.id)
       return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (body.action === 'transfer_leader') {
+      if (!body.targetCharacterId) {
+        return new Response(JSON.stringify({ error: 'targetCharacterId required' }), { status: 400 })
+      }
+      const member = await getMembership(service, body.characterId)
+      const party = member ? await getParty(service, member.party_id) : null
+      if (!party || party.leader_character_id !== body.characterId) {
+        return new Response(JSON.stringify({ error: 'Only leader can transfer leadership' }), {
+          status: 403,
+        })
+      }
+      if (body.targetCharacterId === body.characterId) {
+        return new Response(JSON.stringify({ error: 'Already party leader' }), { status: 400 })
+      }
+      const { data: targetMember } = await service
+        .from('party_members')
+        .select('character_id')
+        .eq('party_id', party.id)
+        .eq('character_id', body.targetCharacterId)
+        .maybeSingle()
+      if (!targetMember) {
+        return new Response(JSON.stringify({ error: 'Target is not in your party' }), { status: 400 })
+      }
+      const { data, error } = await service
+        .from('parties')
+        .update({
+          leader_character_id: body.targetCharacterId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', party.id)
+        .select('*')
+        .single()
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+      }
+      return new Response(JSON.stringify({ party: data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }

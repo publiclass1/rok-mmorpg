@@ -44,8 +44,8 @@ import { dungeonFloors, isDungeonMapId } from '../game/world/dungeonConfig'
 import { ChatStrip } from './ChatStrip'
 import { PlayerTargetPopup } from './PlayerTargetPopup'
 import { GuildModal } from './GuildModal'
-import { PartyPanel } from './PartyPanel'
 import { PartyRequestModal } from './PartyRequestModal'
+import { PartyWindow } from './PartyWindow'
 import { VendorSetupModal } from './VendorSetupModal'
 import { VendorShopModal } from './VendorShopModal'
 import { ActivityLog } from './ActivityLog'
@@ -162,6 +162,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     null,
   )
   const [guildOpen, setGuildOpen] = useState(false)
+  const [partyOpen, setPartyOpen] = useState(false)
   const [vendorSetupOpen, setVendorSetupOpen] = useState(false)
   const [vendorShopTarget, setVendorShopTarget] = useState<SelectedPlayerPayload | null>(null)
   const [vendingOpen, setVendingOpen] = useState(false)
@@ -184,6 +185,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     !!npcMenu ||
     !!tradePartner ||
     !!partyRequest ||
+    partyOpen ||
     guildOpen ||
     vendorSetupOpen ||
     !!vendorShopTarget
@@ -1001,12 +1003,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
                 Respawn options
               </button>
             )}
-            <PartyPanel
-              characterId={character.id}
-              snapshot={partySnapshot}
-              onChanged={refreshParty}
-              onMessage={setMessage}
-            />
           </motion.div>
 
           <motion.div
@@ -1025,6 +1021,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             </button>
             <button type="button" className="secondary hud-btn" onClick={() => setSkillsOpen(true)} title="Alt+K">
               Skills
+            </button>
+            <button type="button" className="secondary hud-btn" onClick={() => setPartyOpen(true)}>
+              Party
             </button>
             <button type="button" className="secondary hud-btn" onClick={() => setGuildOpen(true)}>
               Guild
@@ -1192,6 +1191,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             saveMapId={deathSaveMapId}
             onStay={() => setDeathModalOpen(false)}
             onReturnToSave={returnToSavePoint}
+          />
+        )}
+        {partyOpen && (
+          <PartyWindow
+            key="party"
+            characterId={character.id}
+            snapshot={partySnapshot}
+            onClose={() => setPartyOpen(false)}
+            onChanged={refreshParty}
+            onMessage={setMessage}
           />
         )}
         {guildOpen && (
