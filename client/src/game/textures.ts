@@ -1,56 +1,68 @@
 import Phaser from 'phaser'
 
+/** Full-bleed 32×32 classic RO-style flat tiles (no inset gutters). */
+
 function drawGrassTile(g: Phaser.GameObjects.Graphics, x: number, base: number, accent: number) {
-  g.fillStyle(0x0f172a, 0.35)
-  g.fillRect(x, 26, 32, 6)
   g.fillStyle(base, 1)
-  g.fillRect(x + 1, 4, 30, 24)
+  g.fillRect(x, 0, 32, 32)
   g.fillStyle(accent, 1)
-  g.fillRect(x + 2, 5, 28, 8)
-  g.fillStyle(0xffffff, 0.08)
-  g.fillRect(x + 3, 6, 12, 4)
+  g.fillRect(x + 2, 2, 14, 14)
+  g.fillRect(x + 16, 16, 14, 14)
+  g.fillStyle(0xffffff, 0.06)
+  g.fillRect(x + 4, 4, 6, 6)
+  g.fillRect(x + 18, 18, 6, 6)
 }
 
 function drawPathTile(g: Phaser.GameObjects.Graphics, x: number) {
-  g.fillStyle(0x0f172a, 0.35)
-  g.fillRect(x, 26, 32, 6)
-  g.fillStyle(0xa8845c, 1)
-  g.fillRect(x + 1, 5, 30, 23)
-  g.fillStyle(0xc4a574, 1)
-  g.fillRect(x + 2, 6, 28, 10)
-  g.fillStyle(0x8b6914, 0.25)
-  g.fillRect(x + 4, 18, 24, 8)
+  g.fillStyle(0x9a7b4f, 1)
+  g.fillRect(x, 0, 32, 32)
+  g.fillStyle(0xb8956a, 1)
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 4; col++) {
+      const ox = col * 8 + (row % 2 === 0 ? 0 : 4)
+      const oy = row * 8
+      g.fillRect(x + ox, oy, 7, 7)
+    }
+  }
+  g.fillStyle(0x7d6342, 1)
+  g.fillRect(x + 7, 0, 1, 32)
+  g.fillRect(x + 15, 0, 1, 32)
+  g.fillRect(x + 23, 0, 1, 32)
+  g.fillRect(x, 7, 32, 1)
+  g.fillRect(x, 15, 32, 1)
+  g.fillRect(x, 23, 32, 1)
 }
 
 function drawWallTile(g: Phaser.GameObjects.Graphics, x: number) {
-  g.fillStyle(0x1f2937, 1)
-  g.fillRect(x, 22, 32, 10)
-  g.fillStyle(0x4b5563, 1)
-  g.fillRect(x + 2, 6, 28, 18)
   g.fillStyle(0x6b7280, 1)
-  g.fillRect(x + 3, 7, 26, 8)
-  g.fillStyle(0x374151, 1)
-  g.fillRect(x + 2, 14, 6, 10)
-  g.lineStyle(1, 0x9ca3af, 0.5)
-  g.strokeRect(x + 3, 7, 26, 16)
+  g.fillRect(x, 0, 32, 32)
+  g.fillStyle(0x9ca3af, 1)
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 2; col++) {
+      g.fillRect(x + col * 16 + 1, row * 8 + 1, 14, 6)
+    }
+  }
+  g.fillStyle(0x4b5563, 1)
+  g.fillRect(x, 0, 32, 2)
+  g.fillRect(x, 30, 32, 2)
 }
 
 function drawBuildingTile(g: Phaser.GameObjects.Graphics, x: number) {
-  g.fillStyle(0x0f172a, 0.35)
-  g.fillRect(x, 26, 32, 6)
   g.fillStyle(0x78716c, 1)
-  g.fillRect(x + 1, 14, 30, 16)
+  g.fillRect(x, 0, 32, 32)
   g.fillStyle(0xb45309, 1)
-  g.fillTriangle(x + 16, 4, x + 30, 14, x + 2, 14)
+  g.fillTriangle(x + 16, 2, x + 30, 14, x + 2, 14)
+  g.fillStyle(0xd6d3d1, 1)
+  g.fillRect(x + 4, 14, 24, 18)
   g.fillStyle(0x44403c, 1)
-  g.fillRect(x + 12, 18, 8, 10)
+  g.fillRect(x + 12, 20, 8, 12)
 }
 
 function drawTreeTile(g: Phaser.GameObjects.Graphics, x: number) {
-  g.fillStyle(0x15803d, 1)
-  g.fillRect(x + 1, 22, 30, 8)
+  g.fillStyle(0x1a5c28, 1)
+  g.fillRect(x, 0, 32, 32)
   g.fillStyle(0x78350f, 1)
-  g.fillRect(x + 14, 18, 4, 8)
+  g.fillRect(x + 14, 20, 4, 12)
   g.fillStyle(0x166534, 1)
   g.fillCircle(x + 16, x + 12, 11)
   g.fillStyle(0x22c55e, 1)
@@ -62,20 +74,20 @@ function drawTreeTile(g: Phaser.GameObjects.Graphics, x: number) {
 function drawFountainTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillStyle(0x94a3b8, 1)
   g.fillRect(x, 0, 32, 32)
-  g.fillStyle(0xcbd5e1, 0.5)
+  g.fillStyle(0xcbd5e1, 0.6)
   g.fillRect(x + 2, 2, 28, 28)
-  g.fillStyle(0x38bdf8, 0.85)
-  g.fillCircle(x + 16, x + 16, 8)
+  g.fillStyle(0x38bdf8, 0.9)
+  g.fillCircle(x + 16, x + 16, 9)
   g.fillStyle(0x0ea5e9, 1)
   g.fillCircle(x + 16, x + 16, 4)
 }
 
 function drawPortalTile(g: Phaser.GameObjects.Graphics, x: number) {
-  g.fillStyle(0x1e1b4b, 1)
+  g.fillStyle(0x312e81, 1)
   g.fillRect(x, 0, 32, 32)
-  g.fillStyle(0x6366f1, 0.5)
+  g.fillStyle(0x6366f1, 0.55)
   g.fillEllipse(x + 16, x + 18, 24, 12)
-  g.fillStyle(0x818cf8, 0.9)
+  g.fillStyle(0x818cf8, 0.95)
   g.fillCircle(x + 16, x + 16, 8)
   g.fillStyle(0xc4b5fd, 1)
   g.fillCircle(x + 16, x + 16, 4)
@@ -91,8 +103,8 @@ export function ensureTilesTexture(scene: Phaser.Scene) {
 
   const g = scene.add.graphics()
   drawWallTile(g, 0)
-  drawGrassTile(g, 32, 0x22c55e, 0x16a34a)
-  drawGrassTile(g, 64, 0x16a34a, 0x15803d)
+  drawGrassTile(g, 32, 0x2d8a3e, 0x267a35)
+  drawGrassTile(g, 64, 0x267a35, 0x1f6b2d)
   drawPathTile(g, 96)
   drawBuildingTile(g, 128)
   drawTreeTile(g, 160)
@@ -100,6 +112,9 @@ export function ensureTilesTexture(scene: Phaser.Scene) {
   drawPortalTile(g, 224)
   g.generateTexture('tiles', TILESET_WIDTH_PX, 32)
   g.destroy()
+
+  const tex = scene.textures.get('tiles')
+  tex.setFilter(Phaser.Textures.FilterMode.NEAREST)
 }
 
 export function ensurePlayerTexture(scene: Phaser.Scene) {

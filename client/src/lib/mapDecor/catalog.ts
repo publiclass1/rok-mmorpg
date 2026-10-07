@@ -40,6 +40,8 @@ export type DecorAssetDef = {
   flatDepth?: number
   footprint?: DecorFootprintRect
   footprints?: DecorFootprintRect[]
+  /** Walkable deck: blocking decor underneath (e.g. canal) is ignored where this overlaps */
+  clearsBelow?: boolean
 }
 
 const buildingBody = (w: number, h: number, inset = 12, baseH = 72): DecorFootprintRect => ({
@@ -234,8 +236,34 @@ export const DECOR_ASSETS: DecorAssetDef[] = [
     ySort: true,
     footprint: { x: 8, y: 88, width: 80, height: 88 },
   },
-  { id: 'bridge_h', label: 'Bridge (H)', src: '/maps/decor/bridge_h.svg', width: 192, height: 128, ySort: false, flatDepth: 1.5 },
-  { id: 'bridge_v', label: 'Bridge (V)', src: '/maps/decor/bridge_v.svg', width: 128, height: 192, ySort: false, flatDepth: 1.5 },
+  {
+    id: 'bridge_h',
+    label: 'Bridge (H)',
+    src: '/maps/decor/bridge_h.svg',
+    width: 192,
+    height: 128,
+    ySort: false,
+    flatDepth: 1.5,
+    clearsBelow: true,
+    footprints: [
+      { x: 0, y: 72, width: 12, height: 56 },
+      { x: 180, y: 72, width: 12, height: 56 },
+    ],
+  },
+  {
+    id: 'bridge_v',
+    label: 'Bridge (V)',
+    src: '/maps/decor/bridge_v.svg',
+    width: 128,
+    height: 192,
+    ySort: false,
+    flatDepth: 1.5,
+    clearsBelow: true,
+    footprints: [
+      { x: 72, y: 0, width: 56, height: 12 },
+      { x: 72, y: 180, width: 56, height: 12 },
+    ],
+  },
   { id: 'lamp_post', label: 'Lamp', src: '/maps/decor/lamp_post.svg', width: 32, height: 96, ySort: true },
   {
     id: 'bush',

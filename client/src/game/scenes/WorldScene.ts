@@ -234,6 +234,7 @@ export class WorldScene extends Phaser.Scene {
 
   create() {
     ensureTilesTexture(this)
+    this.cameras.main.setRoundPixels(true)
     ensureMobTexture(this)
     ensureMobParticleTexture(this)
     registerMobDeathAnimation(this)

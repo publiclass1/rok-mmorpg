@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { partyManage } from '../lib/api'
-import type { PartySnapshot } from '../lib/partyState'
+import { createParty as createPartyRpc, type PartySnapshot } from '../lib/partyState'
 import { AnimatedModal } from './motion/AnimatedModal'
 
 type Props = {
@@ -38,7 +38,7 @@ export function PartyWindow({ characterId, snapshot, onClose, onChanged, onMessa
       return
     }
     await run(async () => {
-      await partyManage({ action: 'create', characterId, name })
+      await createPartyRpc(characterId, name)
       setPartyName('')
     }, 'Party created.')
   }

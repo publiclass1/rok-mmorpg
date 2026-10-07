@@ -3,15 +3,15 @@ import { GID_GRASS_A, GID_GRASS_B, GID_PATH, GID_WALL } from '../../lib/tmj'
 export function gidFillColor(gid: number): string {
   switch (gid) {
     case GID_WALL:
-      return '#4b5563'
+      return '#6b7280'
     case GID_GRASS_A:
-      return '#22c55e'
+      return '#2d8a3e'
     case GID_GRASS_B:
-      return '#16a34a'
+      return '#267a35'
     case GID_PATH:
-      return '#a8845c'
+      return '#9a7b4f'
     default:
-      return '#0f172a'
+      return '#1a5c28'
   }
 }
 

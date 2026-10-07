@@ -20,7 +20,7 @@ export function createPhaserGame(
     parent,
     width: GAME_VIEW_WIDTH,
     height: GAME_VIEW_HEIGHT,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#1a5c28',
     physics: {
       default: 'arcade',
       arcade: {

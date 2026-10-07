@@ -1,13 +1,40 @@
+import {
+  FunctionsFetchError,
+  FunctionsHttpError,
+  FunctionsRelayError,
+} from '@supabase/supabase-js'
 import { supabase } from './supabase'
+
+async function formatInvokeError(name: string, error: unknown): Promise<string> {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const body = (await error.context.clone().json()) as { error?: string }
+      if (body?.error) return body.error
+    } catch {
+      /* ignore parse errors */
+    }
+    return `Request to ${name} failed (${error.context.status}).`
+  }
+  if (error instanceof FunctionsFetchError) {
+    const url = import.meta.env.VITE_SUPABASE_URL ?? ''
+    if (!url || url.includes('placeholder')) {
+      return 'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in client/.env and restart the dev server (or set them in your host build settings).'
+    }
+    const cause = error.context
+    const detail = cause instanceof Error ? cause.message : String(cause)
+    return `Could not reach ${name} (${detail}). If other game features work, check ad blockers or try another browser. For hosted builds, confirm env vars were set before deploy.`
+  }
+  if (error instanceof FunctionsRelayError) {
+    return `Supabase relay error calling ${name}. Try again in a moment.`
+  }
+  if (error instanceof Error) return error.message
+  return String(error)
+}
 
 async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke(name, { body })
   if (error) {
-    const hint =
-      error.message.includes('Edge Function') || error.message.includes('Failed to send')
-        ? ` Deploy it with: npx supabase functions deploy ${name}`
-        : ''
-    throw new Error(`${error.message}${hint}`)
+    throw new Error(await formatInvokeError(name, error))
   }
   if (data?.error) {
     throw new Error(String(data.error))

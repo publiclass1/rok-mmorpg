@@ -52,3 +52,14 @@ export async function loadPendingPartyRequests(characterId: string): Promise<Par
 export function partyMemberIds(snapshot: PartySnapshot): string[] {
   return snapshot?.members.map((m) => m.characterId) ?? []
 }
+
+/** Creates a party via Postgres RPC (same API host as character save; no Edge Function). */
+export async function createParty(characterId: string, name: string): Promise<void> {
+  const { error } = await supabase.rpc('create_party', {
+    p_character_id: characterId,
+    p_name: name.trim(),
+  })
+  if (error) {
+    throw new Error(error.message)
+  }
+}
