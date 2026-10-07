@@ -25,8 +25,8 @@
       "tilewidth": 32
     }
   ],
-  "nextlayerid": 9,
-  "nextobjectid": 110,
+  "nextlayerid": 10,
+  "nextobjectid": 124,
   "layers": [
     {
       "data": [
@@ -25663,6 +25663,22 @@
               "value": "lamp_post"
             }
           ]
+        },
+        {
+          "id": 123,
+          "name": "tree_pine",
+          "type": "decor",
+          "x": 280,
+          "y": 551,
+          "width": 112,
+          "height": 208,
+          "properties": [
+            {
+              "name": "assetId",
+              "type": "string",
+              "value": "tree_pine"
+            }
+          ]
         }
       ]
     },
@@ -25676,216 +25692,11 @@
       "y": 0,
       "objects": [
         {
-          "id": 99,
-          "name": "prontera_kafra",
-          "type": "npc",
-          "x": 1816,
-          "y": 1360,
-          "width": 48,
-          "height": 64,
-          "properties": [
-            {
-              "name": "npcId",
-              "type": "string",
-              "value": "prontera_kafra"
-            },
-            {
-              "name": "npcType",
-              "type": "string",
-              "value": "storage"
-            },
-            {
-              "name": "label",
-              "type": "string",
-              "value": "Kafra"
-            },
-            {
-              "name": "facing",
-              "type": "string",
-              "value": "down"
-            },
-            {
-              "name": "spriteKey",
-              "type": "string",
-              "value": ""
-            },
-            {
-              "name": "configJson",
-              "type": "string",
-              "value": "{}"
-            }
-          ]
-        },
-        {
-          "id": 100,
-          "name": "prontera_save",
-          "type": "npc",
-          "x": 1592,
-          "y": 1424,
-          "width": 48,
-          "height": 64,
-          "properties": [
-            {
-              "name": "npcId",
-              "type": "string",
-              "value": "prontera_save"
-            },
-            {
-              "name": "npcType",
-              "type": "string",
-              "value": "save"
-            },
-            {
-              "name": "label",
-              "type": "string",
-              "value": "Save Point"
-            },
-            {
-              "name": "facing",
-              "type": "string",
-              "value": "down"
-            },
-            {
-              "name": "spriteKey",
-              "type": "string",
-              "value": ""
-            },
-            {
-              "name": "configJson",
-              "type": "string",
-              "value": "{}"
-            }
-          ]
-        },
-        {
-          "id": 101,
-          "name": "prontera_healer",
-          "type": "npc",
-          "x": 1368,
-          "y": 1360,
-          "width": 48,
-          "height": 64,
-          "properties": [
-            {
-              "name": "npcId",
-              "type": "string",
-              "value": "prontera_healer"
-            },
-            {
-              "name": "npcType",
-              "type": "string",
-              "value": "healer"
-            },
-            {
-              "name": "label",
-              "type": "string",
-              "value": "Healer"
-            },
-            {
-              "name": "facing",
-              "type": "string",
-              "value": "down"
-            },
-            {
-              "name": "spriteKey",
-              "type": "string",
-              "value": ""
-            },
-            {
-              "name": "configJson",
-              "type": "string",
-              "value": "{\"zenyCost\":0}"
-            }
-          ]
-        },
-        {
-          "id": 102,
-          "name": "prontera_rental",
-          "type": "npc",
-          "x": 1464,
-          "y": 1360,
-          "width": 48,
-          "height": 64,
-          "properties": [
-            {
-              "name": "npcId",
-              "type": "string",
-              "value": "prontera_rental"
-            },
-            {
-              "name": "npcType",
-              "type": "string",
-              "value": "rental"
-            },
-            {
-              "name": "label",
-              "type": "string",
-              "value": "Rental Shop"
-            },
-            {
-              "name": "facing",
-              "type": "string",
-              "value": "down"
-            },
-            {
-              "name": "spriteKey",
-              "type": "string",
-              "value": ""
-            },
-            {
-              "name": "configJson",
-              "type": "string",
-              "value": "{}"
-            }
-          ]
-        },
-        {
-          "id": 103,
-          "name": "prontera_warp",
-          "type": "npc",
-          "x": 1592,
-          "y": 1584,
-          "width": 48,
-          "height": 64,
-          "properties": [
-            {
-              "name": "npcId",
-              "type": "string",
-              "value": "prontera_warp"
-            },
-            {
-              "name": "npcType",
-              "type": "string",
-              "value": "teleport"
-            },
-            {
-              "name": "label",
-              "type": "string",
-              "value": "Warp Agent"
-            },
-            {
-              "name": "facing",
-              "type": "string",
-              "value": "down"
-            },
-            {
-              "name": "spriteKey",
-              "type": "string",
-              "value": ""
-            },
-            {
-              "name": "configJson",
-              "type": "string",
-              "value": "{\"destinations\":[{\"x\":480,\"y\":320,\"label\":\"Prontera Field 01\",\"map_id\":\"prt_fild01\"},{\"x\":160,\"y\":160,\"label\":\"Field (dev)\",\"map_id\":\"field_01\"},{\"x\":768,\"y\":112,\"label\":\"Prontera Culvert\",\"map_id\":\"prt_sewb1\"}]}"
-            }
-          ]
-        },
-        {
-          "id": 104,
+          "id": 110,
           "name": "prontera_job_master",
           "type": "npc",
-          "x": 1592,
-          "y": 784,
+          "x": 422,
+          "y": 41,
           "width": 48,
           "height": 64,
           "properties": [
@@ -25917,16 +25728,57 @@
             {
               "name": "configJson",
               "type": "string",
-              "value": "{\"offers\":[{\"jobId\":\"swordman\",\"zenyCost\":0,\"fromJobId\":\"novice\",\"requiredJobLevel\":10,\"requiredBaseLevel\":1},{\"jobId\":\"knight\",\"zenyCost\":0,\"fromJobId\":\"swordman\",\"requiredJobLevel\":40,\"requiredBaseLevel\":40}]}"
+              "value": "{\"offers\":[{\"jobId\":\"swordman\",\"zenyCost\":0,\"fromJobId\":\"novice\",\"requiredJobLevel\":10,\"requiredBaseLevel\":1},{\"jobId\":\"mage\",\"zenyCost\":0,\"fromJobId\":\"novice\",\"requiredJobLevel\":10,\"requiredBaseLevel\":1},{\"jobId\":\"archer\",\"zenyCost\":0,\"fromJobId\":\"novice\",\"requiredJobLevel\":10,\"requiredBaseLevel\":1},{\"jobId\":\"acolyte\",\"zenyCost\":0,\"fromJobId\":\"novice\",\"requiredJobLevel\":10,\"requiredBaseLevel\":1},{\"jobId\":\"merchant\",\"zenyCost\":0,\"fromJobId\":\"novice\",\"requiredJobLevel\":10,\"requiredBaseLevel\":1},{\"jobId\":\"thief\",\"zenyCost\":0,\"fromJobId\":\"novice\",\"requiredJobLevel\":10,\"requiredBaseLevel\":1},{\"jobId\":\"knight\",\"zenyCost\":0,\"fromJobId\":\"swordman\",\"requiredJobLevel\":40,\"requiredBaseLevel\":40},{\"jobId\":\"hunter\",\"zenyCost\":0,\"fromJobId\":\"archer\",\"requiredJobLevel\":40,\"requiredBaseLevel\":40}]}"
             }
           ]
         },
         {
-          "id": 105,
+          "id": 111,
+          "name": "prontera_tool_dealer",
+          "type": "npc",
+          "x": 1329,
+          "y": 1141,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "npcId",
+              "type": "string",
+              "value": "prontera_tool_dealer"
+            },
+            {
+              "name": "npcType",
+              "type": "string",
+              "value": "shop"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Tool Dealer"
+            },
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "down"
+            },
+            {
+              "name": "spriteKey",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "configJson",
+              "type": "string",
+              "value": "{\"buys\":[{\"price\":2,\"itemId\":\"jellopy\"},{\"price\":3,\"itemId\":\"fluff\"},{\"price\":8,\"itemId\":\"chrysalis\"},{\"price\":26,\"itemId\":\"worm_peeling\"},{\"price\":4,\"itemId\":\"sticky_mucus\"},{\"price\":200,\"itemId\":\"phracon\"},{\"price\":9,\"itemId\":\"red_herb\"},{\"price\":25,\"itemId\":\"iron_ore\"},{\"price\":39,\"itemId\":\"rat_tail\"},{\"price\":27,\"itemId\":\"animal_skin\"},{\"price\":15,\"itemId\":\"feather\"},{\"price\":60,\"itemId\":\"monsters_feed\"},{\"price\":8,\"itemId\":\"tooth_of_bat\"},{\"price\":200,\"itemId\":\"grape\"}],\"stock\":[{\"price\":50,\"itemId\":\"red_potion\"},{\"price\":120,\"itemId\":\"blue_potion\"}]}"
+            }
+          ]
+        },
+        {
+          "id": 112,
           "name": "prontera_dungeon_guide",
           "type": "npc",
-          "x": 2872,
-          "y": 1360,
+          "x": 1773,
+          "y": 1130,
           "width": 48,
           "height": 64,
           "properties": [
@@ -25963,28 +25815,28 @@
           ]
         },
         {
-          "id": 106,
-          "name": "prontera_weapon_dealer",
+          "id": 113,
+          "name": "prontera_kafra",
           "type": "npc",
-          "x": 824,
-          "y": 1808,
+          "x": 1921,
+          "y": 1304,
           "width": 48,
           "height": 64,
           "properties": [
             {
               "name": "npcId",
               "type": "string",
-              "value": "prontera_weapon_dealer"
+              "value": "prontera_kafra"
             },
             {
               "name": "npcType",
               "type": "string",
-              "value": "shop"
+              "value": "storage"
             },
             {
               "name": "label",
               "type": "string",
-              "value": "Weapon Dealer"
+              "value": "Kafra"
             },
             {
               "name": "facing",
@@ -25999,16 +25851,139 @@
             {
               "name": "configJson",
               "type": "string",
-              "value": "{\"stock\":[{\"price\":1200,\"itemId\":\"knife\"},{\"price\":1600,\"itemId\":\"sword\"},{\"price\":1500,\"itemId\":\"spear\"},{\"price\":2400,\"itemId\":\"falchion\"},{\"price\":2900,\"itemId\":\"blade\"},{\"price\":3200,\"itemId\":\"rapier\"},{\"price\":3500,\"itemId\":\"saber\"},{\"price\":1000,\"itemId\":\"rod\"},{\"price\":2000,\"itemId\":\"wand\"},{\"price\":5000,\"itemId\":\"staff\"},{\"price\":2500,\"itemId\":\"bow\"},{\"price\":8000,\"itemId\":\"great_bow\"},{\"price\":15000,\"itemId\":\"composite_bow\"},{\"price\":2400,\"itemId\":\"mace\"},{\"price\":2900,\"itemId\":\"club\"},{\"price\":4500,\"itemId\":\"smasher\"},{\"price\":2800,\"itemId\":\"axe\"},{\"price\":5500,\"itemId\":\"battle_axe\"},{\"price\":2000,\"itemId\":\"main_gauche\"},{\"price\":2400,\"itemId\":\"dagger\"},{\"price\":3200,\"itemId\":\"stiletto\"}]}"
+              "value": "{}"
             }
           ]
         },
         {
-          "id": 107,
+          "id": 114,
+          "name": "prontera_save",
+          "type": "npc",
+          "x": 1347,
+          "y": 1267,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "npcId",
+              "type": "string",
+              "value": "prontera_save"
+            },
+            {
+              "name": "npcType",
+              "type": "string",
+              "value": "save"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Save Point"
+            },
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "down"
+            },
+            {
+              "name": "spriteKey",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "configJson",
+              "type": "string",
+              "value": "{}"
+            }
+          ]
+        },
+        {
+          "id": 115,
+          "name": "prontera_healer",
+          "type": "npc",
+          "x": 1715,
+          "y": 1458,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "npcId",
+              "type": "string",
+              "value": "prontera_healer"
+            },
+            {
+              "name": "npcType",
+              "type": "string",
+              "value": "healer"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Healer"
+            },
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "down"
+            },
+            {
+              "name": "spriteKey",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "configJson",
+              "type": "string",
+              "value": "{\"zenyCost\":0}"
+            }
+          ]
+        },
+        {
+          "id": 116,
+          "name": "prontera_warp",
+          "type": "npc",
+          "x": 1489,
+          "y": 1459,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "npcId",
+              "type": "string",
+              "value": "prontera_warp"
+            },
+            {
+              "name": "npcType",
+              "type": "string",
+              "value": "teleport"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Warp Agent"
+            },
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "down"
+            },
+            {
+              "name": "spriteKey",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "configJson",
+              "type": "string",
+              "value": "{\"destinations\":[{\"x\":480,\"y\":320,\"label\":\"Prontera Field 01\",\"map_id\":\"prt_fild01\"},{\"x\":160,\"y\":160,\"label\":\"Field (dev)\",\"map_id\":\"field_01\"},{\"x\":768,\"y\":112,\"label\":\"Prontera Culvert\",\"map_id\":\"prt_sewb1\"}]}"
+            }
+          ]
+        },
+        {
+          "id": 117,
           "name": "prontera_armor_dealer",
           "type": "npc",
-          "x": 1080,
-          "y": 1808,
+          "x": 1383,
+          "y": 1042,
           "width": 48,
           "height": 64,
           "properties": [
@@ -26045,11 +26020,93 @@
           ]
         },
         {
-          "id": 108,
+          "id": 118,
+          "name": "prontera_rental",
+          "type": "npc",
+          "x": 1440,
+          "y": 1328,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "npcId",
+              "type": "string",
+              "value": "prontera_rental"
+            },
+            {
+              "name": "npcType",
+              "type": "string",
+              "value": "rental"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Rental Shop"
+            },
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "down"
+            },
+            {
+              "name": "spriteKey",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "configJson",
+              "type": "string",
+              "value": "{}"
+            }
+          ]
+        },
+        {
+          "id": 119,
+          "name": "prontera_weapon_dealer",
+          "type": "npc",
+          "x": 1466,
+          "y": 966,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "npcId",
+              "type": "string",
+              "value": "prontera_weapon_dealer"
+            },
+            {
+              "name": "npcType",
+              "type": "string",
+              "value": "shop"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Weapon Dealer"
+            },
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "down"
+            },
+            {
+              "name": "spriteKey",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "configJson",
+              "type": "string",
+              "value": "{\"stock\":[{\"price\":1200,\"itemId\":\"knife\"},{\"price\":1600,\"itemId\":\"sword\"},{\"price\":1500,\"itemId\":\"spear\"},{\"price\":2400,\"itemId\":\"falchion\"},{\"price\":2900,\"itemId\":\"blade\"},{\"price\":3200,\"itemId\":\"rapier\"},{\"price\":3500,\"itemId\":\"saber\"},{\"price\":1000,\"itemId\":\"rod\"},{\"price\":2000,\"itemId\":\"wand\"},{\"price\":5000,\"itemId\":\"staff\"},{\"price\":2500,\"itemId\":\"bow\"},{\"price\":8000,\"itemId\":\"great_bow\"},{\"price\":15000,\"itemId\":\"composite_bow\"},{\"price\":2400,\"itemId\":\"mace\"},{\"price\":2900,\"itemId\":\"club\"},{\"price\":4500,\"itemId\":\"smasher\"},{\"price\":2800,\"itemId\":\"axe\"},{\"price\":5500,\"itemId\":\"battle_axe\"},{\"price\":2000,\"itemId\":\"main_gauche\"},{\"price\":2400,\"itemId\":\"dagger\"},{\"price\":3200,\"itemId\":\"stiletto\"}]}"
+            }
+          ]
+        },
+        {
+          "id": 120,
           "name": "prontera_rarity_armor_dealer",
           "type": "npc",
-          "x": 1336,
-          "y": 1808,
+          "x": 1320,
+          "y": 1824,
           "width": 48,
           "height": 64,
           "properties": [
@@ -26081,33 +26138,33 @@
             {
               "name": "configJson",
               "type": "string",
-              "value": "{}"
+              "value": "{\"stock\":[{\"price\":100,\"itemId\":\"padded_vest\"},{\"price\":500,\"itemId\":\"scout_mail\"},{\"price\":2000,\"itemId\":\"knight_plate\"},{\"price\":8000,\"itemId\":\"violet_cuirass\"},{\"price\":25000,\"itemId\":\"dragon_scale_mail\"},{\"price\":80000,\"itemId\":\"skyweave_robe\"},{\"price\":250000,\"itemId\":\"relic_guardplate\"}],\"shopLayout\":\"rarityTabs\"}"
             }
           ]
         },
         {
-          "id": 109,
-          "name": "prontera_tool_dealer",
+          "id": 121,
+          "name": "prontera_pvp_master",
           "type": "npc",
-          "x": 2360,
-          "y": 1808,
+          "x": 1528,
+          "y": 1616,
           "width": 48,
           "height": 64,
           "properties": [
             {
               "name": "npcId",
               "type": "string",
-              "value": "prontera_tool_dealer"
+              "value": "prontera_pvp_master"
             },
             {
               "name": "npcType",
               "type": "string",
-              "value": "shop"
+              "value": "teleport"
             },
             {
               "name": "label",
               "type": "string",
-              "value": "Tool Dealer"
+              "value": "PVP Master"
             },
             {
               "name": "facing",
@@ -26117,12 +26174,64 @@
             {
               "name": "spriteKey",
               "type": "string",
-              "value": ""
+              "value": "job_master"
             },
             {
               "name": "configJson",
               "type": "string",
-              "value": "{\"buys\":[{\"price\":2,\"itemId\":\"jellopy\"},{\"price\":3,\"itemId\":\"fluff\"},{\"price\":8,\"itemId\":\"chrysalis\"},{\"price\":26,\"itemId\":\"worm_peeling\"},{\"price\":4,\"itemId\":\"sticky_mucus\"},{\"price\":200,\"itemId\":\"phracon\"},{\"price\":9,\"itemId\":\"red_herb\"},{\"price\":25,\"itemId\":\"iron_ore\"},{\"price\":39,\"itemId\":\"rat_tail\"},{\"price\":27,\"itemId\":\"animal_skin\"},{\"price\":15,\"itemId\":\"feather\"},{\"price\":60,\"itemId\":\"monsters_feed\"},{\"price\":8,\"itemId\":\"tooth_of_bat\"},{\"price\":200,\"itemId\":\"grape\"}],\"stock\":[{\"price\":50,\"itemId\":\"red_potion\"},{\"price\":120,\"itemId\":\"blue_potion\"}]}"
+              "value": "{\"destinations\":[{\"x\":640,\"y\":480,\"label\":\"PVP Room\",\"map_id\":\"pvp_room\"}]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "mob_spots",
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "objects": [
+        {
+          "id": 122,
+          "name": "prontera_spot_0",
+          "type": "mob_spot",
+          "x": 1696,
+          "y": 1392,
+          "width": 32,
+          "height": 32,
+          "properties": [
+            {
+              "name": "spotId",
+              "type": "string",
+              "value": "prontera_spot_0"
+            },
+            {
+              "name": "defId",
+              "type": "string",
+              "value": "training_dummy"
+            },
+            {
+              "name": "count",
+              "type": "float",
+              "value": 1
+            },
+            {
+              "name": "spawnsPerMinute",
+              "type": "float",
+              "value": 7.5
+            },
+            {
+              "name": "canLure",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "lureRadius",
+              "type": "float",
+              "value": 48
             }
           ]
         }

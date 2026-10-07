@@ -24,7 +24,7 @@
     "maps:dungeons": "node scripts/generate-dungeon-maps.mjs",
     "supabase:login": "supabase login",
     "supabase:link": "supabase link",
-    "supabase:push": "supabase db push",
+    "supabase:push": "supabase db push --include-all",
     "supabase:functions": "supabase functions deploy storage-transfer && supabase functions deploy save-point && supabase functions deploy teleport && supabase functions deploy portal-warp && supabase functions deploy trade-manage && supabase functions deploy party-manage && supabase functions deploy duel-manage && supabase functions deploy guild-manage && supabase functions deploy vendor-manage && supabase functions deploy dungeon-manage && supabase functions deploy gm-command && supabase functions deploy admin-panel",
     "supabase:setup": "npm run supabase:push && npm run supabase:functions",
     "supabase:cloud-setup": "bash scripts/supabase-cloud-setup.sh"

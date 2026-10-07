@@ -3716,7 +3716,8 @@
         "defId": "training_dummy",
         "count": 1,
         "spawnsPerMinute": 7.5,
-        "canLure": true
+        "canLure": true,
+        "lureRadius": 48
       }
     ]
   }

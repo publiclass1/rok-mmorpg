@@ -1,5 +1,19 @@
 {
   "portals": {
+    "pvp_room": [
+      {
+        "id": "pvp_room_exit_prontera",
+        "x": 576,
+        "y": 1184,
+        "width": 128,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 1584,
+        "targetY": 1616,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
     "prt_sewb1": [
       {
         "id": "culvert_exit_prontera",
