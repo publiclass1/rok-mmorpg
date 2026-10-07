@@ -1993,25 +1993,34 @@ button:disabled {
   align-items: start;
 }
 
-.stats-window__detail-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.15rem 0.65rem;
+.stats-window__compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   margin: 0;
   font-size: 0.8rem;
   line-height: 1.35;
 }
 
-.stats-window__detail-grid dt {
-  margin: 0;
-  color: #9ca3af;
-  font-weight: 500;
+.stats-window__compact-row {
+  display: flex;
+  gap: 0.5rem;
 }
 
-.stats-window__detail-grid dd {
-  margin: 0;
+.stats-window__compact-pair {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.stats-window__compact-label {
+  color: #9ca3af;
+  font-weight: 500;
+  margin-right: 0.2rem;
+}
+
+.stats-window__compact-value {
   font-weight: 600;
-  text-align: right;
 }
 
 .stats-window__stat-list {

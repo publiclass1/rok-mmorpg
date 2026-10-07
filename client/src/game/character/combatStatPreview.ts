@@ -8,6 +8,7 @@ import {
   calcStatusMatkMin,
 } from '../combat/damage'
 import { sumEquippedCritChancePercent } from '../combat/critBonuses'
+import { calcDexVariableCastReducePercent } from '../combat/castTime'
 import { playerAttackTiming } from '../combat/preRenewalAspd'
 import { getItemCombatStats } from './itemCatalog'
 import { effectiveStats } from './effectiveStats'
@@ -33,6 +34,7 @@ export type CombatStatPreview = {
   hit: number
   flee: number
   critChancePercent: number
+  variableCastReducePercent: number
 }
 
 export function buildCombatStatPreview(state: CharacterSessionState): CombatStatPreview {
@@ -67,5 +69,6 @@ export function buildCombatStatPreview(state: CharacterSessionState): CombatStat
     critChancePercent: calcCritChancePercent(sumEquippedCritChancePercent(state.equipment), {
       attackerLuk: stats.luk,
     }),
+    variableCastReducePercent: calcDexVariableCastReducePercent(stats.dex),
   }
 }

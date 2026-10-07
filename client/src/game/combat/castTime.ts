@@ -7,6 +7,12 @@ export const SKILL_STRIKE_WINDUP_MS = 55
 /** Effective DEX at which variable cast time reaches 0 (game tuning; Classic wiki uses 150). */
 export const DEX_FOR_ZERO_CAST = 130
 
+/** Variable cast time reduction % from DEX alone (matches `calcPreRenewalCastTimeMs` DEX term). */
+export function calcDexVariableCastReducePercent(dex: number): number {
+  const clamped = Math.max(0, Math.min(DEX_FOR_ZERO_CAST, dex))
+  return Math.min(100, Math.floor((clamped / DEX_FOR_ZERO_CAST) * 100))
+}
+
 export type CastTimeModifierOptions = {
   /** Suffragium skill level (15% VCT reduction per level in Classic). */
   suffragiumLevel?: number

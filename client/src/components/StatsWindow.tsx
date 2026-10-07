@@ -81,8 +81,8 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
     }
   }
 
-  const atkLabel =
-    cs.weaponAtk > 0 ? `${cs.atk} (${cs.statusAtk}+${cs.weaponAtk})` : String(cs.atk)
+  const atkTitle =
+    cs.weaponAtk > 0 ? `${cs.statusAtk} status + ${cs.weaponAtk} weapon` : undefined
 
   return (
     <AnimatedModal onClose={onClose} panelClassName="panel modal stats-window-modal">
@@ -113,30 +113,68 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
 
       <div className="stats-window__body two-col">
         <section className="stats-window__details" aria-label="Character stats">
-          <dl className="stats-window__detail-grid">
-            <dt>HP</dt>
-            <dd>{cs.hp} / {cs.hpMax}</dd>
-            <dt>MP</dt>
-            <dd>{cs.mp} / {cs.mpMax}</dd>
-            <dt>Move</dt>
-            <dd>{cs.moveSpeed}</dd>
-            <dt>Atk spd</dt>
-            <dd>ASPD {cs.aspdDisplay} · {cs.attackIntervalMs}ms (~{cs.attacksPerSecond}/s)</dd>
-            <dt>ATK</dt>
-            <dd>{atkLabel}</dd>
-            <dt>MATK</dt>
-            <dd>{cs.matkMin}–{cs.matkMax}</dd>
-            <dt>DEF</dt>
-            <dd>{cs.def}</dd>
-            <dt>MDEF</dt>
-            <dd>{cs.mdef}</dd>
-            <dt>Hit</dt>
-            <dd>{cs.hit}</dd>
-            <dt>Flee</dt>
-            <dd>{cs.flee}</dd>
-            <dt>Crit</dt>
-            <dd>{cs.critChancePercent}%</dd>
-          </dl>
+          <div className="stats-window__compact">
+            <div className="stats-window__compact-row">
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">HP:</span>
+                <span className="stats-window__compact-value">{cs.hp}/{cs.hpMax}</span>
+              </span>
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">SP:</span>
+                <span className="stats-window__compact-value">{cs.mp}/{cs.mpMax}</span>
+              </span>
+            </div>
+            <div className="stats-window__compact-row">
+              <span className="stats-window__compact-pair" title={atkTitle}>
+                <span className="stats-window__compact-label">ATK:</span>
+                <span className="stats-window__compact-value">{cs.atk}</span>
+              </span>
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">MATK:</span>
+                <span className="stats-window__compact-value">{cs.matkMin}–{cs.matkMax}</span>
+              </span>
+            </div>
+            <div className="stats-window__compact-row">
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">DEF:</span>
+                <span className="stats-window__compact-value">{cs.def}</span>
+              </span>
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">MDEF:</span>
+                <span className="stats-window__compact-value">{cs.mdef}</span>
+              </span>
+            </div>
+            <div className="stats-window__compact-row">
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">Hit:</span>
+                <span className="stats-window__compact-value">{cs.hit}</span>
+              </span>
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">Flee:</span>
+                <span className="stats-window__compact-value">{cs.flee}</span>
+              </span>
+            </div>
+            <div className="stats-window__compact-row">
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">Move:</span>
+                <span className="stats-window__compact-value">{cs.moveSpeed}</span>
+              </span>
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">Crit:</span>
+                <span className="stats-window__compact-value">{cs.critChancePercent}%</span>
+              </span>
+            </div>
+            <div className="stats-window__compact-row">
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">ASPD:</span>
+                <span className="stats-window__compact-value">{cs.aspdDisplay}</span>
+              </span>
+              <span className="stats-window__compact-pair">
+                <span className="stats-window__compact-label">Cast red:</span>
+                <span className="stats-window__compact-value">{cs.variableCastReducePercent}%</span>
+              </span>
+            </div>
+          </div>
         </section>
 
         <section className="stats-window__allocate" aria-label="Stat allocation">

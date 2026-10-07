@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import {
+  calcDexVariableCastReducePercent,
   calcPreRenewalCastTimeMs,
   DEX_FOR_ZERO_CAST,
   skillCastStrikeDelayMs,
@@ -16,6 +17,11 @@ function run() {
 
   assert.equal(calcPreRenewalCastTimeMs(1000, 0, { suffragiumLevel: 1 }), 850)
   assert.equal(calcPreRenewalCastTimeMs(1000, 0, { castTimeReducePercent: 10 }), 900)
+
+  assert.equal(calcDexVariableCastReducePercent(0), 0)
+  assert.equal(calcDexVariableCastReducePercent(65), 50)
+  assert.equal(calcDexVariableCastReducePercent(DEX_FOR_ZERO_CAST), 100)
+  assert.equal(calcDexVariableCastReducePercent(200), 100)
 
   const session = { ...createInitialCharacterState(), dex: 99 }
   assert.equal(
