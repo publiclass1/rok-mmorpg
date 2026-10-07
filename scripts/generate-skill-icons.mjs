@@ -18,8 +18,9 @@ const outDir = path.join(REPO_ROOT, 'client/public/skills')
 const defs = (id) => `
   <defs>
     <linearGradient id="${id}-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#0f172a"/>
+      <stop offset="0%" stop-color="#3d3258"/>
+      <stop offset="55%" stop-color="#2a2240"/>
+      <stop offset="100%" stop-color="#12101c"/>
     </linearGradient>
     <linearGradient id="${id}-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
@@ -59,9 +60,11 @@ const defs = (id) => `
 function frame(id, accent) {
   return `
   ${defs(id)}
-  <rect width="32" height="32" rx="5" fill="url(#${id}-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="${accent}" stroke-opacity="0.45" stroke-width="0.6"/>
-  <path d="M3 27 Q16 23 29 27" stroke="#000" stroke-opacity="0.3" stroke-width="1" fill="none"/>`
+  <rect width="32" height="32" rx="2" fill="#0a0812"/>
+  <rect x="1" y="1" width="30" height="30" rx="1" fill="url(#${id}-bg)"/>
+  <rect x="1" y="1" width="30" height="30" rx="1" fill="none" stroke="#6b5a8f" stroke-opacity="0.55" stroke-width="0.5"/>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="1" fill="none" stroke="${accent}" stroke-opacity="0.35" stroke-width="0.4"/>
+  <path d="M2 29 L30 29" stroke="#000" stroke-opacity="0.35" stroke-width="0.8"/>`
 }
 
 function wrap(body, id, accent = '#64748b') {
@@ -115,11 +118,14 @@ function drawSwordMastery(id) {
 function drawBash(id) {
   return wrap(
     `
-  <path d="M14 7 L18 7 L17 20 L16 22 L15 20 Z" fill="url(#${id}-steel)"/>
-  <rect x="11" y="20" width="10" height="2.5" fill="url(#${id}-gold)"/>
-  <path d="M6 10 L12 16 L8 20 L4 14 Z" fill="url(#${id}-fire)" filter="url(#${id}-glow)"/>
-  <path d="M20 8 L26 14 L22 18 L16 12 Z" fill="#fbbf24" opacity="0.5"/>
-  <circle cx="24" cy="9" r="2" fill="#fde047" opacity="0.8"/>
+  <path d="M15 5 L17 5 L18 21 L16 23 L14 21 Z" fill="url(#${id}-steel)"/>
+  <path d="M15.5 6 L16.5 6 L17 19 L16 20 L15 19 Z" fill="#f8fafc" opacity="0.5"/>
+  <rect x="12" y="21" width="8" height="2" fill="url(#${id}-gold)"/>
+  <rect x="13" y="23" width="6" height="1.5" fill="#57534e"/>
+  <path d="M5 11 L9 8 L13 14 L9 18 L4 14 Z" fill="#fde047"/>
+  <path d="M6 12 L9 10 L11 14 L8 16 L5 13 Z" fill="url(#${id}-fire)" filter="url(#${id}-glow)"/>
+  <path d="M7 13 L9 11 L10 14 L8 15 Z" fill="#fff" opacity="0.6"/>
+  <path d="M20 9 L24 12 L21 15 L17 12 Z" fill="#fbbf24" opacity="0.45"/>
   `,
     id,
     '#ea580c',
@@ -129,13 +135,18 @@ function drawBash(id) {
 function drawProvoke(id) {
   return wrap(
     `
-  <circle cx="16" cy="14" r="7" fill="#fca5a5"/>
-  <path d="M11 13 Q16 8 21 13" stroke="#7f1d1d" stroke-width="1.2" fill="none"/>
-  <circle cx="13" cy="13" r="1" fill="#450a0a"/>
-  <circle cx="19" cy="13" r="1" fill="#450a0a"/>
-  <path d="M13 17 Q16 20 19 17" stroke="#7f1d1d" stroke-width="1" fill="none"/>
-  <path d="M6 10 L4 6 M26 10 L28 6 M16 4 L16 2" stroke="#ef4444" stroke-width="1.2" stroke-linecap="round"/>
-  <path d="M8 22 L10 26 M24 22 L22 26" stroke="#f87171" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="16" cy="15" r="8" fill="#e11d48"/>
+  <circle cx="16" cy="15" r="7" fill="#f43f5e"/>
+  <path d="M10 11 L13 12 L16 10 L19 12 L22 11" stroke="#7f1d1d" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="13" cy="14" rx="2.2" ry="2.5" fill="#fff"/>
+  <ellipse cx="19" cy="14" rx="2.2" ry="2.5" fill="#fff"/>
+  <circle cx="13" cy="14.5" r="1.1" fill="#1c1917"/>
+  <circle cx="19" cy="14.5" r="1.1" fill="#1c1917"/>
+  <path d="M12 19 Q16 22 20 19 L19 20 Q16 23 13 20 Z" fill="#fff"/>
+  <path d="M13.5 19.5 H18.5 V20.5 H13.5 Z" fill="#881337"/>
+  <path d="M5 9 L3 5 M27 9 L29 5" stroke="#fb7185" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M7 21 L9 26 M25 21 L23 26" stroke="#be123c" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M16 5 L16 3" stroke="#fda4af" stroke-width="1.2" stroke-linecap="round"/>
   `,
     id,
     '#dc2626',

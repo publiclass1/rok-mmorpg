@@ -1678,7 +1678,13 @@
         "defId": "loli_ruri"
       }
     ],
-    "prontera": []
+    "prontera": [
+      {
+        "x": 1712,
+        "y": 1408,
+        "defId": "training_dummy"
+      }
+    ]
   },
   "portals": {
     "new_map_rfpp": [],

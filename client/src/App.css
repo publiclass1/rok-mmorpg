@@ -1682,9 +1682,7 @@ body.game-active .game-canvas canvas {
   max-height: min(55vh, 420px);
 }
 
-.game-shell.skills-assign-mode .game-hud-bottom,
-.game-shell.skills-assign-mode .game-bottom-dock {
-  position: relative;
+.game-shell.skills-assign-mode .game-hud-bottom {
   z-index: 25;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.45);
 }

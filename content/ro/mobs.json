@@ -224,6 +224,33 @@
         "baseExp": 28,
         "jobExp": 15
       }
+    },
+    {
+      "id": "training_dummy",
+      "name": "Training Dummy",
+      "level": 1,
+      "hp": 1000000,
+      "atk": 0,
+      "def": 0,
+      "mdef": 0,
+      "size": "medium",
+      "element": "neutral",
+      "wikiBaseExp": 0,
+      "wikiJobExp": 0,
+      "drops": [],
+      "runtime": {
+        "maxHp": 1000000,
+        "color": "0xa8a29e",
+        "aggroRange": 0,
+        "attackRange": 0,
+        "attackDamage": 0,
+        "attackCooldownMs": 1200,
+        "roamRadius": 0,
+        "moveSpeed": 0,
+        "wanderPauseMs": 2000,
+        "baseExp": 0,
+        "jobExp": 0
+      }
     }
   ]
 }
