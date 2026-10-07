@@ -3,7 +3,7 @@ import { canAcceptJobChange, jobChangeOffersForNpc, type JobChangeOffer } from '
 import { JOB_NAMES } from '../game/character/skillsConfig'
 import type { CharacterSheetPayload } from '../game/events'
 import type { CharacterRow, NpcRow } from '../types/database'
-import { supabase } from '../lib/supabase'
+import { spendCharacterZeny } from '../lib/zeny'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
 
@@ -38,14 +38,9 @@ export function JobMasterModal({ character, npc, sheet, onClose, onCharacterUpda
 
     const cost = offer.zenyCost ?? 0
     if (cost > 0) {
-      const { data, error } = await supabase
-        .from('characters')
-        .update({ zeny: character.zeny - cost })
-        .eq('id', character.id)
-        .select('*')
-        .single()
-      if (error || !data) return
-      onCharacterUpdated(data as CharacterRow)
+      const nextZeny = await spendCharacterZeny(character.id, -cost)
+      if (nextZeny == null) return
+      onCharacterUpdated({ ...character, zeny: nextZeny })
     }
 
     dispatchCharacterAction({ type: 'changeJob', jobId: offer.jobId })

@@ -220,6 +220,8 @@ export type GameEvents = {
   partyExpGrant: PartyExpGrantPayload
   vendorPosSync: { mapId: string; x: number; y: number }
   zenyGain: { amount: number }
+  characterZenySync: { zeny: number }
+  duelHpSync: { hp: number }
   playerDeath: Record<string, never>
   pvpDeath: { mapId: string }
   pvpAnnounce: {
@@ -229,7 +231,7 @@ export type GameEvents = {
     victimName: string
   }
   playerRevived: { x: number; y: number }
-  pvpRespawnInArena: Record<string, never>
+  pvpRespawnInArena: { x: number; y: number }
   pvpRespawned: { x: number; y: number }
   pvpAttackRequest: { characterId: string }
   dungeonSync: DungeonSyncPayload

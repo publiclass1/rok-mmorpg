@@ -26,6 +26,13 @@ import { createPlayerChatBubble, type PlayerChatBubble } from '../world/playerCh
 import { positionPlayerNameLabel, styleWorldNameLabel } from '../world/worldNameLabel'
 import type { MapCombatSkillId } from './mapCombatTypes'
 import type { SfxPlayer } from '../combat/sfx'
+import {
+  REMOTE_POSITION_EPSILON_PX,
+  shouldSnapRemotePosition,
+} from './remotePositionSnap'
+
+export { REMOTE_POSITION_EPSILON_PX, REMOTE_SNAP_DISTANCE_PX } from './remotePositionSnap'
+export { shouldSnapRemotePosition } from './remotePositionSnap'
 
 const EQUIP_SLOTS: EquipSlot[] = [
   'weapon',
@@ -56,6 +63,13 @@ export type RemotePlayerEntity = {
 
 function equipmentKey(equipment: Record<EquipSlot, string | null>): string {
   return EQUIP_SLOTS.map((s) => equipment[s] ?? '').join('|')
+}
+
+function snapRemoteContainerToTarget(entity: RemotePlayerEntity, x: number, y: number) {
+  const container = entity.display.container
+  if (shouldSnapRemotePosition(container.x, container.y, x, y)) {
+    container.setPosition(x, y)
+  }
 }
 
 function syncRemotePecoMount(entity: RemotePlayerEntity, payload: PlayerPresencePayload, walkFrame: 0 | 1) {
@@ -113,6 +127,7 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
 }
 
 export function applyRemotePresence(entity: RemotePlayerEntity, payload: PlayerPresencePayload) {
+  snapRemoteContainerToTarget(entity, payload.x, payload.y)
   entity.targetX = payload.x
   entity.targetY = payload.y
   entity.lastPayload = payload
@@ -137,25 +152,36 @@ export function applyRemotePresence(entity: RemotePlayerEntity, payload: PlayerP
 }
 
 /** Smooth toward last network position and drive walk cycles locally. */
-export function tickRemotePlayer(entity: RemotePlayerEntity, now: number, smoothFactor: number) {
+export function tickRemotePlayer(entity: RemotePlayerEntity, _now: number, smoothFactor: number) {
   const container = entity.display.container
   container.x = Phaser.Math.Linear(container.x, entity.targetX, smoothFactor)
   container.y = Phaser.Math.Linear(container.y, entity.targetY, smoothFactor)
 
-  const p = entity.lastPayload
-  let walkFrame = p.walkFrame
-  if (p.anim === 'walk') {
-    walkFrame = (Math.floor(now / 150) % 2) as 0 | 1
+  if (
+    Math.hypot(entity.targetX - container.x, entity.targetY - container.y) <
+    REMOTE_POSITION_EPSILON_PX
+  ) {
+    container.setPosition(entity.targetX, entity.targetY)
   }
+
+  const p = entity.lastPayload
+  const walkFrame = p.walkFrame
+  const mounted = Boolean(p.mounted)
 
   const localAttack = entity.display.pose.anim === 'attack'
   const forcePresenceAnim = p.anim === 'dead' || p.anim === 'sit'
+  const pose = entity.display.pose
+  const poseChanged =
+    pose.anim !== p.anim || pose.facing !== p.facing || pose.mounted !== mounted
+
   if (!localAttack || forcePresenceAnim) {
-    playPlayerAnim(entity.display, p.anim, p.facing)
-    if (p.anim === 'walk') {
+    if (poseChanged || forcePresenceAnim) {
+      playPlayerAnim(entity.display, p.anim, p.facing)
+    }
+    if (p.anim === 'walk' && (poseChanged || pose.walkFrame !== walkFrame)) {
       setPlayerWalkFrame(entity.display, walkFrame)
     }
-  } else if (p.anim === 'walk') {
+  } else if (p.anim === 'walk' && pose.walkFrame !== walkFrame) {
     setPlayerWalkFrame(entity.display, walkFrame)
   }
   syncRemotePecoMount(entity, p, walkFrame)

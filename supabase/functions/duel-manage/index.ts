@@ -1,4 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts'
+import { writeAuditLog } from '../_shared/auditLog.ts'
+import { calcDuelStrike, derivedMaxHp, type DuelSnapshot } from '../_shared/duelCombat.ts'
 import { assertSameMapAndRange } from '../_shared/social.ts'
 import {
   createAuthedClient,
@@ -20,7 +22,7 @@ const EQUIP_SLOTS = [
   'accRight',
 ] as const
 
-type Action = 'invite' | 'accept' | 'decline' | 'cancel' | 'complete'
+type Action = 'invite' | 'accept' | 'decline' | 'cancel' | 'complete' | 'attack'
 
 type Body = {
   action: Action
@@ -28,6 +30,8 @@ type Body = {
   targetCharacterId?: string
   duelSessionId?: string
   winnerCharacterId?: string
+  skillId?: string
+  skillLevel?: number
 }
 
 type CombatSnapshot = {
@@ -266,6 +270,16 @@ Deno.serve(async (req) => {
       const challengerSnapshot = await buildCombatSnapshot(service, duel.challenger_character_id)
       const opponentSnapshot = await buildCombatSnapshot(service, duel.opponent_character_id)
       const fightStartsAt = new Date(Date.now() + 5000).toISOString()
+      const challengerHpMax = derivedMaxHp(
+        challengerSnapshot.jobId,
+        challengerSnapshot.baseLevel,
+        challengerSnapshot.vit,
+      )
+      const opponentHpMax = derivedMaxHp(
+        opponentSnapshot.jobId,
+        opponentSnapshot.baseLevel,
+        opponentSnapshot.vit,
+      )
 
       const { data: updated, error } = await service
         .from('duel_sessions')
@@ -274,6 +288,10 @@ Deno.serve(async (req) => {
           fight_starts_at: fightStartsAt,
           challenger_snapshot: challengerSnapshot,
           opponent_snapshot: opponentSnapshot,
+          challenger_hp: challengerHpMax,
+          opponent_hp: opponentHpMax,
+          challenger_hp_max: challengerHpMax,
+          opponent_hp_max: opponentHpMax,
           updated_at: new Date().toISOString(),
         })
         .eq('id', duel.id)
@@ -293,6 +311,122 @@ Deno.serve(async (req) => {
           duel: updated,
           opponentCharacterId: opponentIdFor(updated, body.characterId),
           opponentSnapshot: opponentSnapshotForClient,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    if (body.action === 'attack') {
+      if (!body.duelSessionId || !body.targetCharacterId) {
+        return new Response(JSON.stringify({ error: 'duelSessionId and targetCharacterId required' }), {
+          status: 400,
+        })
+      }
+
+      const { data: duel } = await service
+        .from('duel_sessions')
+        .select('*')
+        .eq('id', body.duelSessionId)
+        .maybeSingle()
+
+      if (!duel) {
+        return new Response(JSON.stringify({ error: 'Duel not found' }), { status: 404 })
+      }
+
+      if (
+        duel.challenger_character_id !== body.characterId &&
+        duel.opponent_character_id !== body.characterId
+      ) {
+        return new Response(JSON.stringify({ error: 'Not a duel participant' }), { status: 403 })
+      }
+
+      const opponentId = opponentIdFor(duel, body.characterId)
+      if (body.targetCharacterId !== opponentId) {
+        return new Response(JSON.stringify({ error: 'Invalid duel target' }), { status: 400 })
+      }
+
+      if (!['countdown', 'active'].includes(duel.state)) {
+        return new Response(JSON.stringify({ error: 'Duel is not active' }), { status: 400 })
+      }
+
+      const fightStart = duel.fight_starts_at ? Date.parse(duel.fight_starts_at) : 0
+      if (!Number.isFinite(fightStart) || Date.now() < fightStart) {
+        return new Response(JSON.stringify({ error: 'Fight has not started' }), { status: 400 })
+      }
+
+      const now = new Date()
+      if (duel.last_attack_at) {
+        const last = Date.parse(duel.last_attack_at)
+        if (Number.isFinite(last) && now.getTime() - last < 400) {
+          return new Response(JSON.stringify({ error: 'Attack on cooldown' }), { status: 429 })
+        }
+      }
+
+      const attackerIsChallenger = duel.challenger_character_id === body.characterId
+      const attackerSnapshot = (attackerIsChallenger
+        ? duel.challenger_snapshot
+        : duel.opponent_snapshot) as DuelSnapshot | null
+      const defenderSnapshot = (attackerIsChallenger
+        ? duel.opponent_snapshot
+        : duel.challenger_snapshot) as DuelSnapshot | null
+
+      if (!attackerSnapshot || !defenderSnapshot) {
+        return new Response(JSON.stringify({ error: 'Duel snapshots missing' }), { status: 400 })
+      }
+
+      let challengerHp = duel.challenger_hp ?? duel.challenger_hp_max ?? 1
+      let opponentHp = duel.opponent_hp ?? duel.opponent_hp_max ?? 1
+
+      const strike = calcDuelStrike(
+        attackerSnapshot,
+        defenderSnapshot,
+        () => Math.random(),
+        body.skillId,
+        body.skillLevel,
+      )
+
+      let targetHpAfter = attackerIsChallenger ? opponentHp : challengerHp
+      if (strike.hit && strike.damage > 0) {
+        targetHpAfter = Math.max(0, targetHpAfter - strike.damage)
+      }
+
+      if (attackerIsChallenger) opponentHp = targetHpAfter
+      else challengerHp = targetHpAfter
+
+      const nextState = targetHpAfter <= 0 ? 'completed' : (duel.state === 'countdown' ? 'active' : duel.state)
+      const winnerId = targetHpAfter <= 0 ? body.characterId : null
+
+      const { data: updated, error } = await service
+        .from('duel_sessions')
+        .update({
+          state: nextState,
+          challenger_hp: challengerHp,
+          opponent_hp: opponentHp,
+          winner_character_id: winnerId,
+          last_attack_at: now.toISOString(),
+          updated_at: now.toISOString(),
+        })
+        .eq('id', duel.id)
+        .select('*')
+        .single()
+
+      if (error || !updated) {
+        return new Response(JSON.stringify({ error: error?.message ?? 'Attack failed' }), { status: 400 })
+      }
+
+      if (winnerId) {
+        await writeAuditLog(service, body.characterId, 'duel_won', { duelSessionId: duel.id })
+      }
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          hit: strike.hit,
+          damage: strike.damage,
+          critical: strike.critical,
+          targetCharacterId: body.targetCharacterId,
+          targetHp: targetHpAfter,
+          duel: updated,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )

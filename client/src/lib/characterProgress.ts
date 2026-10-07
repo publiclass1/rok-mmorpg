@@ -12,6 +12,7 @@ import {
 } from '../game/character/characterState'
 import { parseActiveRental } from '../game/character/rental'
 import type { CharacterRow } from '../types/database'
+import { progressSave } from './api'
 import { supabase } from './supabase'
 
 const EQUIP_SLOTS: EquipSlot[] = [
@@ -305,35 +306,10 @@ async function writeCharacterSession(characterId: string, state: CharacterSessio
     updated_at: new Date().toISOString(),
   }
 
-  const { error: progressError } = await supabase
-    .from('character_progress')
-    .upsert(progressPayload, { onConflict: 'character_id' })
-
-  if (progressError) {
-    throw new Error(progressError.message)
-  }
-
   const skillRows = Object.entries(synced.skills).map(([skill_id, level]) => ({
-    character_id: characterId,
     skill_id,
     level,
   }))
-
-  const { error: deleteSkillsError } = await supabase
-    .from('character_skills')
-    .delete()
-    .eq('character_id', characterId)
-
-  if (deleteSkillsError) {
-    throw new Error(deleteSkillsError.message)
-  }
-
-  if (skillRows.length > 0) {
-    const { error: insertSkillsError } = await supabase.from('character_skills').insert(skillRows)
-    if (insertSkillsError) {
-      throw new Error(insertSkillsError.message)
-    }
-  }
 
   const equipRows = EQUIP_SLOTS.filter((slot) => synced.equipment[slot] != null).map((slot) => {
     const equippedId = synced.equipment[slot] as string
@@ -341,26 +317,16 @@ async function writeCharacterSession(characterId: string, state: CharacterSessio
       ? (parseRolledBaseItemId(equippedId) ?? equippedId)
       : equippedId
     return {
-      character_id: characterId,
       slot,
       item_id: baseId,
       instance_id: isRolledItemId(equippedId) ? equippedId : null,
     }
   })
 
-  const { error: deleteEquipError } = await supabase
-    .from('character_equipment')
-    .delete()
-    .eq('character_id', characterId)
-
-  if (deleteEquipError) {
-    throw new Error(deleteEquipError.message)
-  }
-
-  if (equipRows.length > 0) {
-    const { error: insertEquipError } = await supabase.from('character_equipment').insert(equipRows)
-    if (insertEquipError) {
-      throw new Error(insertEquipError.message)
-    }
-  }
+  await progressSave({
+    characterId,
+    progress: progressPayload,
+    skills: skillRows,
+    equipment: equipRows,
+  })
 }

@@ -11,7 +11,7 @@ import type { RoRentalKind } from '../content/ro/types'
 import type { CharacterSheetPayload } from '../game/events'
 import { getCharacterSession } from '../game/character/characterSessionBridge'
 import type { CharacterRow, NpcRow } from '../types/database'
-import { supabase } from '../lib/supabase'
+import { spendCharacterZeny } from '../lib/zeny'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
 
@@ -46,17 +46,12 @@ export function RentalModal({ character, npc, sheet, onClose, onCharacterUpdated
     }
     const cost = rentalCatalogEntry(kind).zenyCost
     if (cost > 0) {
-      const { data, error } = await supabase
-        .from('characters')
-        .update({ zeny: character.zeny - cost })
-        .eq('id', character.id)
-        .select('*')
-        .single()
-      if (error || !data) {
-        onMessage?.(error?.message ?? 'Payment failed')
+      const nextZeny = await spendCharacterZeny(character.id, -cost)
+      if (nextZeny == null) {
+        onMessage?.('Payment failed')
         return
       }
-      onCharacterUpdated(data as CharacterRow)
+      onCharacterUpdated({ ...character, zeny: nextZeny })
     }
     dispatchCharacterAction({ type: 'rentEquipment', kind })
     onMessage?.(`Rented ${rentalCatalogEntry(kind).name}.`)

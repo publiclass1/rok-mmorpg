@@ -5,7 +5,7 @@ import { dispatchCharacterAction } from '../game/character/characterActionDispat
 import { getCharacterSession, setCharacterSession } from '../game/character/characterSessionBridge'
 import { STAT_RESET_ZENY_COST } from '../game/character/statFormulas'
 import { emitGameEvent, type CharacterSheetPayload } from '../game/events'
-import { supabase } from '../lib/supabase'
+import { spendCharacterZeny } from '../lib/zeny'
 import type { CharacterRow } from '../types/database'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
@@ -72,17 +72,12 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
       const resetOk = dispatchCharacterAction({ type: 'resetStats' })
       if (!resetOk) return
 
-      const { data, error } = await supabase
-        .from('characters')
-        .update({ zeny: character.zeny - STAT_RESET_ZENY_COST })
-        .eq('id', character.id)
-        .select('*')
-        .single()
-      if (error || !data) {
-        emitGameEvent('status', error?.message ?? 'Payment failed.')
+      const nextZeny = await spendCharacterZeny(character.id, -STAT_RESET_ZENY_COST)
+      if (nextZeny == null) {
+        emitGameEvent('status', 'Payment failed.')
         return
       }
-      onCharacterUpdated(data as CharacterRow)
+      onCharacterUpdated({ ...character, zeny: nextZeny })
     } finally {
       setBusy(false)
     }

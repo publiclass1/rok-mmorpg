@@ -7,7 +7,7 @@ import { isSkillBarDragEvent, readSkillBarDrag } from '../game/character/skillBa
 import { JOB_NAMES, skillsForJob, skillWindowTabs } from '../game/character/skillsConfig'
 import { SKILL_RESET_ZENY_COST } from '../game/character/statFormulas'
 import { emitGameEvent, type CharacterSheetPayload } from '../game/events'
-import { supabase } from '../lib/supabase'
+import { spendCharacterZeny } from '../lib/zeny'
 import type { CharacterRow } from '../types/database'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
@@ -55,17 +55,12 @@ export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: 
       const resetOk = dispatchCharacterAction({ type: 'resetSkills' })
       if (!resetOk) return
 
-      const { data, error } = await supabase
-        .from('characters')
-        .update({ zeny: character.zeny - SKILL_RESET_ZENY_COST })
-        .eq('id', character.id)
-        .select('*')
-        .single()
-      if (error || !data) {
-        emitGameEvent('status', error?.message ?? 'Payment failed.')
+      const nextZeny = await spendCharacterZeny(character.id, -SKILL_RESET_ZENY_COST)
+      if (nextZeny == null) {
+        emitGameEvent('status', 'Payment failed.')
         return
       }
-      onCharacterUpdated(data as CharacterRow)
+      onCharacterUpdated({ ...character, zeny: nextZeny })
     } finally {
       setBusy(false)
     }

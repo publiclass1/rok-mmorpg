@@ -177,6 +177,11 @@ export type DuelSessionRow = {
   challenger_base_level: number
   challenger_snapshot: unknown
   opponent_snapshot: unknown
+  challenger_hp: number | null
+  opponent_hp: number | null
+  challenger_hp_max: number | null
+  opponent_hp_max: number | null
+  last_attack_at: string | null
   winner_character_id: string | null
   created_at: string
   updated_at: string

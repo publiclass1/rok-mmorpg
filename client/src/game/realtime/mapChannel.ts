@@ -5,9 +5,9 @@ import { createDefaultEquipment } from '../character/characterState'
 import type { PlayerPresencePayload } from '../events'
 import { parseDuelCombatSnapshot } from '../duel/duelCombatSnapshot'
 import { normalizeMapCombatPayload, type MapCombatPayload } from './mapCombatTypes'
+import { parsePresenceLeaveCharacterId, pruneStaleRemoteEntries } from './mapPresenceUtils'
 
 const BROADCAST_MS = 50
-const STALE_MS = 5000
 const PRUNE_MS = 1000
 
 function normalizeAppearance(raw: Partial<CharacterAppearance> | undefined): CharacterAppearance {
@@ -86,15 +86,12 @@ export class MapPresenceChannel {
     this.onUpdate([...this.remotes.values()].map((e) => e.payload))
   }
 
+  private removeRemote(characterId: string): boolean {
+    return this.remotes.delete(characterId)
+  }
+
   private pruneStale() {
-    const now = Date.now()
-    let changed = false
-    for (const [id, entry] of this.remotes) {
-      if (now - entry.at > STALE_MS) {
-        this.remotes.delete(id)
-        changed = true
-      }
-    }
+    const changed = pruneStaleRemoteEntries(this.remotes, Date.now())
     if (changed) this.emitRemotes()
   }
 
@@ -108,6 +105,12 @@ export class MapPresenceChannel {
       if (!p || p.characterId === this.local.characterId) return
       this.remotes.set(p.characterId, { payload: p, at: Date.now() })
       this.emitRemotes()
+    })
+
+    this.channel.on('broadcast', { event: 'leave' }, ({ payload }) => {
+      const characterId = parsePresenceLeaveCharacterId(payload)
+      if (!characterId || characterId === this.local.characterId) return
+      if (this.removeRemote(characterId)) this.emitRemotes()
     })
 
     this.channel.on('broadcast', { event: 'combat' }, ({ payload }) => {
@@ -148,6 +151,11 @@ export class MapPresenceChannel {
       this.pruneTimer = null
     }
     if (this.channel) {
+      void this.channel.send({
+        type: 'broadcast',
+        event: 'leave',
+        payload: { characterId: this.local.characterId },
+      })
       await supabase.removeChannel(this.channel)
       this.channel = null
     }

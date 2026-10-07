@@ -105,6 +105,11 @@ export function partyManage(payload: Record<string, unknown>) {
 export function duelManage(payload: Record<string, unknown>) {
   return invoke<{
     ok?: boolean
+    hit?: boolean
+    damage?: number
+    critical?: boolean
+    targetCharacterId?: string
+    targetHp?: number
     duel?: import('../types/database').DuelSessionRow
     opponentCharacterId?: string
     opponentSnapshot?: import('../game/duel/duelCombatSnapshot').DuelCombatSnapshot
@@ -137,4 +142,54 @@ export function gmCommand(payload: { characterId: string; command: string }) {
     targetName?: string
     newZeny?: number
   }>('gm-command', payload)
+}
+
+export function progressSave(payload: {
+  characterId: string
+  progress: Record<string, unknown>
+  skills: { skill_id: string; level: number }[]
+  equipment: { slot: string; item_id: string; instance_id?: string | null }[]
+}) {
+  return invoke<{ ok: boolean }>('progress-save', payload)
+}
+
+export function combatReport(payload: {
+  characterId: string
+  mapId: string
+  spawnIndex: number
+  mobDefId: string
+  x: number
+  y: number
+}) {
+  return invoke<{
+    ok: boolean
+    baseExp: number
+    jobExp: number
+    zeny: number
+    itemIds: string[]
+    progress: { baseLevel: number; baseExp: number; jobLevel: number; jobExp: number }
+    zenyTotal: number
+    sessionInventory: unknown
+  }>('combat-report', payload)
+}
+
+export function characterEconomyAdjust(payload: { characterId: string; delta: number; reason?: string }) {
+  const action = payload.delta < 0 ? 'spend' : 'credit'
+  return invoke<{ ok: boolean; zeny: number }>('character-economy', {
+    action,
+    characterId: payload.characterId,
+    delta: payload.delta,
+    reason: payload.reason,
+  })
+}
+
+export function duelAttack(payload: {
+  action: 'attack'
+  characterId: string
+  duelSessionId: string
+  targetCharacterId: string
+  skillId?: string
+  skillLevel?: number
+}) {
+  return duelManage(payload)
 }

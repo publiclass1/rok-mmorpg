@@ -5,7 +5,7 @@ import { createServiceClient } from '../_shared/supabase.ts'
 const ONLINE_WINDOW_SECONDS = 45
 const MAX_ZENY_GRANT = 1_000_000_000
 
-type Action = 'stats' | 'search_characters' | 'set_gm' | 'unset_gm' | 'grant_zeny'
+type Action = 'stats' | 'search_characters' | 'set_gm' | 'unset_gm' | 'grant_zeny' | 'audit_summary'
 
 type Body = {
   action: Action
@@ -97,6 +97,20 @@ Deno.serve(async (req) => {
         .map(([mapId, count]) => ({ mapId, count }))
         .sort((a, b) => b.count - a.count)
 
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      const [rejectRes, rateRes] = await Promise.all([
+        service
+          .from('character_audit_log')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_type', 'progress_save_rejected')
+          .gte('created_at', since24h),
+        service
+          .from('character_audit_log')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_type', 'mob_kill_rate_limited')
+          .gte('created_at', since24h),
+      ])
+
       return new Response(
         JSON.stringify({
           totalCharacters: charCount.count ?? 0,
@@ -109,9 +123,30 @@ Deno.serve(async (req) => {
           totalOnline: presenceRows.length,
           onlinePerMap,
           onlineWindowSeconds: ONLINE_WINDOW_SECONDS,
+          auditFlags: {
+            progressRejections24h: rejectRes.count ?? 0,
+            mobKillRateLimited24h: rateRes.count ?? 0,
+          },
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
+    }
+
+    if (body.action === 'audit_summary') {
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      const { data, error } = await service
+        .from('character_audit_log')
+        .select('character_id, event_type, created_at, detail')
+        .in('event_type', ['progress_save_rejected', 'mob_kill_rate_limited', 'mob_kill_grant'])
+        .gte('created_at', since24h)
+        .order('created_at', { ascending: false })
+        .limit(100)
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+      }
+      return new Response(JSON.stringify({ events: data ?? [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     if (body.action === 'search_characters') {

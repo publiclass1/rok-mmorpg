@@ -57,8 +57,10 @@ npx supabase secrets set ADMIN_PANEL_PASSWORD=your-secure-password
 Deploy GM and admin functions after schema migration `20261007200000_gm_and_presence.sql`:
 
 ```bash
-npx supabase functions deploy gm-command admin-panel
+npx supabase functions deploy gm-command admin-panel progress-save combat-report character-economy
 ```
+
+After migration `20261007230000_anti_cheat_security.sql`, redeploy `duel-manage` (server duel damage).
 
 `admin-panel` uses `verify_jwt = false` in [supabase/config.toml](../supabase/config.toml) so `/admin` works without logging into the game. Redeploy after changing that file.
 

@@ -13,8 +13,10 @@ import {
   loadCharacterSession,
   persistCharacterWorld,
   saveCharacterSession,
+  saveCharacterWorldPosition,
 } from '../lib/characterProgress'
 import { supabase } from '../lib/supabase'
+import { spendCharacterZeny } from '../lib/zeny'
 import { appearanceFromCharacterRow } from '../game/character/characterAppearance'
 import { JOB_NAMES } from '../game/character/skillsConfig'
 import {
@@ -81,7 +83,7 @@ import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { DeathModal } from './DeathModal'
 import { PvpDeathModal } from './PvpDeathModal'
 import { PvpKillAnnounceOverlay } from './PvpKillAnnounceOverlay'
-import { isPvpMap, PVP_ROOM_EXIT_TELEPORT } from '../game/world/pvpConfig'
+import { isPvpMap, PVP_ROOM_EXIT_TELEPORT, randomPvpRespawnPoint } from '../game/world/pvpConfig'
 import { SplashScreen } from './SplashScreen'
 import { TradeModal } from './TradeModal'
 import { mapDisplayName } from '../game/world/mapDisplayName'
@@ -135,19 +137,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [])
 
   const flushZenyToDb = useCallback(async () => {
-    if (pendingZenySaveRef.current <= 0) return
     pendingZenySaveRef.current = 0
-    const zeny = characterRef.current.zeny
-    const { error } = await supabase
-      .from('characters')
-      .update({ zeny })
-      .eq('id', characterRef.current.id)
-    if (!error) {
-      const updated: CharacterRow = { ...characterRef.current, zeny }
-      characterRef.current = updated
-      onCharacterUpdated(updated)
-    }
-  }, [onCharacterUpdated])
+  }, [])
   const [status, setStatus] = useState('')
   const [storageNpc, setStorageNpc] = useState<NpcRow | null>(null)
   const [jobMasterNpc, setJobMasterNpc] = useState<NpcRow | null>(null)
@@ -559,6 +550,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           setDuelSync(sync)
           emitGameEvent('duelSync', sync)
         }
+        const myHp =
+          row.challenger_character_id === myId ? row.challenger_hp : row.opponent_hp
+        if (myHp != null) {
+          emitGameEvent('duelHpSync', { hp: myHp })
+        }
       }
     },
     [restoreVitalsAfterDuel],
@@ -679,7 +675,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [character.id])
 
   useEffect(() => {
-    const unsub = onGameEvent('zenyGain', ({ amount }) => {
+    const unsubGain = onGameEvent('zenyGain', ({ amount }) => {
       if (amount <= 0) return
       const updated: CharacterRow = {
         ...characterRef.current,
@@ -693,8 +689,15 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         void flushZenyToDb()
       }, 1500)
     })
+    const unsubSync = onGameEvent('characterZenySync', ({ zeny }) => {
+      const updated: CharacterRow = { ...characterRef.current, zeny }
+      characterRef.current = updated
+      onCharacterUpdated(updated)
+      pendingZenySaveRef.current = 0
+    })
     return () => {
-      unsub()
+      unsubGain()
+      unsubSync()
     }
   }, [onCharacterUpdated, flushZenyToDb])
 
@@ -809,22 +812,18 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }
 
   async function respawnInPvpArena() {
-    const coords = await new Promise<{ x: number; y: number }>((resolve, reject) => {
-      const timeout = window.setTimeout(() => {
-        unsub()
-        reject(new Error('Respawn timed out'))
-      }, 5000)
-      const unsub = onGameEvent('pvpRespawned', ({ x, y }) => {
-        window.clearTimeout(timeout)
-        unsub()
-        resolve({ x, y })
-      })
-      emitGameEvent('pvpRespawnInArena', {})
+    const coords = randomPvpRespawnPoint()
+    emitGameEvent('pvpRespawnInArena', coords)
+    const session = getCharacterSession()
+    await saveCharacterSession(characterRef.current.id, session)
+    await saveCharacterWorldPosition(characterRef.current.id, {
+      x: coords.x,
+      y: coords.y,
+      mapId: characterRef.current.map_id,
     })
-    const sheet = toCharacterSheetPayload(getCharacterSession())
     const { data, error } = await supabase
       .from('characters')
-      .update({ x: coords.x, y: coords.y, hp: sheet.hpMax, mp: sheet.mpMax })
+      .update({ x: coords.x, y: coords.y })
       .eq('id', characterRef.current.id)
       .select('*')
       .single()
@@ -1114,17 +1113,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             setMessage(`Need ${choice.zenyCost} zeny.`)
             return
           }
-          const { data, error } = await supabase
-            .from('characters')
-            .update({ zeny: character.zeny - choice.zenyCost })
-            .eq('id', character.id)
-            .select('*')
-            .single()
-          if (error || !data) {
-            setMessage(error?.message ?? 'Payment failed')
+          const nextZeny = await spendCharacterZeny(character.id, -choice.zenyCost)
+          if (nextZeny == null) {
+            setMessage('Payment failed')
             return
           }
-          const paid: CharacterRow = { ...characterRef.current, zeny: data.zeny }
+          const paid: CharacterRow = { ...characterRef.current, zeny: nextZeny }
           characterRef.current = paid
           onCharacterUpdated(paid)
         }
@@ -1383,7 +1377,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               <p className="game-hud-zeny">
                 Zeny <strong>{character.zeny.toLocaleString()}</strong>
               </p>
-              {sheet.hp <= 0 && !deathModalOpen && (
+              {sheet.hp <= 0 && !deathModalOpen && !pvpDeathModalOpen && !isPvpMap(character.map_id) && (
                 <button
                   type="button"
                   className="secondary small"

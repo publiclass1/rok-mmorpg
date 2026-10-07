@@ -22,7 +22,7 @@ import {
 import { emitGameEvent } from '../game/events'
 import type { CharacterSheetPayload } from '../game/events'
 import type { CharacterRow, NpcRow } from '../types/database'
-import { supabase } from '../lib/supabase'
+import { spendCharacterZeny } from '../lib/zeny'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalCloseButton } from './motion/ModalCloseButton'
 import { ItemHoverTooltip } from './ItemHoverTooltip'
@@ -71,16 +71,9 @@ export function RarityTabShopModal({
   }, [stock])
 
   async function adjustZeny(delta: number): Promise<boolean> {
-    const next = character.zeny + delta
-    if (next < 0) return false
-    const { data, error } = await supabase
-      .from('characters')
-      .update({ zeny: next })
-      .eq('id', character.id)
-      .select('*')
-      .single()
-    if (error || !data) return false
-    onCharacterUpdated(data as CharacterRow)
+    const nextZeny = await spendCharacterZeny(character.id, delta)
+    if (nextZeny == null) return false
+    onCharacterUpdated({ ...character, zeny: nextZeny })
     return true
   }
 

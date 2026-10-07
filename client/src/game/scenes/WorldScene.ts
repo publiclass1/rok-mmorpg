@@ -52,7 +52,6 @@ import {
   calcMobVsPlayerDamage,
   calcPlayerSkillVsMobDamage,
   calcPlayerVsMobDamage,
-  calcPlayerVsPlayerDamage,
 } from '../combat/damage'
 import { playSkillCastFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
@@ -90,7 +89,8 @@ import {
 } from '../events'
 import { isDuelCombatPhase } from '../duel/duelSync'
 import { combatSnapshotFromSession, type DuelCombatSnapshot } from '../duel/duelCombatSnapshot'
-import { vendorManage } from '../../lib/api'
+import { combatReport, duelAttack, vendorManage } from '../../lib/api'
+import { progressFromLevels } from '../combat/exp'
 import {
   CLICK_MOVE_ARRIVAL_THRESHOLD,
   clearMoveTarget,
@@ -138,7 +138,7 @@ import type { BootDungeonState } from '../world/bootDungeon'
 import { dungeonFloorByMapId, isDungeonMapId } from '../world/dungeonConfig'
 import { findPortalAtPoint } from '../world/mapPortals'
 import { applyPickupToSession, MapDropManager } from '../world/mapDrops'
-import { isPvpMap, PVP_KILL_STREAK_LABELS, randomPvpRespawnPoint } from '../world/pvpConfig'
+import { isPvpMap, PVP_KILL_STREAK_LABELS } from '../world/pvpConfig'
 import { PvpKillStreakTracker } from '../world/pvpKillStreak'
 import { decorFootprintRects } from '../../lib/mapDecor/decorFootprints'
 import { preloadMapDecor, spawnMapDecor } from '../world/spawnMapDecor'
@@ -211,6 +211,8 @@ export class WorldScene extends Phaser.Scene {
   private rentalFalconAngle = 0
   private presence: MapPresenceChannel | null = null
   private remotePlayers = new Map<string, RemotePlayerEntity>()
+  /** Hysteresis for presence walk vs idle (avoids flicker near velocity threshold). */
+  private presenceWalkActive = false
   private facing: Facing = 'down'
   private persistTimer: number | null = null
   private progressSaveTimer: number | null = null
@@ -231,6 +233,7 @@ export class WorldScene extends Phaser.Scene {
   private duelSync: DuelSyncPayload | null = null
   private mapDropManager: MapDropManager | null = null
   private pvpKillStreak = new PvpKillStreakTracker()
+  private pvpDeadRemoteIds = new Set<string>()
   private chasePathGoalX = 0
   private chasePathGoalY = 0
   private lastChaseRepathAt = 0
@@ -507,7 +510,8 @@ export class WorldScene extends Phaser.Scene {
           this.beginChaseDuelOpponent(remote)
         } else if (
           this.isPvpActive() &&
-          this.canAttackPlayer(remote.lastPayload.characterId)
+          this.canAttackPlayer(remote.lastPayload.characterId) &&
+          !this.isRemotePlayerDead(remote.lastPayload.characterId)
         ) {
           this.beginChasePvpOpponent(remote)
         }
@@ -602,6 +606,31 @@ export class WorldScene extends Phaser.Scene {
           this.queuedDuelSkillCast = null
         }
       }),
+      onGameEvent('duelHpSync', ({ hp }) => {
+        if (hp < 0) return
+        const prev = this.session.hp
+        const damage = Math.max(0, prev - hp)
+        this.session = { ...this.session, hp }
+        if (damage > 0 && this.duelSync) {
+          const enduring = hasStatus(this.activeBuffs, 'endure')
+          if (this.isSitting && !enduring) this.standUp()
+          showFloatingText(
+            this,
+            this.playerDisplay.container.x,
+            this.playerDisplay.container.y - 36,
+            `-${damage}`,
+            'mobHitPlayer',
+          )
+          flashPlayerHit(this, this.playerDisplay)
+          this.sfx.playHit()
+          logActivity('combat', `Took ${damage} damage in a duel.`)
+        }
+        if (hp <= 0) {
+          this.endDuelAsLoser()
+        } else {
+          this.emitCharacterSheet()
+        }
+      }),
       onGameEvent('partyExpGrant', (payload) => {
         this.applyPartyExpGrant(payload)
       }),
@@ -620,17 +649,24 @@ export class WorldScene extends Phaser.Scene {
           this.beginChasePvpOpponent(entity)
         }
       }),
-      onGameEvent('pvpRespawnInArena', () => {
+      onGameEvent('pvpRespawnInArena', ({ x, y }) => {
+        if (this.progressSaveTimer) {
+          window.clearTimeout(this.progressSaveTimer)
+          this.progressSaveTimer = null
+        }
         const sheet = toCharacterSheetPayload(this.session)
         this.session = { ...this.session, hp: sheet.hpMax, mp: sheet.mpMax }
-        const { x, y } = randomPvpRespawnPoint()
         this.isPlayerDead = false
+        this.chasePvpOpponent = null
+        this.queuedPvpSkillCast = null
         if (this.playerDisplay) {
           this.playerDisplay.container.setPosition(x, y)
           playPlayerAnim(this.playerDisplay, 'idle', this.facing)
         }
         this.emitCharacterSheet()
-        emitGameEvent('pvpRespawned', { x, y })
+        void saveCharacterSession(this.character.id, getCharacterSession()).catch((err) => {
+          console.warn('PVP respawn progress save failed', err)
+        })
         logActivity('combat', 'Respawned in the PVP arena.')
         emitGameEvent('status', 'Respawned with full HP and SP.')
       }),
@@ -681,6 +717,11 @@ export class WorldScene extends Phaser.Scene {
             this.remotePlayers.set(remote.characterId, entity)
           } else {
             applyRemotePresence(entity, remote)
+          }
+          if (remote.anim === 'dead') {
+            this.pvpDeadRemoteIds.add(remote.characterId)
+          } else {
+            this.pvpDeadRemoteIds.delete(remote.characterId)
           }
         }
 
@@ -760,6 +801,10 @@ export class WorldScene extends Phaser.Scene {
     this.queuedSkillCast = null
     if (this.isSitting) this.standUp()
     this.chaseMob = null
+    this.chasePvpOpponent = null
+    this.chaseDuelOpponent = null
+    this.queuedPvpSkillCast = null
+    this.queuedDuelSkillCast = null
     this.isAttacking = false
     clearMoveTarget(this.moveTarget)
     this.stopPlayerMotion()
@@ -924,6 +969,8 @@ export class WorldScene extends Phaser.Scene {
         next = this.pendingSkill.def.target === 'ground' ? 'aoe' : 'skillTarget'
       } else if (this.findNpcAt(p.worldX, p.worldY)) {
         next = 'npc'
+      } else if (this.isPvpActive()) {
+        next = 'mob'
       } else if (this.findMobAt(p.worldX, p.worldY)) {
         next = 'mob'
       }
@@ -1270,7 +1317,13 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const body = this.getPlayerBody()
-    const moving = body ? Math.hypot(body.velocity.x, body.velocity.y) > 8 : false
+    const speed = body ? Math.hypot(body.velocity.x, body.velocity.y) : 0
+    if (this.presenceWalkActive) {
+      if (speed < 4) this.presenceWalkActive = false
+    } else if (speed > 8) {
+      this.presenceWalkActive = true
+    }
+    const moving = this.presenceWalkActive
     let anim: PlayerPresencePayload['anim'] = 'idle'
     if (this.isPlayerDead) anim = 'dead'
     else if (this.isSitting) anim = 'sit'
@@ -2186,6 +2239,12 @@ export class WorldScene extends Phaser.Scene {
     emitGameEvent('selectedPlayerAnchor', { x: sx, y: sy })
   }
 
+  private isRemotePlayerDead(characterId: string): boolean {
+    if (this.pvpDeadRemoteIds.has(characterId)) return true
+    const entity = this.remotePlayers.get(characterId)
+    return entity?.lastPayload.anim === 'dead'
+  }
+
   private findRemotePlayerAt(wx: number, wy: number): RemotePlayerEntity | null {
     for (const entity of this.remotePlayers.values()) {
       const c = entity.display.container
@@ -2590,15 +2649,22 @@ export class WorldScene extends Phaser.Scene {
       showDamageFloat(this, tx, ty, payload.damage, remoteCrit ? 'critPhysical' : 'hit')
       this.sfx.playHitNearby(listener.x, listener.y, tx, ty)
       if (payload.targetCharacterId === this.character.id) {
-        this.applyIncomingDuelDamage(payload.damage, payload.characterId)
-        this.applyIncomingPvpDamage(payload.damage, payload.characterId)
+        if (!this.isDuelCombatAllowed()) {
+          this.applyIncomingPvpDamage(payload.damage, payload.characterId)
+        }
       }
       return
     }
 
     if (payload.kind === 'player_die') {
+      this.pvpDeadRemoteIds.add(payload.characterId)
+      if (this.chasePvpOpponent?.lastPayload.characterId === payload.characterId) {
+        this.chasePvpOpponent = null
+        this.queuedPvpSkillCast = null
+      }
       const entity = this.remotePlayers.get(payload.characterId)
       if (entity) {
+        entity.lastPayload = { ...entity.lastPayload, anim: 'dead' }
         playPlayerAnim(entity.display, 'dead', entity.lastPayload.facing)
       }
       if (payload.characterId !== this.character.id) {
@@ -2663,8 +2729,10 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private canAttackPlayer(targetCharacterId: string): boolean {
+    if (this.isPlayerDead) return false
     if (targetCharacterId === this.character.id) return false
     if (this.partySync.memberCharacterIds.includes(targetCharacterId)) return false
+    if (this.isRemotePlayerDead(targetCharacterId)) return false
     return true
   }
 
@@ -3007,74 +3075,56 @@ export class WorldScene extends Phaser.Scene {
     emitGameEvent('status', 'Duel lost.')
   }
 
-  private applyIncomingDuelDamage(damage: number, fromCharacterId: string) {
-    if (!this.isDuelCombatAllowed() || !this.duelSync) return
-    if (fromCharacterId !== this.duelSync.opponentCharacterId) return
-    if (this.session.hp <= 0) return
-    const enduring = hasStatus(this.activeBuffs, 'endure')
-    if (this.isSitting && !enduring) this.standUp()
-    if (damage <= 0) return
-
-    this.session = { ...this.session, hp: Math.max(0, this.session.hp - damage) }
-    showFloatingText(
-      this,
-      this.playerDisplay.container.x,
-      this.playerDisplay.container.y - 36,
-      `-${damage}`,
-      'mobHitPlayer',
-    )
-    flashPlayerHit(this, this.playerDisplay)
-    if (this.session.hp > 0 && !enduring) {
-      this.isAttacking = false
-      const entity = this.remotePlayers.get(fromCharacterId)
-      if (entity) {
-        playPlayerFlinch(
-          this,
-          this.playerDisplay,
-          this.facing,
-          this.playerDisplay.container.x - entity.display.container.x,
-          this.playerDisplay.container.y - entity.display.container.y,
-        )
-      }
-    }
-    this.sfx.playHit()
-    logActivity('combat', `Took ${damage} damage in a duel.`)
-    if (this.session.hp <= 0) {
-      this.endDuelAsLoser()
-    } else {
-      this.emitCharacterSheet()
-    }
-  }
-
   private strikeDuelOpponent(
     target: RemotePlayerEntity,
-    snapshot: DuelCombatSnapshot,
+    _snapshot: DuelCombatSnapshot,
     skillLabel: string,
     skillId?: string,
     skillLevel?: number,
   ) {
     const tx = target.display.container.x
     const ty = target.display.container.y
-    let result = calcPlayerVsPlayerDamage(this.session, snapshot)
-    if (skillId && skillLevel != null) {
-      result = calcPlayerSkillVsMobDamage(result, skillId, skillLevel)
-    }
-    const { damage, hit, critical } = result
-    if (!hit || damage <= 0) {
-      showFloatingText(this, tx, ty - 40, 'MISS', 'miss')
-      this.sfx.playMiss()
-      this.broadcastPlayerMiss(target.lastPayload.characterId, tx, ty - 40)
-      logActivity('combat', `${skillLabel} missed ${target.lastPayload.name} in a duel.`)
-      return
-    }
-    showDamageFloat(this, tx, ty - 40, damage, critical ? 'critPhysical' : 'hit')
-    this.sfx.playHit()
-    this.broadcastPlayerHit(target.lastPayload.characterId, damage, skillLabel, critical)
-    logActivity('combat', `${skillLabel} hit ${target.lastPayload.name} for ${damage} in a duel.`)
+    if (!this.duelSync) return
+
+    void duelAttack({
+      action: 'attack',
+      characterId: this.character.id,
+      duelSessionId: this.duelSync.duelSessionId,
+      targetCharacterId: target.lastPayload.characterId,
+      skillId,
+      skillLevel,
+    })
+      .then((res) => {
+        if (!res.hit || res.damage <= 0) {
+          showFloatingText(this, tx, ty - 40, 'MISS', 'miss')
+          this.sfx.playMiss()
+          this.broadcastPlayerMiss(target.lastPayload.characterId, tx, ty - 40)
+          logActivity('combat', `${skillLabel} missed ${target.lastPayload.name} in a duel.`)
+          return
+        }
+        const critical = res.critical === true
+        showDamageFloat(this, tx, ty - 40, res.damage, critical ? 'critPhysical' : 'hit')
+        this.sfx.playHit()
+        this.broadcastPlayerHit(target.lastPayload.characterId, res.damage, skillLabel, critical)
+        logActivity('combat', `${skillLabel} hit ${target.lastPayload.name} for ${res.damage} in a duel.`)
+        if (res.duel?.state === 'completed' && res.duel.winner_character_id === this.character.id) {
+          emitGameEvent('status', 'Duel won!')
+        }
+      })
+      .catch(() => {
+        emitGameEvent('status', 'Duel attack failed.')
+      })
   }
 
   private tryBasicAttack() {
     if (this.isPlayerDead || this.isSitting) return
+    if (this.isPvpActive() && this.chasePvpOpponent) {
+      const id = this.chasePvpOpponent.lastPayload.characterId
+      if (this.isRemotePlayerDead(id)) {
+        this.chasePvpOpponent = null
+        return
+      }
+    }
     const now = this.time.now
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
     const duelSnapshot = this.getDuelOpponentSnapshot()
@@ -3234,7 +3284,11 @@ export class WorldScene extends Phaser.Scene {
   private killMob(mob: MobInstance) {
     const def = MOB_DEFS[mob.defId]
     const isMvpKill = this.mvpMob === mob
-    if (def) {
+    const useServerFieldRewards = def && !this.dungeonBoot && !isDungeonMapId(this.character.map_id)
+    if (useServerFieldRewards) {
+      void this.grantFieldMobKillFromServer(mob, def)
+      logActivity('combat', `Defeated Lv ${mob.level} ${mob.name}.`)
+    } else if (def) {
       const loot = resolveMobKillLoot(def, LOOT_CONFIG)
       if (loot.zeny > 0) {
         logActivity('combat', `Obtained ${loot.zeny.toLocaleString()} zeny.`)
@@ -3335,6 +3389,67 @@ export class WorldScene extends Phaser.Scene {
       if (Phaser.Math.Distance.Between(kx, ky, c.x, c.y) <= PARTY_EXP_RANGE) count += 1
     }
     return Math.max(1, count)
+  }
+
+  private grantFieldMobKillFromServer(mob: MobInstance, _def: (typeof MOB_DEFS)[string]) {
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    combatReport({
+      characterId: this.character.id,
+      mapId: this.character.map_id,
+      spawnIndex: mob.spawnIndex,
+      mobDefId: mob.defId,
+      x: px,
+      y: py,
+    })
+      .then((result) => {
+        if (result.zeny > 0) {
+          logActivity('combat', `Obtained ${result.zeny.toLocaleString()} zeny.`)
+          emitGameEvent('characterZenySync', { zeny: result.zenyTotal })
+        }
+        if (result.itemIds.length > 0) {
+          this.session = {
+            ...this.session,
+            sessionInventory: addItemsToSessionInventory(
+              this.session.sessionInventory,
+              result.itemIds,
+            ),
+          }
+          for (const itemId of result.itemIds) {
+            logActivity('combat', `Obtained ${getItemDisplayName(itemId)}.`, itemId)
+          }
+        }
+        const beforeBase = this.session.progress.baseLevel
+        const beforeJob = this.session.progress.jobLevel
+        updateCharacterSession((s) => {
+          const progress = progressFromLevels(
+            result.progress.baseLevel,
+            result.progress.baseExp,
+            result.progress.jobLevel,
+            result.progress.jobExp,
+            s.jobId,
+          )
+          return syncDerivedVitals({
+            ...s,
+            progress,
+            sessionInventory: Array.isArray(result.sessionInventory)
+              ? (result.sessionInventory as typeof s.sessionInventory)
+              : s.sessionInventory,
+          })
+        })
+        logActivity('exp', `Gained ${result.baseExp} Base EXP and ${result.jobExp} Job EXP.`)
+        if (result.progress.baseLevel > beforeBase) {
+          emitGameEvent('status', `Base level up! Lv ${result.progress.baseLevel}`)
+        }
+        if (result.progress.jobLevel > beforeJob) {
+          emitGameEvent('status', `Job level up! Lv ${result.progress.jobLevel}`)
+        }
+        this.emitCharacterSheet()
+      })
+      .catch((err) => {
+        console.warn('combat-report failed', err)
+        emitGameEvent('status', 'Could not claim mob rewards (server).')
+      })
   }
 
   private grantKillExperience(baseExp: number, jobExp: number, fx: number, fy: number) {

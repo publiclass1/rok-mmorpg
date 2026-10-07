@@ -56,7 +56,7 @@ The browser opens a **WebSocket to `*.supabase.co`** (Supabase Realtime), not to
 | Party EXP share (client) | Broadcast `exp_grant` on `party:{partyId}` | [`WorldScene.ts`](../client/src/game/scenes/WorldScene.ts) |
 | Vending listings | **postgres_changes** on `vendor_listings` + `vendor-manage` HTTP | [`VendorShopModal.tsx`](../client/src/components/VendorShopModal.tsx) |
 
-Combat math, drops, and EXP on kill stay **on the attacking client** (client-trusted). Other players on the same map receive **`combat` broadcasts** so they see attacks, skill swings, damage numbers, mob HP/death/respawn (by spawn index), and nearby combat SFX. Mob wander/AI is still simulated locally per client.
+Field map kills grant EXP, loot, and zeny via the **`combat-report`** Edge Function (server-validated spawn + rate limits). Progress saves go through **`progress-save`** (validated snapshot). Client **`combat` broadcasts** remain cosmetic sync for other players (attacks, floats, mob death/respawn by spawn index). Duel damage is applied server-side via **`duel-manage`** `attack`. Mob wander/AI is still simulated locally per client.
 
 Persistence is **pull/push over HTTP**, not a live sync of every combat tick.
 
