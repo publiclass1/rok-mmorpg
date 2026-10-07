@@ -59,9 +59,29 @@
       "displayName": "Niflheim Depths",
       "fieldType": "dungeon",
       "sourceUrl": null
+    },
+    {
+      "id": "pvp_room",
+      "displayName": "PVP Room",
+      "fieldType": "pvp",
+      "sourceUrl": null
     }
   ],
   "portals": {
+    "pvp_room": [
+      {
+        "id": "pvp_room_exit_prontera",
+        "x": 576,
+        "y": 1184,
+        "width": 128,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 1584,
+        "targetY": 1616,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
     "new_map_rfpp": [],
     "prt_sewb1": [
       {

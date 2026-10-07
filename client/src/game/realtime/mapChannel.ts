@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { DEFAULT_CHARACTER_APPEARANCE, type CharacterAppearance } from '../character/characterAppearance'
 import { createDefaultEquipment } from '../character/characterState'
 import type { PlayerPresencePayload } from '../events'
+import { parseDuelCombatSnapshot } from '../duel/duelCombatSnapshot'
 import { normalizeMapCombatPayload, type MapCombatPayload } from './mapCombatTypes'
 
 const BROADCAST_MS = 50
@@ -38,6 +39,7 @@ function normalizePresence(raw: Partial<PlayerPresencePayload>): PlayerPresenceP
     guildTag: raw.guildTag ?? null,
     isVending: Boolean(raw.isVending),
     stallTitle: raw.stallTitle ?? null,
+    pvpSnapshot: raw.pvpSnapshot != null ? parseDuelCombatSnapshot(raw.pvpSnapshot) : undefined,
   }
 }
 

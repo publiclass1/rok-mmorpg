@@ -1,5 +1,8 @@
 import type { CharacterSessionState } from '../character/characterState'
+import type { DuelCombatSnapshot } from '../duel/duelCombatSnapshot'
 import { effectiveStats } from '../character/effectiveStats'
+import { equipmentBonusesFromState } from '../character/equipmentConfig'
+import { applyBonuses } from '../character/statFormulas'
 import { getItemCombatStats } from '../character/itemCatalog'
 import { getItemWeaponClass } from '../character/itemCatalog'
 import { sumEquippedCritChancePercent } from './critBonuses'
@@ -167,6 +170,59 @@ export function calcPlayerVsMobDamage(
   damage = applyCriticalDamageMultiplier(damage, critical, stats.luk)
   damage = Math.floor(damage * elementMultiplier(weaponElement, mob.element))
   damage = Math.floor(damage * sizeMultiplier(weaponSize, mob.size))
+  const weaponClass = state.equipment.weapon ? getItemWeaponClass(state.equipment.weapon) : null
+  const dmgKind = weaponClass === 'bow' ? 'range' : 'melee'
+  const bonusPct = sumEquippedRolledDamagePercent(state.equipment, dmgKind)
+  if (bonusPct > 0) {
+    damage = Math.floor(damage * (1 + bonusPct / 100))
+  }
+  return { damage: Math.max(1, damage), hit: true, critical }
+}
+
+function defenderEffectiveStats(defender: DuelCombatSnapshot) {
+  const bonuses = equipmentBonusesFromState(defender.equipment)
+  return applyBonuses(
+    {
+      str: defender.str,
+      agi: defender.agi,
+      vit: defender.vit,
+      int: defender.int,
+      dex: defender.dex,
+      luk: defender.luk,
+    },
+    bonuses,
+  )
+}
+
+export function calcPlayerVsPlayerDamage(
+  state: CharacterSessionState,
+  defender: DuelCombatSnapshot,
+  options?: { rng?: () => number },
+): { damage: number; hit: boolean; critical: boolean } {
+  const rng = options?.rng ?? Math.random
+  const stats = effectiveStats(state)
+  const defStats = defenderEffectiveStats(defender)
+  const equipCrit = sumEquippedCritChancePercent(state.equipment)
+  const defenderLuk = defStats.luk
+  const defenderFlee = calcFlee(defender.baseLevel, defStats.agi, defStats.luk)
+  const weapon = state.equipment.weapon ? getItemCombatStats(state.equipment.weapon) : null
+  const weaponAtk = weapon?.weaponAtk ?? 0
+  const weaponElement = weapon?.attackElement ?? 'neutral'
+  const weaponSize = weapon?.weaponSize ?? 'medium'
+
+  const critical = rollPlayerCritVsMob(equipCrit, stats.luk, defenderLuk, rng)
+  let hit = critical
+  if (!hit) {
+    hit = rollHitSuccess(calcHit(state.progress.baseLevel, stats.dex, stats.luk), defenderFlee, rng)
+  }
+  if (!hit) return { damage: 0, hit: false, critical: false }
+
+  const atk = calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk) + weaponAtk
+  const def = critical ? 0 : softDef(defStats.vit)
+  let damage = damageAfterDef(atk, def, defStats.vit)
+  damage = applyCriticalDamageMultiplier(damage, critical, stats.luk)
+  damage = Math.floor(damage * elementMultiplier(weaponElement, 'neutral'))
+  damage = Math.floor(damage * sizeMultiplier(weaponSize, 'medium'))
   const weaponClass = state.equipment.weapon ? getItemWeaponClass(state.equipment.weapon) : null
   const dmgKind = weaponClass === 'bow' ? 'range' : 'melee'
   const bonusPct = sumEquippedRolledDamagePercent(state.equipment, dmgKind)

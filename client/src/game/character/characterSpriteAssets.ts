@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import type { PlayerAvatarKey } from '../player/playerJobAvatar'
+import { idleSpritePose } from '../player/playerIdleMotion'
 import {
   listNpcSpriteDefs,
   resolvePlayerSpriteDef,
@@ -25,7 +26,8 @@ export const PALETTE_SOURCE = {
 } as const
 
 type FrameMotion =
-  | { kind: 'idle' | 'walk'; walkStep: number; idleBlink?: boolean }
+  | { kind: 'idle'; walkStep: number; idleStep: 0 | 1; idleBlink: boolean }
+  | { kind: 'walk'; walkStep: number }
   | { kind: 'sit' }
   | { kind: 'attack'; style: AttackStyle; phase: 0 | 1 | 2 }
 
@@ -495,19 +497,27 @@ function drawChibiFrame(
 
   const attackMotion = motion.kind === 'attack' ? motion : null
   const walkStep = motion.kind === 'walk' ? motion.walkStep : 0
-  const legSpread =
-    motion.kind === 'walk'
-      ? walkStep === 0
+  let legSpread = 2
+  let bob = 0
+  let armSwing = 0
+
+  if (motion.kind === 'walk') {
+    legSpread =
+      walkStep === 0
         ? 2
         : walkStep === 1
           ? 5
           : walkStep === 2
             ? -2
             : -5
-      : 2
-  const bob = motion.kind === 'walk' && walkStep % 2 === 1 ? -1 : 0
-  const armSwing =
-    motion.kind === 'walk' ? (walkStep === 0 || walkStep === 2 ? -2 : 2) : 0
+    bob = walkStep % 2 === 1 ? -1 : 0
+    armSwing = walkStep === 0 || walkStep === 2 ? -2 : 2
+  } else if (motion.kind === 'idle' && isPlayer) {
+    const idlePose = idleSpritePose(mode.avatarKey, motion.idleStep)
+    legSpread = idlePose.legSpread
+    bob = idlePose.bob
+    armSwing = idlePose.armSwing
+  }
 
   feetY += bob
 
@@ -551,7 +561,7 @@ function drawChibiFrame(
   if (facing === 'left') eyeDx = -2
   if (facing === 'right') eyeDx = 2
 
-  const blink = motion.kind === 'idle' && motion.idleBlink === true
+  const blink = motion.kind === 'idle' && motion.idleBlink
   if (!blink) {
     g.fillStyle(pal.eyes, 1)
     g.fillRect(cx - 4 + eyeDx, feetY - 35, 2, 2)
@@ -569,16 +579,18 @@ function femaleHairWidth(mode: DrawMode): number {
   return 16
 }
 
-function motionForColumn(def: CharacterSpriteDef, col: number, npcSheet: boolean): FrameMotion {
+function motionForColumn(def: CharacterSpriteDef, col: number): FrameMotion {
   if (
     col >= def.strips.idle.offset &&
     col < def.strips.idle.offset + def.strips.idle.count
   ) {
     const idleIndex = col - def.strips.idle.offset
+    const idleStep = idleIndex === 1 ? 1 : 0
     return {
       kind: 'idle',
       walkStep: 0,
-      idleBlink: npcSheet && idleIndex === 1,
+      idleStep,
+      idleBlink: idleIndex === 1,
     }
   }
   if (col >= def.strips.walk.offset && col < def.strips.walk.offset + def.strips.walk.count) {
@@ -595,7 +607,7 @@ function motionForColumn(def: CharacterSpriteDef, col: number, npcSheet: boolean
       return { kind: 'attack', style, phase }
     }
   }
-  return { kind: 'idle', walkStep: 0 }
+  return { kind: 'idle', walkStep: 0, idleStep: 0, idleBlink: false }
 }
 
 function generateSheet(
@@ -611,15 +623,13 @@ function generateSheet(
   const w = cols * SPRITE_FRAME_WIDTH
   const h = rows * SPRITE_FRAME_HEIGHT
   const g = scene.add.graphics()
-  const npcSheet = mode.kind === 'npc'
-
   const facings: Array<'down' | 'left' | 'right' | 'up'> = ['down', 'left', 'right', 'up']
   for (let row = 0; row < rows; row++) {
     const facing = facings[row]
     for (let col = 0; col < cols; col++) {
       const ox = col * SPRITE_FRAME_WIDTH
       const oy = row * SPRITE_FRAME_HEIGHT
-      const motion = motionForColumn(def, col, npcSheet)
+      const motion = motionForColumn(def, col)
       drawChibiFrame(g, ox, oy, facing, motion, mode)
     }
   }

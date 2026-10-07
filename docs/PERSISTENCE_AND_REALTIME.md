@@ -48,6 +48,8 @@ The browser opens a **WebSocket to `*.supabase.co`** (Supabase Realtime), not to
 | Shared field combat (visibility) | Realtime **Broadcast** on `map:{mapId}` — event `combat` | [`mapChannel.ts`](../client/src/game/realtime/mapChannel.ts), [`mapCombatTypes.ts`](../client/src/game/realtime/mapCombatTypes.ts), [`WorldScene.ts`](../client/src/game/scenes/WorldScene.ts) |
 | Trade UI updates | Realtime **postgres_changes** on `trade_sessions` / `trade_offers` | Migrations + [`GameView.tsx`](../client/src/components/GameView.tsx), [`TradeModal.tsx`](../client/src/components/TradeModal.tsx) |
 | Party invites / roster | **postgres_changes** on `party_requests`, `party_members`, `parties` | [`20260324100000_m6_social.sql`](../supabase/migrations/20260324100000_m6_social.sql), `party-manage` |
+| Duels (invite, countdown, end) | **postgres_changes** on `duel_sessions` + **`duel-manage`** HTTP | [`20261007210000_duels.sql`](../supabase/migrations/20261007210000_duels.sql), [`GameView.tsx`](../client/src/components/GameView.tsx) |
+| Duel PvP hits (visibility + damage to target) | Realtime **Broadcast** `combat` — `player_hit` / `player_miss` | [`mapCombatTypes.ts`](../client/src/game/realtime/mapCombatTypes.ts), [`WorldScene.ts`](../client/src/game/scenes/WorldScene.ts) |
 | Map / party chat | Realtime **Broadcast** (`chat` event on `map:{mapId}` and `party:{partyId}`) | [`mapChat.ts`](../client/src/game/realtime/mapChat.ts), [`partyChannel.ts`](../client/src/game/realtime/partyChannel.ts) |
 | GM `/zeny` chat command | HTTP **`gm-command`** Edge Function (actor must have `characters.is_gm`) | [`gm-command`](../supabase/functions/gm-command/index.ts), [`GameView.tsx`](../client/src/components/GameView.tsx) |
 | Online presence (admin) | HTTP upsert to `character_presence` every ~15s in-world | [`characterPresence.ts`](../client/src/lib/characterPresence.ts), [`admin-panel`](../supabase/functions/admin-panel/index.ts) |
@@ -66,6 +68,7 @@ Persistence is **pull/push over HTTP**, not a live sync of every combat tick.
 4. A uses Bash: B sees attack FX and damage float text.
 5. A misses: B sees miss text and sound at A’s position.
 6. Solo play and trade/presence unchanged.
+7. **Duel:** A invites B → B sees name/job/level → accept → both see 5s countdown only → fight (basic attack + skills) → loser at 0 HP ends duel; both restored to full HP (no death modal).
 
 ## Netlify and socket servers
 

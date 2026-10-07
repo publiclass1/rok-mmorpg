@@ -5,7 +5,8 @@ import {
 } from '../character/characterAppearance'
 import { ensurePlayerSwappedTexture } from '../character/characterPaletteSwap'
 import { defaultCharacterPose, type CharacterPose } from '../character/characterPose'
-import { applyPoseToSprite, registerIdleAnimations } from '../character/characterSpriteAnim'
+import { applyPoseToSprite, registerPlayerIdleAnimations } from '../character/characterSpriteAnim'
+import { stopIdleRigTween, syncPlayerIdleRigMotion } from './playerIdleMotion'
 import type { CharacterSpriteDef } from '../character/characterSpriteRegistry'
 import { createDefaultEquipment, type EquipSlot } from '../character/characterState'
 import type { Facing } from '../movement/clickToMove'
@@ -40,6 +41,7 @@ export type PlayerDisplay = RarityGlowHost & {
   textureKey: string
   spriteDef: CharacterSpriteDef
   equipment: Record<EquipSlot, string | null>
+  idleRigTween?: Phaser.Tweens.Tween
 }
 
 function syncSpritePose(display: PlayerDisplay) {
@@ -53,6 +55,7 @@ function syncSpritePose(display: PlayerDisplay) {
   }
   syncEquipmentTransforms(display)
   syncPlayerRarityGlow(display, display.equipment)
+  syncPlayerIdleRigMotion(display.body.scene, display)
 }
 
 function bindPlayerTexture(
@@ -64,7 +67,8 @@ function bindPlayerTexture(
   display.textureKey = textureKey
   display.spriteDef = def
   display.appearance = { ...appearance }
-  registerIdleAnimations(scene, textureKey, def)
+  stopIdleRigTween(display, true)
+  registerPlayerIdleAnimations(scene, textureKey, def, display.avatarKey)
   display.body.setTexture(textureKey, '0')
   syncSpritePose(display)
 }
@@ -97,7 +101,7 @@ export function createPlayerDisplay(
 ): PlayerDisplay {
   const placeholderKey = ensureEquipPlaceholderTexture(scene)
   const { textureKey, def } = ensurePlayerSwappedTexture(scene, appearance, avatarKey)
-  registerIdleAnimations(scene, textureKey, def)
+  registerPlayerIdleAnimations(scene, textureKey, def, avatarKey)
 
   const body = scene.add.sprite(0, 0, textureKey, '0')
   body.setOrigin(0.5, 1)

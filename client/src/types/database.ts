@@ -165,6 +165,23 @@ export type PartyRequestRow = {
   updated_at: string
 }
 
+export type DuelSessionRow = {
+  id: string
+  challenger_character_id: string
+  opponent_character_id: string
+  state: 'pending' | 'countdown' | 'active' | 'completed' | 'declined' | 'cancelled'
+  map_id: string
+  fight_starts_at: string | null
+  challenger_name: string
+  challenger_job_id: string
+  challenger_base_level: number
+  challenger_snapshot: unknown
+  opponent_snapshot: unknown
+  winner_character_id: string | null
+  created_at: string
+  updated_at: string
+}
+
 export type GuildRow = {
   id: string
   name: string
@@ -257,6 +274,7 @@ export type Database = {
       parties: { Row: PartyRow; Insert: Partial<PartyRow>; Update: Partial<PartyRow> }
       party_members: { Row: PartyMemberRow; Insert: Partial<PartyMemberRow>; Update: Partial<PartyMemberRow> }
       party_requests: { Row: PartyRequestRow; Insert: Partial<PartyRequestRow>; Update: Partial<PartyRequestRow> }
+      duel_sessions: { Row: DuelSessionRow; Insert: Partial<DuelSessionRow>; Update: Partial<DuelSessionRow> }
       guilds: { Row: GuildRow; Insert: Partial<GuildRow>; Update: Partial<GuildRow> }
       guild_members: { Row: GuildMemberRow; Insert: Partial<GuildMemberRow>; Update: Partial<GuildMemberRow> }
       vendor_stalls: { Row: VendorStallRow; Insert: Partial<VendorStallRow>; Update: Partial<VendorStallRow> }

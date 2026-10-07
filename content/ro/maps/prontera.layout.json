@@ -832,6 +832,13 @@
       "tileY": 51
     },
     {
+      "id": "prontera_pvp_master",
+      "label": "PVP Master",
+      "npcType": "teleport",
+      "tileX": 48,
+      "tileY": 51
+    },
+    {
       "id": "prontera_job_master",
       "label": "Job Master",
       "npcType": "job_master",

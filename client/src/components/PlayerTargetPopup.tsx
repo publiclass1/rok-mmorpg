@@ -3,7 +3,10 @@ import type { SelectedPlayerPayload } from '../game/events'
 type Props = {
   player: SelectedPlayerPayload
   anchor: { x: number; y: number }
+  pvpMap?: boolean
   onTrade: () => void
+  onDuel: () => void
+  onAttack?: () => void
   onInvite: () => void
   onApply: () => void
   onBrowseShop: () => void
@@ -12,7 +15,10 @@ type Props = {
 export function PlayerTargetPopup({
   player,
   anchor,
+  pvpMap = false,
   onTrade,
+  onDuel,
+  onAttack,
   onInvite,
   onApply,
   onBrowseShop,
@@ -30,6 +36,14 @@ export function PlayerTargetPopup({
       <div className="target-actions row wrap gap">
         <button type="button" className="hud-btn" onClick={onTrade}>
           Trade
+        </button>
+        {pvpMap && onAttack && (
+          <button type="button" className="hud-btn" onClick={onAttack}>
+            Attack
+          </button>
+        )}
+        <button type="button" className="hud-btn" onClick={onDuel}>
+          Duel
         </button>
         <button type="button" className="hud-btn" onClick={onInvite}>
           Join Party

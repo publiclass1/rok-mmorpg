@@ -69,4 +69,18 @@ export class SfxPlayer {
     if (!isWithinCombatAudioRange(listenerX, listenerY, sourceX, sourceY)) return
     this.playMiss(0.035)
   }
+
+  playKillStreak(streak: string) {
+    const patterns: Record<string, number[]> = {
+      first_blood: [440, 554, 659],
+      double: [523, 659],
+      triple: [587, 740, 880],
+      ultra: [659, 831, 988, 1175],
+      rampage: [392, 523, 659, 784, 988],
+    }
+    const freqs = patterns[streak] ?? [440, 660]
+    freqs.forEach((f, i) => {
+      window.setTimeout(() => this.beep(f, 120, 'square', 0.1), i * 90)
+    })
+  }
 }

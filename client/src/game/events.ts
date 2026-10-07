@@ -1,3 +1,5 @@
+import type { DuelCombatSnapshot } from './duel/duelCombatSnapshot'
+import type { PvpKillStreakKind } from './world/pvpConfig'
 import type { CharacterAppearance } from './character/characterAppearance'
 import type { CombatStatPreview } from './character/combatStatPreview'
 import type { CharacterSessionState, EquipSlot, PrimaryStat, SessionInventorySlot } from './character/characterState'
@@ -24,6 +26,8 @@ export type PlayerPresencePayload = PositionPayload & {
   guildTag?: string | null
   isVending?: boolean
   stallTitle?: string | null
+  /** Present on PVP maps for damage calculation against this player. */
+  pvpSnapshot?: DuelCombatSnapshot | null
 }
 
 export type SelectedPlayerPayload = {
@@ -49,6 +53,23 @@ export type PartySyncPayload = {
   memberCharacterIds: string[]
   myCharacterId: string
 }
+
+export type DuelSyncPayload = {
+  duelSessionId: string
+  opponentCharacterId: string
+  opponentSnapshot: DuelCombatSnapshot | null
+  fightStartsAt: number | null
+  state: DuelSessionRowState
+  winnerCharacterId?: string | null
+}
+
+export type DuelSessionRowState =
+  | 'pending'
+  | 'countdown'
+  | 'active'
+  | 'completed'
+  | 'declined'
+  | 'cancelled'
 
 export type SocialPresencePayload = {
   guildTag?: string | null
@@ -167,6 +188,8 @@ export type GameEvents = {
   selectedPlayer: SelectedPlayerPayload | null
   selectedPlayerAnchor: { x: number; y: number } | null
   partySync: PartySyncPayload
+  duelSync: DuelSyncPayload | null
+  duelCompleteRequest: { duelSessionId: string; winnerCharacterId: string }
   socialPresence: SocialPresencePayload
   status: string
   playerStats: PlayerStatsPayload
@@ -198,7 +221,17 @@ export type GameEvents = {
   vendorPosSync: { mapId: string; x: number; y: number }
   zenyGain: { amount: number }
   playerDeath: Record<string, never>
+  pvpDeath: { mapId: string }
+  pvpAnnounce: {
+    streak: PvpKillStreakKind
+    killerCharacterId: string
+    killerName: string
+    victimName: string
+  }
   playerRevived: { x: number; y: number }
+  pvpRespawnInArena: Record<string, never>
+  pvpRespawned: { x: number; y: number }
+  pvpAttackRequest: { characterId: string }
   dungeonSync: DungeonSyncPayload
   dungeonMobKilled: { instanceId: string; spawnIndex: number }
   dungeonMvpKilled: { instanceId: string }

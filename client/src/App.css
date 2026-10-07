@@ -1896,6 +1896,73 @@ button:disabled {
   text-align: center;
 }
 
+.duel-countdown-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.duel-countdown-overlay__inner {
+  text-align: center;
+  padding: 1rem 2rem;
+  background: rgba(15, 23, 42, 0.82);
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.duel-countdown-overlay__label {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #fcd34d;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.duel-countdown-overlay__value {
+  margin: 0.15rem 0 0;
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.pvp-kill-announce-overlay {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  pointer-events: none;
+}
+
+.pvp-kill-announce-overlay__inner {
+  text-align: center;
+  padding: 0.75rem 1.5rem;
+  background: rgba(127, 29, 29, 0.88);
+  border: 2px solid #fca5a5;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
+.pvp-kill-announce-overlay__streak {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fef2f2;
+  letter-spacing: 0.03em;
+}
+
+.pvp-kill-announce-overlay__detail {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: #fecaca;
+}
+
 .chat-strip {
   pointer-events: auto;
   margin: 0 0.65rem 0.35rem;

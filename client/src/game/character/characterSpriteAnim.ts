@@ -1,6 +1,8 @@
 import Phaser from 'phaser'
 import type { CharacterPose } from './characterPose'
 import type { Facing } from '../movement/clickToMove'
+import { idleAnimProfile } from '../player/playerIdleMotion'
+import type { PlayerAvatarKey } from '../player/playerJobAvatar'
 import { stripFrameIndex, type CharacterSpriteDef } from './characterSpriteRegistry'
 
 export function animKey(textureKey: string, anim: string, facing: Facing): string {
@@ -18,6 +20,31 @@ export function registerIdleAnimations(scene: Phaser.Scene, textureKey: string, 
       key,
       frames: scene.anims.generateFrameNumbers(textureKey, { start, end }),
       frameRate: 4,
+      repeat: -1,
+    })
+  }
+}
+
+/** Per-job idle: hold / blink pattern from idle strip frames. */
+export function registerPlayerIdleAnimations(
+  scene: Phaser.Scene,
+  textureKey: string,
+  def: CharacterSpriteDef,
+  avatarKey: PlayerAvatarKey,
+) {
+  const profile = idleAnimProfile(avatarKey)
+  const facings: Facing[] = ['down', 'left', 'right', 'up']
+  for (const facing of facings) {
+    const key = animKey(textureKey, 'idle', facing)
+    if (scene.anims.exists(key)) continue
+    const frames = profile.frames.map((step) => {
+      const frame = stripFrameIndex(def, facing, def.strips.idle, step)
+      return { key: textureKey, frame: `${frame}` }
+    })
+    scene.anims.create({
+      key,
+      frames,
+      frameRate: profile.frameRate,
       repeat: -1,
     })
   }

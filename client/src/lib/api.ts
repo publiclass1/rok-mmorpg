@@ -102,6 +102,15 @@ export function partyManage(payload: Record<string, unknown>) {
   }>('party-manage', payload)
 }
 
+export function duelManage(payload: Record<string, unknown>) {
+  return invoke<{
+    ok?: boolean
+    duel?: import('../types/database').DuelSessionRow
+    opponentCharacterId?: string
+    opponentSnapshot?: import('../game/duel/duelCombatSnapshot').DuelCombatSnapshot
+  }>('duel-manage', payload)
+}
+
 export function guildManage(payload: Record<string, unknown>) {
   return invoke<{ ok?: boolean; guild?: import('../types/database').GuildRow }>('guild-manage', payload)
 }

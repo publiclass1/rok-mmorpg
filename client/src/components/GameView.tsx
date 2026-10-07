@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import Phaser from 'phaser'
-import { dungeonManage, gmCommand, partyManage, portalWarp, savePoint, teleport } from '../lib/api'
+import { duelManage, dungeonManage, gmCommand, partyManage, portalWarp, savePoint, teleport } from '../lib/api'
 import { clearCharacterPresence, upsertCharacterPresence } from '../lib/characterPresence'
 import { loadGuildForCharacter, type GuildSnapshot } from '../lib/guildState'
 import { loadPartyForCharacter, type PartySnapshot } from '../lib/partyState'
@@ -38,11 +38,15 @@ import {
   type SelectedPlayerPayload,
   type PlayerBuffPayload,
   type DungeonSyncPayload,
+  type DuelSyncPayload,
+  type GameEvents,
 } from '../game/events'
+import { duelRowToSyncPayload } from '../game/duel/duelSync'
 import type {
   CharacterRow,
   DungeonInstanceRow,
   NpcRow,
+  DuelSessionRow,
   PartyRequestRow,
   TradeSessionRow,
 } from '../types/database'
@@ -51,6 +55,8 @@ import { dungeonFloors, isDungeonMapId } from '../game/world/dungeonConfig'
 import { ChatStrip, type ChatStripHandle } from './ChatStrip'
 import { PlayerTargetPopup } from './PlayerTargetPopup'
 import { GuildModal } from './GuildModal'
+import { DuelCountdownOverlay } from './DuelCountdownOverlay'
+import { DuelInviteModal } from './DuelInviteModal'
 import { PartyRequestModal } from './PartyRequestModal'
 import { PartyWindow } from './PartyWindow'
 import { VendorSetupModal } from './VendorSetupModal'
@@ -73,6 +79,9 @@ import { RarityTabShopModal } from './RarityTabShopModal'
 import { isRarityTabShop } from '../game/character/npcServices'
 import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { DeathModal } from './DeathModal'
+import { PvpDeathModal } from './PvpDeathModal'
+import { PvpKillAnnounceOverlay } from './PvpKillAnnounceOverlay'
+import { isPvpMap, PVP_ROOM_EXIT_TELEPORT } from '../game/world/pvpConfig'
 import { SplashScreen } from './SplashScreen'
 import { TradeModal } from './TradeModal'
 import { mapDisplayName } from '../game/world/mapDisplayName'
@@ -178,7 +187,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   mapLoadingRef.current = mapLoading
   const [loadProgress, setLoadProgress] = useState<number | undefined>(undefined)
   const [deathModalOpen, setDeathModalOpen] = useState(false)
+  const [pvpDeathModalOpen, setPvpDeathModalOpen] = useState(false)
   const [deathSaveMapId, setDeathSaveMapId] = useState('prontera')
+  const [pvpAnnounce, setPvpAnnounce] = useState<GameEvents['pvpAnnounce'] | null>(null)
   const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
   const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
   const [selectedPlayerAnchor, setSelectedPlayerAnchor] = useState<{ x: number; y: number } | null>(null)
@@ -187,6 +198,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [partyRequest, setPartyRequest] = useState<{ request: PartyRequestRow; fromName: string } | null>(
     null,
   )
+  const [duelInvite, setDuelInvite] = useState<DuelSessionRow | null>(null)
+  const [duelSync, setDuelSync] = useState<DuelSyncPayload | null>(null)
+  const duelSyncRef = useRef<DuelSyncPayload | null>(null)
+  duelSyncRef.current = duelSync
   const [guildOpen, setGuildOpen] = useState(false)
   const [partyOpen, setPartyOpen] = useState(false)
   const [vendorSetupOpen, setVendorSetupOpen] = useState(false)
@@ -213,6 +228,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     !!npcMenu ||
     !!tradePartner ||
     !!partyRequest ||
+    !!duelInvite ||
     partyOpen ||
     guildOpen ||
     vendorSetupOpen ||
@@ -488,6 +504,103 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     }
   }, [character.id])
 
+  const restoreVitalsAfterDuel = useCallback(() => {
+    const session = getCharacterSession()
+    const payload = toCharacterSheetPayload(session)
+    const next = { ...session, hp: payload.hpMax, mp: payload.mpMax }
+    sessionRef.current = next
+    setSheet(toCharacterSheetPayload(next))
+    emitGameEvent('sessionSync', structuredClone(next))
+  }, [])
+
+  const applyDuelSessionRow = useCallback(
+    (row: DuelSessionRow) => {
+      const myId = characterRef.current.id
+      const isParticipant =
+        row.challenger_character_id === myId || row.opponent_character_id === myId
+      if (!isParticipant) return
+
+      if (row.state === 'pending' && row.opponent_character_id === myId) {
+        setDuelInvite(row)
+        return
+      }
+
+      if (row.state === 'pending' && row.challenger_character_id === myId) {
+        setDuelInvite(null)
+        return
+      }
+
+      if (row.state === 'declined' || row.state === 'cancelled') {
+        setDuelInvite((cur) => (cur?.id === row.id ? null : cur))
+        if (duelSyncRef.current?.duelSessionId === row.id) {
+          setDuelSync(null)
+          emitGameEvent('duelSync', null)
+        }
+        return
+      }
+
+      if (row.state === 'completed') {
+        setDuelInvite(null)
+        setDuelSync(null)
+        emitGameEvent('duelSync', null)
+        restoreVitalsAfterDuel()
+        if (row.winner_character_id === myId) {
+          setMessage('You won the duel!')
+        } else if (row.winner_character_id) {
+          setMessage('You lost the duel.')
+        }
+        return
+      }
+
+      if (row.state === 'countdown' || row.state === 'active') {
+        const sync = duelRowToSyncPayload(row, myId)
+        if (sync) {
+          setDuelInvite(null)
+          setDuelSync(sync)
+          emitGameEvent('duelSync', sync)
+        }
+      }
+    },
+    [restoreVitalsAfterDuel],
+  )
+
+  useEffect(() => {
+    void supabase
+      .from('duel_sessions')
+      .select('*')
+      .or(`challenger_character_id.eq.${character.id},opponent_character_id.eq.${character.id}`)
+      .in('state', ['pending', 'countdown', 'active'])
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) applyDuelSessionRow(data)
+      })
+
+    const channel = supabase
+      .channel(`duel-sessions:${character.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'duel_sessions' },
+        (payload) => {
+          applyDuelSessionRow(payload.new as DuelSessionRow)
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'duel_sessions' },
+        (payload) => {
+          applyDuelSessionRow(payload.new as DuelSessionRow)
+        },
+      )
+      .subscribe()
+
+    return () => {
+      emitGameEvent('duelSync', null)
+      void supabase.removeChannel(channel)
+    }
+  }, [character.id, applyDuelSessionRow])
+
   useEffect(() => {
     let chat: MapChatChannel | null = new MapChatChannel(character.map_id, (msg) => {
       setMapChatLines((prev) => [...prev, msg].slice(-50))
@@ -641,6 +754,22 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           setDeathModalOpen(true)
         })
       }),
+      onGameEvent('pvpDeath', () => {
+        setPvpDeathModalOpen(true)
+      }),
+      onGameEvent('pvpAnnounce', (payload) => {
+        setPvpAnnounce(payload)
+      }),
+      onGameEvent('duelCompleteRequest', ({ duelSessionId, winnerCharacterId }) => {
+        void duelManage({
+          action: 'complete',
+          characterId: characterRef.current.id,
+          duelSessionId,
+          winnerCharacterId,
+        }).catch((err) => {
+          setMessage(err instanceof Error ? err.message : 'Could not end duel')
+        })
+      }),
     ]
     return () => unsubs.forEach((u) => u())
   }, [])
@@ -677,6 +806,52 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     }
     setDeathModalOpen(false)
     setMessage('Returned to save point with partial HP and SP.')
+  }
+
+  async function respawnInPvpArena() {
+    const coords = await new Promise<{ x: number; y: number }>((resolve, reject) => {
+      const timeout = window.setTimeout(() => {
+        unsub()
+        reject(new Error('Respawn timed out'))
+      }, 5000)
+      const unsub = onGameEvent('pvpRespawned', ({ x, y }) => {
+        window.clearTimeout(timeout)
+        unsub()
+        resolve({ x, y })
+      })
+      emitGameEvent('pvpRespawnInArena', {})
+    })
+    const sheet = toCharacterSheetPayload(getCharacterSession())
+    const { data, error } = await supabase
+      .from('characters')
+      .update({ x: coords.x, y: coords.y, hp: sheet.hpMax, mp: sheet.mpMax })
+      .eq('id', characterRef.current.id)
+      .select('*')
+      .single()
+    if (error || !data) throw new Error(error?.message ?? 'Respawn failed')
+    onCharacterUpdated(data as CharacterRow)
+    setPosition({ x: coords.x, y: coords.y, mapId: characterRef.current.map_id })
+    setPvpDeathModalOpen(false)
+    setMessage('Respawned in the PVP arena with full HP and SP.')
+  }
+
+  async function leavePvpRoom() {
+    const exit = PVP_ROOM_EXIT_TELEPORT
+    setMapLoading({ mapId: exit.destinationMapId, label: mapDisplayName(exit.destinationMapId) })
+    const res = await teleport({
+      characterId: characterRef.current.id,
+      mapId: exit.mapId,
+      x: exit.npcX,
+      y: exit.npcY,
+      npcId: exit.npcId,
+      destinationMapId: exit.destinationMapId,
+    })
+    dispatchCharacterAction({ type: 'respawnPartial' })
+    destroyActiveGame()
+    setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
+    onCharacterUpdated(res.character)
+    setPvpDeathModalOpen(false)
+    setMessage(`Left PVP room — warped to ${mapDisplayName(exit.destinationMapId)}.`)
   }
 
   useEffect(() => {
@@ -1044,6 +1219,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     }
   }
 
+  async function runDuelInvite(targetCharacterId: string) {
+    try {
+      await duelManage({ action: 'invite', characterId: character.id, targetCharacterId })
+      setMessage('Duel invite sent.')
+      setSelectedPlayer(null)
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Duel invite failed')
+    }
+  }
+
   function appendMapSystemLine(text: string) {
     setMapChatLines((prev) =>
       [...prev, { characterId: 'system', name: 'System', text, at: Date.now() }].slice(-50),
@@ -1131,17 +1316,25 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       <div className="game-stage game-stage--fullscreen" aria-label="Game world">
         <div ref={hostRef} className="game-canvas" />
         <LowHpVignette hp={sheet.hp} hpMax={sheet.hpMax} />
+        {duelSync && <DuelCountdownOverlay duel={duelSync} />}
+        <PvpKillAnnounceOverlay announce={pvpAnnounce} />
 
         {selectedPlayer && selectedPlayerAnchor && (
           <PlayerTargetPopup
             player={selectedPlayer}
             anchor={selectedPlayerAnchor}
+            pvpMap={isPvpMap(character.map_id)}
+            onAttack={() => {
+              emitGameEvent('pvpAttackRequest', { characterId: selectedPlayer.characterId })
+              setSelectedPlayer(null)
+            }}
             onTrade={() =>
               setTradePartner({
                 characterId: selectedPlayer.characterId,
                 name: selectedPlayer.name,
               })
             }
+            onDuel={() => void runDuelInvite(selectedPlayer.characterId)}
             onInvite={() => void runPartyAction('invite', selectedPlayer.characterId)}
             onApply={() => void runPartyAction('apply', selectedPlayer.characterId)}
             onBrowseShop={() => setVendorShopTarget(selectedPlayer)}
@@ -1410,12 +1603,28 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             onResolved={refreshParty}
           />
         )}
+        {duelInvite && (
+          <DuelInviteModal
+            key={duelInvite.id}
+            characterId={character.id}
+            duel={duelInvite}
+            onClose={() => setDuelInvite(null)}
+            onResolved={() => setDuelInvite(null)}
+          />
+        )}
         {deathModalOpen && (
           <DeathModal
             key="death"
             saveMapId={deathSaveMapId}
             onStay={() => setDeathModalOpen(false)}
             onReturnToSave={returnToSavePoint}
+          />
+        )}
+        {pvpDeathModalOpen && (
+          <PvpDeathModal
+            key="pvp-death"
+            onRespawn={respawnInPvpArena}
+            onLeave={leavePvpRoom}
           />
         )}
         {partyOpen && (

@@ -577,6 +577,17 @@
       "sourceUrl": "https://irowiki.org/wiki/Jellopy"
     },
     {
+      "id": "skull",
+      "name": "Skull",
+      "type": "etc",
+      "weight": 1,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": null
+    },
+    {
       "id": "fluff",
       "name": "Fluff",
       "type": "etc",
