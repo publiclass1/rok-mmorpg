@@ -311,6 +311,45 @@ export type MagicSkillHitResult = {
   perHitDamage: number[]
 }
 
+function magicSkillElementAndModifier(
+  skillId: string,
+  skillLevel: number,
+  mob: MobDefinition,
+  def: SkillDefinition | undefined,
+): { element: string; modifier: number } {
+  const modifier = magicSkillModifier(def, skillLevel)
+  let undeadMult = 1
+  let element = def?.magic?.element ?? 'neutral'
+  if (skillId === 'soul_strike' && mob.element === 'undead') {
+    undeadMult = 1.5
+    element = 'neutral'
+  }
+  return { element, modifier: modifier * undeadMult }
+}
+
+export function magicSkillHitCount(def: SkillDefinition | undefined, skillLevel: number): number {
+  if (def?.magic?.hitsEqualLevel) return Math.max(1, skillLevel)
+  return 1
+}
+
+/** One projectile / one damage roll (used when damage syncs to projectile arrival). */
+export function calcPlayerMagicSkillSingleHit(
+  state: CharacterSessionState,
+  mob: MobDefinition,
+  skillId: string,
+  skillLevel: number,
+  options?: { rng?: () => number },
+): { damage: number; critical: boolean } {
+  const def = SKILLS[skillId]
+  const rng = options?.rng ?? Math.random
+  const { element, modifier } = magicSkillElementAndModifier(skillId, skillLevel, mob, def)
+  return calcPlayerMagicVsMobDamage(state, mob, {
+    skillModifier: modifier,
+    attackElement: element,
+    rng,
+  })
+}
+
 export function calcPlayerMagicSkillVsMob(
   state: CharacterSessionState,
   mob: MobDefinition,
@@ -319,28 +358,15 @@ export function calcPlayerMagicSkillVsMob(
   options?: { rng?: () => number },
 ): MagicSkillHitResult {
   const def = SKILLS[skillId]
-  const magic = def?.magic
   const rng = options?.rng ?? Math.random
-  const modifier = magicSkillModifier(def, skillLevel)
-  let undeadMult = 1
-  let element = magic?.element ?? 'neutral'
-  if (skillId === 'soul_strike' && mob.element === 'undead') {
-    undeadMult = 1.5
-    // Ghost property is 0% vs Undead in our element table; use neutral for the bonus hit.
-    element = 'neutral'
-  }
-  const hitCount = magic?.hitsEqualLevel ? Math.max(1, skillLevel) : 1
+  const hitCount = magicSkillHitCount(def, skillLevel)
 
   const perHitDamage: number[] = []
   let criticalAny = false
   let total = 0
 
   for (let i = 0; i < hitCount; i++) {
-    const { damage, critical } = calcPlayerMagicVsMobDamage(state, mob, {
-      skillModifier: modifier * undeadMult,
-      attackElement: element,
-      rng,
-    })
+    const { damage, critical } = calcPlayerMagicSkillSingleHit(state, mob, skillId, skillLevel, { rng })
     perHitDamage.push(damage)
     total += damage
     if (critical) criticalAny = true

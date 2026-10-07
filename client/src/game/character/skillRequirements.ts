@@ -1,3 +1,4 @@
+import { calcPreRenewalCastTimeMs } from '../combat/castTime'
 import type { CharacterSheetPayload } from '../events'
 import { isSkillSpendingTab } from './skillPointBudget'
 import {
@@ -30,7 +31,16 @@ export function skillRequirementDetail(
   const statsLines: string[] = []
   statsLines.push(skill.type === 'passive' ? 'Passive' : 'Active')
   if (skill.type === 'active' && skill.mpCost > 0) statsLines.push(`SP ${skill.mpCost}`)
-  if (skill.castTimeMs > 0) statsLines.push(`Cast ${(skill.castTimeMs / 1000).toFixed(1)}s`)
+  if (skill.castTimeMs > 0) {
+    const effectiveMs = calcPreRenewalCastTimeMs(skill.castTimeMs, sheet.effectiveDex)
+    const effectiveSec = effectiveMs / 1000
+    const baseSec = skill.castTimeMs / 1000
+    if (effectiveMs < skill.castTimeMs) {
+      statsLines.push(`Cast ${effectiveSec.toFixed(1)}s (${baseSec.toFixed(1)}s base, DEX)`)
+    } else {
+      statsLines.push(`Cast ${baseSec.toFixed(1)}s`)
+    }
+  }
   if (skill.type === 'active' && skill.range > 0) statsLines.push(`Range ${skill.range}`)
 
   const jobName = JOB_NAMES[skill.jobId] ?? skill.jobId

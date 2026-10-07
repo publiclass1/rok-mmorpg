@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { playPlayerAttackSlash } from '../combat/combatFx'
 import {
   playBowArrowProjectile,
+  playMagicSkillProjectileVolley,
   playRangedAttackRecoil,
   playStaffMagicProjectile,
   rangedProjectileOrigin,
@@ -30,7 +31,14 @@ export function startPlayerAttackAnim(
   options: {
     variant: AttackVariant
     attackStyle: AttackStyle
+    /** Delay before strike phase (cast time for magic skills). */
+    strikeDelayMs?: number
     getAimTarget?: () => { x: number; y: number } | null
+    /** When set, fires element-specific projectiles instead of the default staff orb. */
+    magicSkillId?: string
+    magicHitCount?: number
+    onMagicHit?: (hitIndex: number) => void
+    onMagicVolleyComplete?: () => void
     onStrike?: () => void
     onComplete?: () => void
   },
@@ -48,7 +56,9 @@ export function startPlayerAttackAnim(
   }
   setPlayerAttackPhase(display, 0)
 
-  scene.time.delayedCall(WINDUP_MS, () => {
+  const strikeDelay = options.strikeDelayMs ?? WINDUP_MS
+
+  scene.time.delayedCall(strikeDelay, () => {
     if (display.pose.anim !== 'attack') return
     setPlayerAttackPhase(display, 1)
 
@@ -57,14 +67,34 @@ export function startPlayerAttackAnim(
 
     if (ranged && aim) {
       const container = display.container
-      const origin = rangedProjectileOrigin(container.x, container.y, facing)
       const depth = container.depth + 0.08
       playRangedAttackRecoil(scene, display.bodyRig, facing)
-      const onArrive = () => options.onStrike?.()
-      if (options.attackStyle === 'bow') {
-        playBowArrowProjectile(scene, origin.x, origin.y, aim.x, aim.y, depth, onArrive)
+      if (options.magicSkillId) {
+        const hitCount = options.magicHitCount ?? 1
+        playMagicSkillProjectileVolley(
+          scene,
+          options.magicSkillId,
+          facing,
+          container.x,
+          container.y,
+          aim.x,
+          aim.y,
+          depth,
+          hitCount,
+          (hitIndex) => options.onMagicHit?.(hitIndex),
+          () => {
+            options.onMagicVolleyComplete?.()
+            options.onStrike?.()
+          },
+        )
       } else {
-        playStaffMagicProjectile(scene, origin.x, origin.y, aim.x, aim.y, depth, onArrive)
+        const origin = rangedProjectileOrigin(container.x, container.y, facing)
+        const onArrive = () => options.onStrike?.()
+        if (options.attackStyle === 'bow') {
+          playBowArrowProjectile(scene, origin.x, origin.y, aim.x, aim.y, depth, onArrive)
+        } else {
+          playStaffMagicProjectile(scene, origin.x, origin.y, aim.x, aim.y, depth, onArrive)
+        }
       }
       return
     }

@@ -44,6 +44,16 @@ Typically 1 skill point per job level ([Skills](https://irowiki.org/wiki/Skills)
 
 **Today:** `SKILL_POINTS_PER_JOB_LEVEL = 1` (matches classic simplification).
 
+## Cast time (variable)
+
+Classic Pre-Renewal cast time scales with **DEX** ([Cast Time](https://irowiki.org/classic/Cast_Time)):
+
+- `Cast = Base × (1 − DEX/130) × (1 − 0.15×SuffragiumLv) × (1 − x×0.01)` where `x` is sum of % reductions from gear/skills. (Divisor **130** is a project tuning choice; Classic wiki uses 150.)
+- At DEX ≥ 130 the variable portion reaches 0 (instant cast phase; attack windup still applies).
+- Skill rows store **base** cast in `castTimeMs` (milliseconds).
+
+**Today:** `client/src/game/combat/castTime.ts` — DEX reduction wired in `WorldScene` strike delay and skill tooltips (`skillRequirements.ts`). Suffragium / gear % not wired yet.
+
 ## Combat (planned)
 
 Implement in order:
@@ -93,3 +103,4 @@ Kill reward uses mob base EXP and job EXP from data ([Poring](https://irowiki.or
 - [x] LUK-based critical hits (physical + magic helper)
 - [x] Drops from `mobs.json` `drops[]`
 - [x] Classic Pre-Renewal ASPD (`aspd.json`, `preRenewalAspd.ts`)
+- [x] Classic cast time vs DEX (`castTime.ts`, skill `castTimeMs` in content)

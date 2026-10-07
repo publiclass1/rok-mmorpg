@@ -61,7 +61,8 @@ import { isChatStripInputFocused } from '../chatInputFocus'
 import {
   calcMobSkillVsPlayerDamage,
   calcMobVsPlayerDamage,
-  calcPlayerMagicSkillVsMob,
+  calcPlayerMagicSkillSingleHit,
+  magicSkillHitCount,
   calcPlayerSkillVsMobDamage,
   calcPlayerVsMobDamage,
   calcPlayerVsPlayerDamage,
@@ -69,7 +70,8 @@ import {
 import { playLevelUpAudio, preloadLevelUpAudio } from '../combat/levelUpAudio'
 import { playLevelUpWorldFx } from '../combat/levelUpFx'
 import { buildLevelUpSteps, type LevelUpStep } from '../combat/levelUpSteps'
-import { playSkillCastFx, playSkillGroundFx } from '../combat/skillFx'
+import { skillCastStrikeDelayMs } from '../combat/castTime'
+import { playSkillCastFx, playSkillGroundFx, playSkillImpactFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
 import { scaleMobExp } from '../combat/gameConfig'
@@ -1883,39 +1885,48 @@ export class WorldScene extends Phaser.Scene {
     }
 
     this.lastAttackAt = now
+    this.isAttacking = true
     this.faceToward(target.sprite.x, target.sprite.y)
     this.showSkillCallout(def.name)
+    const depth = this.playerDisplay.container.depth + 0.1
     playSkillCastFx(this, 'dispell', {
       playerX: px,
       playerY: py,
       facing: this.facing,
-      depth: this.playerDisplay.container.depth + 0.1,
-      targetX: target.sprite.x,
-      targetY: target.sprite.y,
+      depth,
+      targetX: px,
+      targetY: py,
     })
-    emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — buff removal not implemented yet.`)
-    logActivity('combat', `${def.name} Lv ${skillLevel} on Lv ${target.level} ${target.name} (stub).`)
-    this.emitCharacterSheet()
+    startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
+      variant: 'basic',
+      attackStyle: 'cast',
+      strikeDelayMs: this.skillCastStrikeDelayMs(def),
+      getAimTarget: () => toCombatAimPoint(target.sprite.x, target.sprite.y),
+      magicSkillId: 'dispell',
+      magicHitCount: 1,
+      onMagicHit: () => {
+        const aim = toCombatAimPoint(target.sprite.x, target.sprite.y)
+        playSkillImpactFx(this, 'dispell', aim.x, aim.y, depth)
+        emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — buff removal not implemented yet.`)
+        logActivity('combat', `${def.name} Lv ${skillLevel} on Lv ${target.level} ${target.name} (stub).`)
+      },
+      onMagicVolleyComplete: () => this.emitCharacterSheet(),
+      onComplete: () => {
+        this.isAttacking = false
+      },
+    })
   }
 
-  private applyMagicHitsToMob(
+  private applyMagicSingleHitToMob(
     mob: MobInstance,
     skillId: string,
     skillLevel: number,
     skillLabel: string,
     mobDef: (typeof MOB_DEFS)[string],
   ) {
-    const result = calcPlayerMagicSkillVsMob(this.session, mobDef, skillId, skillLevel)
-    if (result.totalDamage <= 0) return
-    for (let i = 0; i < result.perHitDamage.length; i++) {
-      if (!mob.alive) break
-      const dmg = result.perHitDamage[i]!
-      const crit = result.criticalAny && i === result.perHitDamage.length - 1
-      this.applyDamageToMob(mob, dmg, mobDef, skillLabel, { critical: crit, criticalMagic: crit })
-    }
-    if (skillId === 'stone_curse') {
-      emitGameEvent('status', `${skillLabel} — petrify not implemented yet.`)
-    }
+    const { damage, critical } = calcPlayerMagicSkillSingleHit(this.session, mobDef, skillId, skillLevel)
+    if (damage <= 0 || !mob.alive) return
+    this.applyDamageToMob(mob, damage, mobDef, skillLabel, { critical, criticalMagic: critical })
   }
 
   private runPlayerMagicSkill(
@@ -1954,31 +1965,36 @@ export class WorldScene extends Phaser.Scene {
       playerY: py,
       facing: this.facing,
       depth,
-      targetX: primaryMob.sprite.x,
-      targetY: primaryMob.sprite.y,
+      targetX: px,
+      targetY: py,
     })
 
     this.sfx.playAttack()
     this.broadcastPlayerAction('basic_attack')
 
-    const strikeDelay = Math.max(55, def.castTimeMs)
-
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       attackStyle: 'cast',
+      strikeDelayMs: this.skillCastStrikeDelayMs(def),
+      getAimTarget: () => toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y),
+      magicSkillId: skillId,
+      magicHitCount: magicSkillHitCount(def, skillLevel),
+      onMagicHit: () => {
+        const mobDef = MOB_DEFS[primaryMob.defId]
+        if (!mobDef || !primaryMob.alive) return
+        const aim = toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y)
+        playSkillImpactFx(this, skillId, aim.x, aim.y, depth)
+        this.applyMagicSingleHitToMob(primaryMob, skillId, skillLevel, skillLabel, mobDef)
+        if (skillId === 'stone_curse') {
+          emitGameEvent('status', `${skillLabel} — petrify not implemented yet.`)
+        }
+      },
+      onMagicVolleyComplete: () => {
+        this.emitCharacterSheet()
+      },
       onComplete: () => {
         this.isAttacking = false
       },
-    })
-
-    this.time.delayedCall(strikeDelay, () => {
-      const mobDef = MOB_DEFS[primaryMob.defId]
-      if (!mobDef || !primaryMob.alive) {
-        this.emitCharacterSheet()
-        return
-      }
-      this.applyMagicHitsToMob(primaryMob, skillId, skillLevel, skillLabel, mobDef)
-      this.emitCharacterSheet()
     })
   }
 
@@ -2009,14 +2025,35 @@ export class WorldScene extends Phaser.Scene {
     this.showSkillCallout(def.name)
 
     const depth = this.playerDisplay.container.depth + 0.1
-    const strikeDelay = Math.max(55, def.castTimeMs)
+    const strikeDelay = this.skillCastStrikeDelayMs(def)
+    const aim = toCombatAimPoint(wx, wy)
 
     if (isPlayerGroundMagicStub(skillId)) {
-      this.time.delayedCall(strikeDelay, () => {
-        playSkillGroundFx(this, skillId, wx, wy, depth)
-        emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — tile effect not implemented yet.`)
-        logActivity('combat', `${def.name} Lv ${skillLevel} at (${Math.round(wx)}, ${Math.round(wy)}).`)
-        this.emitCharacterSheet()
+      this.isAttacking = true
+      playSkillCastFx(this, skillId, {
+        playerX: px,
+        playerY: py,
+        facing: this.facing,
+        depth,
+        targetX: px,
+        targetY: py,
+      })
+      startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
+        variant: 'basic',
+        attackStyle: 'cast',
+        strikeDelayMs: strikeDelay,
+        getAimTarget: () => aim,
+        magicSkillId: skillId,
+        magicHitCount: 1,
+        onMagicHit: () => {
+          playSkillGroundFx(this, skillId, wx, wy, depth)
+          emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — tile effect not implemented yet.`)
+          logActivity('combat', `${def.name} Lv ${skillLevel} at (${Math.round(wx)}, ${Math.round(wy)}).`)
+        },
+        onMagicVolleyComplete: () => this.emitCharacterSheet(),
+        onComplete: () => {
+          this.isAttacking = false
+        },
       })
       return
     }
@@ -2024,29 +2061,42 @@ export class WorldScene extends Phaser.Scene {
     this.isAttacking = true
     this.sfx.playAttack()
     this.broadcastPlayerAction('basic_attack')
+    playSkillCastFx(this, skillId, {
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      depth,
+      targetX: px,
+      targetY: py,
+    })
+    const skillLabel = def.name
+    const radius = def.magic?.aoeRadius ?? 64
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       attackStyle: 'cast',
+      strikeDelayMs: strikeDelay,
+      getAimTarget: () => aim,
+      magicSkillId: skillId,
+      magicHitCount: 1,
+      onMagicHit: () => {
+        playSkillGroundFx(this, skillId, wx, wy, depth)
+      },
+      onMagicVolleyComplete: () => {
+        const victims = this.mobsInAoERadius(wx, wy, radius)
+        if (victims.length === 0) {
+          emitGameEvent('status', `${skillLabel} — no targets in area.`)
+        } else {
+          for (const mob of victims) {
+            const mobDef = MOB_DEFS[mob.defId]
+            if (!mobDef || !mob.alive) continue
+            this.applyMagicSingleHitToMob(mob, skillId, skillLevel, skillLabel, mobDef)
+          }
+        }
+        this.emitCharacterSheet()
+      },
       onComplete: () => {
         this.isAttacking = false
       },
-    })
-
-    this.time.delayedCall(strikeDelay, () => {
-      playSkillGroundFx(this, skillId, wx, wy, depth)
-      const radius = def.magic?.aoeRadius ?? 64
-      const victims = this.mobsInAoERadius(wx, wy, radius)
-      const skillLabel = def.name
-      if (victims.length === 0) {
-        emitGameEvent('status', `${skillLabel} — no targets in area.`)
-      } else {
-        for (const mob of victims) {
-          const mobDef = MOB_DEFS[mob.defId]
-          if (!mobDef || !mob.alive) continue
-          this.applyMagicHitsToMob(mob, skillId, skillLevel, skillLabel, mobDef)
-        }
-      }
-      this.emitCharacterSheet()
     })
   }
 
@@ -2345,6 +2395,10 @@ export class WorldScene extends Phaser.Scene {
       this.rentalFalconGfx.setPosition(fx, fy)
       setDepthByFeet(this.rentalFalconGfx, playerFeet, 0.06)
     }
+  }
+
+  private skillCastStrikeDelayMs(def: SkillDefinition): number {
+    return skillCastStrikeDelayMs(def.castTimeMs, this.session)
   }
 
   private playerAttackElementOverride(): string | undefined {

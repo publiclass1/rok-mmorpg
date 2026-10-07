@@ -149,33 +149,22 @@ export function playSkillCastFx(scene: Phaser.Scene, skillId: string, ctx: Skill
       expandingRing(scene, playerX, playerY, depth, 0xa3a3a3, 1.5, 260)
       break
     case 'fire_bolt':
+    case 'cold_bolt':
+    case 'lightning_bolt':
     case 'fire_ball':
+    case 'frost_diver':
+    case 'water_ball':
+    case 'jupitel_thunder':
+    case 'earth_spike':
     case 'meteor_storm':
     case 'lord_of_vermilion':
-      lineBurst(scene, playerX, playerY - 16, tx, ty - 20, depth, 0xf97316)
-      expandingRing(scene, tx, ty - 16, depth, 0xef4444, 1.6, 280)
-      break
-    case 'cold_bolt':
-    case 'frost_diver':
     case 'frost_nova':
     case 'storm_gust':
-    case 'water_ball':
-      lineBurst(scene, playerX, playerY - 16, tx, ty - 20, depth, 0x38bdf8)
-      expandingRing(scene, tx, ty - 16, depth, 0x0ea5e9, 1.5, 300)
-      break
-    case 'lightning_bolt':
-    case 'jupitel_thunder':
-      lineBurst(scene, playerX, playerY - 16, tx, ty - 20, depth, 0xfde047)
-      expandingRing(scene, tx, ty - 18, depth, 0xeab308, 1.4, 260)
-      break
+    case 'heavens_drive':
     case 'napalm_beat':
     case 'soul_strike':
-      expandingRing(scene, tx, ty - 18, depth, 0xa78bfa, 1.7, 320)
-      break
     case 'stone_curse':
-    case 'earth_spike':
-    case 'heavens_drive':
-      expandingRing(scene, tx, ty - 12, depth, 0xa8a29e, 1.8, 340)
+      playSkillCastWindup(scene, playerX, playerY - 12, depth, skillId)
       break
     case 'energy_coat':
       expandingRing(scene, playerX, playerY - 8, depth, 0x3b82f6, 1.5, 360)
@@ -203,6 +192,75 @@ export function playSkillCastFx(scene: Phaser.Scene, skillId: string, ctx: Skill
   }
 }
 
+function playSkillCastWindup(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  depth: number,
+  skillId: string,
+) {
+  const color =
+    skillId.includes('fire') || skillId === 'meteor_storm' || skillId === 'lord_of_vermilion'
+      ? 0xf97316
+      : skillId.includes('cold') ||
+          skillId.includes('frost') ||
+          skillId.includes('water') ||
+          skillId === 'storm_gust'
+        ? 0x38bdf8
+        : skillId.includes('lightning') || skillId === 'jupitel_thunder'
+          ? 0xfde047
+          : skillId.includes('earth') || skillId === 'stone_curse'
+            ? 0xa8a29e
+            : 0xa78bfa
+  expandingRing(scene, x, y, depth, color, 1.2, 240)
+}
+
+/** Impact FX when a magic projectile reaches its aim point. */
+export function playSkillImpactFx(
+  scene: Phaser.Scene,
+  skillId: string,
+  x: number,
+  y: number,
+  depth: number,
+) {
+  const ty = y
+  switch (skillId) {
+    case 'fire_bolt':
+    case 'fire_ball':
+    case 'meteor_storm':
+    case 'lord_of_vermilion':
+      expandingRing(scene, x, ty, depth, 0xef4444, 1.6, 280)
+      break
+    case 'cold_bolt':
+    case 'frost_diver':
+    case 'frost_nova':
+    case 'storm_gust':
+    case 'water_ball':
+      expandingRing(scene, x, ty, depth, 0x0ea5e9, 1.5, 300)
+      break
+    case 'lightning_bolt':
+    case 'jupitel_thunder':
+      expandingRing(scene, x, ty, depth, 0xeab308, 1.4, 260)
+      lineBurst(scene, x, ty - 24, x, ty, depth, 0xfde047)
+      break
+    case 'napalm_beat':
+    case 'soul_strike':
+      expandingRing(scene, x, ty, depth, 0xa78bfa, 1.7, 320)
+      break
+    case 'stone_curse':
+    case 'earth_spike':
+    case 'heavens_drive':
+      expandingRing(scene, x, ty, depth, 0xa8a29e, 1.8, 340)
+      break
+    case 'dispell':
+      expandingRing(scene, x, ty, depth, 0x6366f1, 1.6, 280)
+      break
+    default:
+      expandingRing(scene, x, ty, depth, 0x7dd3fc, 1.4, 260)
+      break
+  }
+}
+
 /** Ground-target AoE feedback at map coordinates. */
 export function playSkillGroundFx(
   scene: Phaser.Scene,
@@ -211,8 +269,7 @@ export function playSkillGroundFx(
   y: number,
   depth: number,
 ) {
-  const ctx: SkillFxContext = { playerX: x, playerY: y, facing: 'down', depth, targetX: x, targetY: y }
-  playSkillCastFx(scene, skillId, ctx)
+  playSkillImpactFx(scene, skillId, x, y - 14, depth)
   if (
     skillId === 'meteor_storm' ||
     skillId === 'lord_of_vermilion' ||

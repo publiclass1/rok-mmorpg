@@ -133,23 +133,206 @@ export function playStaffMagicProjectile(
   depth: number,
   onArrive?: () => void,
 ) {
-  const dist = Math.hypot(toX - fromX, toY - fromY)
-  const duration = projectileTravelMs(dist)
+  playMagicSkillProjectile(scene, 'staff_basic', fromX, fromY, toX, toY, depth, onArrive)
+}
 
+type MagicProjectileKind =
+  | 'staff_basic'
+  | 'fire'
+  | 'water'
+  | 'wind'
+  | 'ghost'
+  | 'earth'
+  | 'earth_rise'
+
+export function magicProjectileKindForSkill(skillId: string): MagicProjectileKind {
+  switch (skillId) {
+    case 'fire_bolt':
+    case 'fire_ball':
+    case 'meteor_storm':
+    case 'lord_of_vermilion':
+      return 'fire'
+    case 'cold_bolt':
+    case 'frost_diver':
+    case 'frost_nova':
+    case 'storm_gust':
+    case 'water_ball':
+      return 'water'
+    case 'lightning_bolt':
+    case 'jupitel_thunder':
+      return 'wind'
+    case 'napalm_beat':
+    case 'soul_strike':
+    case 'dispell':
+      return 'ghost'
+    case 'stone_curse':
+      return 'earth_rise'
+    case 'earth_spike':
+    case 'heavens_drive':
+      return 'earth'
+    default:
+      return 'staff_basic'
+  }
+}
+
+function buildMagicProjectileGraphic(
+  scene: Phaser.Scene,
+  kind: MagicProjectileKind,
+): Phaser.GameObjects.Container {
   const container = scene.add.container(0, 0)
-  const core = scene.add.circle(0, 0, 4, 0x7dd3fc, 0.95)
-  core.setStrokeStyle(1, 0xe0f2fe, 1)
-  container.add(core)
+  const g = scene.add.graphics()
 
-  const trail = scene.add.graphics()
-  trail.lineStyle(3, 0x38bdf8, 0.5)
-  trail.lineBetween(-14, 0, -4, 0)
-  container.add(trail)
+  switch (kind) {
+    case 'fire': {
+      const core = scene.add.circle(0, 0, 4, 0xf97316, 0.95)
+      core.setStrokeStyle(1, 0xfde047, 1)
+      container.add(core)
+      g.lineStyle(3, 0xef4444, 0.55)
+      g.lineBetween(-12, 0, -3, 0)
+      container.add(g)
+      break
+    }
+    case 'water': {
+      const core = scene.add.circle(0, 0, 4, 0x38bdf8, 0.95)
+      core.setStrokeStyle(1, 0xe0f2fe, 1)
+      container.add(core)
+      g.lineStyle(3, 0x0ea5e9, 0.5)
+      g.lineBetween(-14, 0, -4, 0)
+      container.add(g)
+      break
+    }
+    case 'wind': {
+      g.lineStyle(3, 0xfde047, 0.95)
+      g.lineBetween(-12, 2, 10, -2)
+      g.lineStyle(2, 0xfbbf24, 0.7)
+      g.lineBetween(-8, -3, 8, 1)
+      container.add(g)
+      break
+    }
+    case 'ghost': {
+      const core = scene.add.circle(0, 0, 5, 0xa78bfa, 0.75)
+      container.add(core)
+      g.lineStyle(2, 0xc4b5fd, 0.6)
+      g.lineBetween(-10, 0, 6, 0)
+      container.add(g)
+      break
+    }
+    case 'earth': {
+      g.fillStyle(0xa8a29e, 1)
+      g.fillTriangle(0, -6, -5, 4, 5, 4)
+      container.add(g)
+      break
+    }
+    case 'earth_rise':
+    case 'staff_basic':
+    default: {
+      const core = scene.add.circle(0, 0, 4, 0x7dd3fc, 0.95)
+      core.setStrokeStyle(1, 0xe0f2fe, 1)
+      container.add(core)
+      g.lineStyle(3, 0x38bdf8, 0.5)
+      g.lineBetween(-14, 0, -4, 0)
+      container.add(g)
+      break
+    }
+  }
+
+  return container
+}
+
+export function playMagicSkillProjectile(
+  scene: Phaser.Scene,
+  skillId: string,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  depth: number,
+  onArrive?: () => void,
+) {
+  const kind = magicProjectileKindForSkill(skillId)
+  const dist = Math.hypot(toX - fromX, toY - fromY)
+  let duration = projectileTravelMs(dist)
+  if (kind === 'wind') duration = Math.max(80, Math.floor(duration * 0.65))
+  if (kind === 'earth_rise') duration = Math.max(100, Math.floor(duration * 0.5))
+
+  const container = buildMagicProjectileGraphic(scene, kind)
+  const useArc = kind === 'water' || kind === 'staff_basic' || kind === 'fire' || kind === 'ghost'
+  const sparkColor =
+    kind === 'fire'
+      ? 0xf97316
+      : kind === 'water'
+        ? 0x38bdf8
+        : kind === 'wind'
+          ? 0xfde047
+          : kind === 'ghost'
+            ? 0xa78bfa
+            : kind === 'earth' || kind === 'earth_rise'
+              ? 0xa8a29e
+              : 0x7dd3fc
+
+  if (kind === 'earth_rise') {
+    const riseFromY = toY + 28
+    container.setPosition(toX, riseFromY)
+    container.setDepth(depth)
+    scene.tweens.add({
+      targets: container,
+      y: toY - 8,
+      alpha: 0.85,
+      duration,
+      ease: 'Quad.easeOut',
+      onComplete: () => {
+        container.destroy()
+        sparkAt(scene, toX, toY - 8, depth, sparkColor)
+        onArrive?.()
+      },
+    })
+    return
+  }
 
   tweenProjectile(scene, container, fromX, fromY, toX, toY, depth, duration, () => {
-    sparkAt(scene, toX, toY, depth, 0x7dd3fc)
+    sparkAt(scene, toX, toY, depth, sparkColor)
     onArrive?.()
-  }, true)
+  }, useArc)
+}
+
+const BOLT_STAGGER_MS = 90
+
+/** Launches one or more skill projectiles from the player toward a combat aim point. */
+export function playMagicSkillProjectileVolley(
+  scene: Phaser.Scene,
+  skillId: string,
+  facing: Facing,
+  playerX: number,
+  playerY: number,
+  aimX: number,
+  aimY: number,
+  depth: number,
+  hitCount: number,
+  onHit: (hitIndex: number) => void,
+  onVolleyComplete?: () => void,
+) {
+  const origin = rangedProjectileOrigin(playerX, playerY, facing)
+  const count = Math.max(1, hitCount)
+  const stagger = skillId.endsWith('_bolt') ? BOLT_STAGGER_MS : 0
+
+  if (count === 1) {
+    playMagicSkillProjectile(scene, skillId, origin.x, origin.y, aimX, aimY, depth, () => {
+      onHit(0)
+      onVolleyComplete?.()
+    })
+    return
+  }
+
+  let finished = 0
+  for (let i = 0; i < count; i++) {
+    scene.time.delayedCall(i * stagger, () => {
+      playMagicSkillProjectile(scene, skillId, origin.x, origin.y, aimX, aimY, depth, () => {
+        onHit(i)
+        finished += 1
+        if (finished >= count) onVolleyComplete?.()
+      })
+    })
+  }
 }
 
 export function playRangedAttackRecoil(
