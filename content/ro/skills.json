@@ -31,6 +31,21 @@
       "sourceUrl": "https://irowiki.org/wiki/Sit"
     },
     {
+      "id": "play_dead",
+      "name": "Play Dead",
+      "jobId": "novice",
+      "maxLevel": 1,
+      "requiredJobLevel": 1,
+      "type": "active",
+      "target": "self",
+      "mpCost": 0,
+      "castTimeMs": 0,
+      "range": 0,
+      "prerequisites": [],
+      "description": "Feign death so nearby monsters ignore you. Use again or move to stand.",
+      "sourceUrl": "https://irowiki.org/wiki/Play_Dead"
+    },
+    {
       "id": "sword_mastery",
       "name": "Sword Mastery",
       "jobId": "swordman",

@@ -17,7 +17,7 @@ import {
 } from '../lib/characterProgress'
 import { supabase } from '../lib/supabase'
 import { spendCharacterZeny } from '../lib/zeny'
-import { appearanceFromCharacterRow } from '../game/character/characterAppearance'
+import { appearanceFromCharacterRow, appearanceKey } from '../game/character/characterAppearance'
 import { JOB_NAMES } from '../game/character/skillsConfig'
 import {
   dispatchCharacterAction,
@@ -72,6 +72,7 @@ import { InventoryWindow } from './InventoryWindow'
 import { StatsWindow } from './StatsWindow'
 import { StorageModal } from './StorageModal'
 import { LowHpVignette } from './LowHpVignette'
+import { PlayerHudPortrait } from './PlayerHudPortrait'
 import { Minimap } from './Minimap'
 import type { MinimapPayload } from '../game/world/minimapTypes'
 import { JobMasterModal } from './JobMasterModal'
@@ -145,6 +146,18 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     pendingZenySaveRef.current = 0
   }, [])
   const [status, setStatus] = useState('')
+  const statusFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const STATUS_FADE_MS = 5000
+
+  const showStatusMessage = useCallback((message: string) => {
+    if (statusFadeTimerRef.current) clearTimeout(statusFadeTimerRef.current)
+    setStatus(message)
+    if (!message) return
+    statusFadeTimerRef.current = setTimeout(() => {
+      setStatus('')
+      statusFadeTimerRef.current = null
+    }, STATUS_FADE_MS)
+  }, [])
   const [storageNpc, setStorageNpc] = useState<NpcRow | null>(null)
   const [jobMasterNpc, setJobMasterNpc] = useState<NpcRow | null>(null)
   const [shopNpc, setShopNpc] = useState<NpcRow | null>(null)
@@ -727,7 +740,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       onGameEvent('position', ({ x, y }) => {
         setPosition((prev) => ({ ...prev, x, y }))
       }),
-      onGameEvent('status', setStatus),
+      onGameEvent('status', showStatusMessage),
       onGameEvent('remotePlayers', setRemotePlayers),
       onGameEvent('characterSheet', (payload) => {
         const ref = sessionRef.current
@@ -807,6 +820,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       }),
     ]
     return () => unsubs.forEach((u) => u())
+  }, [showStatusMessage])
+
+  useEffect(() => {
+    return () => {
+      if (statusFadeTimerRef.current) clearTimeout(statusFadeTimerRef.current)
+    }
   }, [])
 
   async function returnToSavePoint() {
@@ -1307,6 +1326,20 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     return sent
   }
 
+  const hudPortraitRevision = useMemo(
+    () =>
+      `${appearanceKey(appearanceFromCharacterRow(character))}|${sheet.jobId}|${JSON.stringify(sheet.equipment)}`,
+    [
+      character.gender,
+      character.body_color,
+      character.hair_color,
+      character.eye_color,
+      character.clothes_color,
+      sheet.jobId,
+      sheet.equipment,
+    ],
+  )
+
   const hpRatio = sheet.hpMax > 0 ? Math.min(1, sheet.hp / sheet.hpMax) : 0
   const mpRatio = sheet.mpMax > 0 ? Math.min(1, sheet.mp / sheet.mpMax) : 0
   const guildTag = guildSnapshot?.guild.tag
@@ -1398,62 +1431,74 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
         <div className="game-hud-overlay" aria-label="Game HUD">
           <PvpKillAnnounceOverlay announce={pvpAnnounce} />
+          {status ? (
+            <div className="game-hud-status-message" aria-live="polite">
+              {status}
+            </div>
+          ) : null}
           <SkillBar sheet={sheet} onOpenSkills={() => setSkillsOpen(true)} />
           <Minimap data={minimap} />
           <BuffBar buffs={playerBuffs} />
           <div className="game-hud-top-cluster">
             <div className="game-hud-vitals-column">
             <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>
-              <p className="game-hud-name">
-                <strong>
-                  {guildTag ? `[${guildTag}] ` : ''}
-                  {character.name}
-                </strong>
-                <span className="muted small">
-                  {mapDisplayName(character.map_id)} · {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Base {sheet.baseLevel} · Job {sheet.jobLevel}
-                </span>
-              </p>
-              <div className="vital-row">
-                <span className="vital-label">HP</span>
-                <div className="vital-track">
-                  <motion.div
-                    className="vital-fill vital-fill--hp"
-                    initial={false}
-                    animate={{ width: `${hpRatio * 100}%` }}
-                    transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-                  />
+              <div className="game-hud-vitals__body">
+                <div className="game-hud-vitals__avatar" aria-hidden>
+                  <PlayerHudPortrait gameRef={gameRef} revision={hudPortraitRevision} />
                 </div>
-                <span className="vital-num">{sheet.hp}/{sheet.hpMax}</span>
-              </div>
-              <div className="vital-row">
-                <span className="vital-label">SP</span>
-                <div className="vital-track">
-                  <motion.div
-                    className="vital-fill vital-fill--mp"
-                    initial={false}
-                    animate={{ width: `${mpRatio * 100}%` }}
-                    transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-                  />
+                <div className="game-hud-vitals__main">
+                  <p className="game-hud-name">
+                    <strong>
+                      {guildTag ? `[${guildTag}] ` : ''}
+                      {character.name}
+                    </strong>
+                    <span className="muted small">
+                      {mapDisplayName(character.map_id)} · {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Base {sheet.baseLevel} · Job {sheet.jobLevel}
+                    </span>
+                  </p>
+                  <div className="vital-row">
+                    <span className="vital-label">HP</span>
+                    <div className="vital-track">
+                      <motion.div
+                        className="vital-fill vital-fill--hp"
+                        initial={false}
+                        animate={{ width: `${hpRatio * 100}%` }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                      />
+                    </div>
+                    <span className="vital-num">{sheet.hp}/{sheet.hpMax}</span>
+                  </div>
+                  <div className="vital-row">
+                    <span className="vital-label">SP</span>
+                    <div className="vital-track">
+                      <motion.div
+                        className="vital-fill vital-fill--mp"
+                        initial={false}
+                        animate={{ width: `${mpRatio * 100}%` }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                      />
+                    </div>
+                    <span className="vital-num">{sheet.mp}/{sheet.mpMax}</span>
+                  </div>
+                  <p className="game-hud-zeny">
+                    Zeny <strong>{character.zeny.toLocaleString()}</strong>
+                  </p>
+                  {sheet.hp <= 0 && !deathModalOpen && !pvpDeathModalOpen && !isPvpMap(character.map_id) && (
+                    <button
+                      type="button"
+                      className="secondary small"
+                      onClick={() => {
+                        void loadAccountSavePoint().then((save) => {
+                          setDeathSaveMapId(save.mapId)
+                          setDeathModalOpen(true)
+                        })
+                      }}
+                    >
+                      Respawn options
+                    </button>
+                  )}
                 </div>
-                <span className="vital-num">{sheet.mp}/{sheet.mpMax}</span>
               </div>
-              <p className="game-hud-zeny">
-                Zeny <strong>{character.zeny.toLocaleString()}</strong>
-              </p>
-              {sheet.hp <= 0 && !deathModalOpen && !pvpDeathModalOpen && !isPvpMap(character.map_id) && (
-                <button
-                  type="button"
-                  className="secondary small"
-                  onClick={() => {
-                    void loadAccountSavePoint().then((save) => {
-                      setDeathSaveMapId(save.mapId)
-                      setDeathModalOpen(true)
-                    })
-                  }}
-                >
-                  Respawn options
-                </button>
-              )}
             </motion.div>
             {isPvpMap(character.map_id) && (
               <motion.div
@@ -1509,7 +1554,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             <button type="button" className="secondary hud-btn" onClick={() => setVendorSetupOpen(true)}>
               Vend
             </button>
-            {status && <span className="hud-status muted small">{status}</span>}
             <button type="button" className="secondary hud-btn hud-btn--leave" onClick={() => void leaveWorld()}>
               Leave
             </button>

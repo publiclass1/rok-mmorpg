@@ -56,6 +56,14 @@ export function skillsForJob(jobId: string): SkillDefinition[] {
 }
 
 /** Job ids for skills window tabs: first job → current (excludes novice). */
+export const GENERAL_ACTION_SKILL_IDS = ['basic_attack', 'sit', 'play_dead'] as const
+
+export function generalActionSkills(): SkillDefinition[] {
+  return GENERAL_ACTION_SKILL_IDS.map((id) => SKILLS[id]).filter(
+    (s): s is SkillDefinition => s != null,
+  )
+}
+
 export function skillWindowTabs(jobId: string): string[] {
   const tabs = jobAncestorIds(jobId)
     .filter((id) => id !== 'novice')
@@ -67,7 +75,7 @@ export function skillWindowTabs(jobId: string): string[] {
 }
 
 export function skillUsableByJob(skillId: string, jobId: string): boolean {
-  if (skillId === 'basic_attack' || skillId === 'sit') return true
+  if (skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead') return true
   const skill = SKILLS[skillId]
   return skill != null && jobCanUseSkillFromJob(jobId, skill.jobId)
 }

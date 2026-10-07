@@ -6,7 +6,7 @@ import {
   assignSkillBarSlot,
   equipItemWithInventoryTransfer,
   learnOrLevelSkill,
-  moveSkillBarSlot,
+  relocateSkillOnBar,
   placeSkillOnBar,
   hasAllocatedSkillPoints,
   hasRaisedPrimaryStats,
@@ -122,7 +122,7 @@ export function applyCharacterAction(
     if (action.from === action.to || action.from < 0 || action.from > 8 || action.to < 0 || action.to > 8) {
       return { state, changed: false }
     }
-    return { state: moveSkillBarSlot(state, action.from, action.to), changed: true }
+    return { state: relocateSkillOnBar(state, action.from, action.to), changed: true }
   }
 
   if (action.type === 'equip') {

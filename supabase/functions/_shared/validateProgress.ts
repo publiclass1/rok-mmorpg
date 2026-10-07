@@ -105,8 +105,10 @@ function validateSkillBudget(jobId: string, jobLevel: number, skills: SkillRow[]
     if (def.jobId && def.jobId !== jobId && def.jobId !== 'novice') {
       return `skill ${row.skill_id} not allowed for job ${jobId}`
     }
-    spent += row.level - (row.skill_id === 'basic_attack' ? 1 : 0)
-    if (row.skill_id === 'basic_attack' && row.level < 1) return 'basic_attack level invalid'
+    const freeLevel =
+      row.skill_id === 'basic_attack' || row.skill_id === 'sit' || row.skill_id === 'play_dead' ? 1 : 0
+    spent += row.level - freeLevel
+    if (freeLevel > 0 && row.level < 1) return `${row.skill_id} level invalid`
   }
   if (spent < 0) return 'invalid skill spend'
   if (unspent !== earned - spent) return 'skill points unspent mismatch'

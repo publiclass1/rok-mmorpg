@@ -100,6 +100,21 @@ function drawSit(id) {
   )
 }
 
+function drawPlayDead(id) {
+  return wrap(
+    `
+  <ellipse cx="16" cy="22" rx="9" ry="3" fill="#1c1917" opacity="0.5"/>
+  <circle cx="12" cy="14" r="3" fill="#fcd34d"/>
+  <path d="M10 13 L11 14 L10 15" stroke="#451a03" stroke-width="0.5" fill="none"/>
+  <path d="M15 20 L22 18 L24 20 L17 22 Z" fill="#57534e"/>
+  <path d="M8 20 L14 18 L12 20" stroke="#78716c" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <path d="M20 12 L22 10 M22 12 L20 10" stroke="#ef4444" stroke-width="0.8" stroke-linecap="round"/>
+  `,
+    id,
+    '#6b7280',
+  )
+}
+
 function drawSwordMastery(id) {
   return wrap(
     `
@@ -468,6 +483,7 @@ function drawMobPulse(id) {
 const builders = {
   basic_attack: drawBasicAttack,
   sit: drawSit,
+  play_dead: drawPlayDead,
   sword_mastery: drawSwordMastery,
   bash: drawBash,
   provoke: drawProvoke,

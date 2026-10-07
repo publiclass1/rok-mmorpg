@@ -7,7 +7,7 @@ const CSS: Record<GameCursor, string> = {
   npc: "url('/cursors/cursor-npc.png') 2 2, pointer",
   loot: "url('/cursors/cursor-grab.png') 2 2, grab",
   mob: "url('/cursors/cursor-sword.png') 2 2, crosshair",
-  skillTarget: "url('/cursors/cursor-skill-target.png') 2 2, crosshair",
+  skillTarget: "url('/cursors/cursor-skill-target.png') 16 16, crosshair",
   aoe: "url('/cursors/cursor-aoe.png') 16 16, crosshair",
 }
 

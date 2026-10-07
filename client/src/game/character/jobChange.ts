@@ -82,12 +82,12 @@ export function canAcceptJobChange(
 }
 
 function skillsAfterJobChange(state: CharacterSessionState, targetJobId: string): Record<string, number> {
-  const next: Record<string, number> = { basic_attack: 1, sit: 1 }
+  const next: Record<string, number> = { basic_attack: 1, sit: 1, play_dead: 1 }
   if (!isAdvancedJobChange(targetJobId)) {
     return next
   }
   for (const [skillId, level] of Object.entries(state.skills)) {
-    if (skillId === 'basic_attack' || skillId === 'sit') continue
+    if (skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead') continue
     const def = SKILLS[skillId]
     if (!def || level < 1) continue
     if (jobCanUseSkillFromJob(targetJobId, def.jobId)) {
@@ -100,7 +100,7 @@ function skillsAfterJobChange(state: CharacterSessionState, targetJobId: string)
 function sanitizeSkillBar(state: CharacterSessionState): (string | null)[] {
   return state.skillBar.map((skillId) => {
     if (!skillId) return null
-    if (skillId === 'basic_attack' || skillId === 'sit') return skillId
+    if (skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead') return skillId
     const def = SKILLS[skillId]
     if (!def || !jobCanUseSkillFromJob(state.jobId, def.jobId)) return null
     if ((state.skills[skillId] ?? 0) < 1) return null

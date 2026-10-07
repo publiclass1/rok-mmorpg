@@ -28,11 +28,14 @@ function skillBarInitialPosition(panel: HTMLElement) {
 export function SkillBar({ sheet, onOpenSkills }: Props) {
   const [dropTarget, setDropTarget] = useState<number | null>(null)
   const suppressClickRef = useRef(false)
+  const dragSourceSlotRef = useRef<number | null>(null)
+  const dropHandledRef = useRef(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const { pos, isDragging } = useModalDrag(panelRef, true, skillBarInitialPosition)
 
   function handleDrop(slot: number, e: React.DragEvent) {
     e.preventDefault()
+    dropHandledRef.current = true
     setDropTarget(null)
     const payload = readSkillBarDrag(e.dataTransfer)
     if (!payload) return
@@ -46,6 +49,22 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
     if (payload.source === 'bar' && payload.slot !== slot) {
       dispatchCharacterAction({ type: 'moveSkillBar', from: payload.slot, to: slot })
     }
+  }
+
+  function handleBarGutterDrop(e: React.DragEvent) {
+    e.preventDefault()
+    dropHandledRef.current = true
+    setDropTarget(null)
+    const payload = readSkillBarDrag(e.dataTransfer)
+    if (!payload || payload.source !== 'bar') return
+    dispatchCharacterAction({ type: 'assignSkillBar', slot: payload.slot, skillId: null })
+  }
+
+  function clearBarDragSourceIfNeeded() {
+    const from = dragSourceSlotRef.current
+    dragSourceSlotRef.current = null
+    if (from == null || dropHandledRef.current) return
+    dispatchCharacterAction({ type: 'assignSkillBar', slot: from, skillId: null })
   }
 
   function activateSlot(index: number, skillId: string | null, inactive: boolean) {
@@ -78,7 +97,17 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
       >
         ⋮⋮
       </div>
-      <div className="skill-bar" role="toolbar" aria-label="Skill bar">
+      <div
+        className="skill-bar"
+        role="toolbar"
+        aria-label="Skill bar"
+        onDragOver={(e) => {
+          if (!isSkillBarDragEvent(e.dataTransfer)) return
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'move'
+        }}
+        onDrop={handleBarGutterDrop}
+      >
         {sheet.skillBar.map((skillId, index) => {
           const skill = skillId ? SKILLS[skillId] : null
           const level = skillId ? sheet.skills[skillId] ?? 0 : 0
@@ -111,6 +140,8 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
                 }
                 e.stopPropagation()
                 suppressClickRef.current = false
+                dropHandledRef.current = false
+                dragSourceSlotRef.current = index
                 writeSkillBarDrag(e.dataTransfer, { source: 'bar', skillId, slot: index })
               }}
               onDrag={(e) => {
@@ -118,6 +149,7 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
               }}
               onDragEnd={() => {
                 setDropTarget(null)
+                clearBarDragSourceIfNeeded()
               }}
               onDragOver={(e) => {
                 if (!isSkillBarDragEvent(e.dataTransfer)) return
@@ -128,7 +160,10 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
               onDragLeave={() => {
                 setDropTarget((current) => (current === index ? null : current))
               }}
-              onDrop={(e) => handleDrop(index, e)}
+              onDrop={(e) => {
+                e.stopPropagation()
+                handleDrop(index, e)
+              }}
               onClick={() => activateSlot(index, skillId, inactive)}
               onKeyDown={(e) => {
                 if (e.key !== 'Enter' && e.key !== ' ') return

@@ -126,7 +126,7 @@ export function resetAllocatedPrimaryStats(state: CharacterSessionState): Charac
   }
 }
 
-const FREE_SKILL_LEVELS: Record<string, number> = { basic_attack: 1, sit: 1 }
+const FREE_SKILL_LEVELS: Record<string, number> = { basic_attack: 1, sit: 1, play_dead: 1 }
 
 /** Skill points spent on leveled skills (basic_attack / sit start at 1 for free). */
 export function skillPointsSpentOnSkills(skills: Record<string, number>): number {
@@ -151,7 +151,7 @@ export function reconcileProgressBudgetForSave(state: CharacterSessionState): Ch
   const earnedSkill = Math.max(0, (state.progress.jobLevel - 1) * SKILL_POINTS_PER_JOB_LEVEL)
   let spentSkill = 0
   for (const [skillId, level] of Object.entries(state.skills)) {
-    spentSkill += level - (skillId === 'basic_attack' ? 1 : 0)
+    spentSkill += level - (FREE_SKILL_LEVELS[skillId] ?? 0)
   }
   return {
     ...state,
@@ -167,9 +167,9 @@ export function hasAllocatedSkillPoints(skills: Record<string, number>): boolean
 export function resetAllocatedSkills(state: CharacterSessionState): CharacterSessionState {
   if (!hasAllocatedSkillPoints(state.skills)) return state
   const refund = skillPointsSpentOnSkills(state.skills)
-  const skills = { basic_attack: 1, sit: 1 }
+  const skills = { basic_attack: 1, sit: 1, play_dead: 1 }
   const skillBar = state.skillBar.map((skillId) =>
-    skillId === 'basic_attack' || skillId === 'sit' ? skillId : null,
+    skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead' ? skillId : null,
   )
   return {
     ...state,
@@ -186,7 +186,7 @@ export function createInitialCharacterState(): CharacterSessionState {
     statPointsUnspent: 0,
     jobId: 'novice',
     skillPointsUnspent: 0,
-    skills: { basic_attack: 1, sit: 1 },
+    skills: { basic_attack: 1, sit: 1, play_dead: 1 },
     equipment: createDefaultEquipment(),
     skillBar: ['basic_attack', 'sit', null, null, null, null, null, null, null],
     rolledItems: {},
@@ -408,13 +408,24 @@ export function assignSkillBarSlot(state: CharacterSessionState, index: number, 
   return { ...state, skillBar }
 }
 
-/** Move or swap skills between bar slots (used by drag-and-drop). */
+/** Move or swap skills between bar slots (legacy swap). */
 export function moveSkillBarSlot(state: CharacterSessionState, from: number, to: number): CharacterSessionState {
   if (from === to || from < 0 || from > 8 || to < 0 || to > 8) return state
   const skillBar = [...state.skillBar]
   const tmp = skillBar[from]
   skillBar[from] = skillBar[to]
   skillBar[to] = tmp
+  return { ...state, skillBar }
+}
+
+/** Move a bar skill to another slot; target’s previous skill is discarded. */
+export function relocateSkillOnBar(state: CharacterSessionState, from: number, to: number): CharacterSessionState {
+  if (from === to || from < 0 || from > 8 || to < 0 || to > 8) return state
+  const skillId = state.skillBar[from]
+  if (!skillId) return state
+  const skillBar = [...state.skillBar]
+  skillBar[to] = skillId
+  skillBar[from] = null
   return { ...state, skillBar }
 }
 

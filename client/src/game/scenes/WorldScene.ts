@@ -128,6 +128,7 @@ import {
   updatePlayerEquipmentLayers,
   type PlayerDisplay,
 } from '../player/playerSprites'
+import { capturePlayerHudPortrait } from '../player/playerHudPortrait'
 import { resolveJobAvatarKey } from '../player/playerJobAvatar'
 import { sitRegenAmounts, sitRegenIntervalMs } from '../character/sitRegen'
 import { MapPresenceChannel } from '../realtime/mapChannel'
@@ -236,8 +237,12 @@ export class WorldScene extends Phaser.Scene {
     setCharacterSession(state)
   }
   private chaseMob: MobInstance | null = null
+  /** Walk to mob for a one-shot skill cast; do not select target or basic-attack chase. */
+  private chaseMobForSkillOnly = false
   private chaseDuelOpponent: RemotePlayerEntity | null = null
   private chasePvpOpponent: RemotePlayerEntity | null = null
+  /** Walk to player for a one-shot PVP skill; do not start basic-attack chase. */
+  private chasePvpForSkillOnly = false
   private duelSync: DuelSyncPayload | null = null
   private mapDropManager: MapDropManager | null = null
   private pvpKillStreak = new PvpKillStreakTracker()
@@ -275,6 +280,7 @@ export class WorldScene extends Phaser.Scene {
   private isAttacking = false
   private isJumping = false
   private isSitting = false
+  private isPlayingDead = false
   private isPlayerDead = false
   private lastSitRegenAt = 0
   private lastPvpPassiveRegenAt = 0
@@ -477,8 +483,8 @@ export class WorldScene extends Phaser.Scene {
       }
       const npc = this.findNpcAt(wx, wy)
       if (npc) {
-        if (this.isSitting) {
-          this.standUp()
+        if (this.isSitting || this.isPlayingDead) {
+          this.breakRestState()
           return
         }
         const px = this.playerDisplay.container.x
@@ -497,7 +503,7 @@ export class WorldScene extends Phaser.Scene {
       }
       const remote = this.findRemotePlayerAt(wx, wy)
       if (remote) {
-        if (this.isSitting) this.standUp()
+        this.breakRestState()
         const px = this.playerDisplay.container.x
         const py = this.playerDisplay.container.y
         const rx = remote.display.container.x
@@ -545,14 +551,15 @@ export class WorldScene extends Phaser.Scene {
       }
       const mob = this.findMobAt(wx, wy)
       if (mob) {
-        if (this.isSitting) this.standUp()
+        this.breakRestState()
         this.beginChaseMob(mob)
       } else {
-        if (this.isSitting) {
-          this.standUp()
+        if (this.isSitting || this.isPlayingDead) {
+          this.breakRestState()
           return
         }
         this.chaseMob = null
+        this.chaseMobForSkillOnly = false
         this.queuedSkillCast = null
         this.stopPvpChase()
         this.setSelectedMob(null)
@@ -606,8 +613,8 @@ export class WorldScene extends Phaser.Scene {
       }),
       onGameEvent('minimapMove', ({ x, y }) => {
         if (this.uiPointerLocked || this.isPlayerDead || this.pendingSkill) return
-        if (this.isSitting) {
-          this.standUp()
+        if (this.isSitting || this.isPlayingDead) {
+          this.breakRestState()
           return
         }
         const wx = Phaser.Math.Clamp(x, 0, this.worldWidth)
@@ -640,7 +647,7 @@ export class WorldScene extends Phaser.Scene {
         this.session = { ...this.session, hp }
         if (damage > 0 && this.duelSync) {
           const enduring = hasStatus(this.activeBuffs, 'endure')
-          if (this.isSitting && !enduring) this.standUp()
+          if (!enduring) this.breakRestState()
           showFloatingText(
             this,
             this.playerDisplay.container.x,
@@ -663,6 +670,7 @@ export class WorldScene extends Phaser.Scene {
       }),
       onGameEvent('playerRevived', ({ x, y }) => {
         this.isPlayerDead = false
+        this.isPlayingDead = false
         if (this.playerDisplay) {
           clearPlayerDeathVisual(this.playerDisplay)
           this.playerDisplay.container.setPosition(x, y)
@@ -685,6 +693,7 @@ export class WorldScene extends Phaser.Scene {
         const sheet = toCharacterSheetPayload(this.session)
         this.session = { ...this.session, hp: sheet.hpMax, mp: sheet.mpMax }
         this.isPlayerDead = false
+        this.isPlayingDead = false
         this.stopPvpChase()
         if (this.playerDisplay) {
           clearPlayerDeathVisual(this.playerDisplay)
@@ -828,6 +837,8 @@ export class WorldScene extends Phaser.Scene {
     this.isPlayerDead = true
     this.pendingSkill = null
     this.queuedSkillCast = null
+    this.chaseMobForSkillOnly = false
+    this.isPlayingDead = false
     if (this.isSitting) this.standUp()
     this.chaseMob = null
     this.stopPvpChase()
@@ -879,6 +890,14 @@ export class WorldScene extends Phaser.Scene {
       }
       this.stopPlayerMotion()
       clearMoveTarget(this.moveTarget)
+    } else if (this.isPlayingDead) {
+      const pose = this.playerDisplay.pose
+      if (pose.anim !== 'dead') {
+        playPlayerAnim(this.playerDisplay, 'dead', this.facing)
+        setPlayerDeadFrame(this.playerDisplay, 1)
+      }
+      this.stopPlayerMotion()
+      clearMoveTarget(this.moveTarget)
     } else if (this.isSitting) {
       setPlayerSitting(this.playerDisplay, true, this.facing)
       this.stopPlayerMotion()
@@ -918,6 +937,7 @@ export class WorldScene extends Phaser.Scene {
       !isChatStripInputFocused() &&
       !this.isPlayerDead &&
       !this.isSitting &&
+      !this.isPlayingDead &&
       Phaser.Input.Keyboard.JustDown(this.spaceKey)
     ) {
       const jumped = tryJump(this, this.playerDisplay.container, () => this.isJumping, (v) => {
@@ -926,7 +946,7 @@ export class WorldScene extends Phaser.Scene {
       if (jumped) playPlayerAnim(this.playerDisplay, 'jump', this.facing)
     }
 
-    const playerAlive = this.session.hp > 0
+    const playerAlive = this.session.hp > 0 && !this.isPlayingDead
     for (const mob of this.mobs) {
       if (!mob.alive) continue
       const def = MOB_DEFS[mob.defId]
@@ -1131,6 +1151,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private beginChaseMob(mob: MobInstance) {
+    this.chaseMobForSkillOnly = false
     this.chaseDuelOpponent = null
     this.chaseMob = mob
     this.setSelectedMob(mob)
@@ -1161,6 +1182,10 @@ export class WorldScene extends Phaser.Scene {
     if (queued) {
       if (!queued.mob.alive || queued.mob !== mob) {
         this.queuedSkillCast = null
+        if (this.chaseMobForSkillOnly) {
+          this.chaseMob = null
+          this.chaseMobForSkillOnly = false
+        }
         return
       }
       const skillRange = this.skillRangePx(queued.def)
@@ -1173,9 +1198,11 @@ export class WorldScene extends Phaser.Scene {
         if (cast) {
           this.executePlayerSkill(cast.skillId, cast.level, cast.def, cast.mob)
         }
+        this.chaseMob = null
+        this.chaseMobForSkillOnly = false
         return
       }
-    } else if (inAttackRange) {
+    } else if (inAttackRange && !this.chaseMobForSkillOnly) {
       clearMoveTarget(this.moveTarget)
       this.stopPlayerMotion()
       this.faceToward(mx, my)
@@ -1400,7 +1427,7 @@ export class WorldScene extends Phaser.Scene {
     }
     const moving = this.presenceWalkActive
     let anim: PlayerPresencePayload['anim'] = 'idle'
-    if (this.isPlayerDead) anim = 'dead'
+    if (this.isPlayerDead || this.isPlayingDead) anim = 'dead'
     else if (this.isSitting) anim = 'sit'
     else if (this.isJumping) anim = 'jump'
     else if (this.isAttacking) anim = 'attack'
@@ -1515,6 +1542,10 @@ export class WorldScene extends Phaser.Scene {
       this.toggleSit()
       return
     }
+    if (skillId === 'play_dead') {
+      this.togglePlayDead()
+      return
+    }
     if (def.selfBuff) {
       this.trySelfBuffSkill(skillId, level, def)
       return
@@ -1537,6 +1568,19 @@ export class WorldScene extends Phaser.Scene {
     if (!this.pendingSkill) return
     this.pendingSkill = null
     this.queuedSkillCast = null
+    if (this.chaseMobForSkillOnly) {
+      this.chaseMob = null
+      this.chaseMobForSkillOnly = false
+      clearMoveTarget(this.moveTarget)
+      this.stopPlayerMotion()
+    }
+    if (this.chasePvpForSkillOnly) {
+      this.chasePvpOpponent = null
+      this.chasePvpForSkillOnly = false
+      this.queuedPvpSkillCast = null
+      clearMoveTarget(this.moveTarget)
+      this.stopPlayerMotion()
+    }
     emitGameEvent('status', 'Skill cancelled.')
     this.refreshCursor()
   }
@@ -1587,25 +1631,32 @@ export class WorldScene extends Phaser.Scene {
       this.canAttackPlayer(remote.lastPayload.characterId)
     ) {
       this.pendingSkill = null
-      if (this.isSitting) this.standUp()
-      this.queuedPvpSkillCast = { skillId, level, def, remote }
-      this.beginChasePvpOpponent(remote)
+      this.breakRestState()
       const rx = remote.display.container.x
       const ry = remote.display.container.y
-      if (
-        Phaser.Math.Distance.Between(
-          this.playerDisplay.container.x,
-          this.playerDisplay.container.y,
-          rx,
-          ry,
-        ) <= this.skillRangePx(def) &&
-        this.duelOpponentInStrikeRange(remote, this.skillRangePx(def))
-      ) {
-        const cast = this.queuedPvpSkillCast
-        this.queuedPvpSkillCast = null
-        if (cast) {
-          this.executePlayerSkillOnRemotePlayer(cast.skillId, cast.level, cast.def, cast.remote)
-        }
+      const skillRange = this.skillRangePx(def)
+      const distToRemote = Phaser.Math.Distance.Between(
+        this.playerDisplay.container.x,
+        this.playerDisplay.container.y,
+        rx,
+        ry,
+      )
+      const inSkillRange =
+        distToRemote <= skillRange && this.duelOpponentInStrikeRange(remote, skillRange)
+      if (inSkillRange) {
+        this.executePlayerSkillOnRemotePlayer(skillId, level, def, remote)
+      } else {
+        this.queuedPvpSkillCast = { skillId, level, def, remote }
+        this.chasePvpForSkillOnly = true
+        this.chasePvpOpponent = remote
+        this.chaseDuelOpponent = null
+        this.chaseMob = null
+        this.setSelectedMob(null)
+        this.lastChaseRepathAt = 0
+        this.chasePathGoalX = rx
+        this.chasePathGoalY = ry
+        this.requestWalkTo(rx, ry)
+        this.faceToward(rx, ry)
       }
       this.refreshCursor()
       return
@@ -1617,7 +1668,7 @@ export class WorldScene extends Phaser.Scene {
       remote.lastPayload.characterId === this.duelSync.opponentCharacterId
     ) {
       this.pendingSkill = null
-      if (this.isSitting) this.standUp()
+      this.breakRestState()
       this.queuedDuelSkillCast = { skillId, level, def, remote }
       this.beginChaseDuelOpponent(remote)
       const rx = remote.display.container.x
@@ -1648,22 +1699,25 @@ export class WorldScene extends Phaser.Scene {
       this.refreshCursor()
       return
     }
-    if (this.isSitting) this.standUp()
-    this.queuedSkillCast = { skillId, level, def, mob }
-    this.beginChaseMob(mob)
-    if (
-      Phaser.Math.Distance.Between(
-        this.playerDisplay.container.x,
-        this.playerDisplay.container.y,
-        mob.sprite.x,
-        mob.sprite.y,
-      ) <= this.skillRangePx(def)
-    ) {
-      const cast = this.queuedSkillCast
-      this.queuedSkillCast = null
-      if (cast) {
-        this.executePlayerSkill(cast.skillId, cast.level, cast.def, cast.mob)
-      }
+    this.breakRestState()
+    const skillRange = this.skillRangePx(def)
+    const distToMob = Phaser.Math.Distance.Between(
+      this.playerDisplay.container.x,
+      this.playerDisplay.container.y,
+      mob.sprite.x,
+      mob.sprite.y,
+    )
+    if (distToMob <= skillRange) {
+      this.executePlayerSkill(skillId, level, def, mob)
+    } else {
+      this.queuedSkillCast = { skillId, level, def, mob }
+      this.chaseMobForSkillOnly = true
+      this.chaseDuelOpponent = null
+      this.chaseMob = mob
+      this.setSelectedPlayer(null)
+      this.lastChaseRepathAt = 0
+      this.requestChaseMobPath(mob)
+      this.faceToward(mob.sprite.x, mob.sprite.y)
     }
     this.refreshCursor()
   }
@@ -1703,7 +1757,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private executeProvokeSkill(skillLevel: number, def: SkillDefinition, target: MobInstance) {
-    if (this.isPlayerDead || this.isSitting) return
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
     if (!this.spendMp(def.mpCost)) return
@@ -1741,7 +1795,7 @@ export class WorldScene extends Phaser.Scene {
     def: SkillDefinition,
     primaryMob: MobInstance,
   ) {
-    if (this.isPlayerDead || this.isSitting) return
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
     if (!this.spendMp(def.mpCost)) return
@@ -1761,8 +1815,6 @@ export class WorldScene extends Phaser.Scene {
     this.isAttacking = true
     this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
-    this.chaseMob = primaryMob
-    this.setSelectedMob(primaryMob)
     this.faceToward(primaryMob.sprite.x, primaryMob.sprite.y)
     this.showSkillCallout(def.name)
 
@@ -1881,7 +1933,7 @@ export class WorldScene extends Phaser.Scene {
   ) {
     const snapshot = this.resolveRemoteCombatSnapshot(remote)
     if (!snapshot) return
-    if (this.isPlayerDead || this.isSitting) return
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
     if (!this.spendMp(def.mpCost)) return
@@ -1904,14 +1956,6 @@ export class WorldScene extends Phaser.Scene {
     this.isAttacking = true
     this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
-    if (
-      this.isPvpActive() &&
-      this.canAttackPlayer(remote.lastPayload.characterId)
-    ) {
-      this.beginChasePvpOpponent(remote)
-    } else {
-      this.beginChaseDuelOpponent(remote)
-    }
     this.faceToward(tx, ty)
     this.showSkillCallout(def.name)
 
@@ -2133,12 +2177,26 @@ export class WorldScene extends Phaser.Scene {
     logActivity('character', 'Stood up.')
   }
 
+  private standFromPlayDead() {
+    if (!this.isPlayingDead) return
+    this.isPlayingDead = false
+    playPlayerAnim(this.playerDisplay, 'idle', this.facing)
+    emitGameEvent('status', 'Stood up.')
+    logActivity('character', 'Stopped playing dead.')
+  }
+
+  private breakRestState() {
+    if (this.isSitting) this.standUp()
+    if (this.isPlayingDead) this.standFromPlayDead()
+  }
+
   private toggleSit() {
     if (this.isPlayerDead) return
     if (this.isSitting) {
       this.standUp()
       return
     }
+    if (this.isPlayingDead) this.standFromPlayDead()
     if (this.isAttacking || this.isJumping) return
     this.chaseMob = null
     this.setSelectedMob(null)
@@ -2149,6 +2207,25 @@ export class WorldScene extends Phaser.Scene {
     setPlayerSitting(this.playerDisplay, true, this.facing)
     emitGameEvent('status', 'Sitting — recovering HP and SP.')
     logActivity('character', 'Sitting to recover HP and SP.')
+  }
+
+  private togglePlayDead() {
+    if (this.isPlayerDead) return
+    if (this.isPlayingDead) {
+      this.standFromPlayDead()
+      return
+    }
+    if (this.isSitting) this.standUp()
+    if (this.isAttacking || this.isJumping) return
+    this.chaseMob = null
+    this.setSelectedMob(null)
+    clearMoveTarget(this.moveTarget)
+    this.stopPlayerMotion()
+    this.isPlayingDead = true
+    playPlayerAnim(this.playerDisplay, 'dead', this.facing)
+    setPlayerDeadFrame(this.playerDisplay, 1)
+    emitGameEvent('status', 'Playing dead — monsters will ignore you.')
+    logActivity('character', 'Playing dead.')
   }
 
   private applyHpSpRegen(
@@ -2366,6 +2443,7 @@ export class WorldScene extends Phaser.Scene {
 
   private stopPvpChase() {
     this.chasePvpOpponent = null
+    this.chasePvpForSkillOnly = false
     this.queuedPvpSkillCast = null
   }
 
@@ -2393,7 +2471,7 @@ export class WorldScene extends Phaser.Scene {
   private onMobHitPlayer(mob: MobInstance) {
     if (this.session.hp <= 0) return
     const enduring = hasStatus(this.activeBuffs, 'endure')
-    if (this.isSitting && !enduring) this.standUp()
+    if (!enduring) this.breakRestState()
     const def = MOB_DEFS[mob.defId]
     const damage = def ? calcMobVsPlayerDamage(def, this.session) : 0
     if (damage <= 0) {
@@ -2446,7 +2524,7 @@ export class WorldScene extends Phaser.Scene {
     const skillDef = SKILLS[skillId]
     const skillLabel = skillDef?.name ?? skillId
     const enduring = hasStatus(this.activeBuffs, 'endure')
-    if (this.isSitting && !enduring) this.standUp()
+    if (!enduring) this.breakRestState()
     const def = MOB_DEFS[mob.defId]
     const damage = def ? calcMobSkillVsPlayerDamage(def, skillId, skillLevel, this.session) : 0
     if (damage <= 0) {
@@ -2779,6 +2857,7 @@ export class WorldScene extends Phaser.Scene {
       this.pvpDeadRemoteIds.add(payload.characterId)
       if (this.chasePvpOpponent?.lastPayload.characterId === payload.characterId) {
         this.chasePvpOpponent = null
+        this.chasePvpForSkillOnly = false
         this.queuedPvpSkillCast = null
       }
       const entity = this.remotePlayers.get(payload.characterId)
@@ -2860,6 +2939,7 @@ export class WorldScene extends Phaser.Scene {
 
   private beginChasePvpOpponent(entity: RemotePlayerEntity) {
     if (!this.canAttackPlayer(entity.lastPayload.characterId)) return
+    this.chasePvpForSkillOnly = false
     this.chasePvpOpponent = entity
     this.chaseDuelOpponent = null
     this.chaseMob = null
@@ -2892,6 +2972,10 @@ export class WorldScene extends Phaser.Scene {
     if (queued) {
       if (queued.remote !== remote) {
         this.queuedPvpSkillCast = null
+        if (this.chasePvpForSkillOnly) {
+          this.chasePvpOpponent = null
+          this.chasePvpForSkillOnly = false
+        }
         return
       }
       const skillRange = this.skillRangePx(queued.def)
@@ -2904,9 +2988,11 @@ export class WorldScene extends Phaser.Scene {
         if (cast) {
           this.executePlayerSkillOnRemotePlayer(cast.skillId, cast.level, cast.def, cast.remote)
         }
+        this.chasePvpOpponent = null
+        this.chasePvpForSkillOnly = false
         return
       }
-    } else if (inAttackRange) {
+    } else if (inAttackRange && !this.chasePvpForSkillOnly) {
       clearMoveTarget(this.moveTarget)
       this.stopPlayerMotion()
       this.faceToward(mx, my)
@@ -2996,6 +3082,7 @@ export class WorldScene extends Phaser.Scene {
     this.broadcastPlayerDeath(killerCharacterId, x, y)
     this.broadcastSkullDrop(x, y)
     this.chasePvpOpponent = null
+    this.chasePvpForSkillOnly = false
     this.queuedPvpSkillCast = null
     this.isAttacking = false
     this.enterPlayerDeath()
@@ -3005,7 +3092,7 @@ export class WorldScene extends Phaser.Scene {
     if (!this.isPvpActive() || !this.canAttackPlayer(fromCharacterId)) return
     if (this.session.hp <= 0) return
     const enduring = hasStatus(this.activeBuffs, 'endure')
-    if (this.isSitting && !enduring) this.standUp()
+    if (!enduring) this.breakRestState()
     if (damage <= 0) return
 
     this.session = { ...this.session, hp: Math.max(0, this.session.hp - damage) }
@@ -3264,7 +3351,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private tryBasicAttack() {
-    if (this.isPlayerDead || this.isSitting) return
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     if (this.isPvpActive() && this.chasePvpOpponent) {
       const id = this.chasePvpOpponent.lastPayload.characterId
       if (this.isRemotePlayerDead(id)) {
@@ -3711,6 +3798,11 @@ export class WorldScene extends Phaser.Scene {
       y: this.playerDisplay.container.y,
       mapId: this.character.map_id,
     }
+  }
+
+  captureHudPortrait(): string | null {
+    if (!this.playerDisplay) return null
+    return capturePlayerHudPortrait(this, this.playerDisplay)
   }
 
   shutdown() {

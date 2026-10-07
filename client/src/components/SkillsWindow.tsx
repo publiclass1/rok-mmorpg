@@ -13,6 +13,7 @@ import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
 import { ModalResetButton } from './motion/ModalResetButton'
 import { SkillTreePanel } from './SkillTreePanel'
+import { SkillUtilityRow } from './SkillUtilityRow'
 
 type Props = {
   character: CharacterRow
@@ -103,6 +104,8 @@ export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: 
           ))}
         </div>
       )}
+
+      <SkillUtilityRow sheet={sheet} />
 
       <div
         className={`skill-unassign-zone skill-unassign-zone--compact${unassignHover ? ' skill-unassign-zone--active' : ''}`}

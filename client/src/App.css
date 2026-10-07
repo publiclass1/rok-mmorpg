@@ -961,6 +961,42 @@ button:disabled {
   width: 100%;
 }
 
+.game-hud-vitals__body {
+  display: flex;
+  align-items: stretch;
+  gap: 0.45rem;
+}
+
+.game-hud-vitals__avatar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 2.75rem;
+  height: 3.1rem;
+  padding: 0.15rem 0.2rem 0.1rem;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgba(17, 24, 39, 0.72);
+  border: 1px solid rgba(55, 65, 81, 0.8);
+}
+
+.game-hud-vitals__portrait-img {
+  display: block;
+  width: 2.35rem;
+  height: auto;
+  margin: 0 auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transform: scale(1.12);
+  transform-origin: center bottom;
+}
+
+.game-hud-vitals__main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .game-hud-pvp-kills {
   display: flex;
   align-items: baseline;
@@ -1178,11 +1214,23 @@ button:disabled {
   margin-left: 0.15rem;
 }
 
-.hud-status {
-  max-width: 12rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.game-hud-status-message {
+  position: absolute;
+  top: 0.65rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+  max-width: min(520px, calc(100vw - 2rem));
+  padding: 0.35rem 0.85rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #fde68a;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(201, 162, 39, 0.55);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .game-hud-target {
@@ -1538,6 +1586,38 @@ button:disabled {
   border-color: #60a5fa;
   background: #1e3a5f;
   color: #fff;
+}
+
+.skills-utility-section {
+  margin: 0.5rem 0 0.75rem;
+}
+
+.skills-utility-heading {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.skills-utility-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.skills-utility-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 4.5rem;
+}
+
+.skills-utility-name {
+  font-size: 0.7rem;
+  text-align: center;
+  line-height: 1.2;
+  color: #cbd5e1;
 }
 
 .skills-window-tab-panel {
