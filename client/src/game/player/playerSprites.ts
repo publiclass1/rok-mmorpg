@@ -9,50 +9,50 @@ import { applyPoseToSprite, registerIdleAnimations } from '../character/characte
 import type { CharacterSpriteDef } from '../character/characterSpriteRegistry'
 import { createDefaultEquipment, type EquipSlot } from '../character/characterState'
 import type { Facing } from '../movement/clickToMove'
+import { ensureEquipPlaceholderTexture } from './itemEquipIconTexture'
 import {
-  applyPlayerEquipmentRects,
-  positionEquipmentForFacing,
+  MOUNT_BODY_Y_OFFSET,
+  type PlayerVisualLayer,
+} from './playerDisplayLayers'
+import {
+  applyPlayerEquipmentLayers,
+  syncEquipmentTransforms,
 } from './playerEquipmentVisual'
+import { syncPlayerRarityGlow, type RarityGlowHost } from './playerRarityGlow'
+import type { PlayerAvatarKey } from './playerJobAvatar'
 
 export type { CharacterPose } from '../character/characterPose'
 export { defaultCharacterPose } from '../character/characterPose'
+export { MOUNT_BODY_Y_OFFSET } from './playerDisplayLayers'
+export type { PlayerVisualLayer } from './playerDisplayLayers'
 
-/** Rider anchor lift so seated legs rest on the peco saddle (see pecoMountVisual saddle ~y-24). */
-export const MOUNT_BODY_Y_OFFSET = -10
-
-export type PlayerVisualLayer =
-  | 'garment'
-  | 'armor'
-  | 'headTop'
-  | 'headMiddle'
-  | 'headLower'
-  | 'weapon'
-  | 'offhand'
-
-export type PlayerDisplay = {
+export type PlayerDisplay = RarityGlowHost & {
   container: Phaser.GameObjects.Container
+  /** Rider rig (lifted when mounted on peco). */
+  riderLayer: Phaser.GameObjects.Container
+  /** Body + worn gear move together (attack lunge, frame nudges). */
+  bodyRig: Phaser.GameObjects.Container
   body: Phaser.GameObjects.Sprite
-  layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Rectangle>>
+  layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Image>>
   pose: CharacterPose
   appearance: CharacterAppearance
+  avatarKey: PlayerAvatarKey
   textureKey: string
   spriteDef: CharacterSpriteDef
   equipment: Record<EquipSlot, string | null>
 }
 
-function syncEquipmentSide(display: PlayerDisplay) {
-  positionEquipmentForFacing(display.layers, display.pose.facing)
-}
-
 function syncSpritePose(display: PlayerDisplay) {
-  display.body.setY(display.pose.mounted ? MOUNT_BODY_Y_OFFSET : 0)
+  display.riderLayer.setY(display.pose.mounted ? MOUNT_BODY_Y_OFFSET : 0)
+  display.body.setY(0)
   applyPoseToSprite(display.body, display.textureKey, display.spriteDef, display.pose)
   if (display.pose.hitFlash) {
     display.body.setTint(0xffffff)
   } else {
     display.body.clearTint()
   }
-  syncEquipmentSide(display)
+  syncEquipmentTransforms(display)
+  syncPlayerRarityGlow(display, display.equipment)
 }
 
 function bindPlayerTexture(
@@ -60,7 +60,7 @@ function bindPlayerTexture(
   display: PlayerDisplay,
   appearance: CharacterAppearance,
 ) {
-  const { textureKey, def } = ensurePlayerSwappedTexture(scene, appearance)
+  const { textureKey, def } = ensurePlayerSwappedTexture(scene, appearance, display.avatarKey)
   display.textureKey = textureKey
   display.spriteDef = def
   display.appearance = { ...appearance }
@@ -84,44 +84,35 @@ export function setPlayerToIdle(display: PlayerDisplay, facing: Facing) {
   syncSpritePose(display)
 }
 
+function addEquipImage(scene: Phaser.Scene, placeholderKey: string): Phaser.GameObjects.Image {
+  return scene.add.image(0, 0, placeholderKey).setVisible(false)
+}
+
 export function createPlayerDisplay(
   scene: Phaser.Scene,
   x: number,
   y: number,
   appearance: CharacterAppearance = DEFAULT_CHARACTER_APPEARANCE,
+  avatarKey: PlayerAvatarKey = 'novice',
 ): PlayerDisplay {
-  const { textureKey, def } = ensurePlayerSwappedTexture(scene, appearance)
+  const placeholderKey = ensureEquipPlaceholderTexture(scene)
+  const { textureKey, def } = ensurePlayerSwappedTexture(scene, appearance, avatarKey)
   registerIdleAnimations(scene, textureKey, def)
 
   const body = scene.add.sprite(0, 0, textureKey, '0')
   body.setOrigin(0.5, 1)
 
-  const layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Rectangle>> = {}
-  const garment = scene.add.rectangle(0, -18, 22, 16, 0x4b5563, 0.72).setVisible(false)
-  const armor = scene.add.rectangle(0, -16, 18, 12, 0xf5f5dc, 0.88).setVisible(false)
-  const headTop = scene.add.rectangle(0, -36, 18, 6, 0x8b4513).setVisible(false)
-  const headMiddle = scene.add.rectangle(0, -32, 14, 4, 0x6b7280).setVisible(false)
-  const headLower = scene.add.rectangle(0, -28, 12, 4, 0x9ca3af).setVisible(false)
-  const offhand = scene.add.rectangle(-8, -22, 8, 10, 0x6b7280).setVisible(false)
-  const weapon = scene.add.rectangle(10, -20, 10, 4, 0xc0c0c0).setVisible(false)
-  layers.garment = garment
-  layers.armor = armor
+  const layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Image>> = {}
+  const headTop = addEquipImage(scene, placeholderKey)
+  const headMiddle = addEquipImage(scene, placeholderKey)
+  const headLower = addEquipImage(scene, placeholderKey)
   layers.headTop = headTop
   layers.headMiddle = headMiddle
   layers.headLower = headLower
-  layers.offhand = offhand
-  layers.weapon = weapon
 
-  const container = scene.add.container(x, y, [
-    garment,
-    body,
-    armor,
-    headTop,
-    headMiddle,
-    headLower,
-    offhand,
-    weapon,
-  ])
+  const bodyRig = scene.add.container(0, 0, [body, headTop, headMiddle, headLower])
+  const riderLayer = scene.add.container(0, 0, [bodyRig])
+  const container = scene.add.container(x, y, [riderLayer])
   scene.physics.add.existing(container)
   const bodyPhys = container.body as Phaser.Physics.Arcade.Body
   bodyPhys.setSize(18, 14)
@@ -131,10 +122,13 @@ export function createPlayerDisplay(
 
   const display: PlayerDisplay = {
     container,
+    riderLayer,
+    bodyRig,
     body,
     layers,
     pose,
     appearance: { ...appearance },
+    avatarKey,
     textureKey,
     spriteDef: def,
     equipment: createDefaultEquipment(),
@@ -147,6 +141,12 @@ export function setPlayerAppearance(display: PlayerDisplay, appearance: Characte
   bindPlayerTexture(display.body.scene, display, appearance)
 }
 
+export function setPlayerJobAvatar(display: PlayerDisplay, avatarKey: PlayerAvatarKey) {
+  if (display.avatarKey === avatarKey) return
+  display.avatarKey = avatarKey
+  bindPlayerTexture(display.body.scene, display, display.appearance)
+}
+
 export function syncPlayerDisplayPosition(display: PlayerDisplay, x: number, y: number) {
   display.container.setPosition(x, y)
 }
@@ -155,9 +155,8 @@ export function updatePlayerEquipmentLayers(
   display: PlayerDisplay,
   equipment: Record<EquipSlot, string | null>,
 ) {
-  display.equipment = { ...equipment }
-  applyPlayerEquipmentRects(display.layers, equipment)
-  syncEquipmentSide(display)
+  applyPlayerEquipmentLayers(display, equipment)
+  syncPlayerRarityGlow(display, equipment)
 }
 
 export function playPlayerAnim(display: PlayerDisplay, key: string, facing: Facing) {

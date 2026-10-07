@@ -93,7 +93,9 @@ function baseItemsForSlot(slot: string): RoItem[] {
   const { items, dungeons } = loadRoContent()
   const allowed = new Set(dungeons.gear.dropSlots)
   if (!allowed.has(slot)) return []
-  return items.filter((i) => i.equipSlot === slot && i.bonuses && i.layerColor)
+  return items.filter(
+    (i) => i.equipSlot === slot && i.bonuses && i.layerColor && i.dungeonRollable !== false,
+  )
 }
 
 export type CreateRolledGearOptions = {

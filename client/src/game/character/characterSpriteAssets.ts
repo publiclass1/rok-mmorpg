@@ -1,13 +1,14 @@
 import Phaser from 'phaser'
+import type { PlayerAvatarKey } from '../player/playerJobAvatar'
 import {
   listNpcSpriteDefs,
-  PLAYER_SPRITE_FEMALE,
-  PLAYER_SPRITE_MALE,
+  resolvePlayerSpriteDef,
   SPRITE_FRAME_HEIGHT,
   SPRITE_FRAME_WIDTH,
   type AttackStyle,
   type CharacterSpriteDef,
 } from './characterSpriteRegistry'
+import { DEFAULT_CHARACTER_APPEARANCE, type CharacterGender } from './characterAppearance'
 import {
   NPC_ARCHETYPE_PALETTES,
   type NpcArchetype,
@@ -37,7 +38,14 @@ type ChibiPalette = {
   eyes: number
 }
 
-type DrawMode = { kind: 'player'; female: boolean } | { kind: 'npc'; archetype: NpcArchetype }
+type DrawMode =
+  | { kind: 'player'; female: boolean; avatarKey: PlayerAvatarKey }
+  | { kind: 'npc'; archetype: NpcArchetype }
+
+const PLATE_GRAY = 0x9ca3af
+const KNIGHT_CAPE = 0x5b21b6
+const APRON_TAN = 0xd6d3d1
+const QUIVER_BROWN = 0x78350f
 
 const WEAPON_BLADE = 0xc0c8d4
 const WEAPON_HILT = 0x8b5a2b
@@ -179,6 +187,152 @@ function drawArms(
   } else {
     g.fillRect(cx - bodyW / 2 + 1, torsoTop + 4, armW - 1, armH - 2)
     g.fillRect(cx + bodyW / 2 - armW, torsoTop + 4, armW - 1, armH - 2)
+  }
+}
+
+function playerBodyWidth(female: boolean, avatarKey: PlayerAvatarKey): number {
+  let w = female ? 18 : 20
+  if (avatarKey === 'swordman') w += 2
+  if (avatarKey === 'knight') w += 4
+  return w
+}
+
+function drawDefaultLegs(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  feetY: number,
+  legSpread: number,
+  pal: ChibiPalette,
+) {
+  g.fillStyle(pal.shoes, 1)
+  g.fillRect(cx - 10 - legSpread, feetY - 4, 8, 4)
+  g.fillRect(cx + 2 + legSpread, feetY - 4, 8, 4)
+
+  g.fillStyle(pal.pants, 1)
+  g.fillRect(cx - 9 - legSpread, feetY - 14, 7, 12)
+  g.fillRect(cx + 2 + legSpread, feetY - 14, 7, 12)
+}
+
+function drawKnightCape(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  feetY: number,
+  bodyW: number,
+  facing: 'down' | 'left' | 'right' | 'up',
+) {
+  if (facing === 'down') return
+  g.fillStyle(KNIGHT_CAPE, 0.9)
+  if (facing === 'up') {
+    g.fillTriangle(cx - bodyW / 2 - 2, feetY - 26, cx, feetY - 34, cx + bodyW / 2 + 2, feetY - 26)
+  } else {
+    const side = facing === 'left' ? -1 : 1
+    g.fillRect(cx + side * (bodyW / 2 + 1), feetY - 28, 5, 18)
+  }
+}
+
+function drawPlayerJobBody(
+  g: Phaser.GameObjects.Graphics,
+  avatarKey: PlayerAvatarKey,
+  cx: number,
+  feetY: number,
+  bodyW: number,
+  legSpread: number,
+  facing: 'down' | 'left' | 'right' | 'up',
+  pal: ChibiPalette,
+) {
+  if (avatarKey === 'knight') {
+    drawKnightCape(g, cx, feetY, bodyW, facing)
+  }
+
+  if (avatarKey === 'mage' || avatarKey === 'acolyte') {
+    g.fillStyle(pal.shoes, 1)
+    g.fillRect(cx - 6, feetY - 4, 12, 4)
+    g.fillStyle(pal.shirt, 1)
+    g.fillRoundedRect(cx - bodyW / 2 - 1, feetY - 30, bodyW + 2, 30, 3)
+    if (avatarKey === 'acolyte') {
+      g.fillStyle(0xf8fafc, 1)
+      g.fillRect(cx - 2, feetY - 24, 4, 4)
+    }
+    return
+  }
+
+  drawDefaultLegs(g, cx, feetY, legSpread, pal)
+
+  g.fillStyle(pal.shirt, 1)
+  g.fillRoundedRect(cx - bodyW / 2, feetY - 28, bodyW, 16, 3)
+
+  switch (avatarKey) {
+    case 'swordman':
+      g.fillStyle(PLATE_GRAY, 1)
+      g.fillRect(cx - bodyW / 2 - 3, feetY - 27, 5, 7)
+      g.fillRect(cx + bodyW / 2 - 2, feetY - 27, 5, 7)
+      g.fillRect(cx - bodyW / 2, feetY - 14, bodyW, 5)
+      break
+    case 'knight':
+      g.fillStyle(PLATE_GRAY, 1)
+      g.fillRect(cx - bodyW / 2 - 2, feetY - 28, bodyW + 4, 18)
+      g.fillStyle(pal.shirt, 0.35)
+      g.fillRect(cx - bodyW / 2 + 2, feetY - 26, bodyW - 4, 10)
+      break
+    case 'archer':
+      if (facing === 'left' || facing === 'right') {
+        g.fillStyle(QUIVER_BROWN, 1)
+        const side = facing === 'left' ? -1 : 1
+        g.fillRect(cx + side * (bodyW / 2 + 3), feetY - 22, 4, 12)
+      }
+      break
+    case 'hunter':
+      if (facing === 'left' || facing === 'right') {
+        g.fillStyle(QUIVER_BROWN, 1)
+        const side = facing === 'left' ? -1 : 1
+        g.fillRect(cx + side * (bodyW / 2 + 2), feetY - 24, 5, 14)
+      }
+      break
+    case 'merchant':
+      g.fillStyle(APRON_TAN, 1)
+      g.fillRect(cx - bodyW / 2 + 1, feetY - 22, bodyW - 2, 10)
+      g.fillStyle(0xca8a04, 1)
+      g.fillRect(cx - 3, feetY - 14, 6, 4)
+      break
+    case 'thief':
+      g.fillStyle(0x374151, 1)
+      g.fillRect(cx - bodyW / 2, feetY - 16, bodyW, 4)
+      break
+    default:
+      break
+  }
+}
+
+function drawPlayerJobHeadAccessory(
+  g: Phaser.GameObjects.Graphics,
+  avatarKey: PlayerAvatarKey,
+  cx: number,
+  headY: number,
+  facing: 'down' | 'left' | 'right' | 'up',
+) {
+  switch (avatarKey) {
+    case 'archer':
+      g.fillStyle(0x166534, 1)
+      g.fillRect(cx - 5, headY - 12, 10, 4)
+      g.fillStyle(0xdc2626, 1)
+      g.fillRect(cx + 4, headY - 13, 3, 5)
+      break
+    case 'hunter':
+      g.fillStyle(0x4b5563, 1)
+      g.fillRect(cx - 6, headY - 12, 12, 5)
+      g.fillStyle(0x16a34a, 1)
+      g.fillRect(cx + 5, headY - 13, 2, 6)
+      break
+    case 'thief':
+      g.fillStyle(0xdc2626, 1)
+      g.fillRect(cx - 6, headY - 11, 12, 3)
+      if (facing === 'down') {
+        g.fillStyle(0x111827, 1)
+        g.fillRect(cx - 5, headY - 7, 10, 2)
+      }
+      break
+    default:
+      break
   }
 }
 
@@ -330,7 +484,8 @@ function drawChibiFrame(
     : NPC_ARCHETYPE_PALETTES[mode.archetype]
 
   const cx = ox + SPRITE_FRAME_WIDTH / 2
-  const bodyW = female ? 18 : 20
+  const bodyW =
+    isPlayer ? playerBodyWidth(female, mode.avatarKey) : female ? 18 : 20
   let feetY = oy + SPRITE_FRAME_HEIGHT - 4
 
   if (motion.kind === 'sit') {
@@ -356,17 +511,12 @@ function drawChibiFrame(
 
   feetY += bob
 
-  g.fillStyle(pal.shoes, 1)
-  g.fillRect(cx - 10 - legSpread, feetY - 4, 8, 4)
-  g.fillRect(cx + 2 + legSpread, feetY - 4, 8, 4)
-
-  g.fillStyle(pal.pants, 1)
-  g.fillRect(cx - 9 - legSpread, feetY - 14, 7, 12)
-  g.fillRect(cx + 2 + legSpread, feetY - 14, 7, 12)
-
-  g.fillStyle(pal.shirt, 1)
-  g.fillRoundedRect(cx - bodyW / 2, feetY - 28, bodyW, 16, 3)
-  if (!isPlayer) {
+  if (isPlayer) {
+    drawPlayerJobBody(g, mode.avatarKey, cx, feetY, bodyW, legSpread, facing, pal)
+  } else {
+    drawDefaultLegs(g, cx, feetY, legSpread, pal)
+    g.fillStyle(pal.shirt, 1)
+    g.fillRoundedRect(cx - bodyW / 2, feetY - 28, bodyW, 16, 3)
     drawArchetypeOverlay(g, mode.archetype, cx, feetY)
   }
 
@@ -391,6 +541,10 @@ function drawChibiFrame(
     g.fillEllipse(cx, feetY - 38, femaleHairWidth(mode), 10)
   } else {
     g.fillEllipse(cx, feetY - 39, 14, 8)
+  }
+
+  if (isPlayer) {
+    drawPlayerJobHeadAccessory(g, mode.avatarKey, cx, feetY - 34, facing)
   }
 
   let eyeDx = 0
@@ -476,15 +630,22 @@ function generateSheet(
   addSpriteSheetFrames(scene, textureKey, def)
 }
 
+export function ensurePlayerMasterSheet(
+  scene: Phaser.Scene,
+  gender: CharacterGender,
+  avatarKey: PlayerAvatarKey,
+) {
+  const female = gender === 'female'
+  const appearance = { ...DEFAULT_CHARACTER_APPEARANCE, gender }
+  const def = resolvePlayerSpriteDef(appearance, avatarKey)
+  generateSheet(scene, def.masterTextureKey, def, {
+    kind: 'player',
+    female,
+    avatarKey,
+  })
+}
+
 export function ensureMasterCharacterSheets(scene: Phaser.Scene) {
-  generateSheet(scene, PLAYER_SPRITE_MALE.masterTextureKey, PLAYER_SPRITE_MALE, {
-    kind: 'player',
-    female: false,
-  })
-  generateSheet(scene, PLAYER_SPRITE_FEMALE.masterTextureKey, PLAYER_SPRITE_FEMALE, {
-    kind: 'player',
-    female: true,
-  })
   for (const def of listNpcSpriteDefs()) {
     if (!def.npcArchetype) continue
     generateSheet(scene, def.masterTextureKey, def, {

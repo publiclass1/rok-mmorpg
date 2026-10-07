@@ -18,6 +18,7 @@ export type PlayerPresencePayload = PositionPayload & {
   anim: CharacterPose['anim']
   walkFrame: 0 | 1
   mounted?: boolean
+  jobId: string
   equipment: Record<EquipSlot, string | null>
   appearance: CharacterAppearance
   guildTag?: string | null
@@ -174,6 +175,7 @@ export type GameEvents = {
   useSkillSlot: { slot: number }
   characterAction: CharacterActionPayload
   uiPointerLock: boolean
+  uiKeyboardLock: boolean
   selectedMob: SelectedMobPayload | null
   activityLog: ActivityLogEntry
   sessionSync: CharacterSessionState

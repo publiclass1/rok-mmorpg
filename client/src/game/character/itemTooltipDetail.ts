@@ -6,7 +6,7 @@ import {
   getRolledItemOrNull,
 } from './itemCatalog'
 import { formatEquipRequirements } from './equipRequirements'
-import { rarityColor } from '../items/rolledItem'
+import { getItemRarity, isNpcCosmeticRarityItem, rarityColor, rarityLabel } from '../items/itemRarity'
 
 export type ItemTooltipDetail = {
   name: string
@@ -46,6 +46,7 @@ export function buildItemTooltipDetail(
     options?.quantity != null && options.quantity > 1 ? `${name} ×${options.quantity}` : name
 
   const rolled = getRolledItemOrNull(itemId)
+  const cosmeticRarity = !rolled ? getItemRarity(itemId) : null
   const item = getItemDefinition(itemId)
   const subtitleLines: string[] = []
   const statLines: string[] = []
@@ -93,6 +94,9 @@ export function buildItemTooltipDetail(
         : `+${rolled.effect.percent}% ${rolled.effect.kind} damage`,
     )
     effectLines.push('Card slots: [ ] [ ]')
+  } else if (cosmeticRarity && isNpcCosmeticRarityItem(itemId)) {
+    subtitleLines.unshift(rarityLabel(cosmeticRarity))
+    metaLines.push('Cosmetic — no stat bonuses')
   }
 
   const consumable = getConsumableEffect(itemId)
@@ -103,7 +107,8 @@ export function buildItemTooltipDetail(
 
   return {
     name: displayName,
-    nameColor: rolled ? rarityColor(rolled.rarity) : undefined,
+    nameColor:
+      rolled ? rarityColor(rolled.rarity) : cosmeticRarity ? rarityColor(cosmeticRarity) : undefined,
     subtitleLines,
     statLines,
     effectLines,

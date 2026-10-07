@@ -574,17 +574,17 @@ export function playPlayerAttackSlash(
     })
   }
 
-  const body = display.body
-  const startX = body.x
-  const startY = body.y
+  const rig = display.bodyRig
+  const startX = rig.x
+  const startY = rig.y
   scene.tweens.add({
-    targets: body,
+    targets: rig,
     x: startX + offset.x,
     y: startY + offset.y,
     duration: 90,
     yoyo: true,
     onComplete: () => {
-      body.setPosition(startX, startY)
+      rig.setPosition(startX, startY)
     },
   })
 }

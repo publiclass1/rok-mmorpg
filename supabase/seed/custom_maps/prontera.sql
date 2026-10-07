@@ -101,6 +101,15 @@ values
     '{"stock":[{"price":10,"itemId":"cotton_shirt"},{"price":500,"itemId":"adventurers_suit"},{"price":500,"itemId":"silk_robe"},{"price":1200,"itemId":"wooden_mail"},{"price":2500,"itemId":"coat"},{"price":120,"itemId":"cap"},{"price":150,"itemId":"goggles"},{"price":100,"itemId":"flu_mask"},{"price":12000,"itemId":"helm"},{"price":800,"itemId":"wooden_shield"},{"price":600,"itemId":"buckler"},{"price":300,"itemId":"hooded_mantle"},{"price":800,"itemId":"mantle"},{"price":150,"itemId":"sandals"},{"price":400,"itemId":"shoes"},{"price":200,"itemId":"clip"},{"price":180,"itemId":"glove"}],"facing":"down"}'::jsonb
   ),
   (
+    'prontera_rarity_armor_dealer',
+    'prontera',
+    1344,
+    1856,
+    'shop',
+    'Rarity Armor Dealer',
+    '{"facing":"down","shopLayout":"rarityTabs","stock":[{"itemId":"padded_vest","price":100},{"itemId":"scout_mail","price":500},{"itemId":"knight_plate","price":2000},{"itemId":"violet_cuirass","price":8000},{"itemId":"dragon_scale_mail","price":25000},{"itemId":"skyweave_robe","price":80000},{"itemId":"relic_guardplate","price":250000}]}'::jsonb
+  ),
+  (
     'prontera_tool_dealer',
     'prontera',
     2384,

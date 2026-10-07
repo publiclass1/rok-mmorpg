@@ -32,6 +32,7 @@ function normalizePresence(raw: Partial<PlayerPresencePayload>): PlayerPresenceP
     anim: raw.anim ?? 'idle',
     walkFrame: raw.walkFrame === 1 ? 1 : 0,
     mounted: Boolean(raw.mounted),
+    jobId: typeof raw.jobId === 'string' && raw.jobId.trim() ? raw.jobId.trim() : 'novice',
     equipment: raw.equipment ?? createDefaultEquipment(),
     appearance: normalizeAppearance(raw.appearance),
     guildTag: raw.guildTag ?? null,

@@ -3,14 +3,13 @@ import { getEquipmentDefinition } from '../game/character/equipmentConfig'
 import {
   getEquipColor,
   getItemDisplayName,
-  getRolledItemOrNull,
   isConsumable,
   isEquippable,
   hasItemIcon,
 } from '../game/character/itemCatalog'
 import { ItemHoverTooltip } from './ItemHoverTooltip'
 import { ItemIcon } from './ItemIcon'
-import { rarityColor } from '../game/items/rolledItem'
+import { getItemRarity, rarityColor } from '../game/items/itemRarity'
 import { RolledItemDetails } from './RolledItemDetails'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import type { CharacterSheetPayload } from '../game/events'
@@ -101,8 +100,8 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
             const equippable = isEquippable(cell.itemId)
             const hasIcon = hasItemIcon(cell.itemId)
             const color = getEquipColor(cell.itemId)
-            const rolled = getRolledItemOrNull(cell.itemId)
-            const nameColor = rolled ? rarityColor(rolled.rarity) : undefined
+            const itemRarity = getItemRarity(cell.itemId)
+            const nameColor = itemRarity ? rarityColor(itemRarity) : undefined
             return (
               <ItemHoverTooltip key={cell.key} itemId={cell.itemId} quantity={cell.quantity}>
                 <button

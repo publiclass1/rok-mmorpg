@@ -8,10 +8,13 @@ import {
   syncPecoMountGfx,
   type PecoMountGfx,
 } from '../player/pecoMountVisual'
+import { resolveJobAvatarKey } from '../player/playerJobAvatar'
+import type { PlayerAvatarKey } from '../player/playerJobAvatar'
 import {
   createPlayerDisplay,
   playPlayerAnim,
   setPlayerAppearance,
+  setPlayerJobAvatar,
   setPlayerMounted,
   setPlayerWalkFrame,
   updatePlayerEquipmentLayers,
@@ -46,6 +49,7 @@ export type RemotePlayerEntity = {
   lastPayload: PlayerPresencePayload
   equipmentKey: string
   appearanceKey: string
+  jobAvatarKey: PlayerAvatarKey
   inViewport: boolean
 }
 
@@ -66,7 +70,8 @@ function syncRemotePecoMount(entity: RemotePlayerEntity, payload: PlayerPresence
 }
 
 export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePayload): RemotePlayerEntity {
-  const display = createPlayerDisplay(scene, payload.x, payload.y, payload.appearance)
+  const jobAvatarKey = resolveJobAvatarKey(payload.jobId)
+  const display = createPlayerDisplay(scene, payload.x, payload.y, payload.appearance, jobAvatarKey)
   const pecoMountGfx = createPecoMount(scene)
   attachPecoMountToDisplay(display, pecoMountGfx)
   const body = display.container.body as Phaser.Physics.Arcade.Body | null
@@ -96,6 +101,7 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
     lastPayload: payload,
     equipmentKey: eqKey,
     appearanceKey: appearanceKey(payload.appearance),
+    jobAvatarKey,
     inViewport: true,
   }
   syncRemotePecoMount(entity, payload, payload.walkFrame)
@@ -117,6 +123,12 @@ export function applyRemotePresence(entity: RemotePlayerEntity, payload: PlayerP
   if (nextAppearanceKey !== entity.appearanceKey) {
     entity.appearanceKey = nextAppearanceKey
     setPlayerAppearance(entity.display, payload.appearance)
+  }
+
+  const nextJobAvatarKey = resolveJobAvatarKey(payload.jobId)
+  if (nextJobAvatarKey !== entity.jobAvatarKey) {
+    entity.jobAvatarKey = nextJobAvatarKey
+    setPlayerJobAvatar(entity.display, nextJobAvatarKey)
   }
 }
 

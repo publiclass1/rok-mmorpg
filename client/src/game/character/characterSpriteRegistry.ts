@@ -1,8 +1,11 @@
 import type { WeaponClass } from '../../content/ro/types'
 import type { NpcRow } from '../../types/database'
+import type { PlayerAvatarKey } from '../player/playerJobAvatar'
 import type { CharacterAppearance } from './characterAppearance'
 import type { Facing } from '../movement/clickToMove'
 import { npcArchetypeFromNpcType, type NpcArchetype } from './npcArchetypes'
+
+const PLAYER_MASTER_VERSION = 'v6'
 
 export type AttackStyle = 'swing' | 'thrust' | 'bow' | 'cast'
 
@@ -98,22 +101,8 @@ function npcSpriteDef(archetype: NpcArchetype): CharacterSpriteDef {
   }
 }
 
-export const PLAYER_SPRITE_MALE: CharacterSpriteDef = {
-  id: 'player_male',
-  masterTextureKey: 'master_player_male_v5',
-  framesPerRow: PLAYER_FRAMES_PER_ROW,
-  facingRow: FACING_ROW,
-  strips: PLAYER_STRIPS,
-  paletteSwap: true,
-}
-
-export const PLAYER_SPRITE_FEMALE: CharacterSpriteDef = {
-  id: 'player_female',
-  masterTextureKey: 'master_player_female_v5',
-  framesPerRow: PLAYER_FRAMES_PER_ROW,
-  facingRow: FACING_ROW,
-  strips: PLAYER_STRIPS,
-  paletteSwap: true,
+export function playerMasterTextureKey(female: boolean, avatarKey: PlayerAvatarKey): string {
+  return `master_player_${female ? 'female' : 'male'}_${avatarKey}_${PLAYER_MASTER_VERSION}`
 }
 
 export const KAFRA_SPRITE = npcSpriteDef('kafra')
@@ -144,8 +133,20 @@ export function listNpcSpriteKeys(): NpcArchetype[] {
   return Object.keys(NPC_SPRITES) as NpcArchetype[]
 }
 
-export function resolvePlayerSpriteDef(appearance: CharacterAppearance): CharacterSpriteDef {
-  return appearance.gender === 'female' ? PLAYER_SPRITE_FEMALE : PLAYER_SPRITE_MALE
+export function resolvePlayerSpriteDef(
+  appearance: CharacterAppearance,
+  avatarKey: PlayerAvatarKey,
+): CharacterSpriteDef {
+  const female = appearance.gender === 'female'
+  const genderTag = female ? 'female' : 'male'
+  return {
+    id: `player_${genderTag}_${avatarKey}`,
+    masterTextureKey: playerMasterTextureKey(female, avatarKey),
+    framesPerRow: PLAYER_FRAMES_PER_ROW,
+    facingRow: FACING_ROW,
+    strips: PLAYER_STRIPS,
+    paletteSwap: true,
+  }
 }
 
 export function getNpcSpriteDef(spriteKey: string): CharacterSpriteDef | null {

@@ -51,6 +51,13 @@ const NPC_ANCHORS = [
   { id: 'prontera_dungeon_guide', label: 'Dungeon Guide', npcType: 'dungeon', tileX: 90, tileY: 44 },
   { id: 'prontera_weapon_dealer', label: 'Weapon Dealer', npcType: 'shop', tileX: 26, tileY: 58 },
   { id: 'prontera_armor_dealer', label: 'Armor Dealer', npcType: 'shop', tileX: 34, tileY: 58 },
+  {
+    id: 'prontera_rarity_armor_dealer',
+    label: 'Rarity Armor Dealer',
+    npcType: 'shop',
+    tileX: 42,
+    tileY: 58,
+  },
   { id: 'prontera_tool_dealer', label: 'Tool Dealer', npcType: 'shop', tileX: 74, tileY: 58 },
 ]
 

@@ -51,7 +51,6 @@ import { PartyRequestModal } from './PartyRequestModal'
 import { PartyWindow } from './PartyWindow'
 import { VendorSetupModal } from './VendorSetupModal'
 import { VendorShopModal } from './VendorShopModal'
-import { ActivityLogModal } from './ActivityLogModal'
 import { BuffBar } from './BuffBar'
 import { SkillBar } from './SkillBar'
 import { ExperienceHud } from './ExperienceHud'
@@ -66,6 +65,8 @@ import type { MinimapPayload } from '../game/world/minimapTypes'
 import { JobMasterModal } from './JobMasterModal'
 import { RentalModal } from './RentalModal'
 import { ShopModal } from './ShopModal'
+import { RarityTabShopModal } from './RarityTabShopModal'
+import { isRarityTabShop } from '../game/character/npcServices'
 import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { DeathModal } from './DeathModal'
 import { SplashScreen } from './SplashScreen'
@@ -175,7 +176,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [deathModalOpen, setDeathModalOpen] = useState(false)
   const [deathSaveMapId, setDeathSaveMapId] = useState('prontera')
   const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
-  const [activityLogOpen, setActivityLogOpen] = useState(false)
   const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
   const [selectedPlayerAnchor, setSelectedPlayerAnchor] = useState<{ x: number; y: number } | null>(null)
   const [partySnapshot, setPartySnapshot] = useState<PartySnapshot>(null)
@@ -209,7 +209,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     !!tradePartner ||
     !!partyRequest ||
     partyOpen ||
-    activityLogOpen ||
     guildOpen ||
     vendorSetupOpen ||
     !!vendorShopTarget
@@ -827,6 +826,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      const active = document.activeElement
+      if (active instanceof HTMLInputElement && active.classList.contains('chat-strip-input')) {
+        return
+      }
       if (e.altKey && e.key.toLowerCase() === 's') {
         e.preventDefault()
         setStatsOpen((o) => !o)
@@ -1088,63 +1091,80 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           <SkillBar sheet={sheet} onOpenSkills={() => setSkillsOpen(true)} />
           <Minimap data={minimap} />
           <BuffBar buffs={playerBuffs} />
-          <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>
-            <p className="game-hud-name">
-              <strong>
-                {guildTag ? `[${guildTag}] ` : ''}
-                {character.name}
-              </strong>
-              <span className="muted small">
-                {mapDisplayName(character.map_id)} · {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Base {sheet.baseLevel} · Job {sheet.jobLevel}
-              </span>
-            </p>
-            <div className="vital-row">
-              <span className="vital-label">HP</span>
-              <div className="vital-track">
-                <motion.div
-                  className="vital-fill vital-fill--hp"
-                  initial={false}
-                  animate={{ width: `${hpRatio * 100}%` }}
-                  transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-                />
+          <div className="game-hud-top-cluster">
+            <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>
+              <p className="game-hud-name">
+                <strong>
+                  {guildTag ? `[${guildTag}] ` : ''}
+                  {character.name}
+                </strong>
+                <span className="muted small">
+                  {mapDisplayName(character.map_id)} · {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Base {sheet.baseLevel} · Job {sheet.jobLevel}
+                </span>
+              </p>
+              <div className="vital-row">
+                <span className="vital-label">HP</span>
+                <div className="vital-track">
+                  <motion.div
+                    className="vital-fill vital-fill--hp"
+                    initial={false}
+                    animate={{ width: `${hpRatio * 100}%` }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                  />
+                </div>
+                <span className="vital-num">{sheet.hp}/{sheet.hpMax}</span>
               </div>
-              <span className="vital-num">{sheet.hp}/{sheet.hpMax}</span>
-            </div>
-            <div className="vital-row">
-              <span className="vital-label">SP</span>
-              <div className="vital-track">
-                <motion.div
-                  className="vital-fill vital-fill--mp"
-                  initial={false}
-                  animate={{ width: `${mpRatio * 100}%` }}
-                  transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-                />
+              <div className="vital-row">
+                <span className="vital-label">SP</span>
+                <div className="vital-track">
+                  <motion.div
+                    className="vital-fill vital-fill--mp"
+                    initial={false}
+                    animate={{ width: `${mpRatio * 100}%` }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                  />
+                </div>
+                <span className="vital-num">{sheet.mp}/{sheet.mpMax}</span>
               </div>
-              <span className="vital-num">{sheet.mp}/{sheet.mpMax}</span>
-            </div>
-            <p className="game-hud-zeny">
-              Zeny <strong>{character.zeny.toLocaleString()}</strong>
-            </p>
-            {sheet.hp <= 0 && !deathModalOpen && (
-              <button
-                type="button"
-                className="secondary small"
-                onClick={() => {
-                  void loadAccountSavePoint().then((save) => {
-                    setDeathSaveMapId(save.mapId)
-                    setDeathModalOpen(true)
-                  })
-                }}
+              <p className="game-hud-zeny">
+                Zeny <strong>{character.zeny.toLocaleString()}</strong>
+              </p>
+              {sheet.hp <= 0 && !deathModalOpen && (
+                <button
+                  type="button"
+                  className="secondary small"
+                  onClick={() => {
+                    void loadAccountSavePoint().then((save) => {
+                      setDeathSaveMapId(save.mapId)
+                      setDeathModalOpen(true)
+                    })
+                  }}
+                >
+                  Respawn options
+                </button>
+              )}
+            </motion.div>
+
+            {selectedMob ? (
+              <motion.div
+                className="game-hud-panel game-hud-target"
+                {...hudEnterMotion}
+                transition={{ ...hudEnterMotion.transition, delay: 0.08 }}
               >
-                Respawn options
-              </button>
-            )}
-          </motion.div>
+                <h3>Target</h3>
+                <div className="target-panel">
+                  <p><strong>{selectedMob.name}</strong></p>
+                  <p className="muted small">Lv {selectedMob.level}</p>
+                  <p className="small">HP {selectedMob.hp} / {selectedMob.hpMax}</p>
+                </div>
+              </motion.div>
+            ) : null}
+          </div>
 
           <motion.div
             className="game-hud-panel game-hud-menu row"
             {...hudEnterMotion}
-            transition={{ ...hudEnterMotion.transition, delay: 0.08 }}
+            transition={{ ...hudEnterMotion.transition, delay: 0.12 }}
           >
             <button type="button" className="secondary hud-btn" onClick={() => setStatsOpen(true)} title="Alt+S">
               Stats
@@ -1161,9 +1181,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             <button type="button" className="secondary hud-btn" onClick={() => setPartyOpen(true)}>
               Party
             </button>
-            <button type="button" className="secondary hud-btn" onClick={() => setActivityLogOpen(true)}>
-              Log
-            </button>
             <button type="button" className="secondary hud-btn" onClick={() => setGuildOpen(true)}>
               Guild
             </button>
@@ -1174,23 +1191,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             <button type="button" className="secondary hud-btn hud-btn--leave" onClick={() => void leaveWorld()}>
               Leave
             </button>
-          </motion.div>
-
-          <motion.div
-            className="game-hud-panel game-hud-target"
-            {...hudEnterMotion}
-            transition={{ ...hudEnterMotion.transition, delay: 0.12 }}
-          >
-            <h3>Target</h3>
-            {selectedMob ? (
-              <div className="target-panel">
-                <p><strong>{selectedMob.name}</strong></p>
-                <p className="muted small">Lv {selectedMob.level}</p>
-                <p className="small">HP {selectedMob.hp} / {selectedMob.hpMax}</p>
-              </div>
-            ) : (
-              <p className="muted small">Click a mob or player</p>
-            )}
           </motion.div>
 
           <motion.div
@@ -1219,21 +1219,23 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             {message && <p className="small">{message}</p>}
           </motion.div>
 
+          <ChatStrip
+            partyEnabled={!!partySnapshot}
+            mapLines={mapChatLines}
+            partyLines={partyChatLines}
+            activityEntries={activityLog}
+            onSend={sendChat}
+            mapChatPlaceholder={
+              character.is_gm ? 'Say something… or /zeny <player> <amount>' : undefined
+            }
+          />
+
           <motion.div
             className="game-hud-bottom"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 360, damping: 30, delay: 0.2 }}
           >
-            <ChatStrip
-              partyEnabled={!!partySnapshot}
-              mapLines={mapChatLines}
-              partyLines={partyChatLines}
-              onSend={sendChat}
-              mapChatPlaceholder={
-                character.is_gm ? 'Say something… or /zeny <player> <amount>' : undefined
-              }
-            />
             <div className="game-bottom-dock">
               <ExperienceHud sheet={sheet} />
             </div>
@@ -1305,16 +1307,26 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             onCharacterUpdated={onCharacterUpdated}
           />
         )}
-        {shopNpc && (
-          <ShopModal
-            key={`shop-${shopNpc.id}`}
-            character={character}
-            npc={shopNpc}
-            sheet={sheet}
-            onClose={() => setShopNpc(null)}
-            onCharacterUpdated={onCharacterUpdated}
-          />
-        )}
+        {shopNpc &&
+          (isRarityTabShop(shopNpc.config) ? (
+            <RarityTabShopModal
+              key={`shop-${shopNpc.id}`}
+              character={character}
+              npc={shopNpc}
+              sheet={sheet}
+              onClose={() => setShopNpc(null)}
+              onCharacterUpdated={onCharacterUpdated}
+            />
+          ) : (
+            <ShopModal
+              key={`shop-${shopNpc.id}`}
+              character={character}
+              npc={shopNpc}
+              sheet={sheet}
+              onClose={() => setShopNpc(null)}
+              onCharacterUpdated={onCharacterUpdated}
+            />
+          ))}
         {rentalNpc && (
           <RentalModal
             key={`rental-${rentalNpc.id}`}
@@ -1352,13 +1364,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             onClose={() => setPartyOpen(false)}
             onChanged={refreshParty}
             onMessage={setMessage}
-          />
-        )}
-        {activityLogOpen && (
-          <ActivityLogModal
-            key="activity-log"
-            entries={activityLog}
-            onClose={() => setActivityLogOpen(false)}
           />
         )}
         {guildOpen && (

@@ -860,6 +860,13 @@
       "tileY": 58
     },
     {
+      "id": "prontera_rarity_armor_dealer",
+      "label": "Rarity Armor Dealer",
+      "npcType": "shop",
+      "tileX": 42,
+      "tileY": 58
+    },
+    {
       "id": "prontera_tool_dealer",
       "label": "Tool Dealer",
       "npcType": "shop",

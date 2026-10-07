@@ -4,8 +4,8 @@ import {
   resolveAppearanceColors,
   type CharacterAppearance,
 } from './characterAppearance'
-import { addSpriteSheetFrames } from './characterSpriteAssets'
-import { PALETTE_SOURCE } from './characterSpriteAssets'
+import { ensurePlayerMasterSheet, addSpriteSheetFrames, PALETTE_SOURCE } from './characterSpriteAssets'
+import type { PlayerAvatarKey } from '../player/playerJobAvatar'
 import {
   playerTextureKey,
   resolvePlayerSpriteDef,
@@ -50,8 +50,10 @@ function buildReplacements(appearance: CharacterAppearance) {
 export function ensurePlayerSwappedTexture(
   scene: Phaser.Scene,
   appearance: CharacterAppearance,
+  avatarKey: PlayerAvatarKey,
 ): { textureKey: string; def: CharacterSpriteDef } {
-  const def = resolvePlayerSpriteDef(appearance)
+  ensurePlayerMasterSheet(scene, appearance.gender, avatarKey)
+  const def = resolvePlayerSpriteDef(appearance, avatarKey)
   const key = playerTextureKey(def, appearanceKey(appearance))
   if (scene.textures.exists(key)) {
     return { textureKey: key, def }

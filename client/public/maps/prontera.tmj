@@ -26,7 +26,7 @@
     }
   ],
   "nextlayerid": 9,
-  "nextobjectid": 109,
+  "nextobjectid": 110,
   "layers": [
     {
       "data": [
@@ -26046,6 +26046,47 @@
         },
         {
           "id": 108,
+          "name": "prontera_rarity_armor_dealer",
+          "type": "npc",
+          "x": 1336,
+          "y": 1808,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "npcId",
+              "type": "string",
+              "value": "prontera_rarity_armor_dealer"
+            },
+            {
+              "name": "npcType",
+              "type": "string",
+              "value": "shop"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Rarity Armor Dealer"
+            },
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "down"
+            },
+            {
+              "name": "spriteKey",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "configJson",
+              "type": "string",
+              "value": "{}"
+            }
+          ]
+        },
+        {
+          "id": 109,
           "name": "prontera_tool_dealer",
           "type": "npc",
           "x": 2360,

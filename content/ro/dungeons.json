@@ -15,8 +15,10 @@
       "common": { "label": "Common", "color": "#9ca3af", "statMin": 1, "effectMin": 1 },
       "uncommon": { "label": "Uncommon", "color": "#22c55e", "statMin": 2, "effectMin": 4 },
       "rare": { "label": "Rare", "color": "#3b82f6", "statMin": 4, "effectMin": 8 },
-      "epic": { "label": "Epic", "color": "#a855f7", "statMin": 6, "effectMin": 12 },
-      "legendary": { "label": "Legendary", "color": "#f59e0b", "statMin": 8, "effectMin": 16 }
+      "epic": { "label": "Epic", "color": "#d946ef", "statMin": 6, "effectMin": 12 },
+      "legendary": { "label": "Legendary", "color": "#f59e0b", "statMin": 8, "effectMin": 16 },
+      "mythic": { "label": "Mythic", "color": "#7dd3fc", "statMin": 10, "effectMin": 20 },
+      "artifact": { "label": "Artifact", "color": "#c2410c", "statMin": 12, "effectMin": 24 }
     },
     "effectKinds": ["melee", "range", "magic", "critChance"]
   },
@@ -33,7 +35,15 @@
       "gearDrop": {
         "chancePerMille": 800,
         "mvpRolls": 2,
-        "rarityWeights": { "common": 50, "uncommon": 30, "rare": 15, "epic": 4, "legendary": 1 }
+        "rarityWeights": {
+          "common": 50,
+          "uncommon": 30,
+          "rare": 15,
+          "epic": 4,
+          "legendary": 1,
+          "mythic": 0,
+          "artifact": 0
+        }
       }
     },
     {
@@ -48,7 +58,15 @@
       "gearDrop": {
         "chancePerMille": 1000,
         "mvpRolls": 2,
-        "rarityWeights": { "common": 40, "uncommon": 32, "rare": 20, "epic": 6, "legendary": 2 }
+        "rarityWeights": {
+          "common": 40,
+          "uncommon": 32,
+          "rare": 20,
+          "epic": 6,
+          "legendary": 2,
+          "mythic": 0,
+          "artifact": 0
+        }
       }
     },
     {
@@ -63,7 +81,15 @@
       "gearDrop": {
         "chancePerMille": 1200,
         "mvpRolls": 3,
-        "rarityWeights": { "common": 30, "uncommon": 30, "rare": 25, "epic": 11, "legendary": 4 }
+        "rarityWeights": {
+          "common": 30,
+          "uncommon": 30,
+          "rare": 25,
+          "epic": 11,
+          "legendary": 4,
+          "mythic": 0,
+          "artifact": 0
+        }
       }
     },
     {
@@ -78,7 +104,15 @@
       "gearDrop": {
         "chancePerMille": 1400,
         "mvpRolls": 3,
-        "rarityWeights": { "common": 22, "uncommon": 28, "rare": 28, "epic": 16, "legendary": 6 }
+        "rarityWeights": {
+          "common": 22,
+          "uncommon": 28,
+          "rare": 28,
+          "epic": 16,
+          "legendary": 6,
+          "mythic": 0,
+          "artifact": 0
+        }
       }
     },
     {
@@ -93,7 +127,15 @@
       "gearDrop": {
         "chancePerMille": 1600,
         "mvpRolls": 4,
-        "rarityWeights": { "common": 15, "uncommon": 25, "rare": 30, "epic": 20, "legendary": 10 }
+        "rarityWeights": {
+          "common": 15,
+          "uncommon": 25,
+          "rare": 30,
+          "epic": 20,
+          "legendary": 10,
+          "mythic": 0,
+          "artifact": 0
+        }
       }
     }
   ]

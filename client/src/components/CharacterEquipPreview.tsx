@@ -3,7 +3,7 @@ import {
   DEFAULT_CHARACTER_APPEARANCE,
   type CharacterAppearance,
 } from '../game/character/characterAppearance'
-import { getEquipColor } from '../game/character/itemCatalog'
+import { getEquipColor, getItemIconUrl } from '../game/character/itemCatalog'
 import { CharacterAppearancePreview } from './CharacterAppearancePreview'
 
 function colorHex(n: number): string {
@@ -15,9 +15,16 @@ type PreviewLayerProps = {
   itemId: string | null | undefined
 }
 
-/** Worn-equipment tint blocks (same idea as the world avatar overlays). */
 function PreviewLayer({ className, itemId }: PreviewLayerProps) {
   if (!itemId) return null
+  const src = getItemIconUrl(itemId)
+  if (src) {
+    return (
+      <div className={className}>
+        <img src={src} alt="" className="character-equip-preview__art" draggable={false} />
+      </div>
+    )
+  }
   return <div className={className} style={{ backgroundColor: colorHex(getEquipColor(itemId)) }} />
 }
 
@@ -32,14 +39,6 @@ export function CharacterEquipPreview({
   appearance = DEFAULT_CHARACTER_APPEARANCE,
   size = 'lg',
 }: Props) {
-  const weaponId = equipment.weapon
-  const armorId = equipment.armor
-  const offhandId = equipment.offhand
-  const garmentId = equipment.garment
-  const headTopId = equipment.headTop
-  const headMiddleId = equipment.headMiddle
-  const headLowerId = equipment.headLower
-
   return (
     <div
       className={`character-equip-preview character-equip-preview__stack${size === 'lg' ? ' character-equip-preview--lg' : ''}`}
@@ -48,13 +47,9 @@ export function CharacterEquipPreview({
       <div className="character-equip-preview__figure">
         <CharacterAppearancePreview appearance={appearance} size="sm" />
         <div className="character-equip-preview__overlays">
-        <PreviewLayer className="character-equip-preview__garment" itemId={garmentId} />
-        <PreviewLayer className="character-equip-preview__armor" itemId={armorId} />
-        <PreviewLayer className="character-equip-preview__head-top" itemId={headTopId} />
-        <PreviewLayer className="character-equip-preview__head-middle" itemId={headMiddleId} />
-        <PreviewLayer className="character-equip-preview__head-lower" itemId={headLowerId} />
-        <PreviewLayer className="character-equip-preview__offhand" itemId={offhandId} />
-        <PreviewLayer className="character-equip-preview__weapon" itemId={weaponId} />
+          <PreviewLayer className="character-equip-preview__head-top" itemId={equipment.headTop} />
+          <PreviewLayer className="character-equip-preview__head-middle" itemId={equipment.headMiddle} />
+          <PreviewLayer className="character-equip-preview__head-lower" itemId={equipment.headLower} />
         </div>
       </div>
     </div>

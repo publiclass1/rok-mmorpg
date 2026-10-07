@@ -106,12 +106,14 @@ import {
 import {
   createPlayerDisplay,
   playPlayerAnim,
+  setPlayerJobAvatar,
   setPlayerMounted,
   setPlayerSitting,
   setPlayerWalkFrame,
   updatePlayerEquipmentLayers,
   type PlayerDisplay,
 } from '../player/playerSprites'
+import { resolveJobAvatarKey } from '../player/playerJobAvatar'
 import { SIT_REGEN_INTERVAL_MS, sitRegenAmounts } from '../character/sitRegen'
 import { MapPresenceChannel } from '../realtime/mapChannel'
 import type { MapCombatPayload, MapCombatSkillId } from '../realtime/mapCombatTypes'
@@ -214,6 +216,7 @@ export class WorldScene extends Phaser.Scene {
   private selectedMob: MobInstance | null = null
   private selectionRing: Phaser.GameObjects.Ellipse | null = null
   private uiPointerLocked = false
+  private uiKeyboardLocked = false
   private currentCursor: GameCursor = 'default'
   private pendingSkill: { skillId: string; level: number; def: SkillDefinition } | null = null
   private queuedSkillCast: {
@@ -321,7 +324,13 @@ export class WorldScene extends Phaser.Scene {
       .ellipse(spawn.x, spawn.y + PLAYER_FEET_OFFSET, 22, 8, 0x000000, 0.28)
       .setDepth(0.5)
 
-    this.playerDisplay = createPlayerDisplay(this, spawn.x, spawn.y, appearanceFromCharacterRow(this.character))
+    this.playerDisplay = createPlayerDisplay(
+      this,
+      spawn.x,
+      spawn.y,
+      appearanceFromCharacterRow(this.character),
+      resolveJobAvatarKey(this.session.jobId),
+    )
     this.pecoMountGfx = createPecoMount(this)
     attachPecoMountToDisplay(this.playerDisplay, this.pecoMountGfx)
     this.rentalCartGfx = this.add.rectangle(spawn.x, spawn.y, 20, 14, 0x78716c, 1).setVisible(false)
@@ -477,15 +486,25 @@ export class WorldScene extends Phaser.Scene {
     this.eventUnsubs.push(
       onGameEvent('useSkillSlot', ({ slot }) => this.useSkillSlot(slot)),
       onGameEvent('sessionSync', (payload) => {
+        const prevJobId = this.session.jobId
         setCharacterSession(structuredClone(payload))
+        this.session = getCharacterSession()
         if (this.playerDisplay) {
-          updatePlayerEquipmentLayers(this.playerDisplay, getCharacterSession().equipment)
+          updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
+          const nextAvatar = resolveJobAvatarKey(this.session.jobId)
+          if (this.session.jobId !== prevJobId) {
+            setPlayerJobAvatar(this.playerDisplay, nextAvatar)
+          }
         }
         this.scheduleProgressSave()
       }),
       onGameEvent('uiPointerLock', (locked) => {
         this.uiPointerLocked = locked
         this.refreshCursor()
+      }),
+      onGameEvent('uiKeyboardLock', (locked) => {
+        this.uiKeyboardLocked = locked
+        if (locked) this.input.keyboard?.resetKeys()
       }),
       onGameEvent('minimapUi', ({ expanded }) => {
         this.minimapExpanded = expanded
@@ -693,7 +712,12 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
-    if (!this.isPlayerDead && !this.isSitting && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+    if (
+      !this.uiKeyboardLocked &&
+      !this.isPlayerDead &&
+      !this.isSitting &&
+      Phaser.Input.Keyboard.JustDown(this.spaceKey)
+    ) {
       const jumped = tryJump(this, this.playerDisplay.container, () => this.isJumping, (v) => {
         this.isJumping = v
       })
@@ -1093,6 +1117,7 @@ export class WorldScene extends Phaser.Scene {
         anim: 'idle',
         walkFrame: 0,
         mounted: false,
+        jobId: this.session.jobId,
         equipment: this.session.equipment,
         appearance: appearanceFromCharacterRow(this.character),
         guildTag: this.socialPresence.guildTag ?? null,
@@ -1122,6 +1147,7 @@ export class WorldScene extends Phaser.Scene {
       anim,
       walkFrame,
       mounted: isOnPecoMount(this.session, this.activeBuffs),
+      jobId: this.session.jobId,
       equipment: this.session.equipment,
       appearance: appearanceFromCharacterRow(this.character),
       guildTag: this.socialPresence.guildTag ?? null,

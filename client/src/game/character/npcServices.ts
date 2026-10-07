@@ -35,3 +35,7 @@ export function healerZenyCost(config: NpcRow['config']): number {
   const cost = config?.zenyCost
   return typeof cost === 'number' && cost > 0 ? Math.floor(cost) : 0
 }
+
+export function isRarityTabShop(config: NpcRow['config']): boolean {
+  return config?.shopLayout === 'rarityTabs'
+}

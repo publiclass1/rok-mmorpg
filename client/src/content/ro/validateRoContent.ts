@@ -1,6 +1,8 @@
 import type { RoContentPack, WeaponClass } from './types'
+import { PLAYER_AVATAR_KEYS } from '../../game/player/playerJobAvatar'
 
 const WEAPON_CLASSES = new Set<WeaponClass>(['knife', 'sword', 'spear', 'staff', 'bow'])
+const ALLOWED_AVATAR_KEYS = new Set<string>(PLAYER_AVATAR_KEYS)
 
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(`[content/ro] ${message}`)
@@ -19,6 +21,10 @@ export function validateRoContent(pack: RoContentPack): void {
   for (const job of pack.jobs) {
     if (job.parentJobId) {
       assert(jobIds.has(job.parentJobId), `job ${job.id} references unknown parentJobId: ${job.parentJobId}`)
+    }
+    if (job.id !== 'monster') {
+      const key = job.avatarKey ?? 'novice'
+      assert(ALLOWED_AVATAR_KEYS.has(key), `job ${job.id} invalid avatarKey: ${key}`)
     }
   }
 

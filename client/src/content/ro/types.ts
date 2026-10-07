@@ -10,6 +10,8 @@ export type RoJob = {
   name: string
   maxJobLevel: number
   parentJobId: string | null
+  /** Procedural player body silhouette key (see playerJobAvatar.ts). */
+  avatarKey?: string | null
   sourceUrl?: string | null
 }
 
@@ -88,6 +90,10 @@ export type RoItem = {
   sourceUrl?: string | null
   /** Override path under public root; weapons default to `/items/weapons/{id}.svg` */
   iconFile?: string | null
+  /** NPC showcase tier — cosmetic glow/UI only when set on base items. */
+  rarity?: GearRarityId
+  /** When false, item cannot be chosen as a dungeon rolled-gear base. Default true. */
+  dungeonRollable?: boolean
 }
 
 export type RoJobStarterPiece = {
@@ -250,7 +256,14 @@ export type RoLootConfig = {
   levelBands: RoLootLevelBand[]
 }
 
-export type GearRarityId = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+export type GearRarityId =
+  | 'common'
+  | 'uncommon'
+  | 'rare'
+  | 'epic'
+  | 'legendary'
+  | 'mythic'
+  | 'artifact'
 
 export type RoGearRarity = {
   label: string

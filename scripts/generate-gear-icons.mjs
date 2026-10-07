@@ -308,6 +308,13 @@ const armorBuilders = {
   clip: (id, item) => drawClip(id, layerHex(item.layerColor)),
   glove: (id, item) => drawGlove(id, layerHex(item.layerColor)),
   ring: (id, item) => drawRing(id, layerHex(item.layerColor)),
+  padded_vest: (id, item) => drawCoat(id, layerHex(item.layerColor)),
+  scout_mail: (id, item) => drawCoat(id, layerHex(item.layerColor)),
+  knight_plate: (id, item) => drawCoat(id, layerHex(item.layerColor)),
+  violet_cuirass: (id, item) => drawCoat(id, layerHex(item.layerColor)),
+  dragon_scale_mail: (id, item) => drawCoat(id, layerHex(item.layerColor)),
+  skyweave_robe: (id, item) => drawSilkRobe(id, layerHex(item.layerColor)),
+  relic_guardplate: (id, item) => drawWoodenMail(id, layerHex(item.layerColor)),
 }
 
 const consumableBuilders = {

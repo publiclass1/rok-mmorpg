@@ -5,6 +5,7 @@
       "name": "Novice",
       "maxJobLevel": 10,
       "parentJobId": null,
+      "avatarKey": "novice",
       "sourceUrl": "https://irowiki.org/wiki/Novice"
     },
     {
@@ -12,6 +13,7 @@
       "name": "Swordman",
       "maxJobLevel": 50,
       "parentJobId": "novice",
+      "avatarKey": "swordman",
       "sourceUrl": "https://irowiki.org/wiki/Swordman"
     },
     {
@@ -19,6 +21,7 @@
       "name": "Knight",
       "maxJobLevel": 50,
       "parentJobId": "swordman",
+      "avatarKey": "knight",
       "sourceUrl": "https://irowiki.org/wiki/Knight"
     },
     {
@@ -26,6 +29,7 @@
       "name": "Mage",
       "maxJobLevel": 50,
       "parentJobId": "novice",
+      "avatarKey": "mage",
       "sourceUrl": "https://irowiki.org/wiki/Mage"
     },
     {
@@ -33,6 +37,7 @@
       "name": "Archer",
       "maxJobLevel": 50,
       "parentJobId": "novice",
+      "avatarKey": "archer",
       "sourceUrl": "https://irowiki.org/wiki/Archer"
     },
     {
@@ -40,6 +45,7 @@
       "name": "Hunter",
       "maxJobLevel": 50,
       "parentJobId": "archer",
+      "avatarKey": "hunter",
       "sourceUrl": "https://irowiki.org/wiki/Hunter"
     },
     {
@@ -47,6 +53,7 @@
       "name": "Acolyte",
       "maxJobLevel": 50,
       "parentJobId": "novice",
+      "avatarKey": "acolyte",
       "sourceUrl": "https://irowiki.org/wiki/Acolyte"
     },
     {
@@ -54,6 +61,7 @@
       "name": "Merchant",
       "maxJobLevel": 50,
       "parentJobId": "novice",
+      "avatarKey": "merchant",
       "sourceUrl": "https://irowiki.org/wiki/Merchant"
     },
     {
@@ -61,6 +69,7 @@
       "name": "Thief",
       "maxJobLevel": 50,
       "parentJobId": "novice",
+      "avatarKey": "thief",
       "sourceUrl": "https://irowiki.org/wiki/Thief"
     },
     {
