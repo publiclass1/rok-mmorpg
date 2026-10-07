@@ -3,6 +3,8 @@ import Phaser from 'phaser'
 export const PLAYER_NAME_OFFSET_BELOW = 10
 /** Skill name callout sits above the feet anchor (negative Y from feet). */
 export const PLAYER_SKILL_CALLOUT_OFFSET_ABOVE = 42
+/** iRO-style cast gauge (black + green fill), above skill name. */
+export const PLAYER_CAST_BAR_OFFSET_ABOVE = 56
 
 export function styleWorldNameLabel(text: Phaser.GameObjects.Text, color = '#ffffff') {
   text.setFontSize(11).setColor(color).setStroke('#0f172a', 3)

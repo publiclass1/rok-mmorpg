@@ -70,7 +70,8 @@ import {
 import { playLevelUpAudio, preloadLevelUpAudio } from '../combat/levelUpAudio'
 import { playLevelUpWorldFx } from '../combat/levelUpFx'
 import { buildLevelUpSteps, type LevelUpStep } from '../combat/levelUpSteps'
-import { skillCastStrikeDelayMs } from '../combat/castTime'
+import { PlayerCastBarGfx, positionPlayerCastBar, shouldShowCastBar } from '../combat/castBarFx'
+import { calcPreRenewalCastTimeMsFromSession, skillCastStrikeDelayMs } from '../combat/castTime'
 import { playSkillCastFx, playSkillGroundFx, playSkillImpactFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
@@ -299,6 +300,7 @@ export class WorldScene extends Phaser.Scene {
     remote: RemotePlayerEntity
   } | null = null
   private skillCalloutTween: Phaser.Tweens.Tween | null = null
+  private playerCastBar!: PlayerCastBarGfx
   private levelUpQueue: LevelUpStep[] = []
   private levelUpDrainActive = false
   private levelUpCelebrateId = 0
@@ -484,6 +486,8 @@ export class WorldScene extends Phaser.Scene {
     positionSkillCalloutLabel(this.playerSkillCallout, spawn.x, spawn.y)
     this.playerSkillCallout.setVisible(false)
     this.playerSkillCallout.setAlpha(0)
+
+    this.playerCastBar = new PlayerCastBarGfx(this)
 
     this.playerChatBubble = createPlayerChatBubble(this)
 
@@ -867,6 +871,7 @@ export class WorldScene extends Phaser.Scene {
   private enterPlayerDeath(options?: { animate?: boolean }) {
     if (this.isPlayerDead || this.session.hp > 0) return
     this.isPlayerDead = true
+    this.cancelSkillCastBar()
     this.pendingSkill = null
     this.queuedSkillCast = null
     this.chaseMobForSkillOnly = false
@@ -1132,6 +1137,9 @@ export class WorldScene extends Phaser.Scene {
     const localFeetY = this.playerFeetY()
     positionPlayerNameLabel(this.playerLabel, localX, localY)
     positionSkillCalloutLabel(this.playerSkillCallout, localX, localY)
+    if (this.playerCastBar.isActive) {
+      positionPlayerCastBar(this.playerCastBar.container, localX, localFeetY)
+    }
     positionPlayerChatBubbleAtFeet(this.playerChatBubble, localX, localFeetY)
     const localInView = entityInView(bounds, localX, localY)
     this.playerLabel.setVisible(localInView && !this.isPlayerDead)
@@ -1524,6 +1532,7 @@ export class WorldScene extends Phaser.Scene {
     setDepthByFeet(this.playerDisplay.container, playerFeet)
     setDepthByFeet(this.playerLabel, playerFeet + PLAYER_NAME_OFFSET_BELOW, 0.05)
     setDepthByFeet(this.playerSkillCallout, playerFeet, 0.06)
+    setDepthByFeet(this.playerCastBar.container, playerFeet, 0.065)
     setDepthByFeet(this.playerChatBubble.container, playerFeet, 0.07)
     this.syncMountVisuals(playerFeet)
 
@@ -1648,8 +1657,23 @@ export class WorldScene extends Phaser.Scene {
       clearMoveTarget(this.moveTarget)
       this.stopPlayerMotion()
     }
+    this.cancelSkillCastBar()
     emitGameEvent('status', 'Skill cancelled.')
     this.refreshCursor()
+  }
+
+  private beginSkillCastBarIfNeeded(def: SkillDefinition) {
+    const castMs = calcPreRenewalCastTimeMsFromSession(def.castTimeMs, this.session)
+    if (!shouldShowCastBar(castMs)) {
+      this.playerCastBar.cancel()
+      return castMs
+    }
+    this.playerCastBar.play(castMs, this.playerDisplay.container.x, this.playerFeetY())
+    return castMs
+  }
+
+  private cancelSkillCastBar() {
+    this.playerCastBar.cancel()
   }
 
   private showSkillCallout(name: string, durationMs = 1200) {
@@ -1887,7 +1911,8 @@ export class WorldScene extends Phaser.Scene {
     this.lastAttackAt = now
     this.isAttacking = true
     this.faceToward(target.sprite.x, target.sprite.y)
-    this.showSkillCallout(def.name)
+    const castMs = this.beginSkillCastBarIfNeeded(def)
+    this.showSkillCallout(def.name, Math.max(1200, castMs + 500))
     const depth = this.playerDisplay.container.depth + 0.1
     playSkillCastFx(this, 'dispell', {
       playerX: px,
@@ -1956,7 +1981,8 @@ export class WorldScene extends Phaser.Scene {
     this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
     this.faceToward(primaryMob.sprite.x, primaryMob.sprite.y)
-    this.showSkillCallout(def.name)
+    const castMs = this.beginSkillCastBarIfNeeded(def)
+    this.showSkillCallout(def.name, Math.max(1200, castMs + 500))
 
     const skillLabel = def.name
     const depth = this.playerDisplay.container.depth + 0.1
@@ -2022,7 +2048,8 @@ export class WorldScene extends Phaser.Scene {
     this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
     this.faceToward(wx, wy)
-    this.showSkillCallout(def.name)
+    const castMs = this.beginSkillCastBarIfNeeded(def)
+    this.showSkillCallout(def.name, Math.max(1200, castMs + 500))
 
     const depth = this.playerDisplay.container.depth + 0.1
     const strikeDelay = this.skillCastStrikeDelayMs(def)

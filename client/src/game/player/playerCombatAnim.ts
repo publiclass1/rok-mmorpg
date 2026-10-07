@@ -23,6 +23,8 @@ export type AttackVariant = 'basic' | 'bash'
 const WINDUP_MS = 55
 const STRIKE_MS = 100
 const END_MS = 380
+/** Room after strike for projectile travel (matches `projectileTravelMs` cap). */
+const POST_STRIKE_PROJECTILE_MS = 400
 
 export function startPlayerAttackAnim(
   scene: Phaser.Scene,
@@ -57,6 +59,11 @@ export function startPlayerAttackAnim(
   setPlayerAttackPhase(display, 0)
 
   const strikeDelay = options.strikeDelayMs ?? WINDUP_MS
+  const hitCount = options.magicHitCount ?? 1
+  const boltStagger =
+    options.magicSkillId?.endsWith('_bolt') && hitCount > 1 ? (hitCount - 1) * 90 : 0
+  const animEndMs = Math.max(END_MS, strikeDelay + POST_STRIKE_PROJECTILE_MS + boltStagger)
+  const strikePhaseMs = strikeDelay + Math.max(0, STRIKE_MS - WINDUP_MS)
 
   scene.time.delayedCall(strikeDelay, () => {
     if (display.pose.anim !== 'attack') return
@@ -67,7 +74,7 @@ export function startPlayerAttackAnim(
 
     if (ranged && aim) {
       const container = display.container
-      const depth = container.depth + 0.08
+      const depth = container.depth + 1.25
       playRangedAttackRecoil(scene, display.bodyRig, facing)
       if (options.magicSkillId) {
         const hitCount = options.magicHitCount ?? 1
@@ -106,12 +113,12 @@ export function startPlayerAttackAnim(
     options.onStrike?.()
   })
 
-  scene.time.delayedCall(STRIKE_MS, () => {
+  scene.time.delayedCall(strikePhaseMs, () => {
     if (display.pose.anim !== 'attack') return
     setPlayerAttackPhase(display, 2)
   })
 
-  scene.time.delayedCall(END_MS, () => {
+  scene.time.delayedCall(animEndMs, () => {
     if (display.pose.anim === 'attack') {
       setPlayerToIdle(display, facing)
     }

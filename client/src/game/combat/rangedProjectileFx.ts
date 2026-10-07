@@ -184,36 +184,44 @@ function buildMagicProjectileGraphic(
 
   switch (kind) {
     case 'fire': {
-      const core = scene.add.circle(0, 0, 4, 0xf97316, 0.95)
-      core.setStrokeStyle(1, 0xfde047, 1)
+      const glow = scene.add.circle(0, 0, 9, 0xf97316, 0.35)
+      container.add(glow)
+      const core = scene.add.circle(0, 0, 6, 0xf97316, 0.98)
+      core.setStrokeStyle(2, 0xfde047, 1)
       container.add(core)
-      g.lineStyle(3, 0xef4444, 0.55)
-      g.lineBetween(-12, 0, -3, 0)
+      g.lineStyle(4, 0xef4444, 0.65)
+      g.lineBetween(-18, 0, -4, 0)
       container.add(g)
       break
     }
     case 'water': {
-      const core = scene.add.circle(0, 0, 4, 0x38bdf8, 0.95)
-      core.setStrokeStyle(1, 0xe0f2fe, 1)
+      const glow = scene.add.circle(0, 0, 9, 0x38bdf8, 0.3)
+      container.add(glow)
+      const core = scene.add.circle(0, 0, 6, 0x38bdf8, 0.98)
+      core.setStrokeStyle(2, 0xe0f2fe, 1)
       container.add(core)
-      g.lineStyle(3, 0x0ea5e9, 0.5)
-      g.lineBetween(-14, 0, -4, 0)
+      g.lineStyle(4, 0x0ea5e9, 0.6)
+      g.lineBetween(-18, 0, -4, 0)
       container.add(g)
       break
     }
     case 'wind': {
-      g.lineStyle(3, 0xfde047, 0.95)
-      g.lineBetween(-12, 2, 10, -2)
-      g.lineStyle(2, 0xfbbf24, 0.7)
-      g.lineBetween(-8, -3, 8, 1)
+      const core = scene.add.circle(0, 0, 5, 0xfde047, 0.9)
+      container.add(core)
+      g.lineStyle(4, 0xfde047, 0.95)
+      g.lineBetween(-16, 2, 12, -2)
+      g.lineStyle(3, 0xfbbf24, 0.75)
+      g.lineBetween(-10, -4, 10, 2)
       container.add(g)
       break
     }
     case 'ghost': {
-      const core = scene.add.circle(0, 0, 5, 0xa78bfa, 0.75)
+      const glow = scene.add.circle(0, 0, 10, 0xa78bfa, 0.35)
+      container.add(glow)
+      const core = scene.add.circle(0, 0, 6, 0xa78bfa, 0.85)
       container.add(core)
-      g.lineStyle(2, 0xc4b5fd, 0.6)
-      g.lineBetween(-10, 0, 6, 0)
+      g.lineStyle(3, 0xc4b5fd, 0.7)
+      g.lineBetween(-14, 0, 8, 0)
       container.add(g)
       break
     }
@@ -289,10 +297,32 @@ export function playMagicSkillProjectile(
     return
   }
 
-  tweenProjectile(scene, container, fromX, fromY, toX, toY, depth, duration, () => {
-    sparkAt(scene, toX, toY, depth, sparkColor)
+  tweenProjectile(scene, container, fromX, fromY, toX, toY, depth + 0.02, duration, () => {
+    sparkAt(scene, toX, toY, depth + 0.05, sparkColor)
     onArrive?.()
   }, useArc)
+
+  if (kind === 'fire' || kind === 'water' || kind === 'wind') {
+    const trail = scene.add.graphics()
+    trail.setDepth(depth + 0.01)
+    const trailProgress = { t: 0 }
+    scene.tweens.add({
+      targets: trailProgress,
+      t: 1,
+      duration,
+      ease: 'Linear',
+      onUpdate: () => {
+        const t = trailProgress.t
+        const x = fromX + (toX - fromX) * t
+        const arcLift = useArc ? Math.sin(t * Math.PI) * 10 : 0
+        const y = fromY + (toY - fromY) * t - arcLift
+        trail.clear()
+        trail.lineStyle(kind === 'wind' ? 2 : 3, sparkColor, 0.5 * (1 - t * 0.45))
+        trail.lineBetween(fromX, fromY, x, y)
+      },
+      onComplete: () => trail.destroy(),
+    })
+  }
 }
 
 const BOLT_STAGGER_MS = 90
