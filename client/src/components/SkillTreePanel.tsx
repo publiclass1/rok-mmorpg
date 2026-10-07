@@ -59,11 +59,9 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
   const hoverDetail =
     hoverSkill != null ? skillRequirementDetail(hoverSkill, sheet, tabJobId) : null
 
-  const viewportWidth = Math.max(width, 280)
-
   return (
     <div className="skill-tree-viewport">
-      <div className="skill-tree-canvas" style={{ width, height, minWidth: viewportWidth }}>
+      <div className="skill-tree-canvas" style={{ width, height }}>
         <svg className="skill-tree-edges" width={width} height={height} aria-hidden>
           {layout.edges.map((edge) => {
             const fromPos = layout.positions[edge.from]

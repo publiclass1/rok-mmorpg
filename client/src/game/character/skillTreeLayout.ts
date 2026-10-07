@@ -50,7 +50,10 @@ type SubtreeLayout = {
   span: number
 }
 
-/** Assign horizontal columns so children sit under their parent (forest layout). */
+/**
+ * iRO-style skill tree: prerequisites on top, dependents below, siblings spread
+ * horizontally with the parent centered over its branch (see docs/IRO_REFERENCE.md → Skills).
+ */
 function layoutSubtree(rootId: string, childrenOf: Map<string, string[]>): SubtreeLayout {
   const kids = childrenOf.get(rootId) ?? []
   if (kids.length === 0) {
@@ -150,12 +153,12 @@ export function computeSkillTreeLayout(skills: SkillDefinition[]): SkillTreeLayo
   }
 }
 
-/** Pixel layout constants for the skills tree viewport. */
-export const SKILL_TREE_CELL_W = 72
-export const SKILL_TREE_CELL_H = 76
-export const SKILL_TREE_COL_GAP = 14
-export const SKILL_TREE_ROW_GAP = 32
-export const SKILL_TREE_PAD = 20
+/** Spacing tuned for RO-like icon + name + level rows (not cramped). */
+export const SKILL_TREE_CELL_W = 84
+export const SKILL_TREE_CELL_H = 96
+export const SKILL_TREE_COL_GAP = 22
+export const SKILL_TREE_ROW_GAP = 44
+export const SKILL_TREE_PAD = 18
 
 export function skillTreeNodeCenter(
   pos: SkillTreePosition,

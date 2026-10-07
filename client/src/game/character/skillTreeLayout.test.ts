@@ -10,7 +10,7 @@ assert.equal(swordLayout.mode, 'tree')
 const magnumPos = swordLayout.positions.magnum
 const bashPos = swordLayout.positions.bash
 assert.ok(magnumPos && bashPos, 'magnum and bash positioned')
-assert.ok(magnumPos.row > bashPos.row, 'magnum below bash')
+assert.ok(magnumPos.row > bashPos.row, 'magnum below bash (iRO top-down tree)')
 assert.equal(magnumPos.col, bashPos.col, 'magnum centered under bash')
 
 const knight = skillsForJob('knight')

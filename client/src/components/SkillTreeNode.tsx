@@ -61,7 +61,7 @@ export function SkillTreeNode({
         drag={iconDraggable ? { source: 'list', skillId: skill.id } : undefined}
         title=""
       />
-      <span className="skill-tree-node-name">{skill.name}</span>
+      <span className="skill-tree-node-name" title={skill.name}>{skill.name}</span>
       <div className="skill-tree-node__main">
         <span className="skill-tree-node-level muted small">
           {level}/{skill.maxLevel}
