@@ -330,6 +330,7 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
   const mapsJsonPath = path.join(repoRoot, 'content/ro/maps.json')
   const mapsDir = path.join(repoRoot, 'client/public/maps')
   const sharedPortalsPath = path.join(repoRoot, 'supabase/functions/_shared/mapPortals.json')
+  const sharedMobSpotsPath = path.join(repoRoot, 'supabase/functions/_shared/ro/mobSpots.json')
   const migrationsDir = path.join(repoRoot, 'supabase/migrations')
   const customMapsSeedDir = path.join(repoRoot, 'supabase/seed/custom_maps')
 
@@ -437,6 +438,11 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
 
             const portalExport = buildMapPortalsExport(mapsJson)
             await fs.writeFile(sharedPortalsPath, `${JSON.stringify(portalExport, null, 2)}\n`, 'utf8')
+            await fs.writeFile(
+              sharedMobSpotsPath,
+              `${JSON.stringify(mapsJson.mobSpots ?? {}, null, 2)}\n`,
+              'utf8',
+            )
 
             const sqlBundle = buildSqlBundle(entry, portals ?? [], tmj, warpWiring)
             await fs.mkdir(migrationsDir, { recursive: true })

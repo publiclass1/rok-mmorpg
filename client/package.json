@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "content:validate": "tsx src/content/ro/validateContent.ts && node ../scripts/generate-weapon-icons.mjs --check && node ../scripts/generate-gear-icons.mjs --check && node ../scripts/generate-skill-icons.mjs --check",
+    "content:validate": "tsx src/content/ro/validateContent.ts && node ../scripts/sync-mob-spots-to-supabase.mjs --check && node ../scripts/generate-weapon-icons.mjs --check && node ../scripts/generate-gear-icons.mjs --check && node ../scripts/generate-skill-icons.mjs --check",
     "icons:weapons": "node ../scripts/generate-weapon-icons.mjs",
     "icons:gear": "node ../scripts/generate-gear-icons.mjs",
     "icons:skills": "node ../scripts/generate-skill-icons.mjs",

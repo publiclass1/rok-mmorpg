@@ -30,12 +30,6 @@ export function obstacleRectsForMap(
 }
 
 export const OBSTACLES_BY_MAP: Record<string, ObstacleDef[]> = {
-  prt_fild01: [
-    { x: 380, y: 300, width: 64, height: 48 },
-    { x: 580, y: 380, width: 72, height: 56 },
-    { x: 460, y: 180, width: 56, height: 72 },
-    { x: 680, y: 260, width: 48, height: 48 },
-  ],
   field_01: [
     { x: 360, y: 300, width: 72, height: 56 },
     { x: 600, y: 360, width: 64, height: 64 },
