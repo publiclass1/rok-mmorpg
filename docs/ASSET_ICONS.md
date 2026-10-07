@@ -80,6 +80,30 @@ Icons are **original vector art** (gradients + paths) in a 32×32 `viewBox`, sty
 | `pushcart` | [Pushcart](https://irowiki.org/wiki/Pushcart) | Merchant cart + wheels |
 | `falcon_mastery` | [Falcon Mastery](https://irowiki.org/wiki/Falcon_Mastery) | Falcon head / wings |
 | `heal` | [Heal](https://irowiki.org/wiki/Heal) | Golden holy cross |
+| `fire_bolt` | [Fire Bolt](https://irowiki.org/wiki/Fire_Bolt) | Flame bolt |
+| `cold_bolt` | [Cold Bolt](https://irowiki.org/wiki/Cold_Bolt) | Ice crystal |
+| `lightning_bolt` | [Lightning Bolt](https://irowiki.org/wiki/Lightning_Bolt) | Yellow lightning |
+| `napalm_beat` | [Napalm Beat](https://irowiki.org/wiki/Napalm_Beat) | Psychic orb |
+| `soul_strike` | [Soul Strike](https://irowiki.org/wiki/Soul_Strike) | Holy spirit |
+| `fire_ball` | [Fireball](https://irowiki.org/wiki/Fireball) | Fire sphere |
+| `frost_diver` | [Frost Diver](https://irowiki.org/wiki/Frost_Diver) | Ice diamond |
+| `stone_curse` | [Stone Curse](https://irowiki.org/wiki/Stone_Curse) | Stone block |
+| `energy_coat` | [Energy Coat](https://irowiki.org/wiki/Energy_Coat) | Blue aura ring |
+| `safety_wall` | [Safety Wall](https://irowiki.org/wiki/Safety_Wall) | Hex shield |
+| `sight` | [Sight](https://irowiki.org/wiki/Sight) | Eye |
+| `meteor_storm` | [Meteor Storm](https://irowiki.org/wiki/Meteor_Storm) | Meteors + fire |
+| `jupitel_thunder` | [Jupitel Thunder](https://irowiki.org/wiki/Jupitel_Thunder) | Lightning orb |
+| `lord_of_vermilion` | [Lord of Vermilion](https://irowiki.org/wiki/Lord_of_Vermilion) | Fire star burst |
+| `water_ball` | [Water Ball](https://irowiki.org/wiki/Water_Ball) | Water sphere |
+| `ice_wall` | [Ice Wall](https://irowiki.org/wiki/Ice_Wall) | Ice pillars |
+| `frost_nova` | [Frost Nova](https://irowiki.org/wiki/Frost_Nova) | Frost cross burst |
+| `storm_gust` | [Storm Gust](https://irowiki.org/wiki/Storm_Gust) | Blizzard arc |
+| `earth_spike` | [Earth Spike](https://irowiki.org/wiki/Earth_Spike) | Earth spike |
+| `heavens_drive` | [Heaven's Drive](https://irowiki.org/wiki/Heaven%27s_Drive) | Earth triangle |
+| `quagmire` | [Quagmire](https://irowiki.org/wiki/Quagmire) | Mud pool |
+| `sense` | [Sense](https://irowiki.org/wiki/Sense) | Pink target ring |
+| `dispell` | [Dispell](https://irowiki.org/wiki/Dispell) | Crossed magic orb |
+| `magic_rod` | [Magic Rod](https://irowiki.org/wiki/Magic_Rod) | Gem staff |
 | `mob_bash` | — | Purple-tinted bash |
 | `mob_hammer_fall` | — | Purple hammer |
 | `mob_meteor_storm` | — | Meteors + fire |

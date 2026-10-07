@@ -34,6 +34,18 @@ export type RoSkillSelfBuff = {
   durationMsPerLevel?: number
 }
 
+export type RoSkillMagicElement = 'fire' | 'water' | 'wind' | 'earth' | 'ghost' | 'neutral'
+
+export type RoSkillMagic = {
+  element: RoSkillMagicElement
+  /** Bolt skills: one hit per skill level. */
+  hitsEqualLevel?: boolean
+  /** Ground / nova AoE radius in pixels. */
+  aoeRadius?: number
+  skillModifierBase?: number
+  skillModifierPerLevel?: number
+}
+
 export type RoSkill = {
   id: string
   name: string
@@ -51,6 +63,7 @@ export type RoSkill = {
   /** Override path under /skills/; default `{id}.svg` */
   iconFile?: string | null
   selfBuff?: RoSkillSelfBuff
+  magic?: RoSkillMagic
   /** Mob-only skill damage scale vs normal hit. */
   mobDamageMultiplier?: number
 }

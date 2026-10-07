@@ -8,7 +8,7 @@ import { getItemWeaponClass } from '../character/itemCatalog'
 import { sumEquippedCritChancePercent } from './critBonuses'
 import { sumEquippedRolledDamagePercent } from '../items/rolledItemCombat'
 import type { MobDefinition } from './mobConfig'
-import { SKILLS } from '../character/skillsConfig'
+import { SKILLS, type SkillDefinition } from '../character/skillsConfig'
 
 /** Base Pre-Renewal crit damage before LUK bonus (iRO 140%). */
 export const CRITICAL_DAMAGE_BASE = 1.4
@@ -294,6 +294,59 @@ export function calcPlayerMagicVsMobDamage(
     damage = Math.floor(damage * (1 + bonusPct / 100))
   }
   return { damage: Math.max(1, damage), critical }
+}
+
+export function magicSkillModifier(def: SkillDefinition | undefined, skillLevel: number): number {
+  const magic = def?.magic
+  if (!magic) return 1
+  const base = magic.skillModifierBase ?? 1
+  const per = magic.skillModifierPerLevel ?? 0
+  return base + per * Math.max(0, skillLevel - 1)
+}
+
+export type MagicSkillHitResult = {
+  totalDamage: number
+  hits: number
+  criticalAny: boolean
+  perHitDamage: number[]
+}
+
+export function calcPlayerMagicSkillVsMob(
+  state: CharacterSessionState,
+  mob: MobDefinition,
+  skillId: string,
+  skillLevel: number,
+  options?: { rng?: () => number },
+): MagicSkillHitResult {
+  const def = SKILLS[skillId]
+  const magic = def?.magic
+  const rng = options?.rng ?? Math.random
+  const modifier = magicSkillModifier(def, skillLevel)
+  let undeadMult = 1
+  let element = magic?.element ?? 'neutral'
+  if (skillId === 'soul_strike' && mob.element === 'undead') {
+    undeadMult = 1.5
+    // Ghost property is 0% vs Undead in our element table; use neutral for the bonus hit.
+    element = 'neutral'
+  }
+  const hitCount = magic?.hitsEqualLevel ? Math.max(1, skillLevel) : 1
+
+  const perHitDamage: number[] = []
+  let criticalAny = false
+  let total = 0
+
+  for (let i = 0; i < hitCount; i++) {
+    const { damage, critical } = calcPlayerMagicVsMobDamage(state, mob, {
+      skillModifier: modifier * undeadMult,
+      attackElement: element,
+      rng,
+    })
+    perHitDamage.push(damage)
+    total += damage
+    if (critical) criticalAny = true
+  }
+
+  return { totalDamage: total, hits: hitCount, criticalAny, perHitDamage }
 }
 
 export function calcMobVsPlayerDamage(mob: MobDefinition, state: CharacterSessionState, rng = Math.random): number {

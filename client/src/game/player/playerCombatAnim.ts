@@ -1,5 +1,11 @@
 import Phaser from 'phaser'
 import { playPlayerAttackSlash } from '../combat/combatFx'
+import {
+  playBowArrowProjectile,
+  playRangedAttackRecoil,
+  playStaffMagicProjectile,
+  rangedProjectileOrigin,
+} from '../combat/rangedProjectileFx'
 import type { AttackStyle } from '../character/characterSpriteRegistry'
 import type { Facing } from '../movement/clickToMove'
 import { stopIdleRigTween } from './playerIdleMotion'
@@ -24,6 +30,7 @@ export function startPlayerAttackAnim(
   options: {
     variant: AttackVariant
     attackStyle: AttackStyle
+    getAimTarget?: () => { x: number; y: number } | null
     onStrike?: () => void
     onComplete?: () => void
   },
@@ -44,6 +51,24 @@ export function startPlayerAttackAnim(
   scene.time.delayedCall(WINDUP_MS, () => {
     if (display.pose.anim !== 'attack') return
     setPlayerAttackPhase(display, 1)
+
+    const ranged = options.attackStyle === 'bow' || options.attackStyle === 'cast'
+    const aim = ranged ? options.getAimTarget?.() ?? null : null
+
+    if (ranged && aim) {
+      const container = display.container
+      const origin = rangedProjectileOrigin(container.x, container.y, facing)
+      const depth = container.depth + 0.08
+      playRangedAttackRecoil(scene, display.bodyRig, facing)
+      const onArrive = () => options.onStrike?.()
+      if (options.attackStyle === 'bow') {
+        playBowArrowProjectile(scene, origin.x, origin.y, aim.x, aim.y, depth, onArrive)
+      } else {
+        playStaffMagicProjectile(scene, origin.x, origin.y, aim.x, aim.y, depth, onArrive)
+      }
+      return
+    }
+
     playPlayerAttackSlash(scene, display, facing, {
       variant: options.variant,
       attackStyle: options.attackStyle,

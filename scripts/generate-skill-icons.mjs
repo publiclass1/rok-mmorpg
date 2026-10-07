@@ -480,6 +480,221 @@ function drawMobPulse(id) {
   )
 }
 
+function drawFireBolt(id) {
+  return wrap(
+    `<path d="M16 6 L19 14 L16 26 L13 14 Z" fill="url(#${id}-fire)" filter="url(#${id}-glow)"/>
+  <circle cx="16" cy="12" r="2" fill="#fff" opacity="0.8"/>`,
+    id,
+    '#f97316',
+  )
+}
+
+function drawColdBolt(id) {
+  return wrap(
+    `<path d="M16 5 L20 12 L16 27 L12 12 Z" fill="#38bdf8" stroke="#0ea5e9" stroke-width="0.6"/>
+  <path d="M16 9 L16 22 M11 14 L21 14" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round"/>`,
+    id,
+    '#0ea5e9',
+  )
+}
+
+function drawLightningBolt(id) {
+  return wrap(
+    `<path d="M18 5 L12 15 H16 L14 27 L22 14 H17 Z" fill="#fde047" stroke="#eab308" stroke-width="0.5" filter="url(#${id}-glow)"/>`,
+    id,
+    '#eab308',
+  )
+}
+
+function drawNapalmBeat(id) {
+  return wrap(
+    `<circle cx="16" cy="16" r="8" fill="url(#${id}-gem)" opacity="0.9"/>
+  <path d="M8 16 Q16 8 24 16 Q16 24 8 16" fill="none" stroke="#c4b5fd" stroke-width="1.2"/>`,
+    id,
+    '#6366f1',
+  )
+}
+
+function drawSoulStrike(id) {
+  return wrap(
+    `<circle cx="16" cy="14" r="6" fill="url(#${id}-holy)" opacity="0.85"/>
+  <path d="M10 22 Q16 18 22 22" stroke="#fef08a" stroke-width="1.5" fill="none"/>
+  <circle cx="13" cy="12" r="1" fill="#fff"/><circle cx="19" cy="12" r="1" fill="#fff"/>`,
+    id,
+    '#ca8a04',
+  )
+}
+
+function drawFireBall(id) {
+  return wrap(
+    `<circle cx="16" cy="16" r="9" fill="url(#${id}-fire)" filter="url(#${id}-glow)"/>
+  <circle cx="16" cy="16" r="4" fill="#fff" opacity="0.5"/>`,
+    id,
+    '#ef4444',
+  )
+}
+
+function drawFrostDiver(id) {
+  return wrap(
+    `<path d="M16 6 L22 16 L16 26 L10 16 Z" fill="#7dd3fc" stroke="#0284c7" stroke-width="0.6"/>
+  <path d="M16 10 L16 22 M12 16 L20 16" stroke="#f0f9ff" stroke-width="1"/>`,
+    id,
+    '#0284c7',
+  )
+}
+
+function drawStoneCurse(id) {
+  return wrap(
+    `<rect x="10" y="10" width="12" height="14" rx="2" fill="#78716c"/>
+  <path d="M10 14 H22 M12 18 H20" stroke="#a8a29e" stroke-width="0.8"/>`,
+    id,
+    '#57534e',
+  )
+}
+
+function drawEnergyCoat(id) {
+  return wrap(
+    `<circle cx="16" cy="16" r="10" fill="none" stroke="#60a5fa" stroke-width="2" opacity="0.8"/>
+  <circle cx="16" cy="16" r="6" fill="#1d4ed8" opacity="0.35"/>`,
+    id,
+    '#3b82f6',
+  )
+}
+
+function drawSafetyWall(id) {
+  return wrap(
+    `<path d="M16 6 L24 10 V20 L16 26 L8 20 V10 Z" fill="url(#${id}-steel)" opacity="0.9"/>
+  <path d="M16 10 V22" stroke="#94a3b8" stroke-width="1"/>`,
+    id,
+    '#64748b',
+  )
+}
+
+function drawSight(id) {
+  return wrap(
+    `<ellipse cx="16" cy="16" rx="9" ry="6" fill="#fef3c7" stroke="#d97706" stroke-width="0.8"/>
+  <circle cx="16" cy="16" r="3" fill="#1e293b"/>`,
+    id,
+    '#f59e0b',
+  )
+}
+
+function drawMeteorStorm(id) {
+  return drawMobMeteor(id)
+}
+
+function drawJupitelThunder(id) {
+  return wrap(
+    `<circle cx="16" cy="16" r="7" fill="#fef08a" stroke="#ca8a04" stroke-width="0.8"/>
+  <path d="M16 8 L14 16 H18 L15 24 L20 14 H16 Z" fill="#fde047"/>`,
+    id,
+    '#eab308',
+  )
+}
+
+function drawLordOfVermilion(id) {
+  return wrap(
+    `<path d="M16 4 L20 12 L28 14 L20 16 L16 28 L12 16 L4 14 L12 12 Z" fill="#f97316" opacity="0.85"/>
+  <path d="M10 20 L22 20" stroke="#fde047" stroke-width="1.5"/>`,
+    id,
+    '#dc2626',
+  )
+}
+
+function drawWaterBall(id) {
+  return wrap(
+    `<circle cx="16" cy="16" r="8" fill="#38bdf8" stroke="#0369a1" stroke-width="0.8"/>
+  <ellipse cx="13" cy="13" rx="2" ry="1" fill="#e0f2fe" opacity="0.7"/>`,
+    id,
+    '#0284c7',
+  )
+}
+
+function drawIceWall(id) {
+  return wrap(
+    `<rect x="8" y="8" width="6" height="18" fill="#bae6fd" stroke="#0ea5e9"/>
+  <rect x="14" y="6" width="6" height="20" fill="#7dd3fc" stroke="#0284c7"/>
+  <rect x="20" y="9" width="4" height="16" fill="#e0f2fe" stroke="#38bdf8"/>`,
+    id,
+    '#0ea5e9',
+  )
+}
+
+function drawFrostNova(id) {
+  return wrap(
+    `<circle cx="16" cy="16" r="3" fill="#e0f2fe"/>
+  <path d="M16 6 L16 10 M16 22 L16 26 M6 16 L10 16 M22 16 L26 16" stroke="#38bdf8" stroke-width="1.5"/>
+  <circle cx="16" cy="16" r="9" fill="none" stroke="#0ea5e9" stroke-width="1"/>`,
+    id,
+    '#0284c7',
+  )
+}
+
+function drawStormGust(id) {
+  return wrap(
+    `<path d="M8 20 Q16 8 24 20" fill="none" stroke="#94a3b8" stroke-width="2"/>
+  <path d="M10 22 L14 18 L18 22 L22 18" stroke="#e2e8f0" stroke-width="1.2" fill="none"/>
+  <circle cx="16" cy="24" r="2" fill="#38bdf8"/>`,
+    id,
+    '#64748b',
+  )
+}
+
+function drawEarthSpike(id) {
+  return wrap(
+    `<path d="M16 26 L10 14 L16 6 L22 14 Z" fill="#a8a29e" stroke="#57534e"/>
+  <path d="M16 10 L16 22" stroke="#d6d3d1" stroke-width="0.8"/>`,
+    id,
+    '#78716c',
+  )
+}
+
+function drawHeavensDrive(id) {
+  return wrap(
+    `<path d="M6 22 L16 8 L26 22 Z" fill="#a16207" opacity="0.9"/>
+  <path d="M10 20 L16 12 L22 20" stroke="#fde68a" stroke-width="1" fill="none"/>`,
+    id,
+    '#92400e',
+  )
+}
+
+function drawQuagmire(id) {
+  return wrap(
+    `<ellipse cx="16" cy="20" rx="11" ry="5" fill="#451a03" opacity="0.8"/>
+  <path d="M8 18 Q16 22 24 18" stroke="#78350f" stroke-width="1.5" fill="none"/>`,
+    id,
+    '#78350f',
+  )
+}
+
+function drawSense(id) {
+  return wrap(
+    `<circle cx="16" cy="16" r="8" fill="none" stroke="#f472b6" stroke-width="1.5"/>
+  <circle cx="16" cy="16" r="4" fill="#fbcfe8"/>
+  <path d="M16 8 L16 11 M16 21 L16 24" stroke="#ec4899" stroke-width="1"/>`,
+    id,
+    '#db2777',
+  )
+}
+
+function drawDispell(id) {
+  return wrap(
+    `<circle cx="16" cy="16" r="9" fill="url(#${id}-gem)" opacity="0.5"/>
+  <path d="M10 10 L22 22 M22 10 L10 22" stroke="#f8fafc" stroke-width="2" stroke-linecap="round"/>`,
+    id,
+    '#6366f1',
+  )
+}
+
+function drawMagicRod(id) {
+  return wrap(
+    `<rect x="15" y="6" width="2" height="20" fill="url(#${id}-wood)"/>
+  <circle cx="16" cy="8" r="3" fill="url(#${id}-gem)" filter="url(#${id}-glow)"/>`,
+    id,
+    '#7c3aed',
+  )
+}
+
 const builders = {
   basic_attack: drawBasicAttack,
   sit: drawSit,
@@ -504,6 +719,30 @@ const builders = {
   pushcart: drawPushcart,
   falcon_mastery: drawFalconMastery,
   heal: drawHeal,
+  fire_bolt: drawFireBolt,
+  cold_bolt: drawColdBolt,
+  lightning_bolt: drawLightningBolt,
+  napalm_beat: drawNapalmBeat,
+  soul_strike: drawSoulStrike,
+  fire_ball: drawFireBall,
+  frost_diver: drawFrostDiver,
+  stone_curse: drawStoneCurse,
+  energy_coat: drawEnergyCoat,
+  safety_wall: drawSafetyWall,
+  sight: drawSight,
+  meteor_storm: drawMeteorStorm,
+  jupitel_thunder: drawJupitelThunder,
+  lord_of_vermilion: drawLordOfVermilion,
+  water_ball: drawWaterBall,
+  ice_wall: drawIceWall,
+  frost_nova: drawFrostNova,
+  storm_gust: drawStormGust,
+  earth_spike: drawEarthSpike,
+  heavens_drive: drawHeavensDrive,
+  quagmire: drawQuagmire,
+  sense: drawSense,
+  dispell: drawDispell,
+  magic_rod: drawMagicRod,
   mob_bash: drawMobBash,
   mob_hammer_fall: drawMobHammer,
   mob_meteor_storm: drawMobMeteor,

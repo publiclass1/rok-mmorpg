@@ -4,6 +4,7 @@ import { progressFromLevels } from './exp'
 import {
   calcCritChancePercent,
   calcCritDamageMultiplier,
+  calcPlayerMagicSkillVsMob,
   calcPlayerMagicVsMobDamage,
   calcPlayerVsMobDamage,
   calcStatusMatkMax,
@@ -75,6 +76,19 @@ function run() {
   })
   assert.equal(magicCrit.critical, true)
   assert.ok(magicCrit.damage > magicNormal.damage, 'magic crit should exceed normal vs MDEF')
+
+  const fireMob = mockMob({ element: 'fire', mdef: 0, def: 0 })
+  const boltL1 = calcPlayerMagicSkillVsMob(session, fireMob, 'fire_bolt', 1, { rng: () => 0.5 })
+  const boltL5 = calcPlayerMagicSkillVsMob(session, fireMob, 'fire_bolt', 5, { rng: () => 0.5 })
+  assert.equal(boltL1.hits, 1)
+  assert.equal(boltL5.hits, 5)
+  assert.ok(boltL5.totalDamage > boltL1.totalDamage, 'more bolt hits should deal more total damage')
+
+  const undeadMob = mockMob({ element: 'undead', mdef: 0, def: 0 })
+  const neutralMob = mockMob({ element: 'neutral', mdef: 0, def: 0 })
+  const soulUndead = calcPlayerMagicSkillVsMob(session, undeadMob, 'soul_strike', 5, { rng: () => 0.5 })
+  const soulNeutral = calcPlayerMagicSkillVsMob(session, neutralMob, 'soul_strike', 5, { rng: () => 0.5 })
+  assert.ok(soulUndead.totalDamage > soulNeutral.totalDamage, 'soul strike bonus vs undead')
 
   console.log('damage.test.ts: ok')
 }

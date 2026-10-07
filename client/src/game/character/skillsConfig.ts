@@ -1,6 +1,6 @@
 import { loadRoContent } from '../../content/ro/loadContent'
 import { jobAncestorIds, jobCanUseSkillFromJob } from './jobLineage'
-import type { RoSkillSelfBuff, SkillPrerequisite } from '../../content/ro/types'
+import type { RoSkillMagic, RoSkillSelfBuff, SkillPrerequisite } from '../../content/ro/types'
 
 export type SkillDefinition = {
   id: string
@@ -17,6 +17,7 @@ export type SkillDefinition = {
   prerequisites: SkillPrerequisite[]
   iconFile?: string | null
   selfBuff?: RoSkillSelfBuff
+  magic?: RoSkillMagic
   mobDamageMultiplier?: number
 }
 
@@ -40,6 +41,7 @@ export const SKILLS: Record<string, SkillDefinition> = Object.fromEntries(
       prerequisites: s.prerequisites,
       iconFile: s.iconFile ?? null,
       selfBuff: s.selfBuff,
+      magic: s.magic,
       mobDamageMultiplier: s.mobDamageMultiplier,
     },
   ]),
@@ -141,6 +143,32 @@ export function isMeleeSkillStub(skillId: string): boolean {
 /** Enemy-target actives that execute after click-to-target (includes provoke). */
 export function isPlayerEnemyCastSkill(skillId: string): boolean {
   return MELEE_SKILL_STUBS.has(skillId) || skillId === 'provoke'
+}
+
+const GROUND_MAGIC_STUBS = new Set(['safety_wall', 'ice_wall', 'quagmire'])
+
+const ENEMY_MAGIC_STUBS = new Set(['dispell'])
+
+/** Enemy-target magic damage skills (excludes melee stubs and dispell placeholder). */
+export function isPlayerMagicEnemySkill(skillId: string): boolean {
+  if (ENEMY_MAGIC_STUBS.has(skillId)) return false
+  const def = SKILLS[skillId]
+  return def?.magic != null && def.target === 'enemy'
+}
+
+export function isPlayerMagicEnemyStub(skillId: string): boolean {
+  return ENEMY_MAGIC_STUBS.has(skillId)
+}
+
+export function isPlayerGroundMagicStub(skillId: string): boolean {
+  return GROUND_MAGIC_STUBS.has(skillId)
+}
+
+/** Ground-target magic (AoE damage or utility stub). */
+export function isPlayerGroundMagicSkill(skillId: string): boolean {
+  if (GROUND_MAGIC_STUBS.has(skillId)) return true
+  const def = SKILLS[skillId]
+  return def?.target === 'ground' && def.magic?.aoeRadius != null && def.magic.aoeRadius > 0
 }
 
 export function canLearnSkill(

@@ -148,8 +148,87 @@ export function playSkillCastFx(scene: Phaser.Scene, skillId: string, ctx: Skill
     case 'peco_peco_ride':
       expandingRing(scene, playerX, playerY, depth, 0xa3a3a3, 1.5, 260)
       break
+    case 'fire_bolt':
+    case 'fire_ball':
+    case 'meteor_storm':
+    case 'lord_of_vermilion':
+      lineBurst(scene, playerX, playerY - 16, tx, ty - 20, depth, 0xf97316)
+      expandingRing(scene, tx, ty - 16, depth, 0xef4444, 1.6, 280)
+      break
+    case 'cold_bolt':
+    case 'frost_diver':
+    case 'frost_nova':
+    case 'storm_gust':
+    case 'water_ball':
+      lineBurst(scene, playerX, playerY - 16, tx, ty - 20, depth, 0x38bdf8)
+      expandingRing(scene, tx, ty - 16, depth, 0x0ea5e9, 1.5, 300)
+      break
+    case 'lightning_bolt':
+    case 'jupitel_thunder':
+      lineBurst(scene, playerX, playerY - 16, tx, ty - 20, depth, 0xfde047)
+      expandingRing(scene, tx, ty - 18, depth, 0xeab308, 1.4, 260)
+      break
+    case 'napalm_beat':
+    case 'soul_strike':
+      expandingRing(scene, tx, ty - 18, depth, 0xa78bfa, 1.7, 320)
+      break
+    case 'stone_curse':
+    case 'earth_spike':
+    case 'heavens_drive':
+      expandingRing(scene, tx, ty - 12, depth, 0xa8a29e, 1.8, 340)
+      break
+    case 'energy_coat':
+      expandingRing(scene, playerX, playerY - 8, depth, 0x3b82f6, 1.5, 360)
+      break
+    case 'safety_wall':
+    case 'ice_wall':
+      expandingRing(scene, tx, ty - 8, depth, 0x94a3b8, 2, 400)
+      break
+    case 'quagmire':
+      expandingRing(scene, tx, ty, depth, 0x78350f, 2.2, 380)
+      break
+    case 'sight':
+    case 'sense':
+      expandingRing(scene, playerX, playerY - 10, depth, 0xfbbf24, 1.3, 300)
+      break
+    case 'dispell':
+      expandingRing(scene, tx, ty - 18, depth, 0x6366f1, 1.6, 280)
+      break
+    case 'magic_rod':
+      expandingRing(scene, playerX, playerY - 8, depth, 0x7c3aed, 1.2, 280)
+      break
     case 'bash':
     default:
       break
+  }
+}
+
+/** Ground-target AoE feedback at map coordinates. */
+export function playSkillGroundFx(
+  scene: Phaser.Scene,
+  skillId: string,
+  x: number,
+  y: number,
+  depth: number,
+) {
+  const ctx: SkillFxContext = { playerX: x, playerY: y, facing: 'down', depth, targetX: x, targetY: y }
+  playSkillCastFx(scene, skillId, ctx)
+  if (
+    skillId === 'meteor_storm' ||
+    skillId === 'lord_of_vermilion' ||
+    skillId === 'fire_ball'
+  ) {
+    for (let i = 0; i < 4; i++) {
+      const ox = (i - 1.5) * 14
+      const dot = scene.add.circle(x + ox, y - 20 - i * 4, 3, 0xf97316, 0.9)
+      dot.setDepth(depth + 0.02)
+      scene.tweens.add({
+        targets: dot,
+        y: y - 8,
+        alpha: 0,
+        duration: 400 + i * 80,
+        onComplete: () => dot.destroy(),
+      })
+    }
   }
 }

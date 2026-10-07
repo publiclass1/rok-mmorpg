@@ -530,6 +530,10 @@ export function playPlayerAttackSlash(
   facing: Facing,
   options: { variant: AttackVariant; attackStyle: AttackStyle },
 ) {
+  if (options.attackStyle === 'bow' || options.attackStyle === 'cast') {
+    return
+  }
+
   const container = display.container
   const playerX = container.x
   const playerY = container.y

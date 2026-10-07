@@ -20,6 +20,10 @@ import {
 import {
   SKILLS,
   isPlayerEnemyCastSkill,
+  isPlayerGroundMagicSkill,
+  isPlayerGroundMagicStub,
+  isPlayerMagicEnemySkill,
+  isPlayerMagicEnemyStub,
   selfBuffDurationMs,
   skillUsableByJob,
   type SkillDefinition,
@@ -57,6 +61,7 @@ import { isChatStripInputFocused } from '../chatInputFocus'
 import {
   calcMobSkillVsPlayerDamage,
   calcMobVsPlayerDamage,
+  calcPlayerMagicSkillVsMob,
   calcPlayerSkillVsMobDamage,
   calcPlayerVsMobDamage,
   calcPlayerVsPlayerDamage,
@@ -64,7 +69,7 @@ import {
 import { playLevelUpAudio, preloadLevelUpAudio } from '../combat/levelUpAudio'
 import { playLevelUpWorldFx } from '../combat/levelUpFx'
 import { buildLevelUpSteps, type LevelUpStep } from '../combat/levelUpSteps'
-import { playSkillCastFx } from '../combat/skillFx'
+import { playSkillCastFx, playSkillGroundFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
 import { scaleMobExp } from '../combat/gameConfig'
@@ -110,6 +115,7 @@ import {
 import { buildWalkabilityGrid, findWorldPath, trimPathFromPlayer } from '../movement/gridPathfind'
 import { tryJump } from '../movement/jump'
 import { playWalkClickFx } from '../movement/walkClickFx'
+import { toCombatAimPoint } from '../combat/rangedProjectileFx'
 import {
   clearPlayerDeathVisual,
   playPlayerDeath,
@@ -1675,10 +1681,14 @@ export class WorldScene extends Phaser.Scene {
 
     if (def.target === 'ground') {
       this.pendingSkill = null
-      emitGameEvent(
-        'status',
-        `${def.name} — ground target (${Math.round(wx)}, ${Math.round(wy)}) not implemented yet`,
-      )
+      if (isPlayerGroundMagicSkill(skillId) || isPlayerGroundMagicStub(skillId)) {
+        this.executePlayerGroundSkill(skillId, level, def, wx, wy)
+      } else {
+        emitGameEvent(
+          'status',
+          `${def.name} — ground target (${Math.round(wx)}, ${Math.round(wy)}) not implemented yet`,
+        )
+      }
       this.refreshCursor()
       return
     }
@@ -1802,6 +1812,14 @@ export class WorldScene extends Phaser.Scene {
     def: SkillDefinition,
     primaryMob: MobInstance,
   ) {
+    if (isPlayerMagicEnemySkill(skillId)) {
+      this.runPlayerMagicSkill(skillId, skillLevel, def, primaryMob)
+      return
+    }
+    if (isPlayerMagicEnemyStub(skillId)) {
+      this.executeDispellStub(skillLevel, def, primaryMob)
+      return
+    }
     if (!isPlayerEnemyCastSkill(skillId)) {
       emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — not implemented yet`)
       return
@@ -1846,6 +1864,190 @@ export class WorldScene extends Phaser.Scene {
     emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — target enraged.`)
     logActivity('combat', `${def.name} Lv ${skillLevel} on Lv ${target.level} ${target.name}.`)
     this.emitCharacterSheet()
+  }
+
+  private executeDispellStub(skillLevel: number, def: SkillDefinition, target: MobInstance) {
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
+    const now = this.time.now
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
+    if (!this.spendMp(def.mpCost)) return
+    if (!target.alive) return
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (
+      Phaser.Math.Distance.Between(px, py, target.sprite.x, target.sprite.y) > this.skillRangePx(def)
+    ) {
+      emitGameEvent('status', 'Target out of range.')
+      return
+    }
+
+    this.lastAttackAt = now
+    this.faceToward(target.sprite.x, target.sprite.y)
+    this.showSkillCallout(def.name)
+    playSkillCastFx(this, 'dispell', {
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      depth: this.playerDisplay.container.depth + 0.1,
+      targetX: target.sprite.x,
+      targetY: target.sprite.y,
+    })
+    emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — buff removal not implemented yet.`)
+    logActivity('combat', `${def.name} Lv ${skillLevel} on Lv ${target.level} ${target.name} (stub).`)
+    this.emitCharacterSheet()
+  }
+
+  private applyMagicHitsToMob(
+    mob: MobInstance,
+    skillId: string,
+    skillLevel: number,
+    skillLabel: string,
+    mobDef: (typeof MOB_DEFS)[string],
+  ) {
+    const result = calcPlayerMagicSkillVsMob(this.session, mobDef, skillId, skillLevel)
+    if (result.totalDamage <= 0) return
+    for (let i = 0; i < result.perHitDamage.length; i++) {
+      if (!mob.alive) break
+      const dmg = result.perHitDamage[i]!
+      const crit = result.criticalAny && i === result.perHitDamage.length - 1
+      this.applyDamageToMob(mob, dmg, mobDef, skillLabel, { critical: crit, criticalMagic: crit })
+    }
+    if (skillId === 'stone_curse') {
+      emitGameEvent('status', `${skillLabel} — petrify not implemented yet.`)
+    }
+  }
+
+  private runPlayerMagicSkill(
+    skillId: string,
+    skillLevel: number,
+    def: SkillDefinition,
+    primaryMob: MobInstance,
+  ) {
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
+    const now = this.time.now
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
+    if (!this.spendMp(def.mpCost)) return
+    if (!primaryMob.alive) return
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (
+      Phaser.Math.Distance.Between(px, py, primaryMob.sprite.x, primaryMob.sprite.y) >
+      this.skillRangePx(def)
+    ) {
+      emitGameEvent('status', 'Target out of range.')
+      return
+    }
+
+    this.lastAttackAt = now
+    this.isAttacking = true
+    this.stopPlayerMotion()
+    clearMoveTarget(this.moveTarget)
+    this.faceToward(primaryMob.sprite.x, primaryMob.sprite.y)
+    this.showSkillCallout(def.name)
+
+    const skillLabel = def.name
+    const depth = this.playerDisplay.container.depth + 0.1
+    playSkillCastFx(this, skillId, {
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      depth,
+      targetX: primaryMob.sprite.x,
+      targetY: primaryMob.sprite.y,
+    })
+
+    this.sfx.playAttack()
+    this.broadcastPlayerAction('basic_attack')
+
+    const strikeDelay = Math.max(55, def.castTimeMs)
+
+    startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
+      variant: 'basic',
+      attackStyle: 'cast',
+      onComplete: () => {
+        this.isAttacking = false
+      },
+    })
+
+    this.time.delayedCall(strikeDelay, () => {
+      const mobDef = MOB_DEFS[primaryMob.defId]
+      if (!mobDef || !primaryMob.alive) {
+        this.emitCharacterSheet()
+        return
+      }
+      this.applyMagicHitsToMob(primaryMob, skillId, skillLevel, skillLabel, mobDef)
+      this.emitCharacterSheet()
+    })
+  }
+
+  private executePlayerGroundSkill(
+    skillId: string,
+    skillLevel: number,
+    def: SkillDefinition,
+    wx: number,
+    wy: number,
+  ) {
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
+    const now = this.time.now
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
+    if (!this.spendMp(def.mpCost)) return
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (Phaser.Math.Distance.Between(px, py, wx, wy) > this.skillRangePx(def)) {
+      emitGameEvent('status', 'Target out of range.')
+      return
+    }
+
+    this.lastAttackAt = now
+    this.breakRestState()
+    this.stopPlayerMotion()
+    clearMoveTarget(this.moveTarget)
+    this.faceToward(wx, wy)
+    this.showSkillCallout(def.name)
+
+    const depth = this.playerDisplay.container.depth + 0.1
+    const strikeDelay = Math.max(55, def.castTimeMs)
+
+    if (isPlayerGroundMagicStub(skillId)) {
+      this.time.delayedCall(strikeDelay, () => {
+        playSkillGroundFx(this, skillId, wx, wy, depth)
+        emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — tile effect not implemented yet.`)
+        logActivity('combat', `${def.name} Lv ${skillLevel} at (${Math.round(wx)}, ${Math.round(wy)}).`)
+        this.emitCharacterSheet()
+      })
+      return
+    }
+
+    this.isAttacking = true
+    this.sfx.playAttack()
+    this.broadcastPlayerAction('basic_attack')
+    startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
+      variant: 'basic',
+      attackStyle: 'cast',
+      onComplete: () => {
+        this.isAttacking = false
+      },
+    })
+
+    this.time.delayedCall(strikeDelay, () => {
+      playSkillGroundFx(this, skillId, wx, wy, depth)
+      const radius = def.magic?.aoeRadius ?? 64
+      const victims = this.mobsInAoERadius(wx, wy, radius)
+      const skillLabel = def.name
+      if (victims.length === 0) {
+        emitGameEvent('status', `${skillLabel} — no targets in area.`)
+      } else {
+        for (const mob of victims) {
+          const mobDef = MOB_DEFS[mob.defId]
+          if (!mobDef || !mob.alive) continue
+          this.applyMagicHitsToMob(mob, skillId, skillLevel, skillLabel, mobDef)
+        }
+      }
+      this.emitCharacterSheet()
+    })
   }
 
   private runPlayerMeleeSkill(
@@ -1952,6 +2154,10 @@ export class WorldScene extends Phaser.Scene {
   ) {
     if (skillId === 'provoke') {
       emitGameEvent('status', `${def.name} cannot be used on players.`)
+      return
+    }
+    if (isPlayerMagicEnemySkill(skillId) || isPlayerMagicEnemyStub(skillId)) {
+      emitGameEvent('status', `${def.name} is not available on players yet.`)
       return
     }
     if (!isPlayerEnemyCastSkill(skillId)) {
@@ -3454,9 +3660,25 @@ export class WorldScene extends Phaser.Scene {
     } else if (preTarget?.alive) {
       this.faceToward(preTarget.sprite.x, preTarget.sprite.y)
     }
+    const rangedBasic = weaponClass === 'bow' || weaponClass === 'staff'
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       attackStyle: attackStyleForWeapon(weaponClass),
+      getAimTarget: rangedBasic
+        ? () => {
+            const duel = this.getDuelStrikeTarget()
+            if (duel) {
+              return toCombatAimPoint(duel.display.container.x, duel.display.container.y)
+            }
+            const pvp = pvpMode ? this.getPvpStrikeTarget() : null
+            if (pvp) {
+              return toCombatAimPoint(pvp.display.container.x, pvp.display.container.y)
+            }
+            const mob = this.resolveAttackTargetMob()
+            if (mob) return toCombatAimPoint(mob.sprite.x, mob.sprite.y)
+            return null
+          }
+        : undefined,
       onStrike: () => {
         if (duelMode && duelSnapshot) {
           const target = this.getDuelStrikeTarget()
