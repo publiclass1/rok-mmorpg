@@ -67,6 +67,7 @@ type Props = {
 }
 
 export function GameView({ character, onCharacterUpdated, onExit }: Props) {
+  const shellRef = useRef<HTMLDivElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const gameRef = useRef<Phaser.Game | null>(null)
   const [npcs, setNpcs] = useState<NpcRow[]>([])
@@ -525,6 +526,14 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [])
 
   useEffect(() => {
+    const el = shellRef.current
+    if (!el) return
+    const block = (e: Event) => e.preventDefault()
+    el.addEventListener('contextmenu', block)
+    return () => el.removeEventListener('contextmenu', block)
+  }, [])
+
+  useEffect(() => {
     const host = hostRef.current
     if (!host || !npcsReady || !sessionReady) return
 
@@ -739,7 +748,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const guildTag = guildSnapshot?.guild.tag
 
   return (
-    <div className={`game-shell game-shell--fullscreen${skillsOpen ? ' skills-assign-mode' : ''}`}>
+    <div
+      ref={shellRef}
+      className={`game-shell game-shell--fullscreen${skillsOpen ? ' skills-assign-mode' : ''}`}
+    >
       <div className="game-stage game-stage--fullscreen" aria-label="Game world">
         <div ref={hostRef} className="game-canvas" />
         <LowHpVignette hp={sheet.hp} hpMax={sheet.hpMax} />

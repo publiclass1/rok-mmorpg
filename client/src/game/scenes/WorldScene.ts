@@ -109,6 +109,7 @@ import {
   setRemoteViewportVisible,
 } from '../world/syncWorldViewport'
 import { cameraWorldViewRect, viewBoundsWithMargin } from '../world/viewportCull'
+import { cursorCss, type GameCursor } from '../world/gameCursor'
 import { ensureMobTexture, ensureTilesTexture, TILESET_TILE_COUNT } from '../textures'
 import { saveCharacterSession, saveCharacterWorldPosition } from '../../lib/characterProgress'
 import { createNpcWorldVisual, type NpcWorldVisual } from '../npc/npcWorldVisual'
@@ -149,6 +150,8 @@ export class WorldScene extends Phaser.Scene {
   private selectedMob: MobInstance | null = null
   private selectionRing: Phaser.GameObjects.Ellipse | null = null
   private uiPointerLocked = false
+  private currentCursor: GameCursor = 'default'
+  private pendingSkill: { skillId: string; level: number; def: SkillDefinition } | null = null
   private lastAttackAt = 0
   private isAttacking = false
   private isJumping = false
@@ -262,7 +265,7 @@ export class WorldScene extends Phaser.Scene {
     this.playerLabel = this.add.text(spawn.x, spawn.y, this.character.name)
     styleWorldNameLabel(this.playerLabel)
     positionPlayerNameLabel(this.playerLabel, spawn.x, spawn.y)
-    this.playerLabel.setVisible(false)
+    this.playerLabel.setVisible(true)
 
     this.cameras.main.centerOn(spawn.x, spawn.y)
     this.cameras.main.startFollow(this.playerDisplay.container, true, 0.12, 0.12)
@@ -270,11 +273,23 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.setZoom(1.35)
 
     this.spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
+    this.input.setDefaultCursor(cursorCss('default'))
+    const escKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC)
+    escKey.on('down', () => this.cancelSkillTargeting())
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (this.uiPointerLocked || this.isPlayerDead || !pointer.leftButtonDown()) return
+      if (this.uiPointerLocked || this.isPlayerDead) return
+      if (this.pendingSkill && pointer.rightButtonDown()) {
+        this.cancelSkillTargeting()
+        return
+      }
+      if (!pointer.leftButtonDown()) return
       const wx = pointer.worldX
       const wy = pointer.worldY
+      if (this.pendingSkill) {
+        this.confirmSkillTargeting(wx, wy)
+        return
+      }
       const npc = this.findNpcAt(wx, wy)
       if (npc) {
         if (this.isSitting) {
@@ -457,6 +472,7 @@ export class WorldScene extends Phaser.Scene {
   private enterPlayerDeath(options?: { animate?: boolean }) {
     if (this.isPlayerDead || this.session.hp > 0) return
     this.isPlayerDead = true
+    this.pendingSkill = null
     if (this.isSitting) this.standUp()
     this.chaseMob = null
     this.isAttacking = false
@@ -600,18 +616,29 @@ export class WorldScene extends Phaser.Scene {
     this.syncWorldDepth()
     this.syncViewportVisibility()
     this.refreshPlayerNameLabels()
+    this.refreshCursor()
     this.emitMinimap(now)
   }
 
-  private refreshPlayerNameLabels() {
-    if (this.uiPointerLocked) {
-      this.playerLabel.setVisible(false)
-      for (const entity of this.remotePlayers.values()) {
-        entity.label.setVisible(false)
+  private refreshCursor() {
+    let next: GameCursor = 'default'
+    if (!this.uiPointerLocked && !this.isPlayerDead) {
+      const p = this.input.activePointer
+      if (this.pendingSkill) {
+        next = this.pendingSkill.def.target === 'ground' ? 'aoe' : 'skillTarget'
+      } else if (this.findNpcAt(p.worldX, p.worldY)) {
+        next = 'npc'
+      } else if (this.findMobAt(p.worldX, p.worldY)) {
+        next = 'mob'
       }
-      return
     }
+    if (next !== this.currentCursor) {
+      this.currentCursor = next
+      this.input.setDefaultCursor(cursorCss(next))
+    }
+  }
 
+  private refreshPlayerNameLabels() {
     const bounds = viewBoundsWithMargin(this.cameras.main)
     const px = this.input.activePointer.worldX
     const py = this.input.activePointer.worldY
@@ -620,10 +647,14 @@ export class WorldScene extends Phaser.Scene {
 
     positionPlayerNameLabel(this.playerLabel, localX, localY)
     const localInView = entityInView(bounds, localX, localY)
-    const localHovered =
-      !this.isPlayerDead &&
-      Phaser.Math.Distance.Between(px, py, localX, localY) <= MOB_CLICK_RADIUS
-    this.playerLabel.setVisible(localInView && localHovered)
+    this.playerLabel.setVisible(localInView && !this.isPlayerDead)
+
+    if (this.uiPointerLocked) {
+      for (const entity of this.remotePlayers.values()) {
+        entity.label.setVisible(false)
+      }
+      return
+    }
 
     const hoveredRemote = this.findRemotePlayerAt(px, py)
     for (const entity of this.remotePlayers.values()) {
@@ -851,16 +882,82 @@ export class WorldScene extends Phaser.Scene {
       emitGameEvent('status', `${def.name} is passive`)
       return
     }
-    if (skillId === 'bash') {
-      this.tryBash(level, def.mpCost)
-      return
-    }
     if (skillId === 'sit') {
       this.toggleSit()
       return
     }
     if (def.selfBuff) {
       this.trySelfBuffSkill(skillId, level, def)
+      return
+    }
+    if (def.target === 'enemy' && !this.hasAliveMobTarget()) {
+      this.beginSkillTargeting(skillId, level, def)
+      return
+    }
+    if (def.target === 'ground') {
+      this.beginSkillTargeting(skillId, level, def)
+      return
+    }
+    if (skillId === 'bash') {
+      this.tryBash(level, def.mpCost)
+      return
+    }
+    emitGameEvent('status', `${def.name} (Lv ${level}) — not implemented yet`)
+  }
+
+  private hasAliveMobTarget(): boolean {
+    const mob = this.chaseMob ?? this.selectedMob
+    return mob != null && mob.alive
+  }
+
+  private beginSkillTargeting(skillId: string, level: number, def: SkillDefinition) {
+    this.pendingSkill = { skillId, level, def }
+    emitGameEvent('status', `Select target for ${def.name} (Esc or right-click to cancel).`)
+    this.refreshCursor()
+  }
+
+  private cancelSkillTargeting() {
+    if (!this.pendingSkill) return
+    this.pendingSkill = null
+    emitGameEvent('status', 'Skill cancelled.')
+    this.refreshCursor()
+  }
+
+  private confirmSkillTargeting(wx: number, wy: number) {
+    const pending = this.pendingSkill
+    if (!pending) return
+    const { skillId, level, def } = pending
+
+    if (def.target === 'ground') {
+      this.pendingSkill = null
+      emitGameEvent(
+        'status',
+        `${def.name} — ground target (${Math.round(wx)}, ${Math.round(wy)}) not implemented yet`,
+      )
+      this.refreshCursor()
+      return
+    }
+
+    const mob = this.findMobAt(wx, wy)
+    this.pendingSkill = null
+    if (!mob) {
+      emitGameEvent('status', 'No target.')
+      this.refreshCursor()
+      return
+    }
+    if (this.isSitting) this.standUp()
+    this.chaseMob = mob
+    this.setSelectedMob(mob)
+    this.setSelectedPlayer(null)
+    setMoveTarget(this.moveTarget, mob.sprite.x, mob.sprite.y)
+    this.faceToward(mob.sprite.x, mob.sprite.y)
+    this.castSkillById(skillId, level, def)
+    this.refreshCursor()
+  }
+
+  private castSkillById(skillId: string, level: number, def: SkillDefinition) {
+    if (skillId === 'bash') {
+      this.tryBash(level, def.mpCost)
       return
     }
     emitGameEvent('status', `${def.name} (Lv ${level}) — not implemented yet`)

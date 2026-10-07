@@ -4,12 +4,15 @@ import type { MapPortalDef } from '../content/ro/types'
 import {
   createEmptyMap,
   ensureObjectGroups,
+  importNpcRowsIntoMap,
   parseTmj,
   npcDefsFromMap,
   portalDefsFromMap,
+  resizeTmjMap,
   serializeTmj,
   type TmjMap,
 } from '../lib/tmj'
+import { supabase } from '../lib/supabase'
 import type { NpcObjectNpcType, NpcObjectProps } from '../lib/tmj/types'
 import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../lib/tmj/properties'
 import { getObjectGroup } from '../lib/tmj/parse'
@@ -48,7 +51,14 @@ export function MapAdminPage() {
   const [loading, setLoading] = useState(false)
   const [newMapWidth, setNewMapWidth] = useState(30)
   const [newMapHeight, setNewMapHeight] = useState(20)
+  const [resizeWidth, setResizeWidth] = useState(30)
+  const [resizeHeight, setResizeHeight] = useState(20)
   const [editingMapId, setEditingMapId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setResizeWidth(tmj.width)
+    setResizeHeight(tmj.height)
+  }, [tmj.width, tmj.height])
 
   const allMapIds = useMemo(() => loadRoContent().maps.map((m) => m.id), [])
 
@@ -99,18 +109,33 @@ export function MapAdminPage() {
       const bundle = await fetchMapBundle(mapId)
       if (bundle.meta) setMeta(bundle.meta)
       else setMeta({ ...defaultMeta(), id: mapId, displayName: mapId })
+      let loadedTmj: TmjMap
       if (bundle.tmj) {
         const parsed = parseTmj(bundle.tmj)
         ensureObjectGroups(parsed)
-        setTmj(parsed)
+        loadedTmj = parsed
       } else {
-        setTmj(createEmptyMap())
+        loadedTmj = createEmptyMap()
       }
+
+      const { data: npcRows, error: npcError } = await supabase
+        .from('npc_definitions')
+        .select('*')
+        .eq('map_id', mapId)
+
+      if (npcError) {
+        setTmj(loadedTmj)
+        setStatus(`Loaded ${mapId}; NPC import failed: ${npcError.message}`)
+      } else {
+        setTmj(importNpcRowsIntoMap(loadedTmj, mapId, npcRows ?? []))
+        const npcCount = npcRows?.length ?? 0
+        setStatus(npcCount > 0 ? `Loaded ${mapId} (${npcCount} NPCs from DB)` : `Loaded ${mapId}`)
+      }
+
       setJsonDirty(false)
       setSelectedObjectId(null)
       setEditingMapId(mapId)
       setNpcSql('')
-      setStatus(`Loaded ${mapId}`)
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Load failed')
     } finally {
@@ -242,6 +267,13 @@ export function MapAdminPage() {
     setStatus(`New blank map (${w}×${h}) — set id and save`)
   }
 
+  const applyResizeMap = () => {
+    const w = Math.max(5, Math.min(200, Math.round(resizeWidth)))
+    const h = Math.max(5, Math.min(200, Math.round(resizeHeight)))
+    setTmj(resizeTmjMap(tmj, w, h))
+    setStatus(`Map resized to ${w}×${h}`)
+  }
+
   const deleteSelectedObject = () => {
     if (selectedObjectId == null) return
     const next: TmjMap = {
@@ -319,6 +351,37 @@ export function MapAdminPage() {
             <p className="muted small">Resets the canvas. Set a unique id below, then Save to disk.</p>
           </fieldset>
 
+          <fieldset className="map-admin-fieldset">
+            <legend>Resize current map</legend>
+            <p className="muted small">Current: {tmj.width}×{tmj.height} tiles</p>
+            <div className="map-admin-size-row">
+              <label>
+                W (tiles)
+                <input
+                  type="number"
+                  min={5}
+                  max={200}
+                  value={resizeWidth}
+                  onChange={(e) => setResizeWidth(Number(e.target.value))}
+                />
+              </label>
+              <label>
+                H (tiles)
+                <input
+                  type="number"
+                  min={5}
+                  max={200}
+                  value={resizeHeight}
+                  onChange={(e) => setResizeHeight(Number(e.target.value))}
+                />
+              </label>
+            </div>
+            <button type="button" disabled={loading} onClick={applyResizeMap}>
+              Resize map
+            </button>
+            <p className="muted small">Extends or crops from the top-left. Shift tiles near edges with the tiles tool first if needed.</p>
+          </fieldset>
+
           <label>
             Load existing map
             <select
@@ -359,7 +422,7 @@ export function MapAdminPage() {
           <fieldset className="map-admin-fieldset">
             <legend>Tool</legend>
             <div className="map-admin-tool-row">
-              {(['ground', 'collision', 'obstacle', 'portal', 'npc', 'select'] as EditorTool[]).map((t) => (
+              {(['ground', 'collision', 'tiles', 'obstacle', 'portal', 'npc', 'select'] as EditorTool[]).map((t) => (
                 <button
                   key={t}
                   type="button"

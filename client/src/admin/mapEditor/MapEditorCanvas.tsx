@@ -6,6 +6,8 @@ import {
   ensureObjectGroups,
   getObjectGroup,
   getTileLayer,
+  moveTileRegion,
+  type TileRegion,
   type TmjMap,
   type TmjMapObject,
 } from '../../lib/tmj'
@@ -15,7 +17,7 @@ import { getDecorImage, useDecorImages } from '../../lib/mapDecor/useDecorImages
 import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../../lib/tmj/properties'
 import { collisionFillColor, gidFillColor } from './tileColors'
 
-export type EditorTool = 'ground' | 'collision' | 'obstacle' | 'portal' | 'npc' | 'select'
+export type EditorTool = 'ground' | 'collision' | 'tiles' | 'obstacle' | 'portal' | 'npc' | 'select'
 
 type ObjectGroupName = 'obstacles' | 'portals' | 'decor' | 'npcs'
 
@@ -43,9 +45,26 @@ type DragState =
   | { kind: 'paint'; layer: 'ground' | 'collision' }
   | { kind: 'rect'; group: 'obstacles' | 'portals'; startX: number; startY: number }
   | { kind: 'move'; group: ObjectGroupName; objectId: number; offsetX: number; offsetY: number }
+  | { kind: 'tileMarquee'; startTx: number; startTy: number }
+  | { kind: 'moveTiles'; pointerStartTx: number; pointerStartTy: number }
 
 function snapTile(px: number): number {
   return Math.floor(px / TILE_SIZE)
+}
+
+function tileRegionFromPoints(tx0: number, ty0: number, tx1: number, ty1: number): TileRegion {
+  const tx = Math.min(tx0, tx1)
+  const ty = Math.min(ty0, ty1)
+  return {
+    tx,
+    ty,
+    tw: Math.abs(tx1 - tx0) + 1,
+    th: Math.abs(ty1 - ty0) + 1,
+  }
+}
+
+function pointerInTileRegion(tx: number, ty: number, region: TileRegion): boolean {
+  return tx >= region.tx && ty >= region.ty && tx < region.tx + region.tw && ty < region.ty + region.th
 }
 
 function hitObject(objects: TmjMapObject[], x: number, y: number): TmjMapObject | null {
@@ -85,7 +104,23 @@ export function MapEditorCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
   const [previewRect, setPreviewRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
+  const [tileSel, setTileSel] = useState<TileRegion | null>(null)
+  const [tileMarqueePreview, setTileMarqueePreview] = useState<TileRegion | null>(null)
+  const [tileMoveDelta, setTileMoveDelta] = useState<{ dtx: number; dty: number } | null>(null)
   const decorImagesReady = useDecorImages()
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setTileSel(null)
+        setTileMarqueePreview(null)
+        setTileMoveDelta(null)
+        setDrag(null)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   const paintTile = useCallback(
     (tileX: number, tileY: number, layerName: 'ground' | 'collision') => {
@@ -223,6 +258,55 @@ export function MapEditorCanvas({
       ctx.strokeRect(previewRect.x, previewRect.y, previewRect.w, previewRect.h)
       ctx.setLineDash([])
     }
+
+    const activeSel = tileMarqueePreview ?? tileSel
+    if (activeSel) {
+      const px = activeSel.tx * TILE_SIZE
+      const py = activeSel.ty * TILE_SIZE
+      const pw = activeSel.tw * TILE_SIZE
+      const ph = activeSel.th * TILE_SIZE
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.2)'
+      ctx.fillRect(px, py, pw, ph)
+      ctx.strokeStyle = '#fbbf24'
+      ctx.lineWidth = 2
+      ctx.setLineDash([4, 4])
+      ctx.strokeRect(px, py, pw, ph)
+      ctx.setLineDash([])
+    }
+
+    if (tileSel && tileMoveDelta && (tileMoveDelta.dtx !== 0 || tileMoveDelta.dty !== 0)) {
+      const destTx = tileSel.tx + tileMoveDelta.dtx
+      const destTy = tileSel.ty + tileMoveDelta.dty
+      const ground = getTileLayer(map, 'ground')
+      if (ground) {
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.35)'
+        for (let ry = 0; ry < tileSel.th; ry++) {
+          for (let rx = 0; rx < tileSel.tw; rx++) {
+            const sx = tileSel.tx + rx
+            const sy = tileSel.ty + ry
+            if (sx < 0 || sy < 0 || sx >= map.width || sy >= map.height) continue
+            const dx = destTx + rx
+            const dy = destTy + ry
+            if (dx < 0 || dy < 0 || dx >= map.width || dy >= map.height) continue
+            const gid = ground.data[sy * map.width + sx]
+            ctx.fillStyle = gidFillColor(gid)
+            ctx.globalAlpha = 0.55
+            ctx.fillRect(dx * TILE_SIZE, dy * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            ctx.globalAlpha = 1
+          }
+        }
+      }
+      ctx.strokeStyle = '#f59e0b'
+      ctx.lineWidth = 2
+      ctx.setLineDash([2, 2])
+      ctx.strokeRect(
+        destTx * TILE_SIZE,
+        destTy * TILE_SIZE,
+        tileSel.tw * TILE_SIZE,
+        tileSel.th * TILE_SIZE,
+      )
+      ctx.setLineDash([])
+    }
   }, [
     map,
     showGround,
@@ -233,6 +317,9 @@ export function MapEditorCanvas({
     showNpcs,
     selectedObjectId,
     previewRect,
+    tileSel,
+    tileMarqueePreview,
+    tileMoveDelta,
     decorImagesReady,
   ])
 
@@ -346,6 +433,19 @@ export function MapEditorCanvas({
     if (tool === 'npc') {
       placeNpc(x, y)
     }
+
+    if (tool === 'tiles') {
+      const ptx = snapTile(x)
+      const pty = snapTile(y)
+      if (tileSel && pointerInTileRegion(ptx, pty, tileSel)) {
+        setDrag({ kind: 'moveTiles', pointerStartTx: ptx, pointerStartTy: pty })
+        setTileMoveDelta({ dtx: 0, dty: 0 })
+      } else {
+        setTileSel(null)
+        setDrag({ kind: 'tileMarquee', startTx: ptx, startTy: pty })
+        setTileMarqueePreview({ tx: ptx, ty: pty, tw: 1, th: 1 })
+      }
+    }
   }
 
   const onPointerMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -373,6 +473,23 @@ export function MapEditorCanvas({
       const rw = Math.max(TILE_SIZE, Math.abs(ex - drag.startX) + TILE_SIZE)
       const rh = Math.max(TILE_SIZE, Math.abs(ey - drag.startY) + TILE_SIZE)
       setPreviewRect({ x: rx, y: ry, w: rw, h: rh })
+      return
+    }
+
+    if (drag.kind === 'tileMarquee') {
+      const ptx = snapTile(x)
+      const pty = snapTile(y)
+      setTileMarqueePreview(tileRegionFromPoints(drag.startTx, drag.startTy, ptx, pty))
+      return
+    }
+
+    if (drag.kind === 'moveTiles' && tileSel) {
+      const ptx = snapTile(x)
+      const pty = snapTile(y)
+      setTileMoveDelta({
+        dtx: ptx - drag.pointerStartTx,
+        dty: pty - drag.pointerStartTy,
+      })
     }
   }
 
@@ -412,6 +529,23 @@ export function MapEditorCanvas({
   const onPointerUp = () => {
     if (drag?.kind === 'rect' && previewRect) {
       finishRect(drag.group, previewRect)
+    }
+    if (drag?.kind === 'tileMarquee' && tileMarqueePreview) {
+      setTileSel(tileMarqueePreview)
+      setTileMarqueePreview(null)
+    }
+    if (drag?.kind === 'moveTiles' && tileSel && tileMoveDelta) {
+      const { dtx, dty } = tileMoveDelta
+      if (dtx !== 0 || dty !== 0) {
+        onMapChange(moveTileRegion(map, tileSel, dtx, dty))
+        setTileSel({
+          tx: tileSel.tx + dtx,
+          ty: tileSel.ty + dty,
+          tw: tileSel.tw,
+          th: tileSel.th,
+        })
+      }
+      setTileMoveDelta(null)
     }
     setDrag(null)
     setPreviewRect(null)
