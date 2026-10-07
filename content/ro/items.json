@@ -430,6 +430,7 @@
       "weight": 50,
       "stackMax": 1,
       "equipSlot": "offhand",
+      "offhandKind": "shield",
       "layerColor": "0xa16207",
       "bonuses": { "str": 0, "agi": 0, "vit": 2, "int": 0, "dex": 0, "luk": 0 },
       "sourceUrl": "https://irowiki.org/wiki/Wooden_Shield"
@@ -548,6 +549,7 @@
       "weight": 40,
       "stackMax": 1,
       "equipSlot": "offhand",
+      "offhandKind": "shield",
       "layerColor": "0x6b7280",
       "bonuses": { "str": 0, "agi": 0, "vit": 3, "int": 0, "dex": 0, "luk": 0 },
       "requiredBaseLevel": 4,

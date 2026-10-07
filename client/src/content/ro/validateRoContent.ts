@@ -1,7 +1,8 @@
-import type { RoContentPack, WeaponClass } from './types'
+import type { RoAspdWeaponClass, RoContentPack, WeaponClass } from './types'
 import { PLAYER_AVATAR_KEYS } from '../../game/player/playerJobAvatar'
 
 const WEAPON_CLASSES = new Set<WeaponClass>(['knife', 'sword', 'spear', 'staff', 'bow'])
+const ASPD_WEAPON_CLASSES: RoAspdWeaponClass[] = ['unarmed', 'knife', 'sword', 'spear', 'staff', 'bow']
 const ALLOWED_AVATAR_KEYS = new Set<string>(PLAYER_AVATAR_KEYS)
 
 function assert(condition: boolean, message: string): void {
@@ -197,6 +198,27 @@ export function validateRoContent(pack: RoContentPack): void {
       assert(itemIds.has(piece.baseItemId), `jobStarterGear ${jobId} unknown item ${piece.baseItemId}`)
       const item = pack.items.find((i) => i.id === piece.baseItemId)
       assert(item?.equipSlot === piece.slot, `jobStarterGear ${jobId} item ${piece.baseItemId} slot mismatch`)
+    }
+  }
+
+  const aspdJobIds = new Set(pack.aspd.jobs.map((j) => j.jobId))
+  assert(
+    pack.aspd.weaponClasses.length === ASPD_WEAPON_CLASSES.length,
+    'aspd.weaponClasses must list all weapon classes',
+  )
+  for (const wc of ASPD_WEAPON_CLASSES) {
+    assert(pack.aspd.weaponClasses.includes(wc), `aspd.weaponClasses missing ${wc}`)
+  }
+  for (const jobId of jobIds) {
+    assert(aspdJobIds.has(jobId), `aspd.jobs missing entry for job ${jobId}`)
+  }
+  for (const row of pack.aspd.jobs) {
+    assert(jobIds.has(row.jobId), `aspd.jobs references unknown job ${row.jobId}`)
+    assert(row.shieldAspdPenalty >= 0, `aspd ${row.jobId} shieldAspdPenalty must be >= 0`)
+    for (const wc of ASPD_WEAPON_CLASSES) {
+      const base = row.baseAspdAt1Agi1Dex[wc]
+      assert(typeof base === 'number', `aspd ${row.jobId} missing baseAspdAt1Agi1Dex.${wc}`)
+      assert(base >= 100 && base <= 190, `aspd ${row.jobId} ${wc} baseAspd out of range`)
     }
   }
 

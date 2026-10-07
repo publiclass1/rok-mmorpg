@@ -11,6 +11,7 @@ import dungeonsJson from '../../../../content/ro/dungeons.json'
 import jobStarterGearJson from '../../../../content/ro/jobStarterGear.json'
 import jobMasterJson from '../../../../content/ro/jobMaster.json'
 import rentalsJson from '../../../../content/ro/rentals.json'
+import aspdJson from '../../../../content/ro/aspd.json'
 import type {
   RoContentPack,
   RoJob,
@@ -26,6 +27,7 @@ import type {
   RoJobStarterGearConfig,
   RoJobMasterConfig,
   RoRentalsConfig,
+  RoAspdConfig,
 } from './types'
 import { expandAllMobSpots, type RuntimeMobSpawn } from './expandMobSpots'
 import { validateRoContent } from './validateRoContent'
@@ -87,6 +89,7 @@ export function loadRoContent(): RoContentPack {
     jobStarterGear: jobStarterGearJson as RoJobStarterGearConfig,
     jobMaster: jobMasterJson as RoJobMasterConfig,
     rentals: rentalsJson as RoRentalsConfig,
+    aspd: aspdJson as RoAspdConfig,
   }
 
   validateRoContent(pack)

@@ -68,12 +68,8 @@ import { playSkillCastFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
 import { scaleMobExp } from '../combat/gameConfig'
-import {
-  ATTACK_COOLDOWN_MS,
-  MOB_DEFS,
-  MOB_RESPAWN_MS,
-  MOB_SPAWNS_BY_MAP,
-} from '../combat/mobConfig'
+import { MOB_DEFS, MOB_RESPAWN_MS, MOB_SPAWNS_BY_MAP } from '../combat/mobConfig'
+import { playerAttackTiming } from '../combat/preRenewalAspd'
 import {
   getEquippedWeaponClass,
   getPlayerAttackRangeCells,
@@ -84,6 +80,7 @@ import {
   usesTargetedAttack,
 } from '../combat/playerAttackRange'
 import { appearanceFromCharacterRow } from '../character/characterAppearance'
+import { moveSpeedFromAgi } from '../character/statFormulas'
 import { attackStyleForWeapon } from '../character/characterSpriteRegistry'
 import { ensureMasterCharacterSheets } from '../character/characterSpriteAssets'
 import { addItemsToSessionInventory } from '../character/sessionInventory'
@@ -897,10 +894,14 @@ export class WorldScene extends Phaser.Scene {
     this.getPlayerBody()?.setVelocity(0, 0)
   }
 
+  private playerAttackCooldownMs(): number {
+    return playerAttackTiming(this.session).attackIntervalMs
+  }
+
   update() {
     const sheet = toCharacterSheetPayload(this.session)
     const wallNow = Date.now()
-    const speed = (140 + Math.min(sheet.effectiveAgi, 99)) * rentalSpeedMultiplier(this.session, wallNow)
+    const speed = moveSpeedFromAgi(sheet.effectiveAgi) * rentalSpeedMultiplier(this.session, wallNow)
     const now = this.time.now
 
     this.tickActiveRental(wallNow)
@@ -1806,7 +1807,7 @@ export class WorldScene extends Phaser.Scene {
   private executeProvokeSkill(skillLevel: number, def: SkillDefinition, target: MobInstance) {
     if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
-    if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
     if (!this.spendMp(def.mpCost)) return
     if (!target.alive) return
 
@@ -1844,7 +1845,7 @@ export class WorldScene extends Phaser.Scene {
   ) {
     if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
-    if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
     if (!this.spendMp(def.mpCost)) return
     if (!primaryMob.alive) return
 
@@ -1982,7 +1983,7 @@ export class WorldScene extends Phaser.Scene {
     if (!snapshot) return
     if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
-    if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
     if (!this.spendMp(def.mpCost)) return
 
     const px = this.playerDisplay.container.x
@@ -3407,7 +3408,7 @@ export class WorldScene extends Phaser.Scene {
       }
     }
     const now = this.time.now
-    if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
     const duelSnapshot = this.getDuelOpponentSnapshot()
     const duelMode =
       this.isDuelCombatAllowed() &&

@@ -48,6 +48,17 @@ Implement in order:
 
 **Today:** `combat/damage.ts` — HIT/FLEE, soft DEF + VIT reduction, element/size modifiers; mob ATK from `mobs.json`.
 
+## Attack speed (ASPD)
+
+Classic Pre-Renewal display ASPD (0–190) per [iRO Wiki Classic — ASPD](https://irowiki.org/classic/ASPD):
+
+- `WD = 50 × BTBA` where BTBA comes from job + weapon class (`content/ro/aspd.json`, stored as `baseAspdAt1Agi1Dex` at 1 AGI / 1 DEX).
+- `ASPD = 200 − (WD − round((WD×AGI/25 + WD×DEX/100) / 10)) × (1 − SM)`; `SM` = skill/potion IAS (0 until buffs wire in).
+- Shield: subtract per-job `shieldAspdPenalty` from display ASPD when `offhandKind: "shield"` is equipped.
+- Client attack interval: `(200 − floor(ASPD)) / 50` seconds between attacks (min 200ms).
+
+**Today:** `client/src/game/combat/preRenewalAspd.ts`, `WorldScene` attack gating, Status window via `combatStatPreview.ts`.
+
 ## Critical hits
 
 Inspired by [iRO Wiki Classic — Attacks](https://irowiki.org/classic/Attacks); **custom** chance and LUK scaling:
@@ -74,3 +85,4 @@ Kill reward uses mob base EXP and job EXP from data ([Poring](https://irowiki.or
 - [x] HIT/FLEE and damage pipeline in combat
 - [x] LUK-based critical hits (physical + magic helper)
 - [x] Drops from `mobs.json` `drops[]`
+- [x] Classic Pre-Renewal ASPD (`aspd.json`, `preRenewalAspd.ts`)

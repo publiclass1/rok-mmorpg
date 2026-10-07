@@ -1,0 +1,126 @@
+{
+  "sourceUrl": "https://irowiki.org/classic/ASPD",
+  "weaponClasses": ["unarmed", "knife", "sword", "spear", "staff", "bow"],
+  "jobs": [
+    {
+      "jobId": "novice",
+      "shieldAspdPenalty": 5,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 145,
+        "knife": 146,
+        "sword": 146,
+        "spear": 146,
+        "staff": 146,
+        "bow": 146
+      }
+    },
+    {
+      "jobId": "swordman",
+      "shieldAspdPenalty": 7,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 156,
+        "knife": 150,
+        "sword": 150,
+        "spear": 152,
+        "staff": 152,
+        "bow": 150
+      }
+    },
+    {
+      "jobId": "knight",
+      "shieldAspdPenalty": 7,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 156,
+        "knife": 150,
+        "sword": 145,
+        "spear": 152,
+        "staff": 152,
+        "bow": 150
+      }
+    },
+    {
+      "jobId": "mage",
+      "shieldAspdPenalty": 6,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 146,
+        "knife": 146,
+        "sword": 146,
+        "spear": 146,
+        "staff": 146,
+        "bow": 146
+      }
+    },
+    {
+      "jobId": "archer",
+      "shieldAspdPenalty": 6,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 156,
+        "knife": 150,
+        "sword": 150,
+        "spear": 150,
+        "staff": 150,
+        "bow": 147
+      }
+    },
+    {
+      "jobId": "hunter",
+      "shieldAspdPenalty": 6,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 156,
+        "knife": 150,
+        "sword": 150,
+        "spear": 150,
+        "staff": 150,
+        "bow": 145
+      }
+    },
+    {
+      "jobId": "acolyte",
+      "shieldAspdPenalty": 6,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 150,
+        "knife": 146,
+        "sword": 146,
+        "spear": 146,
+        "staff": 146,
+        "bow": 146
+      }
+    },
+    {
+      "jobId": "merchant",
+      "shieldAspdPenalty": 6,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 146,
+        "knife": 146,
+        "sword": 146,
+        "spear": 146,
+        "staff": 146,
+        "bow": 146
+      }
+    },
+    {
+      "jobId": "thief",
+      "shieldAspdPenalty": 5,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 156,
+        "knife": 150,
+        "sword": 150,
+        "spear": 150,
+        "staff": 150,
+        "bow": 150
+      }
+    },
+    {
+      "jobId": "monster",
+      "shieldAspdPenalty": 5,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 145,
+        "knife": 146,
+        "sword": 146,
+        "spear": 146,
+        "staff": 146,
+        "bow": 146
+      }
+    }
+  ]
+}

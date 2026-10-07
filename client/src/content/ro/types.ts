@@ -87,6 +87,8 @@ export type RoItem = {
   requiredBaseLevel?: number
   /** When set, current job must be one of these ids; omitted means all jobs. */
   requiredJobIds?: string[]
+  /** Offhand subtype for combat rules (e.g. shield ASPD penalty). */
+  offhandKind?: 'shield'
   sourceUrl?: string | null
   /** Override path under public root; weapons default to `/items/weapons/{id}.svg` */
   iconFile?: string | null
@@ -132,6 +134,20 @@ export type RoRentalCatalogEntry = {
 export type RoRentalsConfig = {
   catalog: Record<RoRentalKind, RoRentalCatalogEntry>
   offersByNpcId: Record<string, RoRentalKind[]>
+}
+
+export type RoAspdWeaponClass = WeaponClass | 'unarmed'
+
+export type RoAspdJobRow = {
+  jobId: string
+  shieldAspdPenalty: number
+  baseAspdAt1Agi1Dex: Record<RoAspdWeaponClass, number>
+}
+
+export type RoAspdConfig = {
+  sourceUrl?: string
+  weaponClasses: RoAspdWeaponClass[]
+  jobs: RoAspdJobRow[]
 }
 
 export type RoExpTables = {
@@ -314,4 +330,5 @@ export type RoContentPack = {
   jobStarterGear: RoJobStarterGearConfig
   jobMaster: RoJobMasterConfig
   rentals: RoRentalsConfig
+  aspd: RoAspdConfig
 }

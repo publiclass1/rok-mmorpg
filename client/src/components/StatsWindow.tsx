@@ -121,7 +121,7 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
             <dt>Move</dt>
             <dd>{cs.moveSpeed}</dd>
             <dt>Atk spd</dt>
-            <dd>{cs.attackIntervalMs}ms (~{cs.attacksPerSecond}/s)</dd>
+            <dd>ASPD {cs.aspdDisplay} · {cs.attackIntervalMs}ms (~{cs.attacksPerSecond}/s)</dd>
             <dt>ATK</dt>
             <dd>{atkLabel}</dd>
             <dt>MATK</dt>

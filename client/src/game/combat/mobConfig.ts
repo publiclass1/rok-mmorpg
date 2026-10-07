@@ -74,5 +74,6 @@ export const MOB_SPAWNS_BY_MAP: Record<string, MobSpawnPoint[]> = getRuntimeMobS
 
 export const PLAYER_DEFAULT_HP = 50
 export const PLAYER_DEFAULT_MP = 30
+/** Legacy placeholder; player attacks use {@link playerAttackTiming} (Pre-Renewal ASPD). */
 export const ATTACK_COOLDOWN_MS = 450
 export const MOB_RESPAWN_MS = 8000

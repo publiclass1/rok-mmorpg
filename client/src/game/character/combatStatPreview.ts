@@ -8,7 +8,7 @@ import {
   calcStatusMatkMin,
 } from '../combat/damage'
 import { sumEquippedCritChancePercent } from '../combat/critBonuses'
-import { ATTACK_COOLDOWN_MS } from '../combat/mobConfig'
+import { playerAttackTiming } from '../combat/preRenewalAspd'
 import { getItemCombatStats } from './itemCatalog'
 import { effectiveStats } from './effectiveStats'
 import { rentalSpeedMultiplier } from './rental'
@@ -20,6 +20,7 @@ export type CombatStatPreview = {
   mp: number
   mpMax: number
   moveSpeed: number
+  aspdDisplay: number
   attackIntervalMs: number
   attacksPerSecond: number
   statusAtk: number
@@ -43,6 +44,7 @@ export function buildCombatStatPreview(state: CharacterSessionState): CombatStat
   const hpMax = derivedMaxHp(state.jobId, baseLevel, stats.vit)
   const mpMax = derivedMaxMp(state.jobId, baseLevel, stats.int)
   const moveSpeed = Math.round(moveSpeedFromAgi(stats.agi) * rentalSpeedMultiplier(state))
+  const attackTiming = playerAttackTiming(state)
 
   return {
     hp: state.hp,
@@ -50,8 +52,9 @@ export function buildCombatStatPreview(state: CharacterSessionState): CombatStat
     mp: state.mp,
     mpMax,
     moveSpeed,
-    attackIntervalMs: ATTACK_COOLDOWN_MS,
-    attacksPerSecond: Math.round((1000 / ATTACK_COOLDOWN_MS) * 10) / 10,
+    aspdDisplay: attackTiming.aspdDisplay,
+    attackIntervalMs: attackTiming.attackIntervalMs,
+    attacksPerSecond: attackTiming.attacksPerSecond,
     statusAtk,
     weaponAtk,
     atk: statusAtk + weaponAtk,
