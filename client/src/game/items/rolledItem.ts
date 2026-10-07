@@ -25,8 +25,8 @@ const PRIMARY_STATS: PrimaryStat[] = ['str', 'agi', 'vit', 'int', 'dex', 'luk']
 
 const ROLLED_PREFIX = 'ri:'
 
-export function isRolledItemId(itemId: string): boolean {
-  return itemId.startsWith(ROLLED_PREFIX)
+export function isRolledItemId(itemId: string | null | undefined): boolean {
+  return typeof itemId === 'string' && itemId.startsWith(ROLLED_PREFIX)
 }
 
 export function parseRolledBaseItemId(itemId: string): string | null {

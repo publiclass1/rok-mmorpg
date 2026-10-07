@@ -126,6 +126,34 @@ export function canPlaceSkillOnBar(
   return def != null && def.type === 'active'
 }
 
+const AUTO_ATTACK_EXCLUDED_SKILL_IDS = new Set<string>(['play_dead'])
+
+export function canPlaceOnAutoAttackRotation(
+  skillId: string,
+  sheet: { jobId: string; skills: Record<string, number> },
+): boolean {
+  if (AUTO_ATTACK_EXCLUDED_SKILL_IDS.has(skillId)) return false
+  if (skillId === 'basic_attack') return (sheet.skills.basic_attack ?? 1) >= 1
+  if (!canPlaceSkillOnBar(skillId, sheet.jobId, sheet.skills)) return false
+  const def = SKILLS[skillId]
+  if (!def) return false
+  if (def.target === 'ground') return false
+  return true
+}
+
+export function autoAttackAssignableSkills(sheet: {
+  jobId: string
+  skills: Record<string, number>
+}): SkillDefinition[] {
+  return barAssignableSkills(sheet)
+    .filter((def) => canPlaceOnAutoAttackRotation(def.id, sheet))
+    .sort((a, b) => {
+      const jobCmp = (JOB_NAMES[a.jobId] ?? a.jobId).localeCompare(JOB_NAMES[b.jobId] ?? b.jobId)
+      if (jobCmp !== 0) return jobCmp
+      return a.name.localeCompare(b.name)
+    })
+}
+
 /** Active enemy-target skills that reuse the Bash melee stub in WorldScene until dedicated logic exists. */
 const MELEE_SKILL_STUBS = new Set([
   'bash',

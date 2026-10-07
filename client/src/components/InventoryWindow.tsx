@@ -58,6 +58,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
       })
     })
     for (const row of dbRows) {
+      if (!row.item_id) continue
       list.push({
         key: `db-${row.item_id}`,
         itemId: row.item_id,

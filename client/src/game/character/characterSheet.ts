@@ -1,4 +1,5 @@
 import type { CharacterSessionState, EquipSlot, PrimaryStat } from './characterState'
+import { parseSessionInventory } from './sessionInventory'
 import { buildCombatStatPreview } from './combatStatPreview'
 import { previewPlayerAttack } from '../combat/damage'
 import { effectiveStats } from './effectiveStats'
@@ -61,7 +62,7 @@ export function toCharacterSheetPayload(state: CharacterSessionState): Character
     skills: { ...state.skills },
     equipment: { ...state.equipment },
     skillBar: [...state.skillBar],
-    sessionInventory: [...state.sessionInventory],
+    sessionInventory: parseSessionInventory(state.sessionInventory),
     attackDamage,
     combatStats: buildCombatStatPreview(state),
   }
@@ -100,7 +101,7 @@ export function sessionFromSheetPayload(
     skills: { ...sheet.skills },
     equipment: { ...sheet.equipment },
     skillBar: [...sheet.skillBar],
-    sessionInventory: [...sheet.sessionInventory],
+    sessionInventory: parseSessionInventory(sheet.sessionInventory),
     jobId: sheet.jobId,
   })
 }

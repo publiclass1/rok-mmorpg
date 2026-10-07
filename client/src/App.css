@@ -1381,7 +1381,165 @@ button:disabled {
 }
 
 .auto-attack-modal {
-  width: min(420px, 92vw);
+  width: min(560px, 94vw);
+}
+
+.auto-attack-tabs {
+  margin: 0 0.65rem 0.35rem;
+}
+
+.auto-attack-tab-body {
+  min-height: min(42vh, 320px);
+}
+
+.auto-attack-tab-panel {
+  margin-top: 0;
+}
+
+.auto-attack-enable {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  margin: 0 0.65rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: rgba(30, 58, 138, 0.15);
+}
+
+.auto-attack-enable__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.auto-attack-switch {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.auto-attack-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.auto-attack-switch__track {
+  position: relative;
+  display: block;
+  width: 2.5rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: #374151;
+  border: 1px solid #4b5563;
+  transition: background-color 0.15s ease;
+}
+
+.auto-attack-switch__track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #e5e7eb;
+  transition: transform 0.15s ease;
+}
+
+.auto-attack-switch input:checked + .auto-attack-switch__track {
+  background: #2563eb;
+  border-color: #3b82f6;
+}
+
+.auto-attack-switch input:checked + .auto-attack-switch__track::after {
+  transform: translateX(1.1rem);
+}
+
+.auto-attack-card {
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.6rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(55, 65, 81, 0.75);
+  background: rgba(17, 24, 39, 0.45);
+}
+
+.auto-attack-hint {
+  margin: 0 0 0.4rem;
+}
+
+.auto-attack-palette {
+  margin-top: 0.55rem;
+  max-height: min(28vh, 220px);
+  overflow-y: auto;
+  border-top: 1px solid rgba(55, 65, 81, 0.5);
+  padding-top: 0.45rem;
+}
+
+.auto-attack-palette-group {
+  margin-bottom: 0.45rem;
+}
+
+.auto-attack-palette-group__title {
+  margin: 0 0 0.25rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+}
+
+.auto-attack-palette-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.auto-attack-palette-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  width: 4.25rem;
+  padding: 0.25rem 0.15rem;
+  border-radius: 6px;
+  border: 1px solid rgba(55, 65, 81, 0.8);
+  background: rgba(15, 23, 42, 0.85);
+  color: #e5e7eb;
+  cursor: pointer;
+  font-size: 0.62rem;
+  line-height: 1.15;
+}
+
+.auto-attack-palette-btn:hover {
+  border-color: #60a5fa;
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.auto-attack-palette-btn__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auto-attack-range-full {
+  width: 100%;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.auto-attack-mob-count {
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.skill-slot--selected {
+  outline: 2px solid #60a5fa;
+  outline-offset: 1px;
 }
 
 .auto-attack-section {
@@ -1426,7 +1584,7 @@ button:disabled {
   list-style: none;
   margin: 0.35rem 0 0;
   padding: 0;
-  max-height: 10rem;
+  max-height: min(32vh, 240px);
   overflow-y: auto;
   border: 1px solid rgba(55, 65, 81, 0.6);
   border-radius: 6px;
@@ -2814,6 +2972,16 @@ body.chat-strip-resizing {
 .game-shell.skills-assign-mode .skill-bar {
   outline: 1px solid #60a5fa;
   outline-offset: -1px;
+}
+
+.game-shell.skills-assign-mode .auto-attack-rotation {
+  outline: 1px solid #60a5fa;
+  outline-offset: -1px;
+}
+
+.game-shell.skills-assign-mode .auto-attack-modal {
+  z-index: 26;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
 }
 
 .modal {

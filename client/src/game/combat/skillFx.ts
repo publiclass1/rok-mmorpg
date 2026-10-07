@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import type { Facing } from '../movement/clickToMove'
+import { usesGroundAoECastMarker } from './groundAoECastMarker'
 
 export type SkillFxContext = {
   playerX: number
@@ -223,6 +224,7 @@ export function playSkillImpactFx(
   y: number,
   depth: number,
 ) {
+  if (usesGroundAoECastMarker(skillId)) return
   const ty = y
   switch (skillId) {
     case 'fire_bolt':
@@ -269,6 +271,7 @@ export function playSkillGroundFx(
   y: number,
   depth: number,
 ) {
+  if (usesGroundAoECastMarker(skillId)) return
   playSkillImpactFx(scene, skillId, x, y - 14, depth)
   if (
     skillId === 'meteor_storm' ||

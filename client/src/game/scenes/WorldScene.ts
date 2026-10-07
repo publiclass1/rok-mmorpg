@@ -71,18 +71,26 @@ import { playLevelUpAudio, preloadLevelUpAudio } from '../combat/levelUpAudio'
 import { playLevelUpWorldFx } from '../combat/levelUpFx'
 import { buildLevelUpSteps, type LevelUpStep } from '../combat/levelUpSteps'
 import { PlayerCastBarGfx, positionPlayerCastBar, shouldShowCastBar } from '../combat/castBarFx'
+import {
+  GroundAoECastMarker,
+  groundAoERadiusPx,
+  playGroundAoEImpactBurst,
+} from '../combat/groundAoECastMarker'
 import { calcPreRenewalCastTimeMsFromSession, skillCastStrikeDelayMs } from '../combat/castTime'
-import { playSkillCastFx, playSkillGroundFx, playSkillImpactFx } from '../combat/skillFx'
+import { PlayerSpellChantGfx } from '../combat/spellChantFx'
+import { resolveSpellChant, shouldShowSpellChant } from '../combat/spellChants'
+import { playSkillCastFx, playSkillImpactFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
 import { scaleMobExp } from '../combat/gameConfig'
 import { MOB_DEFS, MOB_RESPAWN_MS, MOB_SPAWNS_BY_MAP } from '../combat/mobConfig'
 import {
-  AUTO_ATTACK_SIT_STAND_BUFFER_PERCENT,
+  autoAttackRotationHasSit,
   defaultAutoAttackConfig,
   normalizeAutoAttackConfig,
   type AutoAttackConfig,
 } from '../combat/autoAttackConfig'
+import { shouldStandFromAutoSit } from '../combat/autoAttackSitRegen'
 import {
   pickAutoAttackTarget,
   pickPatrolChaseTarget,
@@ -102,7 +110,7 @@ import { appearanceFromCharacterRow } from '../character/characterAppearance'
 import { moveSpeedFromAgi } from '../character/statFormulas'
 import { attackStyleForWeapon } from '../character/characterSpriteRegistry'
 import { ensureMasterCharacterSheets } from '../character/characterSpriteAssets'
-import { addItemsToSessionInventory } from '../character/sessionInventory'
+import { addItemsToSessionInventory, parseSessionInventory } from '../character/sessionInventory'
 import type { MobInstance } from '../combat/mobTypes'
 import { SfxPlayer } from '../combat/sfx'
 import {
@@ -312,6 +320,9 @@ export class WorldScene extends Phaser.Scene {
   } | null = null
   private skillCalloutTween: Phaser.Tweens.Tween | null = null
   private playerCastBar!: PlayerCastBarGfx
+  private playerSpellChant!: PlayerSpellChantGfx
+  private groundAoEMarker!: GroundAoECastMarker
+  private groundAoECastDismissTimer: Phaser.Time.TimerEvent | null = null
   private levelUpQueue: LevelUpStep[] = []
   private levelUpDrainActive = false
   private levelUpCelebrateId = 0
@@ -507,6 +518,8 @@ export class WorldScene extends Phaser.Scene {
     this.playerSkillCallout.setAlpha(0)
 
     this.playerCastBar = new PlayerCastBarGfx(this)
+    this.playerSpellChant = new PlayerSpellChantGfx(this)
+    this.groundAoEMarker = new GroundAoECastMarker(this)
 
     this.playerChatBubble = createPlayerChatBubble(this)
 
@@ -899,7 +912,9 @@ export class WorldScene extends Phaser.Scene {
     this.disableAutoAttackFromManualInput()
     if (this.isPlayerDead || this.session.hp > 0) return
     this.isPlayerDead = true
-    this.cancelSkillCastBar()
+    this.clearGroundAoECastDismissTimer()
+    this.cancelPlayerCastPresentation()
+    this.groundAoEMarker.cancel()
     this.pendingSkill = null
     this.queuedSkillCast = null
     this.chaseMobForSkillOnly = false
@@ -1086,6 +1101,7 @@ export class WorldScene extends Phaser.Scene {
     this.syncWorldDepth()
     this.syncViewportVisibility()
     this.refreshPlayerNameLabels()
+    this.tickGroundAoEPreview()
     this.refreshCursor()
     this.refreshMapDropHover()
     this.emitMinimap(now)
@@ -1173,6 +1189,9 @@ export class WorldScene extends Phaser.Scene {
     positionSkillCalloutLabel(this.playerSkillCallout, localX, localY)
     if (this.playerCastBar.isActive) {
       positionPlayerCastBar(this.playerCastBar.container, localX, localFeetY)
+    }
+    if (this.playerSpellChant.isActive) {
+      this.playerSpellChant.setPosition(localX, localFeetY)
     }
     positionPlayerChatBubbleAtFeet(this.playerChatBubble, localX, localFeetY)
     const localInView = entityInView(bounds, localX, localY)
@@ -1572,6 +1591,12 @@ export class WorldScene extends Phaser.Scene {
     setDepthByFeet(this.playerLabel, playerFeet + PLAYER_NAME_OFFSET_BELOW, 0.05)
     setDepthByFeet(this.playerSkillCallout, playerFeet, 0.06)
     setDepthByFeet(this.playerCastBar.container, playerFeet, 0.065)
+    if (this.playerSpellChant.isActive) {
+      setDepthByFeet(this.playerSpellChant.text, playerFeet, 0.061)
+    }
+    if (this.groundAoEMarker.isActive) {
+      this.groundAoEMarker.syncDepth()
+    }
     setDepthByFeet(this.playerChatBubble.container, playerFeet, 0.07)
     this.syncMountVisuals(playerFeet)
 
@@ -1711,12 +1736,18 @@ export class WorldScene extends Phaser.Scene {
     this.disableAutoAttackFromManualInput()
     this.queuedSkillCast = null
     this.pendingSkill = { skillId, level, def }
+    if (def.target === 'ground' && (isPlayerGroundMagicSkill(skillId) || isPlayerGroundMagicStub(skillId))) {
+      this.groundAoEMarker.showPreview(skillId, def)
+    }
     emitGameEvent('status', `Select target for ${def.name} (Esc or right-click to cancel).`)
     this.refreshCursor()
   }
 
   private cancelSkillTargeting() {
-    if (!this.pendingSkill) return
+    const hadPending = Boolean(this.pendingSkill)
+    const hadGroundMarker = this.groundAoEMarker.isActive
+    if (!hadPending && !hadGroundMarker) return
+
     this.pendingSkill = null
     this.queuedSkillCast = null
     if (this.chaseMobForSkillOnly) {
@@ -1732,23 +1763,65 @@ export class WorldScene extends Phaser.Scene {
       clearMoveTarget(this.moveTarget)
       this.stopPlayerMotion()
     }
-    this.cancelSkillCastBar()
+    this.clearGroundAoECastDismissTimer()
+    this.cancelPlayerCastPresentation()
+    this.groundAoEMarker.cancel()
     emitGameEvent('status', 'Skill cancelled.')
     this.refreshCursor()
   }
 
-  private beginSkillCastBarIfNeeded(def: SkillDefinition) {
-    const castMs = calcPreRenewalCastTimeMsFromSession(def.castTimeMs, this.session)
-    if (!shouldShowCastBar(castMs)) {
-      this.playerCastBar.cancel()
-      return castMs
-    }
-    this.playerCastBar.play(castMs, this.playerDisplay.container.x, this.playerFeetY())
-    return castMs
+  private clearGroundAoECastDismissTimer() {
+    this.groundAoECastDismissTimer?.remove()
+    this.groundAoECastDismissTimer = null
   }
 
-  private cancelSkillCastBar() {
+  /** Hide rotating ground preview when variable cast time ends (before projectile travel). */
+  private scheduleGroundAoECastPreviewDismiss(strikeDelayMs: number) {
+    this.clearGroundAoECastDismissTimer()
+    this.groundAoECastDismissTimer = this.time.delayedCall(strikeDelayMs, () => {
+      this.groundAoECastDismissTimer = null
+      this.groundAoEMarker.cancel()
+    })
+  }
+
+  private tickGroundAoEPreview() {
+    const pending = this.pendingSkill
+    if (!pending || pending.def.target !== 'ground' || this.uiPointerLocked || this.isPlayerDead) return
+    const p = this.input.activePointer
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    const inRange =
+      Phaser.Math.Distance.Between(px, py, p.worldX, p.worldY) <= this.skillRangePx(pending.def)
+    this.groundAoEMarker.setPreviewPosition(p.worldX, p.worldY, inRange)
+  }
+
+  private beginPlayerCastPresentation(
+    def: SkillDefinition,
+    skillId: string,
+  ): { castMs: number; strikeDelay: number } {
+    const castMs = calcPreRenewalCastTimeMsFromSession(def.castTimeMs, this.session)
+    const strikeDelay = skillCastStrikeDelayMs(def.castTimeMs, this.session)
+    const feetX = this.playerDisplay.container.x
+    const feetY = this.playerFeetY()
+
+    if (shouldShowSpellChant(strikeDelay)) {
+      this.playerSpellChant.play(resolveSpellChant(skillId, def), strikeDelay, feetX, feetY)
+    } else {
+      this.playerSpellChant.cancel()
+    }
+
+    if (shouldShowCastBar(castMs)) {
+      this.playerCastBar.play(castMs, feetX, feetY)
+    } else {
+      this.playerCastBar.cancel()
+    }
+
+    return { castMs, strikeDelay }
+  }
+
+  private cancelPlayerCastPresentation() {
     this.playerCastBar.cancel()
+    this.playerSpellChant.cancel()
   }
 
   private showSkillCallout(name: string, durationMs = 1200) {
@@ -1781,10 +1854,18 @@ export class WorldScene extends Phaser.Scene {
     const { skillId, level, def } = pending
 
     if (def.target === 'ground') {
-      this.pendingSkill = null
       if (isPlayerGroundMagicSkill(skillId) || isPlayerGroundMagicStub(skillId)) {
+        const px = this.playerDisplay.container.x
+        const py = this.playerDisplay.container.y
+        if (Phaser.Math.Distance.Between(px, py, wx, wy) > this.skillRangePx(def)) {
+          emitGameEvent('status', 'Target out of range.')
+          this.refreshCursor()
+          return
+        }
+        this.pendingSkill = null
         this.executePlayerGroundSkill(skillId, level, def, wx, wy)
       } else {
+        this.pendingSkill = null
         emitGameEvent(
           'status',
           `${def.name} — ground target (${Math.round(wx)}, ${Math.round(wy)}) not implemented yet`,
@@ -1986,7 +2067,7 @@ export class WorldScene extends Phaser.Scene {
     this.lastAttackAt = now
     this.isAttacking = true
     this.faceToward(target.sprite.x, target.sprite.y)
-    const castMs = this.beginSkillCastBarIfNeeded(def)
+    const { castMs, strikeDelay } = this.beginPlayerCastPresentation(def, 'dispell')
     this.showSkillCallout(def.name, Math.max(1200, castMs + 500))
     const depth = this.playerDisplay.container.depth + 0.1
     playSkillCastFx(this, 'dispell', {
@@ -2000,7 +2081,7 @@ export class WorldScene extends Phaser.Scene {
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       attackStyle: 'cast',
-      strikeDelayMs: this.skillCastStrikeDelayMs(def),
+      strikeDelayMs: strikeDelay,
       getAimTarget: () => toCombatAimPoint(target.sprite.x, target.sprite.y),
       magicSkillId: 'dispell',
       magicHitCount: 1,
@@ -2012,6 +2093,7 @@ export class WorldScene extends Phaser.Scene {
       },
       onMagicVolleyComplete: () => this.emitCharacterSheet(),
       onComplete: () => {
+        this.cancelPlayerCastPresentation()
         this.isAttacking = false
       },
     })
@@ -2056,7 +2138,7 @@ export class WorldScene extends Phaser.Scene {
     this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
     this.faceToward(primaryMob.sprite.x, primaryMob.sprite.y)
-    const castMs = this.beginSkillCastBarIfNeeded(def)
+    const { castMs, strikeDelay } = this.beginPlayerCastPresentation(def, skillId)
     this.showSkillCallout(def.name, Math.max(1200, castMs + 500))
 
     const skillLabel = def.name
@@ -2076,7 +2158,7 @@ export class WorldScene extends Phaser.Scene {
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       attackStyle: 'cast',
-      strikeDelayMs: this.skillCastStrikeDelayMs(def),
+      strikeDelayMs: strikeDelay,
       getAimTarget: () => toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y),
       magicSkillId: skillId,
       magicHitCount: magicSkillHitCount(def, skillLevel),
@@ -2094,6 +2176,7 @@ export class WorldScene extends Phaser.Scene {
         this.emitCharacterSheet()
       },
       onComplete: () => {
+        this.cancelPlayerCastPresentation()
         this.isAttacking = false
       },
     })
@@ -2123,11 +2206,13 @@ export class WorldScene extends Phaser.Scene {
     this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
     this.faceToward(wx, wy)
-    const castMs = this.beginSkillCastBarIfNeeded(def)
+    this.groundAoEMarker.lockCast(wx, wy)
+    const { castMs, strikeDelay } = this.beginPlayerCastPresentation(def, skillId)
     this.showSkillCallout(def.name, Math.max(1200, castMs + 500))
 
     const depth = this.playerDisplay.container.depth + 0.1
-    const strikeDelay = this.skillCastStrikeDelayMs(def)
+    const aoeRadius = groundAoERadiusPx(def, skillId)
+    this.scheduleGroundAoECastPreviewDismiss(strikeDelay)
     const aim = toCombatAimPoint(wx, wy)
 
     if (isPlayerGroundMagicStub(skillId)) {
@@ -2148,12 +2233,15 @@ export class WorldScene extends Phaser.Scene {
         magicSkillId: skillId,
         magicHitCount: 1,
         onMagicHit: () => {
-          playSkillGroundFx(this, skillId, wx, wy, depth)
+          playGroundAoEImpactBurst(this, wx, wy, skillId, aoeRadius)
           emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — tile effect not implemented yet.`)
           logActivity('combat', `${def.name} Lv ${skillLevel} at (${Math.round(wx)}, ${Math.round(wy)}).`)
         },
         onMagicVolleyComplete: () => this.emitCharacterSheet(),
         onComplete: () => {
+          this.clearGroundAoECastDismissTimer()
+          this.groundAoEMarker.cancel()
+          this.cancelPlayerCastPresentation()
           this.isAttacking = false
         },
       })
@@ -2181,7 +2269,7 @@ export class WorldScene extends Phaser.Scene {
       magicSkillId: skillId,
       magicHitCount: 1,
       onMagicHit: () => {
-        playSkillGroundFx(this, skillId, wx, wy, depth)
+        playGroundAoEImpactBurst(this, wx, wy, skillId, aoeRadius)
       },
       onMagicVolleyComplete: () => {
         const victims = this.mobsInAoERadius(wx, wy, radius)
@@ -2197,6 +2285,9 @@ export class WorldScene extends Phaser.Scene {
         this.emitCharacterSheet()
       },
       onComplete: () => {
+        this.clearGroundAoECastDismissTimer()
+        this.groundAoEMarker.cancel()
+        this.cancelPlayerCastPresentation()
         this.isAttacking = false
       },
     })
@@ -2497,10 +2588,6 @@ export class WorldScene extends Phaser.Scene {
       this.rentalFalconGfx.setPosition(fx, fy)
       setDepthByFeet(this.rentalFalconGfx, playerFeet, 0.06)
     }
-  }
-
-  private skillCastStrikeDelayMs(def: SkillDefinition): number {
-    return skillCastStrikeDelayMs(def.castTimeMs, this.session)
   }
 
   private playerAttackElementOverride(): string | undefined {
@@ -4123,7 +4210,7 @@ export class WorldScene extends Phaser.Scene {
             {
               ...s,
               sessionInventory: Array.isArray(result.sessionInventory)
-                ? (result.sessionInventory as typeof s.sessionInventory)
+                ? parseSessionInventory(result.sessionInventory)
                 : s.sessionInventory,
             },
             progress,
@@ -4344,6 +4431,9 @@ export class WorldScene extends Phaser.Scene {
     }
     if (!this.autoAttackConfig.enabled) {
       this.teardownAutoAttackRuntime()
+    } else if (!autoAttackRotationHasSit(this.autoAttackConfig) && this.autoSitForRegen) {
+      this.autoSitForRegen = false
+      if (this.isSitting) this.standUp()
     }
     this.refreshAutoPatrolCircle()
     if (this.autoAttackConfig.enabled && this.shouldAbortAutoAttack()) {
@@ -4419,7 +4509,7 @@ export class WorldScene extends Phaser.Scene {
     for (let i = 0; i < rot.length; i++) {
       const idx = (this.autoAttackRotationIndex + i) % rot.length
       const id = rot[idx]
-      if (id) return id
+      if (id && id !== 'sit') return id
     }
     return null
   }
@@ -4430,7 +4520,8 @@ export class WorldScene extends Phaser.Scene {
     let idx = this.autoAttackRotationIndex
     for (let step = 0; step < rot.length; step++) {
       idx = (idx + 1) % rot.length
-      if (rot[idx]) {
+      const id = rot[idx]
+      if (id && id !== 'sit') {
         this.autoAttackRotationIndex = idx
         return
       }
@@ -4438,39 +4529,9 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private tickAutoAttackWhileSitting(sheet: ReturnType<typeof toCharacterSheetPayload>) {
-    const spPct = sheet.mpMax > 0 ? (sheet.mp / sheet.mpMax) * 100 : 100
-    const standAt = this.autoAttackConfig.sitSpPercent + AUTO_ATTACK_SIT_STAND_BUFFER_PERCENT
-    if (spPct >= standAt) {
-      this.autoSitForRegen = false
-      this.standUp()
-      return
-    }
-    if (this.hasNearbyAutoThreat()) {
-      this.autoSitForRegen = false
-      this.standUp()
-    }
-  }
-
-  private hasNearbyAutoThreat(): boolean {
-    if (!this.playerDisplay) return false
-    const px = this.playerDisplay.container.x
-    const py = this.playerDisplay.container.y
-    const range = getPlayerAttackRangePx(this.session.equipment) + 96
-    const skillId = this.currentRotationSkillId()
-    const skillRange = skillId ? this.skillRangeForSkillId(skillId) : range
-    const target = pickAutoAttackTarget({
-      playerX: px,
-      playerY: py,
-      anchorX: this.autoAttackAnchorX,
-      anchorY: this.autoAttackAnchorY,
-      mobs: this.autoAttackMobCandidates(),
-      filter: this.autoAttackConfig.mobFilter,
-      movementMode: this.autoAttackConfig.movementMode,
-      patrolRadiusPx: this.autoAttackConfig.patrolRadiusPx,
-      attackRangePx: range,
-      skillRangePx: skillRange,
-    })
-    return target != null
+    if (!shouldStandFromAutoSit(sheet.mp, sheet.mpMax)) return
+    this.autoSitForRegen = false
+    this.standUp()
   }
 
   private tickAutoAttack(now: number, sheet: ReturnType<typeof toCharacterSheetPayload>) {
@@ -4485,21 +4546,29 @@ export class WorldScene extends Phaser.Scene {
     const hpPct = sheet.hpMax > 0 ? (sheet.hp / sheet.hpMax) * 100 : 100
     const spPct = sheet.mpMax > 0 ? (sheet.mp / sheet.mpMax) * 100 : 100
 
+    if (
+      autoAttackRotationHasSit(this.autoAttackConfig) &&
+      spPct <= this.autoAttackConfig.sitSpPercent &&
+      sheet.mp < sheet.mpMax &&
+      !this.isPlayingDead
+    ) {
+      if (!this.isSitting) {
+        this.autoSitForRegen = true
+        this.toggleSit()
+      }
+      return
+    }
+
     if (this.autoAttackConfig.redPotionEnabled && hpPct <= this.autoAttackConfig.redPotionHpPercent) {
       if (this.tryUseConsumableItemId('red_potion')) return
     }
     if (
       !this.isSitting &&
       this.autoAttackConfig.bluePotionEnabled &&
-      spPct <= this.autoAttackConfig.bluePotionSpPercent
+      spPct <= this.autoAttackConfig.bluePotionSpPercent &&
+      spPct > this.autoAttackConfig.sitSpPercent
     ) {
       if (this.tryUseConsumableItemId('blue_potion')) return
-    }
-
-    if (spPct <= this.autoAttackConfig.sitSpPercent && !this.isSitting && !this.isPlayingDead) {
-      this.autoSitForRegen = true
-      this.toggleSit()
-      return
     }
 
     const px = this.playerDisplay.container.x

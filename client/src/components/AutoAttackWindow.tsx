@@ -4,17 +4,19 @@ import {
   AUTO_ATTACK_PATROL_RADIUS_MAX,
   AUTO_ATTACK_PATROL_RADIUS_MIN,
   AUTO_ATTACK_ROTATION_SLOTS,
-  autoAttackSkillAllowedInRotation,
   type AutoAttackConfig,
   type AutoAttackMovementMode,
 } from '../game/combat/autoAttackConfig'
-import { mobFilterDefIds } from '../game/combat/autoAttackTargeting'
-import { mobsOnMap } from '../game/combat/autoAttackTargeting'
-import { canPlaceOnSkillBar } from '../game/character/skillBarEntry'
+import { mobFilterDefIds, mobsOnMap } from '../game/combat/autoAttackTargeting'
 import { isSkillBarDragEvent, readSkillBarDrag } from '../game/character/skillBarDrag'
-import { SKILLS, skillUsableByJob } from '../game/character/skillsConfig'
+import {
+  JOB_NAMES,
+  autoAttackAssignableSkills,
+  canPlaceOnAutoAttackRotation,
+} from '../game/character/skillsConfig'
 import { skillTooltipTitle } from '../game/character/skillIconUrl'
 import type { CharacterSheetPayload } from '../game/events'
+import { emitGameEvent } from '../game/events'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
 import { ModalScrollBody } from './motion/ModalScrollBody'
@@ -27,21 +29,38 @@ type Props = {
   onClose: () => void
 }
 
-function rotationSkillAllowed(skillId: string, sheet: CharacterSheetPayload): boolean {
-  if (!autoAttackSkillAllowedInRotation(skillId)) return false
-  if (!canPlaceOnSkillBar(skillId, sheet.jobId, sheet.skills)) return false
-  const def = SKILLS[skillId]
-  if (!def) return skillId === 'basic_attack'
-  if (def.type === 'passive') return false
-  if (def.target === 'ground') return false
-  const level = sheet.skills[skillId] ?? 0
-  if (level < 1 && skillId !== 'basic_attack') return false
-  return skillUsableByJob(skillId, sheet.jobId)
-}
+type AutoAttackTab = 'rotation' | 'recovery' | 'movement' | 'targets'
+
+const AUTO_ATTACK_TABS: { id: AutoAttackTab; label: string }[] = [
+  { id: 'rotation', label: 'Rotation' },
+  { id: 'recovery', label: 'Recovery' },
+  { id: 'movement', label: 'Movement' },
+  { id: 'targets', label: 'Targets' },
+]
 
 export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Props) {
+  const [activeTab, setActiveTab] = useState<AutoAttackTab>('rotation')
   const [dropTarget, setDropTarget] = useState<number | null>(null)
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0)
   const mapMobs = useMemo(() => mobsOnMap(mapId), [mapId])
+  const assignableSkills = useMemo(() => autoAttackAssignableSkills(sheet), [sheet])
+
+  const paletteByJob = useMemo(() => {
+    const groups = new Map<string, typeof assignableSkills>()
+    for (const def of assignableSkills) {
+      const key = def.jobId
+      const list = groups.get(key) ?? []
+      list.push(def)
+      groups.set(key, list)
+    }
+    return [...groups.entries()].sort((a, b) =>
+      (JOB_NAMES[a[0]] ?? a[0]).localeCompare(JOB_NAMES[b[0]] ?? b[0]),
+    )
+  }, [assignableSkills])
+
+  const mobSelectionCount = config.mobFilter.all
+    ? mapMobs.length
+    : mobFilterDefIds(config.mobFilter).length
 
   function patch(partial: Partial<AutoAttackConfig>) {
     onChange({ ...config, ...partial })
@@ -54,6 +73,17 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
     patch({ rotation })
   }
 
+  function assignSkillToSlot(index: number, skillId: string) {
+    if (!canPlaceOnAutoAttackRotation(skillId, sheet)) {
+      emitGameEvent('status', 'That skill cannot be used in auto attack rotation.')
+      return
+    }
+    setRotationSlot(index, skillId)
+    const nextEmpty = config.rotation.findIndex((id, i) => i > index && !id)
+    if (nextEmpty >= 0) setSelectedSlotIndex(nextEmpty)
+    else if (index < AUTO_ATTACK_ROTATION_SLOTS - 1) setSelectedSlotIndex(index + 1)
+  }
+
   function handleRotationDrop(index: number, e: React.DragEvent) {
     e.preventDefault()
     setDropTarget(null)
@@ -61,8 +91,13 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
     if (!payload) return
     const skillId =
       payload.source === 'list' || payload.source === 'bar' ? payload.skillId : null
-    if (!skillId || !rotationSkillAllowed(skillId, sheet)) return
+    if (!skillId) return
+    if (!canPlaceOnAutoAttackRotation(skillId, sheet)) {
+      emitGameEvent('status', 'That skill cannot be used in auto attack rotation.')
+      return
+    }
     setRotationSlot(index, skillId)
+    setSelectedSlotIndex(index)
   }
 
   function toggleMob(defId: string) {
@@ -85,19 +120,45 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
   return (
     <AnimatedModal panelClassName="panel modal auto-attack-modal">
       <ModalHeader title="Auto attack" onClose={onClose} />
-      <ModalScrollBody>
-        <label className="auto-attack-row">
+      <div className="auto-attack-enable">
+        <div className="auto-attack-enable__text">
+          <strong>Auto attack</strong>
+          <span className="muted small">
+            {config.enabled ? 'Running — uses settings below' : 'Off until enabled'}
+          </span>
+        </div>
+        <label className="auto-attack-switch">
           <input
             type="checkbox"
             checked={config.enabled}
             onChange={(e) => patch({ enabled: e.target.checked })}
           />
-          <span>Enable auto attack</span>
+          <span className="auto-attack-switch__track" aria-hidden />
         </label>
+      </div>
 
-        <section className="auto-attack-section">
-          <h3 className="auto-attack-section__title">Skill rotation (9 slots)</h3>
-          <p className="muted small">Drag skills from the Skills window (Alt+K).</p>
+      <div className="auto-attack-tabs skills-window-tabs" role="tablist" aria-label="Auto attack settings">
+        {AUTO_ATTACK_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={`skills-window-tab${activeTab === tab.id ? ' skills-window-tab--active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <ModalScrollBody className="auto-attack-tab-body">
+        {activeTab === 'rotation' && (
+        <section className="auto-attack-card auto-attack-tab-panel" role="tabpanel">
+          <h3 className="auto-attack-section__title">Skill rotation</h3>
+          <p className="muted small auto-attack-hint">
+            Click a slot, then pick a skill below. You can also drag from the Skills window (Alt+K).
+          </p>
           <div
             className="skill-bar auto-attack-rotation"
             onDragOver={(e) => {
@@ -107,17 +168,17 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
           >
             {Array.from({ length: AUTO_ATTACK_ROTATION_SLOTS }, (_, index) => {
               const skillId = config.rotation[index] ?? null
-              const allowed = skillId ? rotationSkillAllowed(skillId, sheet) : true
-              const skill = skillId ? SKILLS[skillId] : null
+              const allowed = skillId ? canPlaceOnAutoAttackRotation(skillId, sheet) : true
               const level = skillId ? sheet.skills[skillId] ?? 0 : 0
               const isDropTarget = dropTarget === index
+              const selected = selectedSlotIndex === index
               return (
                 <div
                   key={index}
-                  className={`skill-slot${!allowed ? ' skill-slot--inactive' : ''}${isDropTarget ? ' skill-slot--drop-target' : ''}`}
+                  className={`skill-slot${!allowed ? ' skill-slot--inactive' : ''}${isDropTarget ? ' skill-slot--drop-target' : ''}${selected ? ' skill-slot--selected' : ''}`}
                   title={
-                    skill
-                      ? skillTooltipTitle(skillId!, level)
+                    skillId
+                      ? skillTooltipTitle(skillId, level)
                       : `Rotation slot ${index + 1}`
                   }
                   onDragOver={(e) => {
@@ -127,7 +188,8 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
                   }}
                   onDragLeave={() => setDropTarget((c) => (c === index ? null : c))}
                   onDrop={(e) => handleRotationDrop(index, e)}
-                  onClick={() => skillId && setRotationSlot(index, null)}
+                  onClick={() => setSelectedSlotIndex(index)}
+                  onDoubleClick={() => skillId && setRotationSlot(index, null)}
                   onKeyDown={(e) => {
                     if (e.key === 'Backspace' || e.key === 'Delete') setRotationSlot(index, null)
                   }}
@@ -144,20 +206,59 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
               )
             })}
           </div>
-        </section>
 
-        <section className="auto-attack-section">
+          {assignableSkills.length === 0 ? (
+            <p className="muted small">No active skills learned for auto rotation.</p>
+          ) : (
+            <div className="auto-attack-palette">
+              {paletteByJob.map(([jobId, skills]) => (
+                <div key={jobId} className="auto-attack-palette-group">
+                  <h4 className="auto-attack-palette-group__title">{JOB_NAMES[jobId] ?? jobId}</h4>
+                  <div className="auto-attack-palette-grid">
+                    {skills.map((def) => {
+                      const level = sheet.skills[def.id] ?? 0
+                      return (
+                        <button
+                          key={def.id}
+                          type="button"
+                          className="auto-attack-palette-btn"
+                          title={skillTooltipTitle(def.id, level)}
+                          onClick={() => assignSkillToSlot(selectedSlotIndex, def.id)}
+                        >
+                          <SkillIcon
+                            skillId={def.id}
+                            level={level}
+                            size="sm"
+                            draggable
+                            drag={{ source: 'list', skillId: def.id }}
+                          />
+                          <span className="auto-attack-palette-btn__name">{def.name}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+        )}
+
+        {activeTab === 'recovery' && (
+        <section className="auto-attack-card auto-attack-tab-panel" role="tabpanel">
           <h3 className="auto-attack-section__title">Recovery</h3>
-          <label className="auto-attack-row">
-            <span>Sit when SP at or below</span>
+          <label className="auto-attack-row auto-attack-row--stack">
+            <span>Sit when SP ≤ {config.sitSpPercent}%</span>
             <input
-              type="number"
+              type="range"
               min={1}
               max={100}
               value={config.sitSpPercent}
               onChange={(e) => patch({ sitSpPercent: Number(e.target.value) })}
             />
-            <span>%</span>
+            <span className="muted small">
+              Add Sit to a rotation slot to enable auto sit. Stays seated until SP is fully restored.
+            </span>
           </label>
           <label className="auto-attack-row">
             <input
@@ -165,37 +266,41 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
               checked={config.redPotionEnabled}
               onChange={(e) => patch({ redPotionEnabled: e.target.checked })}
             />
-            <span>Red potion when HP ≤</span>
+            <span>Red potion when HP ≤ {config.redPotionHpPercent}%</span>
+          </label>
+          {config.redPotionEnabled && (
             <input
-              type="number"
+              type="range"
+              className="auto-attack-range-full"
               min={1}
               max={100}
-              disabled={!config.redPotionEnabled}
               value={config.redPotionHpPercent}
               onChange={(e) => patch({ redPotionHpPercent: Number(e.target.value) })}
             />
-            <span>%</span>
-          </label>
+          )}
           <label className="auto-attack-row">
             <input
               type="checkbox"
               checked={config.bluePotionEnabled}
               onChange={(e) => patch({ bluePotionEnabled: e.target.checked })}
             />
-            <span>Blue potion when SP ≤</span>
+            <span>Blue potion when SP ≤ {config.bluePotionSpPercent}%</span>
+          </label>
+          {config.bluePotionEnabled && (
             <input
-              type="number"
+              type="range"
+              className="auto-attack-range-full"
               min={1}
               max={100}
-              disabled={!config.bluePotionEnabled}
               value={config.bluePotionSpPercent}
               onChange={(e) => patch({ bluePotionSpPercent: Number(e.target.value) })}
             />
-            <span>%</span>
-          </label>
+          )}
         </section>
+        )}
 
-        <section className="auto-attack-section">
+        {activeTab === 'movement' && (
+        <section className="auto-attack-card auto-attack-tab-panel" role="tabpanel">
           <h3 className="auto-attack-section__title">Movement</h3>
           <label className="auto-attack-row">
             <input
@@ -231,9 +336,18 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
             </label>
           )}
         </section>
+        )}
 
-        <section className="auto-attack-section">
-          <h3 className="auto-attack-section__title">Map mobs ({mapDisplayShort(mapId)})</h3>
+        {activeTab === 'targets' && (
+        <section className="auto-attack-card auto-attack-tab-panel" role="tabpanel">
+          <h3 className="auto-attack-section__title">
+            Map mobs ({mapDisplayShort(mapId)})
+            {!config.mobFilter.all && mapMobs.length > 0 && (
+              <span className="auto-attack-mob-count muted small">
+                · {mobSelectionCount} selected
+              </span>
+            )}
+          </h3>
           {mapMobs.length === 0 ? (
             <p className="muted small">No mob spawns on this map.</p>
           ) : (
@@ -268,6 +382,7 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
             </>
           )}
         </section>
+        )}
       </ModalScrollBody>
     </AnimatedModal>
   )

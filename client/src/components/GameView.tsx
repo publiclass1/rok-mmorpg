@@ -1472,7 +1472,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   return (
     <div
       ref={shellRef}
-      className={`game-shell game-shell--fullscreen${skillsOpen ? ' skills-assign-mode' : ''}`}
+      className={`game-shell game-shell--fullscreen${skillsOpen || autoAttackOpen ? ' skills-assign-mode' : ''}`}
     >
       <AnimatePresence>
         {splashConfig ? <SplashScreen key={splashKey} {...splashConfig} /> : null}

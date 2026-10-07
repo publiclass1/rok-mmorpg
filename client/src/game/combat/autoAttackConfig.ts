@@ -23,8 +23,6 @@ export const AUTO_ATTACK_PATROL_RADIUS_MIN = 80
 export const AUTO_ATTACK_PATROL_RADIUS_MAX = 600
 export const AUTO_ATTACK_PATROL_RADIUS_DEFAULT = 200
 
-export const AUTO_ATTACK_SIT_STAND_BUFFER_PERCENT = 10
-
 const STORAGE_PREFIX = 'autoAttack:v1:'
 
 export function defaultAutoAttackConfig(): AutoAttackConfig {
@@ -120,7 +118,11 @@ export function saveAutoAttackConfig(characterId: string, config: AutoAttackConf
   }
 }
 
+export function autoAttackRotationHasSit(config: Pick<AutoAttackConfig, 'rotation'>): boolean {
+  return config.rotation.some((id) => id === 'sit')
+}
+
 export function autoAttackSkillAllowedInRotation(skillId: string): boolean {
-  if (skillId === 'sit' || skillId === 'play_dead') return false
+  if (skillId === 'play_dead') return false
   return true
 }
