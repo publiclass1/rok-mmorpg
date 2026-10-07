@@ -77,6 +77,17 @@ import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
 import { scaleMobExp } from '../combat/gameConfig'
 import { MOB_DEFS, MOB_RESPAWN_MS, MOB_SPAWNS_BY_MAP } from '../combat/mobConfig'
+import {
+  AUTO_ATTACK_SIT_STAND_BUFFER_PERCENT,
+  defaultAutoAttackConfig,
+  normalizeAutoAttackConfig,
+  type AutoAttackConfig,
+} from '../combat/autoAttackConfig'
+import {
+  pickAutoAttackTarget,
+  pickPatrolChaseTarget,
+  type AutoAttackMobCandidate,
+} from '../combat/autoAttackTargeting'
 import { playerAttackTiming } from '../combat/preRenewalAspd'
 import {
   getEquippedWeaponClass,
@@ -348,6 +359,14 @@ export class WorldScene extends Phaser.Scene {
   private dungeonBoot: BootDungeonState | null = null
   private killedSpawnSet = new Set<number>()
   private mvpMob: MobInstance | null = null
+  private autoAttackConfig: AutoAttackConfig = defaultAutoAttackConfig()
+  private autoAttackAnchorX = 0
+  private autoAttackAnchorY = 0
+  private autoAttackRotationIndex = 0
+  private autoAttackChaseActive = false
+  private autoSitForRegen = false
+  private lastAutoRotationAt = 0
+  private autoPatrolCircle: Phaser.GameObjects.Arc | null = null
 
   constructor() {
     super('WorldScene')
@@ -591,6 +610,7 @@ export class WorldScene extends Phaser.Scene {
           this.breakRestState()
           return
         }
+        this.disableAutoAttackFromManualInput()
         this.chaseMob = null
         this.chaseMobForSkillOnly = false
         this.queuedSkillCast = null
@@ -663,6 +683,7 @@ export class WorldScene extends Phaser.Scene {
         this.socialPresence = { ...this.socialPresence, ...payload }
         if (payload.isVending !== undefined) {
           this.vendingOpen = Boolean(payload.isVending)
+          if (this.vendingOpen) this.disableAutoAttackFromManualInput()
         }
       }),
       onGameEvent('partySync', (payload) => {
@@ -762,6 +783,9 @@ export class WorldScene extends Phaser.Scene {
           this.spawnDungeonMvp()
         }
       }),
+      onGameEvent('autoAttackSync', (payload) => {
+        this.applyAutoAttackSync(payload)
+      }),
     )
 
     this.partySync.myCharacterId = this.character.id
@@ -838,6 +862,9 @@ export class WorldScene extends Phaser.Scene {
         : `Entered ${this.character.map_id} — click move, click NPCs, Space jump, 1–9 skills`,
     )
     emitGameEvent('worldReady', { mapId: this.character.map_id })
+    if (this.autoAttackConfig.enabled && this.shouldAbortAutoAttack()) {
+      emitGameEvent('autoAttackDisable', {})
+    }
 
     if (this.session.hp <= 0) {
       this.enterPlayerDeath({ animate: false })
@@ -869,6 +896,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private enterPlayerDeath(options?: { animate?: boolean }) {
+    this.disableAutoAttackFromManualInput()
     if (this.isPlayerDead || this.session.hp > 0) return
     this.isPlayerDead = true
     this.cancelSkillCastBar()
@@ -944,8 +972,14 @@ export class WorldScene extends Phaser.Scene {
       this.stopPlayerMotion()
       clearMoveTarget(this.moveTarget)
       this.tickSitRegen(now, sheet)
+      if (this.autoAttackConfig.enabled && this.autoSitForRegen) {
+        this.tickAutoAttackWhileSitting(sheet)
+      }
     } else if (!this.isAttacking && !this.isJumping) {
       this.tickPvpPassiveRegen(now, sheet)
+      if (this.autoAttackConfig.enabled && !this.pendingSkill) {
+        this.tickAutoAttack(now, sheet)
+      }
       if (this.chaseMob?.alive) {
         this.tickChaseMob(now)
       } else if (this.chaseDuelOpponent) {
@@ -1195,7 +1229,12 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  private beginChaseMob(mob: MobInstance) {
+  private beginChaseMob(mob: MobInstance, fromAuto = false) {
+    if (!fromAuto) {
+      this.disableAutoAttackFromManualInput()
+    } else {
+      this.autoAttackChaseActive = true
+    }
     this.chaseMobForSkillOnly = false
     this.chaseDuelOpponent = null
     this.chaseMob = mob
@@ -1575,65 +1614,101 @@ export class WorldScene extends Phaser.Scene {
       emitGameEvent('status', 'Empty skill slot')
       return
     }
+    this.disableAutoAttackFromManualInput()
+    this.tryUseSkillId(skillId)
+  }
+
+  private tryUseSkillId(
+    skillId: string,
+    opts?: { fromAuto?: boolean; mob?: MobInstance },
+  ): boolean {
+    const fromAuto = opts?.fromAuto === true
+    const targetMob = opts?.mob
     if (isSkillBarConsumable(skillId)) {
-      const idx = findSessionStackIndex(this.session, skillId)
-      if (idx < 0) {
-        emitGameEvent('status', `No ${getItemDisplayName(skillId)} in inventory.`)
-        return
-      }
-      const result = useConsumableFromSession(this.session, idx)
-      if (result.ok === false) {
-        emitGameEvent('status', result.reason)
-        return
-      }
-      setCharacterSession(syncDerivedVitals(result.state))
-      this.session = getCharacterSession()
-      this.emitCharacterSheet()
-      emitGameEvent('sessionSync', structuredClone(this.session))
-      this.scheduleProgressSave()
-      logActivity('character', `Used ${getItemDisplayName(skillId)}.`)
-      emitGameEvent('status', `Used ${getItemDisplayName(skillId)}.`)
-      return
+      return this.tryUseConsumableItemId(skillId)
     }
     if (skillId === 'basic_attack') {
+      if (targetMob?.alive) {
+        this.chaseMob = targetMob
+        this.setSelectedMob(targetMob)
+      }
       this.tryBasicAttack()
-      return
+      return true
     }
     const def = SKILLS[skillId]
-    if (!def) return
+    if (!def) return false
     const level = this.session.skills[skillId] ?? 0
     if (level < 1) {
-      emitGameEvent('status', `${def.name} not learned`)
-      return
+      if (!fromAuto) emitGameEvent('status', `${def.name} not learned`)
+      return false
     }
     if (!skillUsableByJob(skillId, this.session.jobId)) {
-      emitGameEvent('status', `${def.name} is not available for your job`)
-      return
+      if (!fromAuto) emitGameEvent('status', `${def.name} is not available for your job`)
+      return false
     }
     if (def.type === 'passive') {
-      emitGameEvent('status', `${def.name} is passive`)
-      return
+      if (!fromAuto) emitGameEvent('status', `${def.name} is passive`)
+      return false
     }
     if (skillId === 'sit') {
-      this.toggleSit()
-      return
+      if (!fromAuto) this.toggleSit()
+      return !fromAuto
     }
     if (skillId === 'play_dead') {
-      this.togglePlayDead()
-      return
+      if (!fromAuto) this.togglePlayDead()
+      return !fromAuto
     }
     if (def.selfBuff) {
       this.trySelfBuffSkill(skillId, level, def)
-      return
+      return true
     }
-    if (def.target === 'enemy' || def.target === 'ground') {
-      this.beginSkillTargeting(skillId, level, def)
-      return
+    if (def.target === 'ground') {
+      if (!fromAuto) this.beginSkillTargeting(skillId, level, def)
+      return false
     }
-    emitGameEvent('status', `${def.name} (Lv ${level}) — not implemented yet`)
+    if (def.target === 'enemy') {
+      const mob = targetMob?.alive ? targetMob : this.resolveAttackTargetMob()
+      if (!mob) return false
+      const px = this.playerDisplay.container.x
+      const py = this.playerDisplay.container.y
+      const dist = Phaser.Math.Distance.Between(px, py, mob.sprite.x, mob.sprite.y)
+      const skillRange = this.skillRangePx(def)
+      if (dist <= skillRange) {
+        this.executePlayerSkill(skillId, level, def, mob)
+        return true
+      }
+      this.queuedSkillCast = { skillId, level, def, mob }
+      this.chaseMobForSkillOnly = true
+      this.autoAttackChaseActive = fromAuto
+      this.chaseMob = mob
+      this.setSelectedMob(mob)
+      this.lastChaseRepathAt = 0
+      this.chasePathGoalX = mob.sprite.x
+      this.chasePathGoalY = mob.sprite.y
+      this.requestWalkTo(mob.sprite.x, mob.sprite.y)
+      this.faceToward(mob.sprite.x, mob.sprite.y)
+      return true
+    }
+    if (!fromAuto) emitGameEvent('status', `${def.name} (Lv ${level}) — not implemented yet`)
+    return false
+  }
+
+  private tryUseConsumableItemId(itemId: string): boolean {
+    const idx = findSessionStackIndex(this.session, itemId)
+    if (idx < 0) return false
+    const result = useConsumableFromSession(this.session, idx)
+    if (result.ok === false) return false
+    setCharacterSession(syncDerivedVitals(result.state))
+    this.session = getCharacterSession()
+    this.emitCharacterSheet()
+    emitGameEvent('sessionSync', structuredClone(this.session))
+    this.scheduleProgressSave()
+    logActivity('character', `Used ${getItemDisplayName(itemId)}.`)
+    return true
   }
 
   private beginSkillTargeting(skillId: string, level: number, def: SkillDefinition) {
+    this.disableAutoAttackFromManualInput()
     this.queuedSkillCast = null
     this.pendingSkill = { skillId, level, def }
     emitGameEvent('status', `Select target for ${def.name} (Esc or right-click to cancel).`)
@@ -4243,6 +4318,252 @@ export class WorldScene extends Phaser.Scene {
     return this.nearestNpc
   }
 
+  private shouldAbortAutoAttack(): boolean {
+    return (
+      this.isPlayerDead ||
+      this.vendingOpen ||
+      isPvpMap(this.character.map_id) ||
+      Boolean(this.duelSync && isDuelCombatPhase(this.duelSync))
+    )
+  }
+
+  private disableAutoAttackFromManualInput() {
+    if (!this.autoAttackConfig.enabled) return
+    emitGameEvent('autoAttackDisable', {})
+    this.teardownAutoAttackRuntime()
+  }
+
+  private applyAutoAttackSync(payload: AutoAttackConfig) {
+    const prev = this.autoAttackConfig.enabled
+    this.autoAttackConfig = normalizeAutoAttackConfig(payload)
+    if (this.autoAttackConfig.enabled && !prev && this.playerDisplay) {
+      this.autoAttackAnchorX = this.playerDisplay.container.x
+      this.autoAttackAnchorY = this.playerDisplay.container.y
+      this.autoAttackRotationIndex = 0
+      this.lastAutoRotationAt = 0
+    }
+    if (!this.autoAttackConfig.enabled) {
+      this.teardownAutoAttackRuntime()
+    }
+    this.refreshAutoPatrolCircle()
+    if (this.autoAttackConfig.enabled && this.shouldAbortAutoAttack()) {
+      emitGameEvent('autoAttackDisable', {})
+    }
+  }
+
+  private teardownAutoAttackRuntime() {
+    if (this.autoSitForRegen && this.isSitting) {
+      this.autoSitForRegen = false
+      this.standUp()
+    }
+    if (this.autoAttackChaseActive) {
+      this.autoAttackChaseActive = false
+      this.chaseMob = null
+      this.chaseMobForSkillOnly = false
+      this.queuedSkillCast = null
+      clearMoveTarget(this.moveTarget)
+      this.stopPlayerMotion()
+    }
+    this.autoPatrolCircle?.setVisible(false)
+  }
+
+  private ensureAutoPatrolCircle() {
+    if (this.autoPatrolCircle) return
+    this.autoPatrolCircle = this.add
+      .circle(0, 0, 100, 0x3b82f6, 0.1)
+      .setStrokeStyle(2, 0x60a5fa, 0.55)
+      .setDepth(0.5)
+      .setVisible(false)
+  }
+
+  private refreshAutoPatrolCircle() {
+    this.ensureAutoPatrolCircle()
+    const circle = this.autoPatrolCircle
+    if (!circle) return
+    if (
+      !this.autoAttackConfig.enabled ||
+      this.autoAttackConfig.movementMode !== 'patrol_range' ||
+      !this.playerDisplay
+    ) {
+      circle.setVisible(false)
+      return
+    }
+    circle.setPosition(this.autoAttackAnchorX, this.autoAttackAnchorY)
+    circle.setRadius(this.autoAttackConfig.patrolRadiusPx)
+    circle.setVisible(true)
+  }
+
+  private autoAttackMobCandidates(): AutoAttackMobCandidate[] {
+    return this.mobs.map((mob) => ({
+      defId: mob.defId,
+      spawnIndex: mob.spawnIndex,
+      alive: mob.alive,
+      x: mob.sprite.x,
+      y: mob.sprite.y,
+    }))
+  }
+
+  private mobFromCandidate(candidate: AutoAttackMobCandidate): MobInstance | null {
+    const mob = this.mobBySpawnIndex[candidate.spawnIndex]
+    return mob?.alive ? mob : null
+  }
+
+  private skillRangeForSkillId(skillId: string): number {
+    const def = SKILLS[skillId]
+    if (!def) return getPlayerAttackRangePx(this.session.equipment)
+    return this.skillRangePx(def)
+  }
+
+  private currentRotationSkillId(): string | null {
+    const rot = this.autoAttackConfig.rotation
+    for (let i = 0; i < rot.length; i++) {
+      const idx = (this.autoAttackRotationIndex + i) % rot.length
+      const id = rot[idx]
+      if (id) return id
+    }
+    return null
+  }
+
+  private advanceAutoRotation() {
+    const rot = this.autoAttackConfig.rotation
+    if (rot.length === 0) return
+    let idx = this.autoAttackRotationIndex
+    for (let step = 0; step < rot.length; step++) {
+      idx = (idx + 1) % rot.length
+      if (rot[idx]) {
+        this.autoAttackRotationIndex = idx
+        return
+      }
+    }
+  }
+
+  private tickAutoAttackWhileSitting(sheet: ReturnType<typeof toCharacterSheetPayload>) {
+    const spPct = sheet.mpMax > 0 ? (sheet.mp / sheet.mpMax) * 100 : 100
+    const standAt = this.autoAttackConfig.sitSpPercent + AUTO_ATTACK_SIT_STAND_BUFFER_PERCENT
+    if (spPct >= standAt) {
+      this.autoSitForRegen = false
+      this.standUp()
+      return
+    }
+    if (this.hasNearbyAutoThreat()) {
+      this.autoSitForRegen = false
+      this.standUp()
+    }
+  }
+
+  private hasNearbyAutoThreat(): boolean {
+    if (!this.playerDisplay) return false
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    const range = getPlayerAttackRangePx(this.session.equipment) + 96
+    const skillId = this.currentRotationSkillId()
+    const skillRange = skillId ? this.skillRangeForSkillId(skillId) : range
+    const target = pickAutoAttackTarget({
+      playerX: px,
+      playerY: py,
+      anchorX: this.autoAttackAnchorX,
+      anchorY: this.autoAttackAnchorY,
+      mobs: this.autoAttackMobCandidates(),
+      filter: this.autoAttackConfig.mobFilter,
+      movementMode: this.autoAttackConfig.movementMode,
+      patrolRadiusPx: this.autoAttackConfig.patrolRadiusPx,
+      attackRangePx: range,
+      skillRangePx: skillRange,
+    })
+    return target != null
+  }
+
+  private tickAutoAttack(now: number, sheet: ReturnType<typeof toCharacterSheetPayload>) {
+    if (this.shouldAbortAutoAttack()) {
+      emitGameEvent('autoAttackDisable', {})
+      return
+    }
+    if (!this.playerDisplay) return
+
+    this.refreshAutoPatrolCircle()
+
+    const hpPct = sheet.hpMax > 0 ? (sheet.hp / sheet.hpMax) * 100 : 100
+    const spPct = sheet.mpMax > 0 ? (sheet.mp / sheet.mpMax) * 100 : 100
+
+    if (this.autoAttackConfig.redPotionEnabled && hpPct <= this.autoAttackConfig.redPotionHpPercent) {
+      if (this.tryUseConsumableItemId('red_potion')) return
+    }
+    if (
+      !this.isSitting &&
+      this.autoAttackConfig.bluePotionEnabled &&
+      spPct <= this.autoAttackConfig.bluePotionSpPercent
+    ) {
+      if (this.tryUseConsumableItemId('blue_potion')) return
+    }
+
+    if (spPct <= this.autoAttackConfig.sitSpPercent && !this.isSitting && !this.isPlayingDead) {
+      this.autoSitForRegen = true
+      this.toggleSit()
+      return
+    }
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    const attackRangePx = getPlayerAttackRangePx(this.session.equipment)
+    const rotSkill = this.currentRotationSkillId()
+    const skillRangePx = rotSkill ? this.skillRangeForSkillId(rotSkill) : attackRangePx
+    const candidates = this.autoAttackMobCandidates()
+
+    const target = pickAutoAttackTarget({
+      playerX: px,
+      playerY: py,
+      anchorX: this.autoAttackAnchorX,
+      anchorY: this.autoAttackAnchorY,
+      mobs: candidates,
+      filter: this.autoAttackConfig.mobFilter,
+      movementMode: this.autoAttackConfig.movementMode,
+      patrolRadiusPx: this.autoAttackConfig.patrolRadiusPx,
+      attackRangePx,
+      skillRangePx,
+    })
+
+    if (!target) {
+      if (this.autoAttackConfig.movementMode === 'patrol_range' && !this.chaseMob?.alive) {
+        const chaseTarget = pickPatrolChaseTarget({
+          playerX: px,
+          playerY: py,
+          anchorX: this.autoAttackAnchorX,
+          anchorY: this.autoAttackAnchorY,
+          mobs: candidates,
+          filter: this.autoAttackConfig.mobFilter,
+          patrolRadiusPx: this.autoAttackConfig.patrolRadiusPx,
+        })
+        const mob = chaseTarget ? this.mobFromCandidate(chaseTarget) : null
+        if (mob) this.beginChaseMob(mob, true)
+      }
+      return
+    }
+
+    const mob = this.mobFromCandidate(target)
+    if (!mob) return
+
+    const dist = Phaser.Math.Distance.Between(px, py, mob.sprite.x, mob.sprite.y)
+    const inStrikeRange = dist <= skillRangePx
+
+    if (!inStrikeRange) {
+      if (this.autoAttackConfig.movementMode === 'patrol_range') {
+        this.beginChaseMob(mob, true)
+      }
+      return
+    }
+
+    this.setSelectedMob(mob)
+    if (!rotSkill) return
+    if (now - this.lastAutoRotationAt < 200) return
+    if (this.isAttacking) return
+
+    const used = this.tryUseSkillId(rotSkill, { fromAuto: true, mob })
+    if (used) {
+      this.lastAutoRotationAt = now
+      this.advanceAutoRotation()
+    }
+  }
+
   getPlayerPosition() {
     return {
       x: this.playerDisplay.container.x,
@@ -4257,6 +4578,8 @@ export class WorldScene extends Phaser.Scene {
   }
 
   shutdown() {
+    this.autoPatrolCircle?.destroy()
+    this.autoPatrolCircle = null
     this.worldPersistDisabled = true
     this.minimapExpanded = false
     this.eventUnsubs.forEach((u) => u())

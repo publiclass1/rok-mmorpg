@@ -99,6 +99,14 @@ import { ItemDetailTooltip } from './ItemDetailTooltip'
 import { FloatingTooltipPortal } from './tooltip/FloatingTooltipPortal'
 import { floatingTooltipPositionFromPoint } from './tooltip/floatingTooltipPosition'
 import { GameHudMenu, type GameHudMenuItem } from './GameHudMenu'
+import { AutoAttackHudButton } from './AutoAttackHudButton'
+import { AutoAttackWindow } from './AutoAttackWindow'
+import {
+  loadAutoAttackConfig,
+  normalizeAutoAttackConfig,
+  saveAutoAttackConfig,
+  type AutoAttackConfig,
+} from '../game/combat/autoAttackConfig'
 
 type Props = {
   character: CharacterRow
@@ -237,6 +245,26 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const partyChannelRef = useRef<PartyRealtimeChannel | null>(null)
   const [bootDungeon, setBootDungeon] = useState<BootDungeonState | null>(null)
   const [dungeonReady, setDungeonReady] = useState(true)
+  const [autoAttackOpen, setAutoAttackOpen] = useState(false)
+  const [autoAttackConfig, setAutoAttackConfig] = useState<AutoAttackConfig>(() =>
+    loadAutoAttackConfig(character.id),
+  )
+
+  const applyAutoAttackConfig = useCallback(
+    (next: AutoAttackConfig) => {
+      const normalized = normalizeAutoAttackConfig(next)
+      setAutoAttackConfig(normalized)
+      saveAutoAttackConfig(character.id, normalized)
+      emitGameEvent('autoAttackSync', normalized)
+    },
+    [character.id],
+  )
+
+  useEffect(() => {
+    const loaded = loadAutoAttackConfig(character.id)
+    setAutoAttackConfig(loaded)
+    emitGameEvent('autoAttackSync', loaded)
+  }, [character.id])
 
   const modalOpen =
     statsOpen ||
@@ -251,6 +279,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     !!rentalNpc ||
     !!npcMenu ||
     !!tradePartner ||
+    autoAttackOpen ||
     !!partyRequest ||
     !!duelInvite ||
     partyOpen ||
@@ -792,6 +821,15 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       onGameEvent('worldReady', ({ mapId }) => {
         setMapLoading((current) => (current?.mapId === mapId ? null : current))
         setLoadProgress(undefined)
+      }),
+      onGameEvent('autoAttackDisable', () => {
+        setAutoAttackConfig((prev) => {
+          if (!prev.enabled) return prev
+          const next = { ...prev, enabled: false }
+          saveAutoAttackConfig(characterRef.current.id, next)
+          emitGameEvent('autoAttackSync', next)
+          return next
+        })
       }),
       onGameEvent('worldLoadProgress', ({ mapId, progress }) => {
         setLoadProgress((prev) => {
@@ -1479,6 +1517,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             </div>
           ) : null}
           <SkillBar sheet={sheet} onOpenSkills={() => setSkillsOpen(true)} />
+          <AutoAttackHudButton
+            active={autoAttackConfig.enabled}
+            onClick={() => setAutoAttackOpen(true)}
+          />
           <Minimap data={minimap} />
           <BuffBar buffs={playerBuffs} />
           <div className="game-hud-top-cluster">
@@ -1661,6 +1703,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             sheet={sheet}
             onCharacterUpdated={onCharacterUpdated}
             onClose={() => setSkillsOpen(false)}
+          />
+        )}
+        {autoAttackOpen && (
+          <AutoAttackWindow
+            key="auto-attack"
+            mapId={position.mapId}
+            sheet={sheet}
+            config={autoAttackConfig}
+            onChange={applyAutoAttackConfig}
+            onClose={() => setAutoAttackOpen(false)}
           />
         )}
         {npcMenu && (

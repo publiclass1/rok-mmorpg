@@ -55,6 +55,10 @@ const WEAPON_BLADE = 0xc0c8d4
 const WEAPON_HILT = 0x8b5a2b
 const WEAPON_SPEAR = 0x9ca3af
 const CAST_GLOW = 0xa78bfa
+const MAGE_HAT = 0x1d4ed8
+const WIZARD_ROBE_TRIM = 0x4c1d95
+const WIZARD_HAT = 0x5b21b6
+const MAGE_ROBE_EMBLEM = 0xfbbf24
 
 function drawWeapon(
   g: Phaser.GameObjects.Graphics,
@@ -198,6 +202,7 @@ function playerBodyWidth(female: boolean, avatarKey: PlayerAvatarKey): number {
   let w = female ? 18 : 20
   if (avatarKey === 'swordman') w += 2
   if (avatarKey === 'knight') w += 4
+  if (avatarKey === 'wizard') w += 2
   return w
 }
 
@@ -248,14 +253,36 @@ function drawPlayerJobBody(
     drawKnightCape(g, cx, feetY, bodyW, facing)
   }
 
-  if (avatarKey === 'mage' || avatarKey === 'acolyte') {
-    g.fillStyle(pal.shoes, 1)
-    g.fillRect(cx - 6, feetY - 4, 12, 4)
+  if (avatarKey === 'mage' || avatarKey === 'wizard' || avatarKey === 'acolyte') {
+    const robeH = avatarKey === 'wizard' ? 36 : 30
+    const robeTop = feetY - robeH
+
+    if (avatarKey === 'wizard') {
+      g.fillStyle(pal.shoes, 1)
+      g.fillRect(cx - 5, feetY - 3, 10, 3)
+    } else {
+      g.fillStyle(pal.shoes, 1)
+      g.fillRect(cx - 6, feetY - 4, 12, 4)
+    }
+
     g.fillStyle(pal.shirt, 1)
-    g.fillRoundedRect(cx - bodyW / 2 - 1, feetY - 30, bodyW + 2, 30, 3)
+    g.fillRoundedRect(cx - bodyW / 2 - 1, robeTop, bodyW + 2, robeH, 3)
+
     if (avatarKey === 'acolyte') {
       g.fillStyle(0xf8fafc, 1)
       g.fillRect(cx - 2, feetY - 24, 4, 4)
+    } else if (avatarKey === 'mage') {
+      g.fillStyle(MAGE_ROBE_EMBLEM, 1)
+      g.fillCircle(cx, feetY - 22, 2)
+      g.fillRect(cx - 1, feetY - 26, 2, 5)
+      g.fillRect(cx - 3, feetY - 24, 6, 2)
+    } else {
+      g.fillStyle(WIZARD_ROBE_TRIM, 1)
+      g.fillRect(cx - bodyW / 2, robeTop + 2, bodyW + 2, 4)
+      g.fillRect(cx - bodyW / 2 - 1, feetY - 8, bodyW + 4, 5)
+      g.fillStyle(CAST_GLOW, 0.85)
+      g.fillCircle(cx - bodyW / 2 + 4, feetY - 20, 2)
+      g.fillCircle(cx + bodyW / 2 - 4, feetY - 20, 2)
     }
     return
   }
@@ -334,6 +361,20 @@ function drawPlayerJobHeadAccessory(
         g.fillStyle(0x111827, 1)
         g.fillRect(cx - 5, headY - 7, 10, 2)
       }
+      break
+    case 'mage':
+      if (facing === 'up') break
+      g.fillStyle(MAGE_HAT, 1)
+      g.fillTriangle(cx - 4, headY - 12, cx, headY - 20, cx + 4, headY - 12)
+      g.fillRect(cx - 5, headY - 12, 10, 2)
+      break
+    case 'wizard':
+      if (facing === 'up') break
+      g.fillStyle(WIZARD_HAT, 1)
+      g.fillRect(cx - 7, headY - 13, 14, 3)
+      g.fillTriangle(cx - 5, headY - 13, cx, headY - 26, cx + 5, headY - 13)
+      g.fillStyle(WIZARD_ROBE_TRIM, 1)
+      g.fillRect(cx - 6, headY - 14, 12, 2)
       break
     default:
       break

@@ -6,6 +6,7 @@ import type { CharacterSessionState, EquipSlot, PrimaryStat, SessionInventorySlo
 import type { CharacterPose } from './character/characterPose'
 import type { NpcRow } from '../types/database'
 import type { MinimapPayload } from './world/minimapTypes'
+import type { AutoAttackConfig } from './combat/autoAttackConfig'
 
 export type PositionPayload = {
   characterId: string
@@ -246,6 +247,9 @@ export type GameEvents = {
     kind: 'base' | 'job'
     level: number
   }
+  autoAttackSync: AutoAttackConfig
+  autoAttackToggle: { enabled: boolean }
+  autoAttackDisable: Record<string, never>
 }
 
 type Listener = (payload: unknown) => void
