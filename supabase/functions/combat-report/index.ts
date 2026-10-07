@@ -1,4 +1,4 @@
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders, jsonCorsHeaders, withCors } from '../_shared/cors.ts'
 import { writeAuditLog } from '../_shared/auditLog.ts'
 import {
   addBaseExp,
@@ -54,27 +54,42 @@ Deno.serve(async (req) => {
 
     const character = await getOwnedCharacter(client, user.id, body.characterId)
     if (character.map_id !== body.mapId) {
-      return new Response(JSON.stringify({ error: 'Not on this map' }), { status: 400 })
+      return new Response(JSON.stringify({ error: 'Not on this map' }), {
+        status: 400,
+        headers: jsonCorsHeaders,
+      })
     }
 
     const spawns = MOB_SPAWNS[body.mapId]
     if (!spawns || body.spawnIndex < 0 || body.spawnIndex >= spawns.length) {
-      return new Response(JSON.stringify({ error: 'Invalid spawn index' }), { status: 400 })
+      return new Response(JSON.stringify({ error: 'Invalid spawn index' }), {
+        status: 400,
+        headers: jsonCorsHeaders,
+      })
     }
     const spawn = spawns[body.spawnIndex]
     if (spawn.defId !== body.mobDefId) {
-      return new Response(JSON.stringify({ error: 'Mob mismatch at spawn' }), { status: 400 })
+      return new Response(JSON.stringify({ error: 'Mob mismatch at spawn' }), {
+        status: 400,
+        headers: jsonCorsHeaders,
+      })
     }
 
     const mob = getMobDef(body.mobDefId)
     if (!mob) {
-      return new Response(JSON.stringify({ error: 'Unknown mob' }), { status: 400 })
+      return new Response(JSON.stringify({ error: 'Unknown mob' }), {
+        status: 400,
+        headers: jsonCorsHeaders,
+      })
     }
 
     const dx = spawn.x - body.x
     const dy = spawn.y - body.y
     if (Math.hypot(dx, dy) > KILL_RANGE_PX) {
-      return new Response(JSON.stringify({ error: 'Too far from mob spawn' }), { status: 400 })
+      return new Response(JSON.stringify({ error: 'Too far from mob spawn' }), {
+        status: 400,
+        headers: jsonCorsHeaders,
+      })
     }
 
     const respawnMs = respawnMsForMapSpot(mobSpotsJson as Record<string, { spawnsPerMinute: number }[]>, body.mapId)
@@ -90,7 +105,10 @@ Deno.serve(async (req) => {
 
     if (lockRow && new Date(lockRow.locked_until) > now) {
       if (lockRow.last_killer_character_id !== body.characterId) {
-        return new Response(JSON.stringify({ error: 'Spawn recently killed' }), { status: 409 })
+        return new Response(JSON.stringify({ error: 'Spawn recently killed' }), {
+          status: 409,
+          headers: jsonCorsHeaders,
+        })
       }
     }
 
@@ -104,7 +122,10 @@ Deno.serve(async (req) => {
 
     if ((recentKills ?? 0) >= MAX_KILLS_PER_MINUTE) {
       await writeAuditLog(service, body.characterId, 'mob_kill_rate_limited', { mapId: body.mapId })
-      return new Response(JSON.stringify({ error: 'Kill rate limited' }), { status: 429 })
+      return new Response(JSON.stringify({ error: 'Kill rate limited' }), {
+        status: 429,
+        headers: jsonCorsHeaders,
+      })
     }
 
     const rng = () => Math.random()
@@ -118,7 +139,10 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (progErr || !progress) {
-      return new Response(JSON.stringify({ error: 'Progress not found' }), { status: 404 })
+      return new Response(JSON.stringify({ error: 'Progress not found' }), {
+        status: 404,
+        headers: jsonCorsHeaders,
+      })
     }
 
     const baseAfter = addBaseExp(progress.base_level, progress.base_exp, gained.baseExp)
@@ -148,7 +172,10 @@ Deno.serve(async (req) => {
       .eq('character_id', body.characterId)
 
     if (progUpdateErr) {
-      return new Response(JSON.stringify({ error: progUpdateErr.message }), { status: 400 })
+      return new Response(JSON.stringify({ error: progUpdateErr.message }), {
+        status: 400,
+        headers: jsonCorsHeaders,
+      })
     }
 
     if (loot.zeny > 0) {
@@ -157,7 +184,10 @@ Deno.serve(async (req) => {
         .update({ zeny: nextZeny })
         .eq('id', body.characterId)
       if (zenyErr) {
-        return new Response(JSON.stringify({ error: zenyErr.message }), { status: 400 })
+        return new Response(JSON.stringify({ error: zenyErr.message }), {
+          status: 400,
+          headers: jsonCorsHeaders,
+        })
       }
     }
 
@@ -202,7 +232,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (err) {
-    if (err instanceof Response) return err
+    if (err instanceof Response) return withCors(err)
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

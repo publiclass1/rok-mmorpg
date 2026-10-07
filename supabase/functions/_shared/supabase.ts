@@ -1,9 +1,13 @@
 import { createClient, type User } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+import { jsonCorsHeaders } from './cors.ts'
 
 export function createAuthedClient(req: Request) {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader) {
-    throw new Response(JSON.stringify({ error: 'Missing Authorization header' }), { status: 401 })
+    throw new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+      status: 401,
+      headers: jsonCorsHeaders,
+    })
   }
 
   return createClient(
@@ -23,7 +27,10 @@ export function createServiceClient() {
 export async function requireUser(client: ReturnType<typeof createAuthedClient>): Promise<User> {
   const { data, error } = await client.auth.getUser()
   if (error || !data.user) {
-    throw new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+    throw new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: jsonCorsHeaders,
+    })
   }
   return data.user
 }
@@ -41,10 +48,16 @@ export async function getOwnedCharacter(
     .maybeSingle()
 
   if (error) {
-    throw new Response(JSON.stringify({ error: error.message }), { status: 400 })
+    throw new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: jsonCorsHeaders,
+    })
   }
   if (!data) {
-    throw new Response(JSON.stringify({ error: 'Character not found' }), { status: 404 })
+    throw new Response(JSON.stringify({ error: 'Character not found' }), {
+      status: 404,
+      headers: jsonCorsHeaders,
+    })
   }
   return data
 }
@@ -65,17 +78,26 @@ export async function assertNearNpc(
     .maybeSingle()
 
   if (error || !npc) {
-    throw new Response(JSON.stringify({ error: 'NPC not found' }), { status: 404 })
+    throw new Response(JSON.stringify({ error: 'NPC not found' }), {
+      status: 404,
+      headers: jsonCorsHeaders,
+    })
   }
   if (npc.map_id !== mapId) {
-    throw new Response(JSON.stringify({ error: 'NPC not on this map' }), { status: 400 })
+    throw new Response(JSON.stringify({ error: 'NPC not on this map' }), {
+      status: 400,
+      headers: jsonCorsHeaders,
+    })
   }
 
   const dx = npc.x - x
   const dy = npc.y - y
   const dist = Math.sqrt(dx * dx + dy * dy)
   if (dist > NPC_INTERACT_DISTANCE) {
-    throw new Response(JSON.stringify({ error: 'Too far from NPC' }), { status: 400 })
+    throw new Response(JSON.stringify({ error: 'Too far from NPC' }), {
+      status: 400,
+      headers: jsonCorsHeaders,
+    })
   }
 
   return npc

@@ -27,14 +27,6 @@ export { defaultCharacterPose } from '../character/characterPose'
 export { MOUNT_BODY_Y_OFFSET } from './playerDisplayLayers'
 export type { PlayerVisualLayer } from './playerDisplayLayers'
 
-/** Scene reference for nested display parts (Phaser 4 may not set `.scene` on container children). */
-export function playerDisplayScene(display: {
-  container: Phaser.GameObjects.Container
-  body: Phaser.GameObjects.Sprite
-}): Phaser.Scene | undefined {
-  return display.container.scene ?? display.body.scene ?? undefined
-}
-
 export type PlayerDisplay = RarityGlowHost & {
   container: Phaser.GameObjects.Container
   /** Rider rig (lifted when mounted on peco). */
@@ -53,7 +45,6 @@ export type PlayerDisplay = RarityGlowHost & {
 }
 
 function syncSpritePose(display: PlayerDisplay) {
-  if (!playerDisplayScene(display)) return
   display.riderLayer.setY(display.pose.mounted ? MOUNT_BODY_Y_OFFSET : 0)
   display.body.setY(0)
   applyPoseToSprite(display.body, display.textureKey, display.spriteDef, display.pose)
@@ -64,8 +55,7 @@ function syncSpritePose(display: PlayerDisplay) {
   }
   syncEquipmentTransforms(display)
   syncPlayerRarityGlow(display, display.equipment)
-  const scene = playerDisplayScene(display)
-  if (scene) syncPlayerIdleRigMotion(scene, display)
+  syncPlayerIdleRigMotion(display.body.scene, display)
 }
 
 function bindPlayerTexture(
@@ -152,17 +142,13 @@ export function createPlayerDisplay(
 }
 
 export function setPlayerAppearance(display: PlayerDisplay, appearance: CharacterAppearance) {
-  const scene = playerDisplayScene(display)
-  if (!scene) return
-  bindPlayerTexture(scene, display, appearance)
+  bindPlayerTexture(display.body.scene, display, appearance)
 }
 
 export function setPlayerJobAvatar(display: PlayerDisplay, avatarKey: PlayerAvatarKey) {
   if (display.avatarKey === avatarKey) return
   display.avatarKey = avatarKey
-  const scene = playerDisplayScene(display)
-  if (!scene) return
-  bindPlayerTexture(scene, display, display.appearance)
+  bindPlayerTexture(display.body.scene, display, display.appearance)
 }
 
 export function syncPlayerDisplayPosition(display: PlayerDisplay, x: number, y: number) {

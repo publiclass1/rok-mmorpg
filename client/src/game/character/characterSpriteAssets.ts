@@ -14,10 +14,6 @@ import {
   NPC_ARCHETYPE_PALETTES,
   type NpcArchetype,
 } from './npcArchetypes'
-import {
-  drawSwordsmanLineDownFrame,
-  isSwordsmanLineJob,
-} from './swordsmanLineDownArt'
 
 /** Source colors in master sheets — replaced by palette swap for players. */
 export const PALETTE_SOURCE = {
@@ -50,6 +46,7 @@ type DrawMode =
   | { kind: 'player'; female: boolean; avatarKey: PlayerAvatarKey }
   | { kind: 'npc'; archetype: NpcArchetype }
 
+const PLATE_GRAY = 0x9ca3af
 const KNIGHT_CAPE = 0x5b21b6
 const APRON_TAN = 0xd6d3d1
 const QUIVER_BROWN = 0x78350f
@@ -270,13 +267,13 @@ function drawPlayerJobBody(
 
   switch (avatarKey) {
     case 'swordman':
-      g.fillStyle(0x9ca3af, 1)
+      g.fillStyle(PLATE_GRAY, 1)
       g.fillRect(cx - bodyW / 2 - 3, feetY - 27, 5, 7)
       g.fillRect(cx + bodyW / 2 - 2, feetY - 27, 5, 7)
       g.fillRect(cx - bodyW / 2, feetY - 14, bodyW, 5)
       break
     case 'knight':
-      g.fillStyle(0x9ca3af, 1)
+      g.fillStyle(PLATE_GRAY, 1)
       g.fillRect(cx - bodyW / 2 - 2, feetY - 28, bodyW + 4, 18)
       g.fillStyle(pal.shirt, 0.35)
       g.fillRect(cx - bodyW / 2 + 2, feetY - 26, bodyW - 4, 10)
@@ -628,34 +625,7 @@ function drawChibiFrame(
     armSwing = idlePose.armSwing
   }
 
-  const useSwordsmanLineDown =
-    isPlayer && isSwordsmanLineJob(mode.avatarKey) && facing === 'down'
-
-  if (!useSwordsmanLineDown) {
-    feetY += bob
-  } else if (motion.kind === 'idle') {
-    feetY += bob
-  }
-
-  if (useSwordsmanLineDown) {
-    const blink = motion.kind === 'idle' && motion.idleBlink
-    const attacking = motion.kind === 'attack'
-    let pixelLegSpread = legSpread
-    if (motion.kind === 'walk') {
-      const idleStep = (walkStep === 2 ? 1 : 0) as 0 | 1
-      pixelLegSpread = idleSpritePose(mode.avatarKey, idleStep).legSpread
-    } else if (motion.kind !== 'idle') {
-      pixelLegSpread = idleSpritePose(mode.avatarKey, 0).legSpread
-    }
-    drawSwordsmanLineDownFrame(g, mode.avatarKey, cx, feetY, pixelLegSpread, armSwing, pal, {
-      blink,
-      heldWeapon: !attacking,
-    })
-    if (attacking && attackMotion) {
-      drawWeapon(g, attackMotion.style, attackMotion.phase, facing, cx, feetY, bodyW)
-    }
-    return
-  }
+  feetY += bob
 
   if (isPlayer) {
     drawPlayerJobBody(g, mode.avatarKey, cx, feetY, bodyW, legSpread, facing, pal)

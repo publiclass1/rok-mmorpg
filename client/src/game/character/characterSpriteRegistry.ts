@@ -5,7 +5,7 @@ import type { CharacterAppearance } from './characterAppearance'
 import type { Facing } from '../movement/clickToMove'
 import { npcArchetypeFromNpcType, type NpcArchetype } from './npcArchetypes'
 
-const PLAYER_MASTER_VERSION = 'v12'
+const PLAYER_MASTER_VERSION = 'v9'
 
 export type AttackStyle = 'swing' | 'thrust' | 'bow' | 'cast'
 
@@ -220,8 +220,7 @@ export function stripFrameIndex(
 }
 
 export function playerTextureKey(def: CharacterSpriteDef, appearanceKey: string): string {
-  // Tie swapped sheets to master version so art updates are not stuck on cached palettes.
-  return `${def.masterTextureKey}__${appearanceKey.replace(/\|/g, '_')}`
+  return `${def.id}_${appearanceKey.replace(/\|/g, '_')}`
 }
 
 export function npcTextureKey(def: CharacterSpriteDef): string {
