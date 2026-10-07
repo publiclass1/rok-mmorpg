@@ -1,9 +1,9 @@
 import type { EquipSlot } from '../game/character/characterState'
 import { EQUIPMENT } from '../game/character/equipmentConfig'
 import { getItemDisplayName, hasItemIcon } from '../game/character/itemCatalog'
+import { ItemHoverTooltip } from './ItemHoverTooltip'
 import { ItemIcon } from './ItemIcon'
 import type { CharacterAppearance } from '../game/character/characterAppearance'
-import { CharacterAppearancePreview } from './CharacterAppearancePreview'
 import { CharacterEquipPreview } from './CharacterEquipPreview'
 
 export const EQUIP_SLOT_LABELS: Record<EquipSlot, string> = {
@@ -35,25 +35,27 @@ function EquipSlotCell({ slot, itemId, compact, onUnequip }: SlotCellProps) {
   return (
     <div className={`equip-slot-cell${compact ? ' equip-slot-cell--compact' : ''}`}>
       <span className="muted small equip-slot-label">{EQUIP_SLOT_LABELS[slot]}</span>
-      <div
-        className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''} ${itemId ? 'filled' : ''}${hasIcon ? ' inv-slot--has-icon' : ''}`}
-        style={
-          itemId && !hasIcon
-            ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
-            : undefined
-        }
-        title={itemId ? getItemDisplayName(itemId) : 'Empty'}
-      >
-        {itemId ? (
-          hasIcon ? (
-            <ItemIcon itemId={itemId} size={compact ? 28 : 36} alt="" />
-          ) : (
-            getItemDisplayName(itemId).slice(0, 3)
-          )
-        ) : (
-          '—'
-        )}
-      </div>
+      {itemId ? (
+        <ItemHoverTooltip itemId={itemId}>
+          <div
+            className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''} filled${hasIcon ? ' inv-slot--has-icon' : ''}`}
+            style={!hasIcon ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` } : undefined}
+          >
+            {hasIcon ? (
+              <ItemIcon itemId={itemId} size={compact ? 28 : 36} alt="" />
+            ) : (
+              getItemDisplayName(itemId).slice(0, 3)
+            )}
+          </div>
+        </ItemHoverTooltip>
+      ) : (
+        <div
+          className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''}`}
+          aria-label="Empty"
+        >
+          —
+        </div>
+      )}
       {itemId && onUnequip && (
         <button type="button" className="secondary small-btn" onClick={() => onUnequip(slot)}>
           Unequip
@@ -88,11 +90,7 @@ export function CharacterEquipReadOnly({ equipment, appearance, compact, centerC
       <div
         className={`equipment-ro-center char-select-character-center${centerClassName ? ` ${centerClassName}` : ''}`}
       >
-        {appearance ? (
-          <CharacterAppearancePreview appearance={appearance} size="lg" />
-        ) : (
-          <CharacterEquipPreview equipment={equipment} />
-        )}
+        <CharacterEquipPreview equipment={equipment} appearance={appearance} size="lg" />
       </div>
       <div className="equipment-ro-col equipment-ro-col--right">
         {EQUIP_RIGHT_SLOTS.map((slot) => (

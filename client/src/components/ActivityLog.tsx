@@ -1,4 +1,5 @@
 import type { ActivityLogEntry } from '../game/events'
+import { ItemHoverTooltip } from './ItemHoverTooltip'
 import { ItemIcon } from './ItemIcon'
 
 type Props = {
@@ -30,7 +31,13 @@ export function ActivityLog({ entries, maxEntries = 50, showTitle = true, classN
           {visible.map((entry) => (
             <li key={entry.id} className={`activity-log-item kind-${entry.kind}`}>
               <span className="activity-log-time">{formatTime(entry.at)}</span>
-              {entry.itemId && <ItemIcon itemId={entry.itemId} size={20} className="activity-log-item-icon" />}
+              {entry.itemId && (
+                <ItemHoverTooltip itemId={entry.itemId}>
+                  <span className="activity-log-item-icon">
+                    <ItemIcon itemId={entry.itemId} size={20} alt="" />
+                  </span>
+                </ItemHoverTooltip>
+              )}
               <span className="activity-log-msg">{entry.message}</span>
             </li>
           ))}

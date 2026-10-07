@@ -9,6 +9,7 @@ export function useModalDrag(
   placementDeps: unknown[] = [],
 ) {
   const [pos, setPos] = useState<PanelPosition | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const posRef = useRef({ x: 0, y: 0 })
   const getInitialRef = useRef(getInitialPosition)
   getInitialRef.current = getInitialPosition
@@ -51,6 +52,7 @@ export function useModalDrag(
       if (!target.closest('.modal-drag-handle')) return
       if (target.closest('button, input, a, select, textarea, label')) return
       dragging = true
+      setIsDragging(true)
       start = {
         mx: e.clientX,
         my: e.clientY,
@@ -73,6 +75,7 @@ export function useModalDrag(
     const endDrag = (e: PointerEvent) => {
       if (!dragging) return
       dragging = false
+      setIsDragging(false)
       try {
         panel.releasePointerCapture(e.pointerId)
       } catch {
@@ -93,5 +96,5 @@ export function useModalDrag(
     }
   }, [enabled, panelRef])
 
-  return pos
+  return { pos, isDragging }
 }

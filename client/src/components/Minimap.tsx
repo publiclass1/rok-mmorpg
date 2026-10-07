@@ -163,7 +163,7 @@ export function Minimap({ data }: Props) {
 
   const panelSize =
     data && expanded ? expandedPanelSize(data) : { width: COMPACT_SIZE, height: COMPACT_SIZE }
-  const pos = useModalDrag(panelRef, true, minimapInitialPosition, [
+  const { pos, isDragging } = useModalDrag(panelRef, true, minimapInitialPosition, [
     Boolean(data),
     data?.mapId,
     panelSize.width,
@@ -180,7 +180,7 @@ export function Minimap({ data }: Props) {
   return (
     <div
       ref={panelRef}
-      className={`game-hud-minimap${expanded ? ' game-hud-minimap--expanded' : ''}`}
+      className={`game-hud-minimap${expanded ? ' game-hud-minimap--expanded' : ''}${isDragging ? ' modal-panel--dragging' : ''}`}
       style={panelStyle}
       aria-label="Minimap"
     >

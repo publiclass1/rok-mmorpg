@@ -41,7 +41,7 @@ export function PartyRequestModal({ characterId, request, fromName, onClose, onR
   return (
     <AnimatedModal onClose={onClose}>
       <div className="modal-panel">
-        <h2>Party</h2>
+        <h2 className="modal-title">Party</h2>
         <p>{title}</p>
         {error && <p className="small">{error}</p>}
         <div className="row spread gap">

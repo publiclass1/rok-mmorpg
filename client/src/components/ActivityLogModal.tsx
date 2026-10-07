@@ -1,6 +1,7 @@
 import type { ActivityLogEntry } from '../game/events'
 import { ActivityLog } from './ActivityLog'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type Props = {
   entries: ActivityLogEntry[]
@@ -10,12 +11,7 @@ type Props = {
 export function ActivityLogModal({ entries, onClose }: Props) {
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="panel modal activity-log-modal">
-      <div className="row spread modal-drag-handle activity-log-modal__header">
-        <h2 style={{ margin: 0 }}>Activity log</h2>
-        <button type="button" className="secondary" onClick={onClose}>
-          Close
-        </button>
-      </div>
+      <ModalHeader title="Activity log" onClose={onClose} className="activity-log-modal__header" />
       <ActivityLog entries={entries} maxEntries={100} showTitle={false} className="activity-log-modal__body" />
     </AnimatedModal>
   )

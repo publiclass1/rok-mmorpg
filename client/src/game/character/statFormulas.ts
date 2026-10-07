@@ -3,6 +3,12 @@ import { jobBaseHp, jobBaseSp } from '../../content/ro/expTables'
 
 export const SKILL_POINTS_PER_JOB_LEVEL = 1
 
+/** Zeny cost to reset allocated base stats back to 1 and refund stat points. */
+export const STAT_RESET_ZENY_COST = 10_000
+
+/** Zeny cost to reset allocated job skills and refund skill points. */
+export const SKILL_RESET_ZENY_COST = 10_000
+
 /** Pre-Renewal stat raise cost (iRO Wiki / Stats). */
 export function statRaiseCost(currentStat: number): number {
   return 2 + Math.floor((currentStat - 1) / 10)

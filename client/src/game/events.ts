@@ -1,4 +1,5 @@
 import type { CharacterAppearance } from './character/characterAppearance'
+import type { CombatStatPreview } from './character/combatStatPreview'
 import type { CharacterSessionState, EquipSlot, PrimaryStat, SessionInventorySlot } from './character/characterState'
 import type { CharacterPose } from './character/characterPose'
 import type { NpcRow } from '../types/database'
@@ -112,10 +113,13 @@ export type CharacterSheetPayload = PlayerStatsPayload & {
   skillBar: (string | null)[]
   sessionInventory: SessionInventorySlot[]
   attackDamage: number
+  combatStats: CombatStatPreview
 }
 
 export type CharacterActionPayload =
   | { type: 'raiseStat'; stat: PrimaryStat }
+  | { type: 'resetStats' }
+  | { type: 'resetSkills' }
   | { type: 'learnSkill'; skillId: string }
   | { type: 'changeJob'; jobId: string }
   | { type: 'assignSkillBar'; slot: number; skillId: string | null }

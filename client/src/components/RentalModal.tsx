@@ -13,6 +13,7 @@ import { getCharacterSession } from '../game/character/characterSessionBridge'
 import type { CharacterRow, NpcRow } from '../types/database'
 import { supabase } from '../lib/supabase'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type Props = {
   character: CharacterRow
@@ -70,12 +71,7 @@ export function RentalModal({ character, npc, sheet, onClose, onCharacterUpdated
 
   return (
     <AnimatedModal onClose={onClose}>
-      <div className="row spread modal-drag-handle">
-        <h2 style={{ margin: 0 }}>{npc.label}</h2>
-        <button type="button" className="secondary" onClick={onClose}>
-          Close
-        </button>
-      </div>
+      <ModalHeader title={npc.label} onClose={onClose} />
       <p className="muted small">Equipment rental · one active rental at a time</p>
       {active ? (
         <div className="panel" style={{ marginBottom: 12 }}>

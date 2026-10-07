@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { guildManage } from '../lib/api'
 import type { GuildSnapshot } from '../lib/guildState'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type Props = {
   characterId: string
@@ -68,12 +69,7 @@ export function GuildModal({
 
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="panel modal guild-modal">
-      <div className="row spread modal-drag-handle guild-modal__header">
-        <h2 style={{ margin: 0 }}>Guild</h2>
-        <button type="button" className="secondary" onClick={onClose}>
-          Close
-        </button>
-      </div>
+      <ModalHeader title="Guild" onClose={onClose} className="guild-modal__header" />
 
       {snapshot ? (
         <>

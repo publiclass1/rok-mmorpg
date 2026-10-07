@@ -27,7 +27,7 @@ export function DeathModal({ saveMapId, onStay, onReturnToSave }: Props) {
   return (
     <AnimatedModal onClose={onStay}>
       <div className="modal-panel">
-        <h2>Defeated</h2>
+        <h2 className="modal-title">Defeated</h2>
         <p>You have been defeated. Stay here as a corpse, or return to your last save point.</p>
         <p className="muted small">
           Save point: <strong>{mapDisplayName(saveMapId)}</strong>

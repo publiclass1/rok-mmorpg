@@ -36,16 +36,20 @@ export function rollHitSuccess(attackerHit: number, defenderFlee: number, rng = 
 export type CritChanceOptions = {
   critModifier?: number
   defenderLuk?: number
-  /** Default 0; no crit without gear. */
+  /** Effective LUK; +1% crit per 3 LUK (stacks with gear). */
+  attackerLuk?: number
+  /** Default 0; no crit without gear or LUK. */
   minChancePercent?: number
 }
 
-/** Crit % from equipment (flat %) × modifier − floor(targetLUK/5). */
+/** Crit % from gear + floor(LUK/3) × modifier − floor(targetLUK/5). */
 export function calcCritChancePercent(equipCritBonus: number, options?: CritChanceOptions): number {
   const critModifier = options?.critModifier ?? 1
   const defenderLuk = options?.defenderLuk ?? 0
+  const attackerLuk = options?.attackerLuk ?? 0
   const minChance = options?.minChancePercent ?? 0
-  const raw = equipCritBonus * critModifier - Math.floor(defenderLuk / 5)
+  const fromLuk = Math.floor(attackerLuk / 3)
+  const raw = (equipCritBonus + fromLuk) * critModifier - Math.floor(defenderLuk / 5)
   return Math.max(minChance, raw)
 }
 
@@ -56,10 +60,11 @@ export function rollCriticalHit(chancePercent: number, rng: () => number): boole
 
 function rollPlayerCritVsMob(
   equipCritBonus: number,
+  attackerLuk: number,
   defenderLuk: number,
   rng: () => number,
 ): boolean {
-  const chance = calcCritChancePercent(equipCritBonus, { defenderLuk })
+  const chance = calcCritChancePercent(equipCritBonus, { attackerLuk, defenderLuk })
   return rollCriticalHit(chance, rng)
 }
 
@@ -97,7 +102,7 @@ function sizeMultiplier(weaponSize: string, targetSize: string): number {
   return row[targetSize] ?? 1
 }
 
-function statusAtk(baseLevel: number, str: number, dex: number, luk: number): number {
+export function calcStatusAtk(baseLevel: number, str: number, dex: number, luk: number): number {
   return baseLevel + str + Math.floor(dex / 5) + Math.floor(luk / 3)
 }
 
@@ -149,14 +154,14 @@ export function calcPlayerVsMobDamage(
   const weaponElement = options?.attackElementOverride ?? weapon?.attackElement ?? 'neutral'
   const weaponSize = weapon?.weaponSize ?? 'medium'
 
-  const critical = rollPlayerCritVsMob(equipCrit, defenderLuk, rng)
+  const critical = rollPlayerCritVsMob(equipCrit, stats.luk, defenderLuk, rng)
   let hit = critical
   if (!hit) {
     hit = rollHitSuccess(calcHit(state.progress.baseLevel, stats.dex, stats.luk), mob.flee, rng)
   }
   if (!hit) return { damage: 0, hit: false, critical: false }
 
-  const atk = statusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk) + weaponAtk
+  const atk = calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk) + weaponAtk
   const def = critical ? 0 : mob.def
   let damage = damageAfterDef(atk, def, 0)
   damage = applyCriticalDamageMultiplier(damage, critical, stats.luk)
@@ -222,7 +227,7 @@ export function calcPlayerMagicVsMobDamage(
   const skillModifier = options?.skillModifier ?? 1
   const attackElement = options?.attackElement ?? 'neutral'
 
-  const critical = rollPlayerCritVsMob(equipCrit, defenderLuk, rng)
+  const critical = rollPlayerCritVsMob(equipCrit, stats.luk, defenderLuk, rng)
   const matk = sampleMatk(stats.int, critical, rng)
   const mdef = critical ? 0 : mob.mdef
   let damage = damageAfterMdef(matk, mdef, skillModifier)
@@ -281,5 +286,5 @@ export function previewPlayerAttack(state: CharacterSessionState): number {
   const stats = effectiveStats(state)
   const weapon = state.equipment.weapon ? getItemCombatStats(state.equipment.weapon) : null
   const weaponAtk = weapon?.weaponAtk ?? 0
-  return statusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk) + weaponAtk
+  return calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk) + weaponAtk
 }

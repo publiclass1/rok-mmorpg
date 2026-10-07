@@ -3,12 +3,17 @@ import type { SkillDetailView } from '../game/character/skillRequirements'
 type Props = {
   skillName: string
   detail: SkillDetailView
-  style: React.CSSProperties
+  style?: React.CSSProperties
+  /** Content only — outer shell is provided by FloatingTooltipPortal. */
+  inline?: boolean
 }
 
-export function SkillDetailTooltip({ skillName, detail, style }: Props) {
+export function SkillDetailTooltip({ skillName, detail, style, inline }: Props) {
   return (
-    <div className="skill-detail-tooltip" style={style} role="tooltip">
+    <div
+      className={inline ? 'skill-detail-tooltip--inline' : 'skill-detail-tooltip'}
+      style={style}
+    >
       <p className="skill-detail-tooltip-name">{skillName}</p>
       <p className="skill-detail-tooltip-level muted small">{detail.levelLine}</p>
       <p className="skill-detail-tooltip-desc small">{detail.description}</p>

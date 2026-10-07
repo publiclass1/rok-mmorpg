@@ -2,6 +2,7 @@ import type { NpcRow } from '../types/database'
 import { dungeonFloors } from '../game/world/dungeonConfig'
 import { isCustomWarpDestination, type WarpDestination } from '../game/world/warpDestinationCategory'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 export type NpcMenuChoice =
   | { kind: 'storage'; label: string }
@@ -147,12 +148,7 @@ export function NpcOptionsModal({ npc, baseLevel, partyEnabled, onChoose, onClos
 
   return (
     <AnimatedModal onClose={onClose} panelClassName="panel modal npc-options-modal">
-      <div className="row spread modal-drag-handle">
-        <h2 style={{ margin: 0 }}>{npc.label}</h2>
-        <button type="button" className="secondary" onClick={onClose}>
-          Close
-        </button>
-      </div>
+      <ModalHeader title={npc.label} onClose={onClose} />
       <p className="muted small">Choose an option</p>
       {isTeleport && sections ? (
         <ul className="npc-options-list">

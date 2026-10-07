@@ -87,13 +87,74 @@ export type CharacterSessionState = {
   activeRental: { kind: 'cart' | 'peco_peco' | 'falcon'; expiresAt: number } | null
 }
 
+export const BASE_PRIMARY_STAT = 1
+
 const DEFAULT_STATS: Record<PrimaryStat, number> = {
-  str: 1,
-  agi: 1,
-  vit: 1,
-  int: 1,
-  dex: 1,
-  luk: 1,
+  str: BASE_PRIMARY_STAT,
+  agi: BASE_PRIMARY_STAT,
+  vit: BASE_PRIMARY_STAT,
+  int: BASE_PRIMARY_STAT,
+  dex: BASE_PRIMARY_STAT,
+  luk: BASE_PRIMARY_STAT,
+}
+
+const PRIMARY_STATS: PrimaryStat[] = ['str', 'agi', 'vit', 'int', 'dex', 'luk']
+
+/** Stat points spent raising one primary from base to `current` (exclusive of base). */
+export function statPointsSpentRaising(current: number, base = BASE_PRIMARY_STAT): number {
+  let spent = 0
+  for (let v = base; v < current; v++) {
+    spent += statRaiseCost(v)
+  }
+  return spent
+}
+
+export function hasRaisedPrimaryStats(state: CharacterSessionState): boolean {
+  return PRIMARY_STATS.some((stat) => state[stat] > BASE_PRIMARY_STAT)
+}
+
+export function resetAllocatedPrimaryStats(state: CharacterSessionState): CharacterSessionState {
+  let refund = 0
+  for (const stat of PRIMARY_STATS) {
+    refund += statPointsSpentRaising(state[stat])
+  }
+  if (refund === 0) return state
+  return {
+    ...state,
+    ...DEFAULT_STATS,
+    statPointsUnspent: state.statPointsUnspent + refund,
+  }
+}
+
+const FREE_SKILL_LEVELS: Record<string, number> = { basic_attack: 1, sit: 1 }
+
+/** Skill points spent on leveled skills (basic_attack / sit start at 1 for free). */
+export function skillPointsSpentOnSkills(skills: Record<string, number>): number {
+  let spent = 0
+  for (const [skillId, level] of Object.entries(skills)) {
+    const baseline = FREE_SKILL_LEVELS[skillId] ?? 0
+    spent += Math.max(0, level - baseline)
+  }
+  return spent
+}
+
+export function hasAllocatedSkillPoints(skills: Record<string, number>): boolean {
+  return skillPointsSpentOnSkills(skills) > 0
+}
+
+export function resetAllocatedSkills(state: CharacterSessionState): CharacterSessionState {
+  const refund = skillPointsSpentOnSkills(state.skills)
+  if (refund === 0) return state
+  const skills = { basic_attack: 1, sit: 1 }
+  const skillBar = state.skillBar.map((skillId) =>
+    skillId === 'basic_attack' || skillId === 'sit' ? skillId : null,
+  )
+  return {
+    ...state,
+    skills,
+    skillPointsUnspent: state.skillPointsUnspent + refund,
+    skillBar,
+  }
 }
 
 export function createInitialCharacterState(): CharacterSessionState {

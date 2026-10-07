@@ -8,6 +8,7 @@ import {
   isEquippable,
   hasItemIcon,
 } from '../game/character/itemCatalog'
+import { ItemHoverTooltip } from './ItemHoverTooltip'
 import { ItemIcon } from './ItemIcon'
 import { rarityColor } from '../game/items/rolledItem'
 import { RolledItemDetails } from './RolledItemDetails'
@@ -16,6 +17,7 @@ import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
 import { supabase } from '../lib/supabase'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type Props = {
   characterId: string
@@ -92,10 +94,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
 
   return (
     <AnimatedModal onClose={onClose} panelClassName="panel modal inventory-modal">
-        <div className="row spread modal-drag-handle">
-          <h2 style={{ margin: 0 }}>Inventory</h2>
-          <button type="button" className="secondary" onClick={onClose}>Close</button>
-        </div>
+        <ModalHeader title="Inventory" onClose={onClose} />
         <p className="muted small">Double-click session items to use or equip. Account storage is view-only.</p>
         <div className="inv-grid">
           {cells.map((cell) => {
@@ -105,30 +104,30 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
             const rolled = getRolledItemOrNull(cell.itemId)
             const nameColor = rolled ? rarityColor(rolled.rarity) : undefined
             return (
-              <button
-                key={cell.key}
-                type="button"
-                className={`inv-slot ${equippable ? 'equippable' : ''}${hasIcon ? ' inv-slot--has-icon' : ''}`}
-                onClick={() => setSelectedItemId(cell.itemId)}
-                style={
-                  equippable && !hasIcon
-                    ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
-                    : equippable && hasIcon
-                      ? { borderColor: nameColor ?? `#${color.toString(16).padStart(6, '0')}` }
-                      : undefined
-                }
-                title={`${getItemDisplayName(cell.itemId)}${cell.quantity > 1 ? ` ×${cell.quantity}` : ''}`}
-                onDoubleClick={() => onDoubleClick(cell)}
-              >
-                {hasIcon ? (
-                  <ItemIcon itemId={cell.itemId} size={36} alt="" />
-                ) : (
-                  <span className="inv-slot-label" style={nameColor ? { color: nameColor } : undefined}>
-                    {getItemDisplayName(cell.itemId).slice(0, 4)}
-                  </span>
-                )}
-                {cell.quantity > 1 && <span className="inv-slot-qty">{cell.quantity}</span>}
-              </button>
+              <ItemHoverTooltip key={cell.key} itemId={cell.itemId} quantity={cell.quantity}>
+                <button
+                  type="button"
+                  className={`inv-slot ${equippable ? 'equippable' : ''}${hasIcon ? ' inv-slot--has-icon' : ''}`}
+                  onClick={() => setSelectedItemId(cell.itemId)}
+                  style={
+                    equippable && !hasIcon
+                      ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
+                      : equippable && hasIcon
+                        ? { borderColor: nameColor ?? `#${color.toString(16).padStart(6, '0')}` }
+                        : undefined
+                  }
+                  onDoubleClick={() => onDoubleClick(cell)}
+                >
+                  {hasIcon ? (
+                    <ItemIcon itemId={cell.itemId} size={36} alt="" />
+                  ) : (
+                    <span className="inv-slot-label" style={nameColor ? { color: nameColor } : undefined}>
+                      {getItemDisplayName(cell.itemId).slice(0, 4)}
+                    </span>
+                  )}
+                  {cell.quantity > 1 && <span className="inv-slot-qty">{cell.quantity}</span>}
+                </button>
+              </ItemHoverTooltip>
             )
           })}
           {cells.length === 0 && <p className="muted">No items.</p>}

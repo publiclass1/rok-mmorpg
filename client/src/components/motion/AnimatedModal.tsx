@@ -22,13 +22,14 @@ export function AnimatedModal({
   draggable = true,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null)
-  const pos = useModalDrag(panelRef, draggable)
+  const { pos, isDragging } = useModalDrag(panelRef, draggable)
+  const panelClass = [panelClassName, isDragging ? 'modal-panel--dragging' : ''].filter(Boolean).join(' ')
 
   return (
     <div className={backdropClassName} role={role} aria-modal={ariaModal}>
       <motion.div
         ref={panelRef}
-        className={panelClassName}
+        className={panelClass}
         style={
           pos
             ? { position: 'fixed', left: pos.x, top: pos.y, margin: 0, visibility: 'visible' }

@@ -7,6 +7,7 @@ import type { CharacterRow, VendorListingRow } from '../types/database'
 import { toCharacterSheetPayload } from '../game/character/characterSheet'
 import { emitGameEvent } from '../game/events'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type Props = {
   buyer: CharacterRow
@@ -84,8 +85,8 @@ export function VendorShopModal({
 
   return (
     <AnimatedModal onClose={onClose}>
+      <ModalHeader title={stallTitle ?? `${sellerName}'s shop`} onClose={onClose} />
       <div className="modal-panel">
-        <h2>{stallTitle ?? `${sellerName}'s shop`}</h2>
         {error && <p className="small">{error}</p>}
         <ul className="item-list">
           {listings.map((row) => (

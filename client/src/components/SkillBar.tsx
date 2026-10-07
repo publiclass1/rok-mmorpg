@@ -29,7 +29,7 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
   const [dropTarget, setDropTarget] = useState<number | null>(null)
   const suppressClickRef = useRef(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  const pos = useModalDrag(panelRef, true, skillBarInitialPosition)
+  const { pos, isDragging } = useModalDrag(panelRef, true, skillBarInitialPosition)
 
   function handleDrop(slot: number, e: React.DragEvent) {
     e.preventDefault()
@@ -64,7 +64,7 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
   return (
     <div
       ref={panelRef}
-      className="skill-bar-panel"
+      className={`skill-bar-panel${isDragging ? ' modal-panel--dragging' : ''}`}
       style={
         pos
           ? { position: 'fixed', left: pos.x, top: pos.y, margin: 0, visibility: 'visible' }

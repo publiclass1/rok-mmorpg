@@ -8,7 +8,11 @@ import {
   learnOrLevelSkill,
   moveSkillBarSlot,
   placeSkillOnBar,
+  hasAllocatedSkillPoints,
+  hasRaisedPrimaryStats,
   raiseStat,
+  resetAllocatedPrimaryStats,
+  resetAllocatedSkills,
   useConsumableFromSession,
   type CharacterSessionState,
 } from './characterState'
@@ -42,6 +46,24 @@ export function applyCharacterAction(
       return { state: next, changed: true }
     }
     return { state, changed: false, message: 'Not enough stat points.' }
+  }
+
+  if (action.type === 'resetStats') {
+    if (!hasRaisedPrimaryStats(state)) {
+      return { state, changed: false, message: 'No allocated stats to reset.' }
+    }
+    const next = syncDerivedVitals(resetAllocatedPrimaryStats(state))
+    logActivity('character', 'Reset base stats and refunded stat points.')
+    return { state: next, changed: true, message: 'Stats reset.' }
+  }
+
+  if (action.type === 'resetSkills') {
+    if (!hasAllocatedSkillPoints(state.skills)) {
+      return { state, changed: false, message: 'No skills to reset.' }
+    }
+    const next = syncDerivedVitals(resetAllocatedSkills(state))
+    logActivity('character', 'Reset skills and refunded skill points.')
+    return { state: next, changed: true, message: 'Skills reset.' }
   }
 
   if (action.type === 'learnSkill') {

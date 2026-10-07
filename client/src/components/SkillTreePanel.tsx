@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { SkillDetailTooltip } from './SkillDetailTooltip'
 import { SkillTreeNode } from './SkillTreeNode'
+import { FloatingTooltipPortal } from './tooltip/FloatingTooltipPortal'
+import { floatingTooltipPosition } from './tooltip/floatingTooltipPosition'
 import {
   learnableSkillIdsForTab,
   pathSkillIdsForGuidance,
@@ -47,13 +49,9 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
       setHoverAnchor(null)
       return
     }
-    const viewport = el.closest('.skill-tree-viewport')
-    if (!viewport) return
-    const vpRect = viewport.getBoundingClientRect()
-    const rect = el.getBoundingClientRect()
     setHoverAnchor({
       skillId,
-      rect: new DOMRect(rect.left - vpRect.left, rect.top - vpRect.top, rect.width, rect.height),
+      rect: el.getBoundingClientRect(),
     })
   }
 
@@ -116,22 +114,10 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
         })}
       </div>
       {hoverSkill && hoverDetail && hoverAnchor && (
-        <SkillDetailTooltip
-          skillName={hoverSkill.name}
-          detail={hoverDetail}
-          style={tooltipStyle(hoverAnchor.rect, viewportWidth)}
-        />
+        <FloatingTooltipPortal style={floatingTooltipPosition(hoverAnchor.rect, 240)}>
+          <SkillDetailTooltip skillName={hoverSkill.name} detail={hoverDetail} inline />
+        </FloatingTooltipPortal>
       )}
     </div>
   )
-}
-
-function tooltipStyle(anchor: DOMRect, viewportWidth: number): React.CSSProperties {
-  const tooltipW = 240
-  let left = anchor.left + anchor.width + 8
-  if (left + tooltipW > viewportWidth - 8) {
-    left = Math.max(8, anchor.left - tooltipW - 8)
-  }
-  const top = anchor.top
-  return { left, top, maxWidth: tooltipW }
 }

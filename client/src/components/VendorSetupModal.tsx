@@ -4,6 +4,7 @@ import { getItemDisplayName } from '../game/character/itemCatalog'
 import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type DraftRow = { itemId: string; quantity: number; price: string }
 
@@ -100,8 +101,8 @@ export function VendorSetupModal({
 
   return (
     <AnimatedModal onClose={onClose}>
+      <ModalHeader title="Vending" onClose={onClose} />
       <div className="modal-panel vendor-setup">
-        <h2>Vending</h2>
         <label className="small">
           Shop title
           <input value={stallTitle} onChange={(e) => setStallTitle(e.target.value)} maxLength={40} />

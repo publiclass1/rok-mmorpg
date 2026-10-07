@@ -3,6 +3,7 @@ import { transferStorage } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import type { CharacterRow, ItemRow, NpcRow, StorageRow } from '../types/database'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type InvRow = { item_id: string; quantity: number }
 
@@ -61,12 +62,7 @@ export function StorageModal({ character, npc, position, onClose }: Props) {
 
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="modal panel">
-        <header className="row spread modal-drag-handle">
-          <h2>{npc.label} — Storage</h2>
-          <button type="button" className="secondary" onClick={onClose}>
-            Close
-          </button>
-        </header>
+        <ModalHeader title={`${npc.label} — Storage`} onClose={onClose} />
         {error && <p className="error">{error}</p>}
         <div className="two-col">
           <section>

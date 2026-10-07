@@ -15,6 +15,7 @@ import {
   saveCharacterSession,
 } from '../lib/characterProgress'
 import { supabase } from '../lib/supabase'
+import { appearanceFromCharacterRow } from '../game/character/characterAppearance'
 import { JOB_NAMES } from '../game/character/skillsConfig'
 import {
   dispatchCharacterAction,
@@ -1241,7 +1242,15 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       </div>
 
       <AnimatePresence mode="wait">
-        {statsOpen && <StatsWindow key="stats" sheet={sheet} onClose={() => setStatsOpen(false)} />}
+        {statsOpen && (
+          <StatsWindow
+            key="stats"
+            character={character}
+            sheet={sheet}
+            onCharacterUpdated={onCharacterUpdated}
+            onClose={() => setStatsOpen(false)}
+          />
+        )}
         {inventoryOpen && (
           <InventoryWindow
             key="inventory"
@@ -1251,9 +1260,22 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           />
         )}
         {equipmentOpen && (
-          <EquipmentWindow key="equipment" sheet={sheet} onClose={() => setEquipmentOpen(false)} />
+          <EquipmentWindow
+            key="equipment"
+            sheet={sheet}
+            appearance={appearanceFromCharacterRow(character)}
+            onClose={() => setEquipmentOpen(false)}
+          />
         )}
-        {skillsOpen && <SkillsWindow key="skills" sheet={sheet} onClose={() => setSkillsOpen(false)} />}
+        {skillsOpen && (
+          <SkillsWindow
+            key="skills"
+            character={character}
+            sheet={sheet}
+            onCharacterUpdated={onCharacterUpdated}
+            onClose={() => setSkillsOpen(false)}
+          />
+        )}
         {npcMenu && (
           <NpcOptionsModal
             key={`npc-${npcMenu.id}`}

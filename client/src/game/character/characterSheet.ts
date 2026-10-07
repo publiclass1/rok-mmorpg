@@ -1,4 +1,5 @@
 import type { CharacterSessionState, EquipSlot, PrimaryStat } from './characterState'
+import { buildCombatStatPreview } from './combatStatPreview'
 import { previewPlayerAttack } from '../combat/damage'
 import { effectiveStats } from './effectiveStats'
 import { derivedMaxHp, derivedMaxMp, statRaiseCost } from './statFormulas'
@@ -62,6 +63,7 @@ export function toCharacterSheetPayload(state: CharacterSessionState): Character
     skillBar: [...state.skillBar],
     sessionInventory: [...state.sessionInventory],
     attackDamage,
+    combatStats: buildCombatStatPreview(state),
   }
 }
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { partyManage } from '../lib/api'
 import { createParty as createPartyRpc, type PartySnapshot } from '../lib/partyState'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type Props = {
   characterId: string
@@ -57,12 +58,7 @@ export function PartyWindow({ characterId, snapshot, onClose, onChanged, onMessa
 
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="panel modal party-modal">
-      <div className="row spread modal-drag-handle party-modal__header">
-        <h2 style={{ margin: 0 }}>Party</h2>
-        <button type="button" className="secondary" onClick={onClose}>
-          Close
-        </button>
-      </div>
+      <ModalHeader title="Party" onClose={onClose} className="party-modal__header" />
 
       {snapshot ? (
         <>

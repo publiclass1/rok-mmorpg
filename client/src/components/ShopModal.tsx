@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import { formatEquipRequirements, meetsEquipRequirements } from '../game/character/equipRequirements'
 import { getItemDisplayName, isEquippable } from '../game/character/itemCatalog'
+import { ItemHoverTooltip } from './ItemHoverTooltip'
 import { ItemIcon } from './ItemIcon'
 import {
   addToCart,
@@ -18,6 +19,8 @@ import type { CharacterSheetPayload } from '../game/events'
 import type { CharacterRow, NpcRow } from '../types/database'
 import { supabase } from '../lib/supabase'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalCloseButton } from './motion/ModalCloseButton'
+import { ModalHeader } from './motion/ModalHeader'
 
 type Props = {
   character: CharacterRow
@@ -69,21 +72,22 @@ function ShopCatalogPane({
           rows.map((row) => {
             const atMax = row.maxAdd !== undefined && row.maxAdd <= 0
             return (
-              <button
-                key={row.itemId}
-                type="button"
-                className={`shop-row${row.unmetRequirements ? ' shop-row--unmet' : ''}`}
-                disabled={atMax}
-                onClick={() => onAdd(row.itemId)}
-              >
-                <ItemIcon itemId={row.itemId} size={28} className="shop-row__icon" alt="" />
-                <span className="shop-row__name">
-                  {formatRowLabel(getItemDisplayName(row.itemId), row.qtyLabel, row.price)}
-                </span>
-                {row.requirementHint ? (
-                  <span className="shop-row__req muted small">{row.requirementHint}</span>
-                ) : null}
-              </button>
+              <ItemHoverTooltip key={row.itemId} itemId={row.itemId}>
+                <button
+                  type="button"
+                  className={`shop-row${row.unmetRequirements ? ' shop-row--unmet' : ''}`}
+                  disabled={atMax}
+                  onClick={() => onAdd(row.itemId)}
+                >
+                  <ItemIcon itemId={row.itemId} size={28} className="shop-row__icon" alt="" />
+                  <span className="shop-row__name">
+                    {formatRowLabel(getItemDisplayName(row.itemId), row.qtyLabel, row.price)}
+                  </span>
+                  {row.requirementHint ? (
+                    <span className="shop-row__req muted small">{row.requirementHint}</span>
+                  ) : null}
+                </button>
+              </ItemHoverTooltip>
             )
           })
         )}
@@ -116,18 +120,19 @@ function ShopCartPane({
           entries.map(({ itemId, quantity }) => {
             const unit = priceByItemId[itemId] ?? 0
             return (
-              <button
-                key={itemId}
-                type="button"
-                className="shop-row shop-row--cart"
-                onClick={() => onRemove(itemId)}
-                title="Click to remove one"
-              >
-                <ItemIcon itemId={itemId} size={28} className="shop-row__icon" alt="" />
-                <span className="shop-row__name">{getItemDisplayName(itemId)}</span>
-                <span className="shop-row__qty">×{quantity}</span>
-                <span className="shop-row__price">{unit * quantity} z</span>
-              </button>
+              <ItemHoverTooltip key={itemId} itemId={itemId} quantity={quantity}>
+                <button
+                  type="button"
+                  className="shop-row shop-row--cart"
+                  onClick={() => onRemove(itemId)}
+                  aria-label="Click to remove one"
+                >
+                  <ItemIcon itemId={itemId} size={28} className="shop-row__icon" alt="" />
+                  <span className="shop-row__name">{getItemDisplayName(itemId)}</span>
+                  <span className="shop-row__qty">×{quantity}</span>
+                  <span className="shop-row__price">{unit * quantity} z</span>
+                </button>
+              </ItemHoverTooltip>
             )
           })
         )}
@@ -261,12 +266,7 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
   if (!hasBuy && !hasSell) {
     return (
       <AnimatedModal onClose={onClose} panelClassName="panel modal wide shop-modal">
-        <div className="row spread modal-drag-handle">
-          <h2 style={{ margin: 0 }}>{npc.label}</h2>
-          <button type="button" className="secondary" onClick={onClose}>
-            Cancel
-          </button>
-        </div>
+        <ModalHeader title={npc.label} onClose={onClose} closeLabel="Cancel" />
         <p className="muted">This shop has nothing configured.</p>
       </AnimatedModal>
     )
@@ -279,33 +279,36 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
     <AnimatedModal onClose={onClose} panelClassName="panel modal wide shop-modal">
       <div className="shop-modal__header row spread modal-drag-handle">
         <div>
-          <h2 style={{ margin: 0 }}>{npc.label}</h2>
-          <p className="muted small" style={{ margin: '0.25rem 0 0' }}>
+          <h2 className="modal-title">{npc.label}</h2>
+          <p className="muted small" style={{ margin: '0.15rem 0 0' }}>
             Zeny: {character.zeny}
           </p>
         </div>
-        {(hasBuy && hasSell) && (
-          <div className="shop-tabs" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={isBuy}
-              className={isBuy ? undefined : 'secondary'}
-              onClick={() => setActiveTab('buy')}
-            >
-              Buy
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={!isBuy}
-              className={!isBuy ? undefined : 'secondary'}
-              onClick={() => setActiveTab('sell')}
-            >
-              Sell
-            </button>
-          </div>
-        )}
+        <div className="modal-header__end shop-modal__header-end">
+          {(hasBuy && hasSell) && (
+            <div className="shop-tabs" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={isBuy}
+                className={isBuy ? undefined : 'secondary'}
+                onClick={() => setActiveTab('buy')}
+              >
+                Buy
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={!isBuy}
+                className={!isBuy ? undefined : 'secondary'}
+                onClick={() => setActiveTab('sell')}
+              >
+                Sell
+              </button>
+            </div>
+          )}
+          <ModalCloseButton onClose={onClose} label="Cancel" />
+        </div>
       </div>
 
       <div className="shop-modal__grid two-col">
@@ -364,9 +367,6 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
               Sell
             </button>
           )}
-          <button type="button" className="secondary" onClick={onClose}>
-            Cancel
-          </button>
         </div>
       </div>
     </AnimatedModal>

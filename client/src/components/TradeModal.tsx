@@ -3,6 +3,7 @@ import { tradeManage } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import type { CharacterRow, ItemRow, TradeOfferRow, TradeSessionRow } from '../types/database'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type Props = {
   character: CharacterRow
@@ -112,12 +113,11 @@ export function TradeModal({ character, partner, initialTrade, onClose, onComple
 
   return (
     <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="modal panel wide">
-        <header className="row spread modal-drag-handle">
-          <h2>Trade with {partner.name}</h2>
-          <button type="button" className="secondary" onClick={() => void run('cancel').then(onClose)}>
-            Cancel
-          </button>
-        </header>
+        <ModalHeader
+          title={`Trade · ${partner.name}`}
+          onClose={() => void run('cancel').then(onClose)}
+          closeLabel="Cancel trade"
+        />
         {error && <p className="error">{error}</p>}
         {trade && <p className="muted">State: {trade.state}</p>}
 

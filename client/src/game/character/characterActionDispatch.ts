@@ -28,7 +28,14 @@ export function dispatchCharacterAction(action: CharacterActionPayload) {
   if (!result.changed) {
     if (result.message) {
       emitGameEvent('status', result.message)
-      if (action.type === 'raiseStat' || action.type === 'learnSkill' || action.type === 'changeJob' || action.type === 'assignSkillBar') {
+      if (
+        action.type === 'raiseStat' ||
+        action.type === 'resetStats' ||
+        action.type === 'resetSkills' ||
+        action.type === 'learnSkill' ||
+        action.type === 'changeJob' ||
+        action.type === 'assignSkillBar'
+      ) {
         logActivity('character', result.message)
       }
     }

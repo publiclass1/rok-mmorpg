@@ -5,6 +5,7 @@ import type { CharacterSheetPayload } from '../game/events'
 import type { CharacterRow, NpcRow } from '../types/database'
 import { supabase } from '../lib/supabase'
 import { AnimatedModal } from './motion/AnimatedModal'
+import { ModalHeader } from './motion/ModalHeader'
 
 type Props = {
   character: CharacterRow
@@ -53,12 +54,7 @@ export function JobMasterModal({ character, npc, sheet, onClose, onCharacterUpda
 
   return (
     <AnimatedModal onClose={onClose}>
-        <div className="row spread modal-drag-handle">
-          <h2 style={{ margin: 0 }}>{npc.label}</h2>
-          <button type="button" className="secondary" onClick={onClose}>
-            Close
-          </button>
-        </div>
+        <ModalHeader title={npc.label} onClose={onClose} />
         <p className="muted small">
           Current: {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Job Lv {sheet.jobLevel} · Base Lv {sheet.baseLevel}
         </p>

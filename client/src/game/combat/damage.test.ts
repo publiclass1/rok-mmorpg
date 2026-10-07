@@ -21,6 +21,8 @@ function run() {
   assert.equal(calcCritChancePercent(7), 7)
   assert.equal(calcCritChancePercent(0), 0)
   assert.equal(calcCritChancePercent(10, { defenderLuk: 15 }), 7)
+  assert.equal(calcCritChancePercent(0, { attackerLuk: 9 }), 3)
+  assert.equal(calcCritChancePercent(5, { attackerLuk: 9 }), 8)
 
   assert.equal(calcCritDamageMultiplier(9), 1.43)
   assert.equal(calcCritDamageMultiplier(2), 1.4)

@@ -12,7 +12,7 @@
     "icons:weapons": "node ../scripts/generate-weapon-icons.mjs",
     "icons:gear": "node ../scripts/generate-gear-icons.mjs",
     "icons:skills": "node ../scripts/generate-skill-icons.mjs",
-    "test": "tsx src/content/ro/expandMobSpots.test.ts && tsx src/game/combat/mobAi.leash.test.ts && tsx src/game/combat/exp.test.ts && tsx src/game/combat/damage.test.ts && tsx src/game/combat/playerAttackRange.test.ts && tsx src/game/character/statusEffects.test.ts && tsx src/game/character/equipRequirements.test.ts && tsx src/game/character/jobChange.test.ts && tsx src/game/character/characterSpriteRegistry.test.ts && tsx src/game/character/characterSpriteAnim.test.ts && tsx src/game/player/mountState.test.ts && tsx src/game/movement/gridPathfind.test.ts && tsx src/game/items/rolledItem.test.ts"
+    "test": "tsx src/content/ro/expandMobSpots.test.ts && tsx src/game/combat/mobAi.leash.test.ts && tsx src/game/combat/exp.test.ts && tsx src/game/combat/damage.test.ts && tsx src/game/combat/playerAttackRange.test.ts && tsx src/game/character/statusEffects.test.ts && tsx src/game/character/equipRequirements.test.ts && tsx src/game/character/itemTooltipDetail.test.ts && tsx src/game/character/jobChange.test.ts && tsx src/game/character/characterSpriteRegistry.test.ts && tsx src/game/character/characterSpriteAnim.test.ts && tsx src/game/player/mountState.test.ts && tsx src/game/movement/gridPathfind.test.ts && tsx src/game/items/rolledItem.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
