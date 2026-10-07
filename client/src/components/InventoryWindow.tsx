@@ -6,7 +6,7 @@ import {
   getRolledItemOrNull,
   isConsumable,
   isEquippable,
-  isWeaponItem,
+  hasItemIcon,
 } from '../game/character/itemCatalog'
 import { ItemIcon } from './ItemIcon'
 import { rarityColor } from '../game/items/rolledItem'
@@ -100,7 +100,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
         <div className="inv-grid">
           {cells.map((cell) => {
             const equippable = isEquippable(cell.itemId)
-            const weaponIcon = isWeaponItem(cell.itemId)
+            const hasIcon = hasItemIcon(cell.itemId)
             const color = getEquipColor(cell.itemId)
             const rolled = getRolledItemOrNull(cell.itemId)
             const nameColor = rolled ? rarityColor(rolled.rarity) : undefined
@@ -108,19 +108,19 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
               <button
                 key={cell.key}
                 type="button"
-                className={`inv-slot ${equippable ? 'equippable' : ''}${weaponIcon ? ' inv-slot--has-icon' : ''}`}
+                className={`inv-slot ${equippable ? 'equippable' : ''}${hasIcon ? ' inv-slot--has-icon' : ''}`}
                 onClick={() => setSelectedItemId(cell.itemId)}
                 style={
-                  equippable && !weaponIcon
+                  equippable && !hasIcon
                     ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
-                    : equippable && weaponIcon
+                    : equippable && hasIcon
                       ? { borderColor: nameColor ?? `#${color.toString(16).padStart(6, '0')}` }
                       : undefined
                 }
                 title={`${getItemDisplayName(cell.itemId)}${cell.quantity > 1 ? ` ×${cell.quantity}` : ''}`}
                 onDoubleClick={() => onDoubleClick(cell)}
               >
-                {weaponIcon ? (
+                {hasIcon ? (
                   <ItemIcon itemId={cell.itemId} size={36} alt="" />
                 ) : (
                   <span className="inv-slot-label" style={nameColor ? { color: nameColor } : undefined}>

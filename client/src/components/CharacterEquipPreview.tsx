@@ -1,9 +1,30 @@
 import { resolveHeadItemId, type EquipSlot } from '../game/character/characterState'
 import { EQUIPMENT } from '../game/character/equipmentConfig'
-import { isWeaponItem } from '../game/character/itemCatalog'
+import { hasItemIcon } from '../game/character/itemCatalog'
 import { ItemIcon } from './ItemIcon'
+
 function colorHex(n: number): string {
   return `#${n.toString(16).padStart(6, '0')}`
+}
+
+type PreviewLayerProps = {
+  className: string
+  itemId: string | null | undefined
+  color: number | undefined
+  iconSize: number
+}
+
+function PreviewLayer({ className, itemId, color, iconSize }: PreviewLayerProps) {
+  if (!itemId) return null
+  if (hasItemIcon(itemId)) {
+    return (
+      <div className={`${className} ${className}--icon`}>
+        <ItemIcon itemId={itemId} size={iconSize} alt="" />
+      </div>
+    )
+  }
+  if (color === undefined) return null
+  return <div className={className} style={{ backgroundColor: colorHex(color) }} />
 }
 
 type Props = {
@@ -25,36 +46,30 @@ export function CharacterEquipPreview({ equipment }: Props) {
     <div className="character-equip-preview" aria-hidden>
       <div className="character-equip-preview__body" />
       <div className="character-equip-preview__head" />
-      {armorColor !== undefined && (
-        <div
-          className="character-equip-preview__armor"
-          style={{ backgroundColor: colorHex(armorColor) }}
-        />
-      )}
-      {headColor !== undefined && (
-        <div
-          className="character-equip-preview__headgear"
-          style={{ backgroundColor: colorHex(headColor) }}
-        />
-      )}
-      {offhandColor !== undefined && (
-        <div
-          className="character-equip-preview__offhand"
-          style={{ backgroundColor: colorHex(offhandColor) }}
-        />
-      )}
-      {weaponId && isWeaponItem(weaponId) ? (
-        <div className="character-equip-preview__weapon character-equip-preview__weapon--icon">
-          <ItemIcon itemId={weaponId} size={28} alt="" />
-        </div>
-      ) : (
-        weaponColor !== undefined && (
-          <div
-            className="character-equip-preview__weapon"
-            style={{ backgroundColor: colorHex(weaponColor) }}
-          />
-        )
-      )}
+      <PreviewLayer
+        className="character-equip-preview__armor"
+        itemId={armorId}
+        color={armorColor}
+        iconSize={32}
+      />
+      <PreviewLayer
+        className="character-equip-preview__headgear"
+        itemId={headItemId}
+        color={headColor}
+        iconSize={24}
+      />
+      <PreviewLayer
+        className="character-equip-preview__offhand"
+        itemId={offhandId}
+        color={offhandColor}
+        iconSize={24}
+      />
+      <PreviewLayer
+        className="character-equip-preview__weapon"
+        itemId={weaponId}
+        color={weaponColor}
+        iconSize={28}
+      />
     </div>
   )
 }

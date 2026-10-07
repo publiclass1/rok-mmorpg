@@ -29,6 +29,10 @@
       <stop offset="0%" stop-color="#78716c"/>
       <stop offset="100%" stop-color="#292524"/>
     </linearGradient>
+    <linearGradient id="rapier-cloth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5f5f4"/>
+      <stop offset="100%" stop-color="#a8a29e"/>
+    </linearGradient>
     <radialGradient id="rapier-gem" cx="40%" cy="35%" r="65%">
       <stop offset="0%" stop-color="#e9d5ff"/>
       <stop offset="45%" stop-color="#a78bfa"/>
@@ -44,6 +48,7 @@
   <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M15.2 4 L16.8 4 L16.5 22 L16 23 L15.5 22 Z" fill="url(#rapier-steel-dark)"/>
   <path d="M15.6 5 L16.2 5 L16 20" stroke="#f8fafc" stroke-width="0.6" opacity="0.7"/>
+  <ellipse cx="16" cy="20.5" rx="5" ry="1.2" fill="url(#rapier-gold)" opacity="0.9"/>
   <path d="M10 20 H22 V21.2 H10 Z" fill="url(#rapier-gold)"/>
   <path d="M9 21 H23 V22 H9 Z" fill="#57534e"/>
   <circle cx="16" cy="24" r="2.2" fill="url(#rapier-gold)"/>

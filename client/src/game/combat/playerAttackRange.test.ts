@@ -16,12 +16,15 @@ function run() {
   const emptyEquip = createDefaultEquipment()
   assert.equal(getEquippedWeaponClass(emptyEquip), 'unarmed')
   assert.equal(getPlayerAttackRangePx(emptyEquip), MAP_TILE_SIZE)
+  assert.equal(ATTACK_RANGE_CELLS_BY_CLASS.spear, 2)
 
   const withKnife = { ...emptyEquip, weapon: 'knife' }
   assert.equal(getEquippedWeaponClass(withKnife), 'knife')
   assert.equal(getPlayerAttackRangePx(withKnife), ATTACK_RANGE_CELLS_BY_CLASS.knife * MAP_TILE_SIZE)
 
   assert.equal(usesTargetedAttack('bow'), true)
+  assert.equal(usesTargetedAttack('staff'), true)
+  assert.equal(usesTargetedAttack('spear'), false)
   assert.equal(usesTargetedAttack('sword'), false)
 
   const px = 0
@@ -30,36 +33,74 @@ function run() {
     { id: 'a', alive: true, x: 30, y: 0 },
     { id: 'b', alive: true, x: 0, y: 40 },
   ]
-  const inCone = findMobInAttackCone(px, py, 'right', 32, mobs)
+  const inCone = findMobInAttackCone(px, py, 'right', 1, mobs)
   assert.equal(inCone?.id, 'a')
-  const behind = findMobInAttackCone(px, py, 'left', 32, mobs)
+  const behind = findMobInAttackCone(px, py, 'left', 1, mobs)
   assert.equal(behind, null)
 
-  const chase: MockMob = { id: 'c', alive: true, x: 100, y: 0 }
-  const selected: MockMob = { id: 'd', alive: true, x: 200, y: 0 }
+  const chaseInRange: MockMob = { id: 'c', alive: true, x: 2 * MAP_TILE_SIZE, y: 0 }
+  const chaseOutOfRange: MockMob = { id: 'c_far', alive: true, x: 3 * MAP_TILE_SIZE, y: 0 }
   const spearHit = resolvePlayerAttackTarget({
     playerX: px,
     playerY: py,
-    facing: 'left',
-    rangePx: 160,
+    facing: 'right',
+    rangeCells: 2,
     weaponClass: 'spear',
     mobs,
-    chaseMob: chase,
-    selectedMob: selected,
+    chaseMob: chaseInRange,
+    selectedMob: null,
   })
   assert.equal(spearHit?.id, 'c')
 
+  const spearMissRange = resolvePlayerAttackTarget({
+    playerX: px,
+    playerY: py,
+    facing: 'right',
+    rangeCells: 2,
+    weaponClass: 'spear',
+    mobs: [],
+    chaseMob: chaseOutOfRange,
+    selectedMob: null,
+  })
+  assert.equal(spearMissRange, null)
+
+  const spearMissCone = resolvePlayerAttackTarget({
+    playerX: px,
+    playerY: py,
+    facing: 'left',
+    rangeCells: 2,
+    weaponClass: 'spear',
+    mobs,
+    chaseMob: chaseInRange,
+    selectedMob: null,
+  })
+  assert.equal(spearMissCone, null)
+
+  const selected10: MockMob = { id: 'd', alive: true, x: 10 * MAP_TILE_SIZE, y: 0 }
+  const selected11: MockMob = { id: 'd_far', alive: true, x: 11 * MAP_TILE_SIZE, y: 0 }
   const bowHit = resolvePlayerAttackTarget({
     playerX: px,
     playerY: py,
     facing: 'up',
-    rangePx: 320,
+    rangeCells: 10,
     weaponClass: 'bow',
     mobs,
     chaseMob: null,
-    selectedMob: selected,
+    selectedMob: selected10,
   })
   assert.equal(bowHit?.id, 'd')
+
+  const bowMiss = resolvePlayerAttackTarget({
+    playerX: px,
+    playerY: py,
+    facing: 'up',
+    rangeCells: 10,
+    weaponClass: 'bow',
+    mobs,
+    chaseMob: null,
+    selectedMob: selected11,
+  })
+  assert.equal(bowMiss, null)
 
   console.log('playerAttackRange.test.ts: ok')
 }

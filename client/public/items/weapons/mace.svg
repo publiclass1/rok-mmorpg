@@ -29,6 +29,10 @@
       <stop offset="0%" stop-color="#78716c"/>
       <stop offset="100%" stop-color="#292524"/>
     </linearGradient>
+    <linearGradient id="mace-cloth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5f5f4"/>
+      <stop offset="100%" stop-color="#a8a29e"/>
+    </linearGradient>
     <radialGradient id="mace-gem" cx="40%" cy="35%" r="65%">
       <stop offset="0%" stop-color="#e9d5ff"/>
       <stop offset="45%" stop-color="#a78bfa"/>
@@ -43,10 +47,13 @@
   <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#78716c" stroke-opacity="0.35" stroke-width="0.5"/>
   <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <rect x="15" y="14" width="2" height="14" fill="url(#mace-wood)"/>
-  <rect x="11" y="8" width="10" height="8" rx="2" fill="url(#mace-steel)"/>
-  <circle cx="13" cy="10" r="1" fill="#475569"/>
-  <circle cx="19" cy="10" r="1" fill="#475569"/>
-  <circle cx="16" cy="13" r="1" fill="#475569"/>
-  <rect x="11" y="8" width="10" height="2" fill="#e2e8f0" opacity="0.25"/>
-  <rect x="14" y="6" width="4" height="2" fill="#57534e"/>
+  <rect x="10.5" y="7" width="11" height="9" rx="2" fill="url(#mace-steel)"/>
+  <path d="M10.5 9 H21.5 M10.5 12 H21.5 M10.5 15 H21.5" stroke="#334155" stroke-width="0.5"/>
+  <circle cx="12" cy="10" r="1.1" fill="#475569"/>
+  <circle cx="20" cy="10" r="1.1" fill="#475569"/>
+  <circle cx="16" cy="8" r="1.1" fill="#475569"/>
+  <circle cx="14" cy="14" r="1" fill="#475569"/>
+  <circle cx="18" cy="14" r="1" fill="#475569"/>
+  <rect x="11" y="7" width="10" height="2" fill="#e2e8f0" opacity="0.25"/>
+  <rect x="14" y="5" width="4" height="2" fill="#57534e"/>
   </svg>

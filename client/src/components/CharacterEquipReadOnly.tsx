@@ -1,6 +1,6 @@
 import type { EquipSlot } from '../game/character/characterState'
 import { EQUIPMENT } from '../game/character/equipmentConfig'
-import { getItemDisplayName, isWeaponItem } from '../game/character/itemCatalog'
+import { getItemDisplayName, hasItemIcon } from '../game/character/itemCatalog'
 import { ItemIcon } from './ItemIcon'
 import type { CharacterAppearance } from '../game/character/characterAppearance'
 import { CharacterAppearancePreview } from './CharacterAppearancePreview'
@@ -30,22 +30,22 @@ type SlotCellProps = {
 }
 
 function EquipSlotCell({ slot, itemId, compact, onUnequip }: SlotCellProps) {
-  const weaponIcon = itemId ? isWeaponItem(itemId) : false
+  const hasIcon = itemId ? hasItemIcon(itemId) : false
   const color = itemId ? EQUIPMENT[itemId]?.layerColor ?? 0x4b5563 : 0x1f2937
   return (
     <div className={`equip-slot-cell${compact ? ' equip-slot-cell--compact' : ''}`}>
       <span className="muted small equip-slot-label">{EQUIP_SLOT_LABELS[slot]}</span>
       <div
-        className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''} ${itemId ? 'filled' : ''}${weaponIcon ? ' inv-slot--has-icon' : ''}`}
+        className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''} ${itemId ? 'filled' : ''}${hasIcon ? ' inv-slot--has-icon' : ''}`}
         style={
-          itemId && !weaponIcon
+          itemId && !hasIcon
             ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
             : undefined
         }
         title={itemId ? getItemDisplayName(itemId) : 'Empty'}
       >
         {itemId ? (
-          weaponIcon && slot === 'weapon' ? (
+          hasIcon ? (
             <ItemIcon itemId={itemId} size={compact ? 28 : 36} alt="" />
           ) : (
             getItemDisplayName(itemId).slice(0, 3)

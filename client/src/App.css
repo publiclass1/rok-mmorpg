@@ -1438,12 +1438,6 @@ button:disabled {
   background: #0f1419;
 }
 
-.skill-tree-viewport--grid {
-  min-height: auto;
-  max-height: none;
-  padding: 0.35rem;
-}
-
 .skill-tree-canvas {
   position: relative;
   margin: 0 auto;
@@ -1518,16 +1512,6 @@ button:disabled {
   font-size: 0.75rem;
   font-weight: 700;
   margin-top: 0.1rem;
-}
-
-.skills-grid--tab {
-  margin-top: 0;
-}
-
-.skills-grid--tab .skill-tree-node {
-  border: 1px solid #374151;
-  background: #111827;
-  padding: 0.5rem;
 }
 
 .skill-detail-tooltip {
@@ -1965,8 +1949,8 @@ button:disabled {
 /* Skills modal: panel height cap when assigning to skill bar */
 .modal.skills-modal {
   max-height: min(70vh, 520px);
-  min-width: min(92vw, 420px);
-  max-width: min(92vw, 520px);
+  min-width: min(94vw, 440px);
+  max-width: min(94vw, 640px);
   display: flex;
   flex-direction: column;
 }
@@ -2114,7 +2098,7 @@ button:disabled {
 
 .shop-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 0.5rem;
   width: 100%;
@@ -2155,7 +2139,14 @@ button:disabled {
 }
 
 .shop-row:not(.shop-row--cart) {
-  grid-template-columns: 1fr;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+}
+
+.shop-row__icon {
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 .shop-row--unmet:not(:disabled) {
@@ -2202,11 +2193,38 @@ button:disabled {
   flex-shrink: 0;
 }
 
+.character-equip-preview__armor--icon,
+.character-equip-preview__headgear--icon,
+.character-equip-preview__offhand--icon,
 .character-equip-preview__weapon--icon {
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent !important;
+  opacity: 1;
+}
+
+.character-equip-preview__armor--icon {
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+}
+
+.character-equip-preview__headgear--icon {
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  top: 10%;
+}
+
+.character-equip-preview__offhand--icon {
+  width: 28px;
+  height: 32px;
+}
+
+.character-equip-preview__weapon--icon {
+  width: 32px;
+  height: 32px;
 }
 
 .inv-slot {

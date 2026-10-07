@@ -171,6 +171,40 @@ export function calcPlayerVsMobDamage(
   return { damage: Math.max(1, damage), hit: true, critical }
 }
 
+/** Scale basic attack result for active player skills (pre-renewal placeholders). */
+export function calcPlayerSkillVsMobDamage(
+  base: { damage: number; hit: boolean; critical: boolean },
+  skillId: string,
+  skillLevel: number,
+): { damage: number; hit: boolean; critical: boolean } {
+  if (!base.hit || base.damage <= 0) return base
+  let damage = base.damage
+  switch (skillId) {
+    case 'bash':
+    case 'mob_bash':
+      damage = Math.max(1, Math.floor(base.damage * (1 + skillLevel * 0.15)) + skillLevel * 3)
+      break
+    case 'pierce':
+      damage = Math.max(1, Math.floor(base.damage * (1 + skillLevel * 0.12)) + skillLevel * 4)
+      break
+    case 'spear_stab':
+      damage = Math.max(1, Math.floor(base.damage * (1 + skillLevel * 0.14)) + skillLevel * 5)
+      break
+    case 'brandish_spear':
+      damage = Math.max(1, Math.floor(base.damage * (0.85 + skillLevel * 0.08)))
+      break
+    case 'bowling_bash':
+      damage = Math.max(1, Math.floor(base.damage * (1 + skillLevel * 0.18)) + skillLevel * 2)
+      break
+    case 'spear_boomerang':
+      damage = Math.max(1, Math.floor(base.damage * (1 + skillLevel * 0.1)) + skillLevel * 3)
+      break
+    default:
+      break
+  }
+  return { ...base, damage }
+}
+
 export function calcPlayerMagicVsMobDamage(
   state: CharacterSessionState,
   mob: MobDefinition,

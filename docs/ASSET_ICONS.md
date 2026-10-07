@@ -1,5 +1,7 @@
 # Generated asset icons
 
+Shared frame helpers live in [`scripts/lib/roItemIconFrame.mjs`](../scripts/lib/roItemIconFrame.mjs) (`wrap`, gradients, slot border).
+
 ## Weapon inventory SVGs
 
 | | |
@@ -7,6 +9,30 @@
 | **Generator** | [`scripts/generate-weapon-icons.mjs`](../scripts/generate-weapon-icons.mjs) |
 | **Output** | [`client/public/items/weapons/`](../client/public/items/weapons/) |
 | **Driven by** | [`content/ro/items.json`](../content/ro/items.json) — every row with `type: "weapon"` |
+
+## Armor and consumable inventory SVGs
+
+| | |
+|--|--|
+| **Generator** | [`scripts/generate-gear-icons.mjs`](../scripts/generate-gear-icons.mjs) |
+| **Output** | [`client/public/items/armor/`](../client/public/items/armor/), [`client/public/items/consumables/`](../client/public/items/consumables/) |
+| **Driven by** | [`content/ro/items.json`](../content/ro/items.json) — `type: "armor"` or `type: "consumable"` |
+
+### Gear icon motifs (wiki reference)
+
+| Item id | Motif |
+|---------|--------|
+| `cotton_shirt`, `adventurers_suit`, `silk_robe`, `wooden_mail`, `coat` | Shirt / green suit / purple robe / plank mail / long coat |
+| `cap`, `helm` | Soft cap vs metal helm |
+| `goggles`, `circlet` | Lenses on strap vs gold circlet |
+| `flu_mask`, `mask` | White surgical mask vs dark eye mask |
+| `wooden_shield`, `buckler` | Round wood shield vs metal buckler |
+| `hooded_mantle`, `mantle` | Hooded cloak vs blue shoulder cape |
+| `sandals`, `shoes` | Strapped sandals vs enclosed shoes |
+| `clip`, `glove`, `ring` | Hair clip, glove, gold ring |
+| `red_potion` | Red glass flask |
+
+**Phase 2 (not yet):** `type: "etc"` loot icons under `client/public/items/etc/` plus a generator branch in `getItemIconUrl`.
 
 ## Skill bar SVGs
 
@@ -66,7 +92,9 @@ npm run icons:skills        # regenerate all skill SVGs
 npm run icons:skills:check  # CI / content:validate — ensure files exist
 npm run icons:weapons       # regenerate weapon SVGs
 npm run icons:weapons:check
-npm run icons               # both generators
+npm run icons:gear          # armor + consumable SVGs
+npm run icons:gear:check
+npm run icons               # weapons + gear + skills
 ```
 
 ### Adding a new skill
@@ -85,4 +113,11 @@ Runtime: `skillIconUrl()` → `/skills/{id}.svg` unless `iconFile` is set on the
 3. Run `npm run icons:weapons`.
 4. Run `npm run content:validate`.
 
-Runtime: `getItemIconUrl()` → `/items/weapons/{id}.svg` unless `iconFile` is set on the item row.
+Runtime: `getItemIconUrl()` → `/items/weapons|armor|consumables/{id}.svg` by item `type`, unless `iconFile` is set on the item row.
+
+### Adding armor or a consumable
+
+1. Add the row to `content/ro/items.json`.
+2. Add `armorBuilders[id]` or `consumableBuilders[id]` in `generate-gear-icons.mjs`.
+3. Run `npm run icons:gear`.
+4. Run `npm run content:validate`.

@@ -108,7 +108,13 @@ export function getItemIconUrl(itemId: string): string | null {
   if (!item) return null
   if (item.iconFile) return item.iconFile
   if (item.type === 'weapon') return `/items/weapons/${baseId}.svg`
+  if (item.type === 'armor') return `/items/armor/${baseId}.svg`
+  if (item.type === 'consumable') return `/items/consumables/${baseId}.svg`
   return null
+}
+
+export function hasItemIcon(itemId: string): boolean {
+  return getItemIconUrl(itemId) !== null
 }
 
 export function isWeaponItem(itemId: string): boolean {

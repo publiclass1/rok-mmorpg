@@ -11,6 +11,7 @@ const magnumPos = swordLayout.positions.magnum
 const bashPos = swordLayout.positions.bash
 assert.ok(magnumPos && bashPos, 'magnum and bash positioned')
 assert.ok(magnumPos.row > bashPos.row, 'magnum below bash')
+assert.equal(magnumPos.col, bashPos.col, 'magnum centered under bash')
 
 const knight = skillsForJob('knight')
 const knightLayout = computeSkillTreeLayout(knight)
@@ -19,11 +20,18 @@ const spearMastery = knightLayout.positions.spear_mastery
 const brandish = knightLayout.positions.brandish_spear
 assert.ok(spearMastery && brandish, 'spear branch nodes')
 assert.ok(brandish.row > spearMastery.row, 'brandish below spear mastery')
+const stabPos = knightLayout.positions.spear_stab
+const boomPos = knightLayout.positions.spear_boomerang
+assert.ok(stabPos && boomPos, 'spear mastery children')
+assert.ok(
+  spearMastery.col >= brandish.col && spearMastery.col <= boomPos.col,
+  'spear mastery centered over spear branch',
+)
 
 const acolyte = skillsForJob('acolyte')
-assert.equal(hasIntraJobPrereqEdges(acolyte), false, 'acolyte has no intra-job edges')
 const acolyteLayout = computeSkillTreeLayout(acolyte)
-assert.equal(acolyteLayout.mode, 'grid')
+assert.equal(acolyteLayout.mode, 'tree')
+assert.equal(acolyteLayout.rows, 1, 'single-row tree for lone skill')
 
 assert.ok(SKILLS.heal, 'fixture skill heal exists')
 

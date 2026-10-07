@@ -14,6 +14,7 @@ import {
   SKILL_TREE_PAD,
   SKILL_TREE_ROW_GAP,
   skillTreeContentSize,
+  skillTreeEdgePath,
   skillTreeNodeCenter,
 } from '../game/character/skillTreeLayout'
 import type { SkillDefinition } from '../game/character/skillsConfig'
@@ -60,43 +61,11 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
   const hoverDetail =
     hoverSkill != null ? skillRequirementDetail(hoverSkill, sheet, tabJobId) : null
 
-  if (layout.mode === 'grid') {
-    return (
-      <div className="skill-tree-viewport skill-tree-viewport--grid">
-        <div className="skills-grid skills-grid--tab">
-          {skills
-            .slice()
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((skill) => {
-              const level = sheet.skills[skill.id] ?? 0
-              return (
-                <SkillTreeNode
-                  key={skill.id}
-                  skill={skill}
-                  sheet={sheet}
-                  showLearnButton={showLearnButton}
-                  learnable={learnableIds.has(skill.id)}
-                  onPath={pathIds.has(skill.id)}
-                  maxed={level >= skill.maxLevel}
-                  onHover={(el) => handleHover(skill.id, el)}
-                />
-              )
-            })}
-        </div>
-        {hoverSkill && hoverDetail && hoverAnchor && (
-          <SkillDetailTooltip
-            skillName={hoverSkill.name}
-            detail={hoverDetail}
-            style={tooltipStyle(hoverAnchor.rect, width)}
-          />
-        )}
-      </div>
-    )
-  }
+  const viewportWidth = Math.max(width, 280)
 
   return (
     <div className="skill-tree-viewport">
-      <div className="skill-tree-canvas" style={{ width, height }}>
+      <div className="skill-tree-canvas" style={{ width, height, minWidth: viewportWidth }}>
         <svg className="skill-tree-edges" width={width} height={height} aria-hidden>
           {layout.edges.map((edge) => {
             const fromPos = layout.positions[edge.from]
@@ -105,16 +74,12 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
             const from = skillTreeNodeCenter(fromPos)
             const to = skillTreeNodeCenter(toPos)
             const onPath =
-              pathIds.has(edge.from) &&
-              pathIds.has(edge.to) &&
-              tabJobId === sheet.jobId
+              pathIds.has(edge.from) && pathIds.has(edge.to) && tabJobId === sheet.jobId
             return (
-              <line
+              <path
                 key={`${edge.from}-${edge.to}`}
-                x1={from.x}
-                y1={from.bottom - 8}
-                x2={to.x}
-                y2={to.top + 8}
+                d={skillTreeEdgePath(from, to)}
+                fill="none"
                 className={onPath ? 'skill-tree-edge skill-tree-edge--on-path' : 'skill-tree-edge'}
               />
             )
@@ -124,10 +89,8 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
           const pos = layout.positions[skill.id]
           if (!pos) return null
           const level = sheet.skills[skill.id] ?? 0
-          const left =
-            SKILL_TREE_PAD + pos.col * (SKILL_TREE_CELL_W + SKILL_TREE_COL_GAP)
-          const top =
-            SKILL_TREE_PAD + pos.row * (SKILL_TREE_CELL_H + SKILL_TREE_ROW_GAP)
+          const left = SKILL_TREE_PAD + pos.col * (SKILL_TREE_CELL_W + SKILL_TREE_COL_GAP)
+          const top = SKILL_TREE_PAD + pos.row * (SKILL_TREE_CELL_H + SKILL_TREE_ROW_GAP)
           return (
             <div
               key={skill.id}
@@ -156,7 +119,7 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
         <SkillDetailTooltip
           skillName={hoverSkill.name}
           detail={hoverDetail}
-          style={tooltipStyle(hoverAnchor.rect, width)}
+          style={tooltipStyle(hoverAnchor.rect, viewportWidth)}
         />
       )}
     </div>
@@ -169,6 +132,6 @@ function tooltipStyle(anchor: DOMRect, viewportWidth: number): React.CSSProperti
   if (left + tooltipW > viewportWidth - 8) {
     left = Math.max(8, anchor.left - tooltipW - 8)
   }
-  let top = anchor.top
+  const top = anchor.top
   return { left, top, maxWidth: tooltipW }
 }

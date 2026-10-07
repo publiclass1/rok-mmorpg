@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import { formatEquipRequirements, meetsEquipRequirements } from '../game/character/equipRequirements'
 import { getItemDisplayName, isEquippable } from '../game/character/itemCatalog'
+import { ItemIcon } from './ItemIcon'
 import {
   addToCart,
   cartEntries,
@@ -75,6 +76,7 @@ function ShopCatalogPane({
                 disabled={atMax}
                 onClick={() => onAdd(row.itemId)}
               >
+                <ItemIcon itemId={row.itemId} size={28} className="shop-row__icon" alt="" />
                 <span className="shop-row__name">
                   {formatRowLabel(getItemDisplayName(row.itemId), row.qtyLabel, row.price)}
                 </span>
@@ -121,6 +123,7 @@ function ShopCartPane({
                 onClick={() => onRemove(itemId)}
                 title="Click to remove one"
               >
+                <ItemIcon itemId={itemId} size={28} className="shop-row__icon" alt="" />
                 <span className="shop-row__name">{getItemDisplayName(itemId)}</span>
                 <span className="shop-row__qty">×{quantity}</span>
                 <span className="shop-row__price">{unit * quantity} z</span>

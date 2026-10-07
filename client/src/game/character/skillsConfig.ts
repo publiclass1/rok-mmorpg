@@ -118,6 +118,11 @@ export function isMeleeSkillStub(skillId: string): boolean {
   return MELEE_SKILL_STUBS.has(skillId)
 }
 
+/** Enemy-target actives that execute after click-to-target (includes provoke). */
+export function isPlayerEnemyCastSkill(skillId: string): boolean {
+  return MELEE_SKILL_STUBS.has(skillId) || skillId === 'provoke'
+}
+
 export function canLearnSkill(
   skill: SkillDefinition,
   jobId: string,

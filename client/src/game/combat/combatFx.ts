@@ -15,26 +15,67 @@ const STYLE_COLORS: Record<Exclude<FloatStyle, 'crit' | 'critMagic'>, string> = 
   mobHitPlayer: '#fca5a5',
 }
 
-const CRIT_PHYSICAL = { fill: '#c4a574', stroke: '#5c4033' }
-const CRIT_MAGIC = { fill: '#7dd3fc', stroke: '#1e3a5f' }
+/** RO physical crit: yellow digits on thick black stroke over brown-red jagged burst. */
+const CRIT_PHYSICAL_TEXT = { fill: '#ffe566', stroke: '#000000' }
+const CRIT_MAGIC_TEXT = { fill: '#a5f3fc', stroke: '#0c1929' }
 
-function drawCritBurst(scene: Phaser.Scene, x: number, y: number, magic: boolean) {
-  const g = scene.add.graphics()
-  g.setPosition(x, y)
-  const color = magic ? 0x7dd3fc : 0xc4a574
-  g.lineStyle(2, color, 0.85)
-  for (let i = 0; i < 8; i++) {
-    const a = (Math.PI * 2 * i) / 8
-    g.lineBetween(0, 0, Math.cos(a) * 14, Math.sin(a) * 10)
+function fillJaggedStar(
+  g: Phaser.GameObjects.Graphics,
+  outerR: number,
+  innerR: number,
+  spikes: number,
+  color: number,
+  alpha: number,
+  rotation = -Math.PI / 2,
+) {
+  g.fillStyle(color, alpha)
+  g.beginPath()
+  const step = Math.PI / spikes
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR
+    const a = rotation + i * step
+    const px = Math.cos(a) * r
+    const py = Math.sin(a) * r * 0.82
+    if (i === 0) g.moveTo(px, py)
+    else g.lineTo(px, py)
   }
-  scene.tweens.add({
-    targets: g,
-    alpha: 0,
-    scaleX: 1.35,
-    scaleY: 1.35,
-    duration: 400,
-    onComplete: () => g.destroy(),
-  })
+  g.closePath()
+  g.fillPath()
+}
+
+/** Jagged star + speed lines at local origin (parent container moves with damage text). */
+function createRoCritBurstGraphics(scene: Phaser.Scene, magic: boolean): Phaser.GameObjects.Graphics {
+  const g = scene.add.graphics()
+
+  if (magic) {
+    fillJaggedStar(g, 38, 16, 10, 0x1e3a5f, 0.92)
+    fillJaggedStar(g, 28, 11, 10, 0x38bdf8, 0.88)
+    fillJaggedStar(g, 16, 6, 8, 0x7dd3fc, 0.75)
+    g.lineStyle(2, 0xe0f2fe, 0.9)
+    for (let i = 0; i < 12; i++) {
+      const a = (Math.PI * 2 * i) / 12 + 0.08
+      g.lineBetween(Math.cos(a) * 10, Math.sin(a) * 8, Math.cos(a) * 44, Math.sin(a) * 34)
+    }
+  } else {
+    const rot = -0.4
+    fillJaggedStar(g, 42, 17, 12, 0x5c2018, 0.95, rot)
+    fillJaggedStar(g, 34, 14, 12, 0x8b3a2a, 0.95, rot)
+    fillJaggedStar(g, 24, 10, 10, 0xb85c38, 0.9, rot)
+    fillJaggedStar(g, 14, 5, 8, 0xd48450, 0.75, rot)
+    g.lineStyle(2, 0xfff4c2, 0.85)
+    for (let i = 0; i < 14; i++) {
+      const a = (Math.PI * 2 * i) / 14 + 0.12
+      const len = 18 + (i % 3) * 10
+      g.lineBetween(Math.cos(a) * 8, Math.sin(a) * 6, Math.cos(a) * len, Math.sin(a) * len * 0.85)
+    }
+    g.lineStyle(1, 0xffffff, 0.5)
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI * 2 * i) / 6 - 0.2
+      g.lineBetween(0, 0, Math.cos(a) * 52, Math.sin(a) * 40)
+    }
+  }
+
+  return g
 }
 
 export function showDamageFloat(
@@ -54,35 +95,77 @@ export function showDamageFloat(
   const isCrit = isCritPhysical || isCritMagic
   const label = String(damage)
 
-  if (isCrit) {
-    drawCritBurst(scene, x, y - 4, isCritMagic)
-  }
-
-  const style = isCritPhysical ? CRIT_PHYSICAL : isCritMagic ? CRIT_MAGIC : { fill: STYLE_COLORS.hit, stroke: '#1f2937' }
-  const text = scene.add
-    .text(x, y, label, {
-      fontSize: isCrit ? '14px' : '12px',
-      color: style.fill,
-      fontStyle: isCrit ? 'bold' : undefined,
-      stroke: style.stroke,
-      strokeThickness: isCrit ? 3 : 1,
-    })
-    .setOrigin(0.5)
+  const textStyle = isCritPhysical
+    ? CRIT_PHYSICAL_TEXT
+    : isCritMagic
+      ? CRIT_MAGIC_TEXT
+      : { fill: STYLE_COLORS.hit, stroke: '#1f2937' }
 
   const duration = isCrit ? 2000 : 550
-  const rise = isCrit ? -36 : -28
+  const rise = isCrit ? -42 : -28
+
+  if (isCrit) {
+    const floater = scene.add.container(x, y)
+    floater.setDepth(8000)
+
+    const burst = createRoCritBurstGraphics(scene, isCritMagic)
+    floater.add(burst)
+
+    const text = scene.add
+      .text(0, 0, label, {
+        fontFamily: 'Arial Black, Arial, sans-serif',
+        fontSize: '22px',
+        color: textStyle.fill,
+        fontStyle: 'bold',
+        stroke: textStyle.stroke,
+        strokeThickness: 5,
+      })
+      .setOrigin(0.5)
+    floater.add(text)
+
+    floater.setScale(0.55)
+    scene.tweens.add({
+      targets: floater,
+      scaleX: 1,
+      scaleY: 1,
+      duration: 120,
+      ease: 'Back.easeOut',
+    })
+    scene.tweens.add({
+      targets: floater,
+      y: y + rise,
+      duration,
+      ease: 'Sine.easeOut',
+    })
+    scene.tweens.add({
+      targets: floater,
+      alpha: 0,
+      delay: duration - 450,
+      duration: 450,
+      onComplete: () => floater.destroy(),
+    })
+    return
+  }
+
+  const text = scene.add
+    .text(x, y, label, {
+      fontSize: '12px',
+      color: textStyle.fill,
+      stroke: textStyle.stroke,
+      strokeThickness: 1,
+    })
+    .setOrigin(0.5)
 
   scene.tweens.add({
     targets: text,
     y: y + rise,
     duration,
-    ease: isCrit ? 'Sine.easeOut' : 'Linear',
+    ease: 'Linear',
   })
   scene.tweens.add({
     targets: text,
     alpha: 0,
-    delay: isCrit ? duration - 400 : 0,
-    duration: isCrit ? 400 : duration,
+    duration,
     onComplete: () => text.destroy(),
   })
 }
@@ -104,9 +187,9 @@ export function showFloatingText(
 
   const color =
     style === 'crit'
-      ? CRIT_PHYSICAL.fill
+      ? CRIT_PHYSICAL_TEXT.fill
       : style === 'critMagic'
-        ? CRIT_MAGIC.fill
+        ? CRIT_MAGIC_TEXT.fill
         : STYLE_COLORS[style as keyof typeof STYLE_COLORS] ?? STYLE_COLORS.hit
 
   const label = scene.add
@@ -340,6 +423,62 @@ function strokeSlashArcAt(
   g.strokePath()
 }
 
+function drawThrustSlash(
+  scene: Phaser.Scene,
+  sx: number,
+  sy: number,
+  facing: Facing,
+  bash: boolean,
+  depth: number,
+) {
+  const g = scene.add.graphics()
+  g.setPosition(sx, sy)
+  g.setDepth(depth)
+  const color = bash ? 0xfbbf24 : 0x94a3b8
+  const tip = bash ? 0xfffbeb : 0xe2e8f0
+  const len = bash ? 26 : 20
+  const width = bash ? 4 : 3
+  g.lineStyle(width, color, 0.95)
+  switch (facing) {
+    case 'right':
+      g.lineBetween(0, 0, len, 0)
+      g.fillStyle(tip, 1)
+      g.fillTriangle(len, 0, len - 5, -3, len - 5, 3)
+      break
+    case 'left':
+      g.lineBetween(0, 0, -len, 0)
+      g.fillStyle(tip, 1)
+      g.fillTriangle(-len, 0, -len + 5, -3, -len + 5, 3)
+      break
+    case 'down':
+      g.lineBetween(0, 0, 0, len)
+      g.fillStyle(tip, 1)
+      g.fillTriangle(0, len, -3, len - 5, 3, len - 5)
+      break
+    case 'up':
+      g.lineBetween(0, 0, 0, -len)
+      g.fillStyle(tip, 1)
+      g.fillTriangle(0, -len, -3, -len + 5, 3, -len + 5)
+      break
+  }
+  const slide =
+    facing === 'right'
+      ? { x: 10, y: 0 }
+      : facing === 'left'
+        ? { x: -10, y: 0 }
+        : facing === 'down'
+          ? { x: 0, y: 10 }
+          : { x: 0, y: -10 }
+  scene.tweens.add({
+    targets: g,
+    x: sx + slide.x,
+    y: sy + slide.y,
+    alpha: 0,
+    duration: bash ? 160 : 120,
+    onComplete: () => g.destroy(),
+  })
+}
+
 function drawSwingSlash(
   scene: Phaser.Scene,
   sx: number,
@@ -388,29 +527,34 @@ export function playPlayerAttackSlash(
   const playerX = container.x
   const playerY = container.y
   const bash = options.variant === 'bash'
+  const thrust = options.attackStyle === 'thrust'
+  const lunge = thrust ? 12 : 8
 
   const offset = { x: 0, y: 0 }
   switch (facing) {
     case 'up':
-      offset.y = -8
+      offset.y = -lunge
       break
     case 'down':
-      offset.y = 8
+      offset.y = lunge
       break
     case 'left':
-      offset.x = -8
+      offset.x = -lunge
       break
     case 'right':
-      offset.x = 8
+      offset.x = lunge
       break
   }
 
-  const sx = playerX + (facing === 'left' ? -20 : facing === 'right' ? 20 : 0)
-  const sy = playerY + (facing === 'up' ? -20 : facing === 'down' ? 20 : 0)
+  const reach = thrust ? 14 : 20
+  const sx = playerX + (facing === 'left' ? -reach : facing === 'right' ? reach : 0)
+  const sy = playerY + (facing === 'up' ? -reach : facing === 'down' ? reach : 0)
   const slashDepth = container.depth + 0.08
 
   if (options.attackStyle === 'swing') {
     drawSwingSlash(scene, sx, sy, facing, bash, slashDepth)
+  } else if (options.attackStyle === 'thrust') {
+    drawThrustSlash(scene, sx, sy, facing, bash, slashDepth)
   } else {
     const slash = scene.add.graphics()
     slash.setPosition(sx, sy)
@@ -422,25 +566,26 @@ export function playPlayerAttackSlash(
     slash.beginPath()
     slash.arc(0, 0, arcR, spec.outerStart, spec.outerEnd, false)
     slash.strokePath()
-    const thrustRot = options.attackStyle === 'thrust' ? (facing === 'left' ? -0.15 : 0.15) : 0
-    if (thrustRot !== 0) slash.setRotation(thrustRot)
     scene.tweens.add({
       targets: slash,
       alpha: 0,
-      rotation: thrustRot + (options.attackStyle === 'thrust' ? thrustRot * 2 : 0),
       duration: bash ? 200 : 150,
       onComplete: () => slash.destroy(),
     })
   }
 
-  const startX = container.x
-  const startY = container.y
+  const body = display.body
+  const startX = body.x
+  const startY = body.y
   scene.tweens.add({
-    targets: container,
+    targets: body,
     x: startX + offset.x,
     y: startY + offset.y,
     duration: 90,
     yoyo: true,
+    onComplete: () => {
+      body.setPosition(startX, startY)
+    },
   })
 }
 

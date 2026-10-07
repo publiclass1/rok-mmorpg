@@ -9,13 +9,13 @@ export const ATTACK_RANGE_CELLS_BY_CLASS: Record<WeaponClass, number> = {
   unarmed: 1,
   knife: 1,
   sword: 2,
-  spear: 5,
+  spear: 2,
   staff: 10,
   bow: 10,
 }
 
 export function usesTargetedAttack(weaponClass: WeaponClass): boolean {
-  return weaponClass === 'spear' || weaponClass === 'staff' || weaponClass === 'bow'
+  return weaponClass === 'staff' || weaponClass === 'bow'
 }
 
 export function getEquippedWeaponClass(equipment: Record<EquipSlot, string | null>): WeaponClass {
@@ -31,6 +31,36 @@ export function getPlayerAttackRangeCells(equipment: Record<EquipSlot, string | 
 
 export function getPlayerAttackRangePx(equipment: Record<EquipSlot, string | null>): number {
   return getPlayerAttackRangeCells(equipment) * MAP_TILE_SIZE
+}
+
+export function chebyshevDistanceTiles(px: number, py: number, tx: number, ty: number): number {
+  return Math.max(Math.abs(tx - px), Math.abs(ty - py)) / MAP_TILE_SIZE
+}
+
+export function isWithinAttackRangeCells(
+  px: number,
+  py: number,
+  tx: number,
+  ty: number,
+  rangeCells: number,
+): boolean {
+  return chebyshevDistanceTiles(px, py, tx, ty) <= rangeCells
+}
+
+export function isWithinPlayerAttackRange(
+  equipment: Record<EquipSlot, string | null>,
+  playerX: number,
+  playerY: number,
+  targetX: number,
+  targetY: number,
+): boolean {
+  return isWithinAttackRangeCells(
+    playerX,
+    playerY,
+    targetX,
+    targetY,
+    getPlayerAttackRangeCells(equipment),
+  )
 }
 
 export type AttackTargetCandidate = {
@@ -62,29 +92,25 @@ export function isInFacingCone(
   }
 }
 
-export function distanceBetween(px: number, py: number, tx: number, ty: number): number {
-  return Math.hypot(tx - px, ty - py)
-}
-
 export function findMobInAttackCone<T extends AttackTargetCandidate>(
   playerX: number,
   playerY: number,
   facing: CharacterPose['facing'],
-  maxDist: number,
+  rangeCells: number,
   mobs: T[],
 ): T | null {
   let best: T | null = null
-  let bestDist = maxDist
+  let bestDistTiles = rangeCells
 
   for (const mob of mobs) {
     if (!mob.alive) continue
     const dx = mob.x - playerX
     const dy = mob.y - playerY
-    const dist = Math.hypot(dx, dy)
-    if (dist > maxDist) continue
+    const distTiles = chebyshevDistanceTiles(playerX, playerY, mob.x, mob.y)
+    if (distTiles > rangeCells) continue
     if (!isInFacingCone(facing, dx, dy)) continue
-    if (dist < bestDist) {
-      bestDist = dist
+    if (distTiles <= bestDistTiles) {
+      bestDistTiles = distTiles
       best = mob
     }
   }
@@ -95,10 +121,25 @@ function mobInRange<T extends AttackTargetCandidate>(
   mob: T | null | undefined,
   playerX: number,
   playerY: number,
-  maxDist: number,
+  rangeCells: number,
 ): T | null {
   if (!mob?.alive) return null
-  if (distanceBetween(playerX, playerY, mob.x, mob.y) > maxDist) return null
+  if (!isWithinAttackRangeCells(playerX, playerY, mob.x, mob.y, rangeCells)) return null
+  return mob
+}
+
+function mobInConeAndRange<T extends AttackTargetCandidate>(
+  mob: T | null | undefined,
+  playerX: number,
+  playerY: number,
+  facing: CharacterPose['facing'],
+  rangeCells: number,
+): T | null {
+  if (!mob?.alive) return null
+  if (!isWithinAttackRangeCells(playerX, playerY, mob.x, mob.y, rangeCells)) return null
+  const dx = mob.x - playerX
+  const dy = mob.y - playerY
+  if (!isInFacingCone(facing, dx, dy)) return null
   return mob
 }
 
@@ -106,21 +147,26 @@ export function resolvePlayerAttackTarget<T extends AttackTargetCandidate>(ctx: 
   playerX: number
   playerY: number
   facing: CharacterPose['facing']
-  rangePx: number
+  rangeCells: number
   weaponClass: WeaponClass
   mobs: T[]
   chaseMob: T | null | undefined
   selectedMob: T | null | undefined
 }): T | null {
-  const { playerX, playerY, facing, rangePx, weaponClass, mobs, chaseMob, selectedMob } = ctx
+  const { playerX, playerY, facing, rangeCells, weaponClass, mobs, chaseMob, selectedMob } = ctx
 
   if (usesTargetedAttack(weaponClass)) {
-    const fromChase = mobInRange(chaseMob, playerX, playerY, rangePx)
+    const fromChase = mobInRange(chaseMob, playerX, playerY, rangeCells)
     if (fromChase) return fromChase
-    const fromSelected = mobInRange(selectedMob, playerX, playerY, rangePx)
+    const fromSelected = mobInRange(selectedMob, playerX, playerY, rangeCells)
     if (fromSelected) return fromSelected
     return null
   }
 
-  return findMobInAttackCone(playerX, playerY, facing, rangePx, mobs)
+  const fromChase = mobInConeAndRange(chaseMob, playerX, playerY, facing, rangeCells)
+  if (fromChase) return fromChase
+  const fromSelected = mobInConeAndRange(selectedMob, playerX, playerY, facing, rangeCells)
+  if (fromSelected) return fromSelected
+
+  return findMobInAttackCone(playerX, playerY, facing, rangeCells, mobs)
 }

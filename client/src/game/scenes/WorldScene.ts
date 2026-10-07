@@ -13,7 +13,7 @@ import {
 } from '../character/characterSessionBridge'
 import {
   SKILLS,
-  isMeleeSkillStub,
+  isPlayerEnemyCastSkill,
   selfBuffDurationMs,
   skillUsableByJob,
   type SkillDefinition,
@@ -46,7 +46,13 @@ import {
 } from '../combat/mapObstacles'
 import { initMobAiFields, provokeMob, updateMob } from '../combat/mobAi'
 import { logActivity } from '../activityLog'
-import { calcMobSkillVsPlayerDamage, calcMobVsPlayerDamage, calcPlayerVsMobDamage } from '../combat/damage'
+import {
+  calcMobSkillVsPlayerDamage,
+  calcMobVsPlayerDamage,
+  calcPlayerSkillVsMobDamage,
+  calcPlayerVsMobDamage,
+} from '../combat/damage'
+import { playSkillCastFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
 import { scaleMobExp } from '../combat/gameConfig'
@@ -58,9 +64,10 @@ import {
 } from '../combat/mobConfig'
 import {
   getEquippedWeaponClass,
+  getPlayerAttackRangeCells,
   getPlayerAttackRangePx,
+  isWithinPlayerAttackRange,
   resolvePlayerAttackTarget,
-  usesTargetedAttack,
 } from '../combat/playerAttackRange'
 import { appearanceFromCharacterRow } from '../character/characterAppearance'
 import { attackStyleForWeapon } from '../character/characterSpriteRegistry'
@@ -127,6 +134,8 @@ import { setDepthByFeet } from '../world/depthSort'
 import {
   PLAYER_NAME_OFFSET_BELOW,
   positionPlayerNameLabel,
+  positionSkillCalloutLabel,
+  styleSkillCalloutLabel,
   styleWorldNameLabel,
 } from '../world/worldNameLabel'
 import { pointInRect, rectsIntersect } from '../world/minimapGeometry'
@@ -207,6 +216,13 @@ export class WorldScene extends Phaser.Scene {
   private uiPointerLocked = false
   private currentCursor: GameCursor = 'default'
   private pendingSkill: { skillId: string; level: number; def: SkillDefinition } | null = null
+  private queuedSkillCast: {
+    skillId: string
+    level: number
+    def: SkillDefinition
+    mob: MobInstance
+  } | null = null
+  private skillCalloutTween: Phaser.Tweens.Tween | null = null
   private lastAttackAt = 0
   private isAttacking = false
   private isJumping = false
@@ -362,6 +378,12 @@ export class WorldScene extends Phaser.Scene {
     positionPlayerNameLabel(this.playerLabel, spawn.x, spawn.y)
     this.playerLabel.setVisible(true)
 
+    this.playerSkillCallout = this.add.text(spawn.x, spawn.y, '')
+    styleSkillCalloutLabel(this.playerSkillCallout)
+    positionSkillCalloutLabel(this.playerSkillCallout, spawn.x, spawn.y)
+    this.playerSkillCallout.setVisible(false)
+    this.playerSkillCallout.setAlpha(0)
+
     this.cameras.main.centerOn(spawn.x, spawn.y)
     this.cameras.main.startFollow(this.playerDisplay.container, true, 0.12, 0.12)
     this.cameras.main.setFollowOffset(0, 48)
@@ -434,6 +456,7 @@ export class WorldScene extends Phaser.Scene {
           return
         }
         this.chaseMob = null
+        this.queuedSkillCast = null
         this.setSelectedMob(null)
         this.setSelectedPlayer(null)
         this.requestWalkTo(wx, wy)
@@ -462,6 +485,7 @@ export class WorldScene extends Phaser.Scene {
       }),
       onGameEvent('uiPointerLock', (locked) => {
         this.uiPointerLocked = locked
+        this.refreshCursor()
       }),
       onGameEvent('minimapUi', ({ expanded }) => {
         this.minimapExpanded = expanded
@@ -594,11 +618,13 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private playerLabel!: Phaser.GameObjects.Text
+  private playerSkillCallout!: Phaser.GameObjects.Text
 
   private enterPlayerDeath(options?: { animate?: boolean }) {
     if (this.isPlayerDead || this.session.hp > 0) return
     this.isPlayerDead = true
     this.pendingSkill = null
+    this.queuedSkillCast = null
     if (this.isSitting) this.standUp()
     this.chaseMob = null
     this.isAttacking = false
@@ -748,8 +774,11 @@ export class WorldScene extends Phaser.Scene {
         next = 'mob'
       }
     }
+    const pendingCursor = Boolean(this.pendingSkill)
     if (next !== this.currentCursor) {
       this.currentCursor = next
+      this.applyGameCursor(next)
+    } else if (pendingCursor) {
       this.applyGameCursor(next)
     }
   }
@@ -768,8 +797,12 @@ export class WorldScene extends Phaser.Scene {
     const localY = this.playerDisplay.container.y
 
     positionPlayerNameLabel(this.playerLabel, localX, localY)
+    positionSkillCalloutLabel(this.playerSkillCallout, localX, localY)
     const localInView = entityInView(bounds, localX, localY)
     this.playerLabel.setVisible(localInView && !this.isPlayerDead)
+    if (!this.playerSkillCallout.visible || this.playerSkillCallout.alpha <= 0) {
+      this.playerSkillCallout.setVisible(localInView && !this.isPlayerDead)
+    }
 
     if (this.uiPointerLocked) {
       for (const entity of this.remotePlayers.values()) {
@@ -833,9 +866,27 @@ export class WorldScene extends Phaser.Scene {
     const px = this.playerDisplay.container.x
     const py = this.playerDisplay.container.y
     const dist = Phaser.Math.Distance.Between(px, py, mx, my)
-    const attackRange = this.playerAttackRangePx()
+    const inAttackRange = isWithinPlayerAttackRange(this.session.equipment, px, py, mx, my)
 
-    if (dist <= attackRange) {
+    const queued = this.queuedSkillCast
+    if (queued) {
+      if (!queued.mob.alive || queued.mob !== mob) {
+        this.queuedSkillCast = null
+        return
+      }
+      const skillRange = this.skillRangePx(queued.def)
+      if (dist <= skillRange) {
+        clearMoveTarget(this.moveTarget)
+        this.stopPlayerMotion()
+        this.faceToward(mx, my)
+        const cast = this.queuedSkillCast
+        this.queuedSkillCast = null
+        if (cast) {
+          this.executePlayerSkill(cast.skillId, cast.level, cast.def, cast.mob)
+        }
+        return
+      }
+    } else if (inAttackRange) {
       clearMoveTarget(this.moveTarget)
       this.stopPlayerMotion()
       this.faceToward(mx, my)
@@ -844,10 +895,11 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const mobShift = Math.hypot(mx - this.chasePathGoalX, my - this.chasePathGoalY)
+    const outOfStrikeRange = queued ? dist > this.skillRangePx(queued.def) : !inAttackRange
     const needRepath =
       now - this.lastChaseRepathAt >= 350 ||
       mobShift >= 48 ||
-      (!this.moveTarget.active && dist > attackRange + 8)
+      (!this.moveTarget.active && outOfStrikeRange)
 
     if (needRepath) {
       this.requestChaseMobPath(mob)
@@ -1099,6 +1151,7 @@ export class WorldScene extends Phaser.Scene {
     )
     setDepthByFeet(this.playerDisplay.container, playerFeet)
     setDepthByFeet(this.playerLabel, playerFeet + PLAYER_NAME_OFFSET_BELOW, 0.05)
+    setDepthByFeet(this.playerSkillCallout, playerFeet, 0.06)
     this.syncMountVisuals(playerFeet)
 
     for (const mob of this.mobs) {
@@ -1166,27 +1219,15 @@ export class WorldScene extends Phaser.Scene {
       this.trySelfBuffSkill(skillId, level, def)
       return
     }
-    if (def.target === 'enemy' && !this.hasAliveMobTarget()) {
+    if (def.target === 'enemy' || def.target === 'ground') {
       this.beginSkillTargeting(skillId, level, def)
-      return
-    }
-    if (def.target === 'ground') {
-      this.beginSkillTargeting(skillId, level, def)
-      return
-    }
-    if (isMeleeSkillStub(skillId)) {
-      this.tryBash(level, def.mpCost)
       return
     }
     emitGameEvent('status', `${def.name} (Lv ${level}) — not implemented yet`)
   }
 
-  private hasAliveMobTarget(): boolean {
-    const mob = this.chaseMob ?? this.selectedMob
-    return mob != null && mob.alive
-  }
-
   private beginSkillTargeting(skillId: string, level: number, def: SkillDefinition) {
+    this.queuedSkillCast = null
     this.pendingSkill = { skillId, level, def }
     emitGameEvent('status', `Select target for ${def.name} (Esc or right-click to cancel).`)
     this.refreshCursor()
@@ -1195,8 +1236,33 @@ export class WorldScene extends Phaser.Scene {
   private cancelSkillTargeting() {
     if (!this.pendingSkill) return
     this.pendingSkill = null
+    this.queuedSkillCast = null
     emitGameEvent('status', 'Skill cancelled.')
     this.refreshCursor()
+  }
+
+  private showSkillCallout(name: string, durationMs = 1200) {
+    this.skillCalloutTween?.stop()
+    this.playerSkillCallout.setText(name)
+    this.playerSkillCallout.setVisible(true)
+    this.playerSkillCallout.setAlpha(0)
+    this.tweens.add({
+      targets: this.playerSkillCallout,
+      alpha: 1,
+      duration: 120,
+      ease: 'Sine.easeOut',
+    })
+    this.skillCalloutTween = this.tweens.add({
+      targets: this.playerSkillCallout,
+      alpha: 0,
+      delay: durationMs - 280,
+      duration: 280,
+      ease: 'Sine.easeIn',
+      onComplete: () => {
+        this.playerSkillCallout.setVisible(false)
+        this.skillCalloutTween = null
+      },
+    })
   }
 
   private confirmSkillTargeting(wx: number, wy: number) {
@@ -1222,17 +1288,188 @@ export class WorldScene extends Phaser.Scene {
       return
     }
     if (this.isSitting) this.standUp()
+    this.queuedSkillCast = { skillId, level, def, mob }
     this.beginChaseMob(mob)
-    this.castSkillById(skillId, level, def)
+    if (
+      Phaser.Math.Distance.Between(
+        this.playerDisplay.container.x,
+        this.playerDisplay.container.y,
+        mob.sprite.x,
+        mob.sprite.y,
+      ) <= this.skillRangePx(def)
+    ) {
+      const cast = this.queuedSkillCast
+      this.queuedSkillCast = null
+      if (cast) {
+        this.executePlayerSkill(cast.skillId, cast.level, cast.def, cast.mob)
+      }
+    }
     this.refreshCursor()
   }
 
-  private castSkillById(skillId: string, level: number, def: SkillDefinition) {
-    if (isMeleeSkillStub(skillId)) {
-      this.tryBash(level, def.mpCost)
+  private skillRangePx(def: SkillDefinition): number {
+    return def.range > 0 ? def.range : getPlayerAttackRangePx(this.session.equipment)
+  }
+
+  private mobsInAoERadius(cx: number, cy: number, radius: number): MobInstance[] {
+    const hits: MobInstance[] = []
+    for (const mob of this.mobs) {
+      if (!mob.alive) continue
+      if (Phaser.Math.Distance.Between(cx, cy, mob.sprite.x, mob.sprite.y) <= radius) {
+        hits.push(mob)
+      }
+    }
+    return hits
+  }
+
+  private executePlayerSkill(
+    skillId: string,
+    skillLevel: number,
+    def: SkillDefinition,
+    primaryMob: MobInstance,
+  ) {
+    if (!isPlayerEnemyCastSkill(skillId)) {
+      emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — not implemented yet`)
       return
     }
-    emitGameEvent('status', `${def.name} (Lv ${level}) — not implemented yet`)
+
+    if (skillId === 'provoke') {
+      this.executeProvokeSkill(skillLevel, def, primaryMob)
+      return
+    }
+
+    this.runPlayerMeleeSkill(skillId, skillLevel, def, primaryMob)
+  }
+
+  private executeProvokeSkill(skillLevel: number, def: SkillDefinition, target: MobInstance) {
+    if (this.isPlayerDead || this.isSitting) return
+    const now = this.time.now
+    if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
+    if (!this.spendMp(def.mpCost)) return
+    if (!target.alive) return
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (
+      Phaser.Math.Distance.Between(px, py, target.sprite.x, target.sprite.y) > this.skillRangePx(def)
+    ) {
+      emitGameEvent('status', 'Target out of range.')
+      return
+    }
+
+    this.lastAttackAt = now
+    this.faceToward(target.sprite.x, target.sprite.y)
+    this.showSkillCallout(def.name)
+    playSkillCastFx(this, 'provoke', {
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      depth: this.playerDisplay.container.depth + 0.1,
+      targetX: target.sprite.x,
+      targetY: target.sprite.y,
+    })
+    provokeMob(target)
+    emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — target enraged.`)
+    logActivity('combat', `${def.name} Lv ${skillLevel} on Lv ${target.level} ${target.name}.`)
+    this.emitCharacterSheet()
+  }
+
+  private runPlayerMeleeSkill(
+    skillId: string,
+    skillLevel: number,
+    def: SkillDefinition,
+    primaryMob: MobInstance,
+  ) {
+    if (this.isPlayerDead || this.isSitting) return
+    const now = this.time.now
+    if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
+    if (!this.spendMp(def.mpCost)) return
+    if (!primaryMob.alive) return
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (
+      Phaser.Math.Distance.Between(px, py, primaryMob.sprite.x, primaryMob.sprite.y) >
+      this.skillRangePx(def)
+    ) {
+      emitGameEvent('status', 'Target out of range.')
+      return
+    }
+
+    this.lastAttackAt = now
+    this.isAttacking = true
+    this.stopPlayerMotion()
+    clearMoveTarget(this.moveTarget)
+    this.chaseMob = primaryMob
+    this.setSelectedMob(primaryMob)
+    this.faceToward(primaryMob.sprite.x, primaryMob.sprite.y)
+    this.showSkillCallout(def.name)
+
+    const skillLabel = def.name
+    const depth = this.playerDisplay.container.depth + 0.1
+    playSkillCastFx(this, skillId, {
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      depth,
+      targetX: primaryMob.sprite.x,
+      targetY: primaryMob.sprite.y,
+    })
+
+    this.sfx.playAttack()
+    this.broadcastPlayerAction(skillId === 'bash' ? 'bash' : 'basic_attack')
+    const weaponClass = getEquippedWeaponClass(this.session.equipment)
+    const attackStyle =
+      skillId === 'pierce' || skillId === 'spear_stab' || skillId === 'spear_boomerang'
+        ? 'thrust'
+        : attackStyleForWeapon(weaponClass)
+
+    startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
+      variant: skillId === 'bash' || skillId === 'bowling_bash' ? 'bash' : 'basic',
+      attackStyle,
+      onStrike: () => {
+        const applyHit = (mob: MobInstance) => {
+          const mobDef = MOB_DEFS[mob.defId]
+          if (!mobDef) return
+          const base = this.calcPlayerVsMobDamageForSession(mobDef)
+          const { damage, hit, critical } = calcPlayerSkillVsMobDamage(base, skillId, skillLevel)
+          if (!hit || damage <= 0) {
+            showFloatingText(this, mob.sprite.x, mob.sprite.y - 40, 'MISS', 'miss')
+            this.sfx.playMiss()
+            this.broadcastMobMissAt(mob.spawnIndex, mob.sprite.x, mob.sprite.y - 40)
+            logActivity('combat', `${skillLabel} missed Lv ${mob.level} ${mob.name}.`)
+            return
+          }
+          this.applyDamageToMob(mob, damage, mobDef, skillLabel, { critical })
+        }
+
+        if (skillId === 'brandish_spear' || skillId === 'bowling_bash') {
+          const radius = skillId === 'bowling_bash' ? 64 : 56
+          const centerX = primaryMob.sprite.x
+          const centerY = primaryMob.sprite.y
+          const victims = this.mobsInAoERadius(centerX, centerY, radius)
+          if (victims.length === 0) {
+            applyHit(primaryMob)
+          } else {
+            for (const mob of victims) applyHit(mob)
+          }
+        } else {
+          if (!primaryMob.alive) {
+            const pos = missTextPosition(px, py, this.facing)
+            showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
+            this.sfx.playMiss()
+            logActivity('combat', `${skillLabel} missed.`)
+            this.emitCharacterSheet()
+            return
+          }
+          applyHit(primaryMob)
+        }
+        this.emitCharacterSheet()
+      },
+      onComplete: () => {
+        this.isAttacking = false
+      },
+    })
   }
 
   private tickActiveRental(wallNow: number) {
@@ -1348,6 +1585,15 @@ export class WorldScene extends Phaser.Scene {
       durationMs,
     })
     const seconds = Math.ceil(durationMs / 1000)
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    this.showSkillCallout(def.name)
+    playSkillCastFx(this, skillId, {
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      depth: this.playerDisplay.container.depth + 0.1,
+    })
     emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — ${seconds}s`)
     logActivity('character', `${def.name} Lv ${skillLevel} (${seconds}s).`)
     this.emitPlayerBuffs()
@@ -1376,6 +1622,15 @@ export class WorldScene extends Phaser.Scene {
       skillLevel,
       now: wallNow,
       expiresAt: Number.POSITIVE_INFINITY,
+    })
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    this.showSkillCallout(def.name)
+    playSkillCastFx(this, skillId, {
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      depth: this.playerDisplay.container.depth + 0.1,
     })
     emitGameEvent('status', 'Riding Peco Peco.')
     logActivity('character', `${def.name} Lv ${skillLevel} — mounted.`)
@@ -1432,70 +1687,6 @@ export class WorldScene extends Phaser.Scene {
     }
     this.session = { ...this.session, mp: this.session.mp - cost }
     return true
-  }
-
-  private tryBash(skillLevel: number, mpCost: number) {
-    if (this.isPlayerDead || this.isSitting) return
-    const now = this.time.now
-    if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
-    if (!this.spendMp(mpCost)) return
-    this.lastAttackAt = now
-    this.isAttacking = true
-    this.stopPlayerMotion()
-    clearMoveTarget(this.moveTarget)
-
-    this.sfx.playAttack()
-    this.broadcastPlayerAction('bash')
-    const weaponClass = getEquippedWeaponClass(this.session.equipment)
-    if (usesTargetedAttack(weaponClass)) {
-      const preTarget = this.chaseMob ?? this.selectedMob
-      if (preTarget?.alive) this.faceToward(preTarget.sprite.x, preTarget.sprite.y)
-    }
-    startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
-      variant: 'bash',
-      attackStyle: attackStyleForWeapon(weaponClass),
-      onStrike: () => {
-        const target = this.resolveAttackTargetMob()
-        if (!target) {
-          const pos = missTextPosition(
-            this.playerDisplay.container.x,
-            this.playerDisplay.container.y,
-            this.facing,
-          )
-          showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
-          this.sfx.playMiss()
-          this.broadcastMobMissAt(undefined, pos.x, pos.y)
-          logActivity('combat', 'Bash missed.')
-          this.emitCharacterSheet()
-          return
-        }
-
-        const def = MOB_DEFS[target.defId]
-        if (!def) {
-          this.emitCharacterSheet()
-          return
-        }
-        const { damage: baseDamage, hit, critical } = this.calcPlayerVsMobDamageForSession(def)
-        const damage =
-          hit && baseDamage > 0
-            ? Math.max(1, Math.floor(baseDamage * (1 + skillLevel * 0.15)) + skillLevel * 3)
-            : 0
-        if (!hit || damage <= 0) {
-          showFloatingText(this, target.sprite.x, target.sprite.y - 40, 'MISS', 'miss')
-          this.sfx.playMiss()
-          this.broadcastMobMissAt(target.spawnIndex, target.sprite.x, target.sprite.y - 40)
-          logActivity('combat', `Bash missed Lv ${target.level} ${target.name}.`)
-          this.emitCharacterSheet()
-          return
-        }
-
-        this.applyDamageToMob(target, damage, def, 'Bash', { critical })
-        this.emitCharacterSheet()
-      },
-      onComplete: () => {
-        this.isAttacking = false
-      },
-    })
   }
 
   private applyDamageToMob(
@@ -2041,6 +2232,7 @@ export class WorldScene extends Phaser.Scene {
     if (this.isPlayerDead || this.isSitting) return
     const now = this.time.now
     if (now - this.lastAttackAt < ATTACK_COOLDOWN_MS || this.isAttacking || this.isJumping) return
+    if (this.hasFocusedMobTarget() && !this.resolveAttackTargetMob()) return
     this.lastAttackAt = now
     this.isAttacking = true
     this.stopPlayerMotion()
@@ -2049,10 +2241,8 @@ export class WorldScene extends Phaser.Scene {
     this.sfx.playAttack()
     this.broadcastPlayerAction('basic_attack')
     const weaponClass = getEquippedWeaponClass(this.session.equipment)
-    if (usesTargetedAttack(weaponClass)) {
-      const preTarget = this.chaseMob ?? this.selectedMob
-      if (preTarget?.alive) this.faceToward(preTarget.sprite.x, preTarget.sprite.y)
-    }
+    const preTarget = this.chaseMob ?? this.selectedMob
+    if (preTarget?.alive) this.faceToward(preTarget.sprite.x, preTarget.sprite.y)
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       attackStyle: attackStyleForWeapon(weaponClass),
@@ -2090,8 +2280,8 @@ export class WorldScene extends Phaser.Scene {
     })
   }
 
-  private playerAttackRangePx(): number {
-    return getPlayerAttackRangePx(this.session.equipment)
+  private hasFocusedMobTarget(): boolean {
+    return Boolean(this.chaseMob?.alive || this.selectedMob?.alive)
   }
 
   private resolveAttackTargetMob(): MobInstance | null {
@@ -2119,7 +2309,7 @@ export class WorldScene extends Phaser.Scene {
       playerX: px,
       playerY: py,
       facing: this.facing,
-      rangePx: this.playerAttackRangePx(),
+      rangeCells: getPlayerAttackRangeCells(this.session.equipment),
       weaponClass,
       mobs,
       chaseMob: chase,

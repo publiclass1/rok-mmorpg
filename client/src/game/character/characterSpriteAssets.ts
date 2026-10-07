@@ -56,7 +56,7 @@ function drawWeapon(
   const torsoTop = feetY - 28
   let wx = cx
   let wy = torsoTop + 6
-  const bladeLen = style === 'swing' ? 14 : style === 'thrust' ? 18 : style === 'bow' ? 12 : 10
+  const bladeLen = style === 'swing' ? 14 : style === 'thrust' ? 22 : style === 'bow' ? 12 : 10
 
   if (facing === 'right') {
     wx = cx + bodyW / 2 + (phase === 0 ? -4 : phase === 1 ? 10 : 6)
@@ -132,7 +132,26 @@ function drawArms(
   if (attack) {
     const p = attack.phase
     g.fillStyle(skin, 1)
-    if (facing === 'down') {
+    if (attack.style === 'thrust') {
+      if (facing === 'down') {
+        g.fillRect(cx - bodyW / 2 - armW, torsoTop + 2, armW, armH)
+        g.fillRect(cx + bodyW / 2 - 2, torsoTop + (p === 1 ? 8 : 2), armW, armH + (p === 1 ? 4 : 0))
+      } else if (facing === 'left') {
+        g.fillRect(cx - bodyW / 2 - (p === 1 ? 10 : 2), torsoTop + 4, armW + (p === 1 ? 6 : 0), armH)
+        g.fillRect(cx + bodyW / 2 - 6, torsoTop + 6, armW, armH - 2)
+      } else if (facing === 'right') {
+        g.fillRect(cx - bodyW / 2 + 2, torsoTop + 6, armW, armH - 2)
+        g.fillRect(
+          cx + bodyW / 2 - armW + (p === 1 ? 6 : 0),
+          torsoTop + 4,
+          armW + (p === 1 ? 6 : 0),
+          armH,
+        )
+      } else {
+        g.fillRect(cx - bodyW / 2 + 1, torsoTop + 4, armW - 1, armH - 2)
+        g.fillRect(cx + bodyW / 2 - armW, torsoTop + (p === 1 ? -4 : 4), armW - 1, armH - 2)
+      }
+    } else if (facing === 'down') {
       g.fillRect(cx - bodyW / 2 - armW, torsoTop + (p === 0 ? 0 : 4), armW, armH)
       g.fillRect(cx + bodyW / 2 + 1, torsoTop + (p === 1 ? -2 : 2), armW, armH)
     } else if (facing === 'left') {
