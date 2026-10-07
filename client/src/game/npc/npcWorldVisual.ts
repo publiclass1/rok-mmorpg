@@ -2,11 +2,7 @@ import Phaser from 'phaser'
 import type { NpcRow } from '../../types/database'
 import type { Facing } from '../movement/clickToMove'
 import { registerNpcIdleAnimations, animKey } from '../character/characterSpriteAnim'
-import {
-  getNpcSpriteDef,
-  npcTextureKey,
-  resolveNpcSpriteKey,
-} from '../character/characterSpriteRegistry'
+import { npcTextureKey, resolveNpcSpriteDef } from '../character/characterSpriteRegistry'
 import { styleWorldNameLabel } from '../world/worldNameLabel'
 import {
   GUILD_BADGE_OFFSET_Y,
@@ -61,8 +57,7 @@ export function syncNpcGuildBadgePosition(visual: NpcWorldVisual) {
 
 export function createNpcWorldVisual(scene: Phaser.Scene, npc: NpcRow): NpcWorldVisual {
   const feetY = npc.y + 18
-  const spriteKey = resolveNpcSpriteKey(npc)
-  const def = spriteKey ? getNpcSpriteDef(spriteKey) : null
+  const def = resolveNpcSpriteDef(npc)
   const facing = ((npc.config as { facing?: Facing }).facing ?? 'down') as Facing
   const guildParts = addGuildBadge(scene, npc, feetY)
 

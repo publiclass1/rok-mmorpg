@@ -156,11 +156,55 @@ export function listNpcSpriteDefs(): CharacterSpriteDef[] {
   return Object.values(NPC_SPRITES)
 }
 
+export const DEFAULT_NPC_SPRITE_KEY = 'merchant'
+
+const NPC_ROW_TYPES: NpcRow['npc_type'][] = [
+  'teleport',
+  'storage',
+  'save',
+  'job_master',
+  'shop',
+  'healer',
+  'dungeon',
+  'rental',
+]
+
+function normalizeNpcRowType(npcType: string): NpcRow['npc_type'] | null {
+  const t = npcType.trim().toLowerCase()
+  return NPC_ROW_TYPES.includes(t as NpcRow['npc_type']) ? (t as NpcRow['npc_type']) : null
+}
+
+/** Resolve a config override or npc type string to a registry sprite key. */
+function spriteKeyFromAlias(raw: string): string | null {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  if (getNpcSpriteDef(trimmed)) return trimmed
+  const asType = normalizeNpcRowType(trimmed)
+  if (asType) {
+    const archetype = npcArchetypeFromNpcType(asType)
+    if (archetype) return archetype
+  }
+  return null
+}
+
 export function resolveNpcSpriteKey(npc: NpcRow): string | null {
-  const fromConfig = (npc.config as { spriteKey?: string }).spriteKey
-  if (fromConfig) return fromConfig
-  const archetype = npcArchetypeFromNpcType(npc.npc_type)
+  const configKey = (npc.config as { spriteKey?: string }).spriteKey?.trim()
+  if (configKey) {
+    const fromConfig = spriteKeyFromAlias(configKey)
+    if (fromConfig) return fromConfig
+  }
+  const rowType = normalizeNpcRowType(npc.npc_type) ?? npc.npc_type
+  const archetype = npcArchetypeFromNpcType(rowType)
   return archetype ?? null
+}
+
+export function resolveNpcSpriteDef(npc: NpcRow): CharacterSpriteDef | null {
+  const key = resolveNpcSpriteKey(npc)
+  if (key) {
+    const def = getNpcSpriteDef(key)
+    if (def) return def
+  }
+  return getNpcSpriteDef(DEFAULT_NPC_SPRITE_KEY)
 }
 
 export function stripFrameIndex(

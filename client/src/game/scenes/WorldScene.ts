@@ -207,6 +207,7 @@ export class WorldScene extends Phaser.Scene {
   private obstacles: Phaser.GameObjects.Rectangle[] = []
   private collisionLayer: Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer | null = null
   private portalWarpCooldownUntil = 0
+  private worldPersistDisabled = false
   private sfx = new SfxPlayer()
   private socialPresence: SocialPresencePayload = {}
   private partySync: PartySyncPayload = {
@@ -2240,7 +2241,10 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private async persistWorldState() {
-    await saveCharacterWorldPosition(this.character.id, this.getPlayerPosition())
+    if (this.worldPersistDisabled || !this.sys.isActive()) return
+    const world = this.getPlayerPosition()
+    await saveCharacterWorldPosition(this.character.id, world)
+    if (this.worldPersistDisabled || !this.sys.isActive()) return
   }
 
   getNearestNpc() {
@@ -2256,6 +2260,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   shutdown() {
+    this.worldPersistDisabled = true
     this.minimapExpanded = false
     this.eventUnsubs.forEach((u) => u())
     this.eventUnsubs = []

@@ -100,22 +100,36 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   positionRef.current = position
   const characterRef = useRef(character)
   characterRef.current = character
+
+  useEffect(() => {
+    setPosition((prev) =>
+      prev.mapId === character.map_id ? prev : { ...prev, mapId: character.map_id },
+    )
+  }, [character.map_id])
+
   const pendingZenySaveRef = useRef(0)
   const zenySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const destroyActiveGame = useCallback(() => {
+    const game = gameRef.current
+    if (!game) return
+    game.destroy(true)
+    gameRef.current = null
+    hostRef.current?.replaceChildren()
+  }, [])
 
   const flushZenyToDb = useCallback(async () => {
     if (pendingZenySaveRef.current <= 0) return
     pendingZenySaveRef.current = 0
     const zeny = characterRef.current.zeny
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('characters')
       .update({ zeny })
       .eq('id', characterRef.current.id)
-      .select()
-      .single()
-    if (!error && data) {
-      characterRef.current = data as CharacterRow
-      onCharacterUpdated(data as CharacterRow)
+    if (!error) {
+      const updated: CharacterRow = { ...characterRef.current, zeny }
+      characterRef.current = updated
+      onCharacterUpdated(updated)
     }
   }, [onCharacterUpdated])
   const [status, setStatus] = useState('')
@@ -557,7 +571,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     const unsubs = [
       onGameEvent('npcNearby', setNearbyNpc),
       onGameEvent('npcInteract', (npc) => setNpcMenu(npc)),
-      onGameEvent('position', setPosition),
+      onGameEvent('position', ({ x, y }) => {
+        setPosition((prev) => ({ ...prev, x, y }))
+      }),
       onGameEvent('status', setStatus),
       onGameEvent('remotePlayers', setRemotePlayers),
       onGameEvent('characterSheet', (payload) => {
@@ -627,6 +643,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       throw new Error(error?.message ?? 'Respawn failed')
     }
     setPosition({ x: save.x, y: save.y, mapId: save.mapId })
+    if (!sameMap) destroyActiveGame()
     onCharacterUpdated(data as CharacterRow)
     dispatchCharacterAction({ type: 'respawnPartial' })
     if (sameMap) {
@@ -651,6 +668,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             y: payload.y,
             portalId: payload.portalId,
           })
+          destroyActiveGame()
           setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
           onCharacterUpdated(res.character)
           emitGameEvent('status', `Warped to ${payload.label}`)
@@ -663,7 +681,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     return () => {
       unsub()
     }
-  }, [character.id, onCharacterUpdated])
+  }, [character.id, onCharacterUpdated, destroyActiveGame])
 
   useEffect(() => {
     if (!sessionReady || !npcsReady) return
@@ -839,7 +857,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             setMessage(error?.message ?? 'Payment failed')
             return
           }
-          onCharacterUpdated(data as CharacterRow)
+          const paid: CharacterRow = { ...characterRef.current, zeny: data.zeny }
+          characterRef.current = paid
+          onCharacterUpdated(paid)
         }
         dispatchCharacterAction({ type: 'restoreVitals' })
         setMessage('HP and SP fully restored.')
@@ -877,6 +897,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           npcId: npc.id,
           destinationMapId: choice.destinationMapId,
         })
+        destroyActiveGame()
         setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
         onCharacterUpdated(res.character)
         emitGameEvent('status', `Warped to ${choice.label}`)
@@ -909,6 +930,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           emitGameEvent('dungeonSync', sync)
         }
         if (res.character) {
+          destroyActiveGame()
           setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
           onCharacterUpdated(res.character)
         }
