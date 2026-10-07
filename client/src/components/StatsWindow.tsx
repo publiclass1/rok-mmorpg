@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { BASE_PRIMARY_STAT, type PrimaryStat } from '../game/character/characterState'
+import { sessionFromSheetPayload } from '../game/character/characterSheet'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
+import { getCharacterSession, setCharacterSession } from '../game/character/characterSessionBridge'
 import { STAT_RESET_ZENY_COST } from '../game/character/statFormulas'
 import { emitGameEvent, type CharacterSheetPayload } from '../game/events'
 import { supabase } from '../lib/supabase'
@@ -66,6 +68,10 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
     }
     setBusy(true)
     try {
+      setCharacterSession(sessionFromSheetPayload(sheet, getCharacterSession()))
+      const resetOk = dispatchCharacterAction({ type: 'resetStats' })
+      if (!resetOk) return
+
       const { data, error } = await supabase
         .from('characters')
         .update({ zeny: character.zeny - STAT_RESET_ZENY_COST })
@@ -77,7 +83,6 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
         return
       }
       onCharacterUpdated(data as CharacterRow)
-      dispatchCharacterAction({ type: 'resetStats' })
     } finally {
       setBusy(false)
     }
@@ -108,6 +113,8 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
         {sheet.statPointsUnspent === 0 && (
           <span className="stats-window__meta-sep">· level up for more</span>
         )}
+        <span className="stats-window__meta-sep">·</span>
+        Reset clears base stats; eff and combat stats include gear
       </p>
 
       <div className="stats-window__body two-col">

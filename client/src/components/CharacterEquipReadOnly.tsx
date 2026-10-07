@@ -68,12 +68,20 @@ function EquipSlotCell({ slot, itemId, compact, onUnequip }: SlotCellProps) {
 type Props = {
   equipment: Record<EquipSlot, string | null>
   appearance?: CharacterAppearance
+  jobId?: string
   compact?: boolean
   centerClassName?: string
   onUnequip?: (slot: EquipSlot) => void
 }
 
-export function CharacterEquipReadOnly({ equipment, appearance, compact, centerClassName, onUnequip }: Props) {
+export function CharacterEquipReadOnly({
+  equipment,
+  appearance,
+  jobId,
+  compact,
+  centerClassName,
+  onUnequip,
+}: Props) {
   return (
     <div className={`equipment-ro-layout${compact ? ' equipment-ro-layout--compact' : ''}`}>
       <div className="equipment-ro-col equipment-ro-col--left">
@@ -90,7 +98,7 @@ export function CharacterEquipReadOnly({ equipment, appearance, compact, centerC
       <div
         className={`equipment-ro-center char-select-character-center${centerClassName ? ` ${centerClassName}` : ''}`}
       >
-        <CharacterEquipPreview equipment={equipment} appearance={appearance} size="lg" />
+        <CharacterEquipPreview equipment={equipment} appearance={appearance} jobId={jobId} size="lg" />
       </div>
       <div className="equipment-ro-col equipment-ro-col--right">
         {EQUIP_RIGHT_SLOTS.map((slot) => (

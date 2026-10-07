@@ -1,9 +1,12 @@
 import assert from 'node:assert'
 import type { NpcRow } from '../../types/database'
+import { DEFAULT_CHARACTER_APPEARANCE } from './characterAppearance'
 import {
   getNpcSpriteDef,
+  playerMasterTextureKey,
   resolveNpcSpriteDef,
   resolveNpcSpriteKey,
+  resolvePlayerSpriteDef,
 } from './characterSpriteRegistry'
 
 const NPC_TYPES: NpcRow['npc_type'][] = [
@@ -51,6 +54,12 @@ function run() {
 
   const trimmedType = baseNpc({ npc_type: '  RENTAL  ' as NpcRow['npc_type'] })
   assert.equal(resolveNpcSpriteKey(trimmedType), 'rental_clerk')
+
+  const swordman = resolvePlayerSpriteDef(DEFAULT_CHARACTER_APPEARANCE, 'swordman')
+  const knight = resolvePlayerSpriteDef(DEFAULT_CHARACTER_APPEARANCE, 'knight')
+  assert.notEqual(swordman.masterTextureKey, knight.masterTextureKey)
+  assert.equal(swordman.masterTextureKey, playerMasterTextureKey(false, 'swordman'))
+  assert.equal(knight.masterTextureKey, playerMasterTextureKey(false, 'knight'))
 
   console.log('characterSpriteRegistry.test.ts: ok')
 }

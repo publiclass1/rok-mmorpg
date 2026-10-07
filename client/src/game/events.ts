@@ -176,6 +176,7 @@ export type GameEvents = {
   characterAction: CharacterActionPayload
   uiPointerLock: boolean
   uiKeyboardLock: boolean
+  chatBubble: { characterId: string; text: string }
   selectedMob: SelectedMobPayload | null
   activityLog: ActivityLogEntry
   sessionSync: CharacterSessionState

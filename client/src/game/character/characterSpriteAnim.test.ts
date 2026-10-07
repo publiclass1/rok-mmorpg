@@ -1,9 +1,10 @@
 import assert from 'node:assert'
 import { defaultCharacterPose } from './characterPose'
 import { poseToFrameIndex } from './characterSpriteAnim'
-import { PLAYER_SPRITE_MALE } from './characterSpriteRegistry'
+import { DEFAULT_CHARACTER_APPEARANCE } from './characterAppearance'
+import { resolvePlayerSpriteDef } from './characterSpriteRegistry'
 
-const def = PLAYER_SPRITE_MALE
+const def = resolvePlayerSpriteDef(DEFAULT_CHARACTER_APPEARANCE, 'novice')
 
 const sitFrame = poseToFrameIndex(def, { ...defaultCharacterPose('down'), anim: 'sit' })
 

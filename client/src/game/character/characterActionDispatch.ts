@@ -2,6 +2,7 @@ import { logActivity } from '../activityLog'
 import type { CharacterSheetPayload } from '../events'
 import { emitGameEvent, type CharacterActionPayload } from '../events'
 import { applyCharacterAction, publishSessionState } from './applyCharacterAction'
+import { getCharacterSession, setCharacterSession } from './characterSessionBridge'
 import type { CharacterSessionState } from './characterState'
 
 type DispatchContext = {
@@ -18,13 +19,13 @@ export function registerCharacterActionContext(next: DispatchContext | null) {
 }
 
 /** Apply UI character actions (stats, skills, equip) — single entry point from React modals. */
-export function dispatchCharacterAction(action: CharacterActionPayload) {
+export function dispatchCharacterAction(action: CharacterActionPayload): boolean {
   if (!context) {
     emitGameEvent('characterAction', action)
-    return
+    return false
   }
 
-  const result = applyCharacterAction(context.getSession(), action)
+  const result = applyCharacterAction(getCharacterSession(), action)
   if (!result.changed) {
     if (result.message) {
       emitGameEvent('status', result.message)
@@ -39,21 +40,32 @@ export function dispatchCharacterAction(action: CharacterActionPayload) {
         logActivity('character', result.message)
       }
     }
-    return
+    return false
   }
 
-  context.setSession(result.state)
-  const { sheet } = publishSessionState(result.state)
+  setCharacterSession(result.state)
+  const synced = getCharacterSession()
+  const { sheet } = publishSessionState(synced)
   context.setSheet(sheet)
-  emitGameEvent('sessionSync', result.state)
+  emitGameEvent('sessionSync', structuredClone(synced))
+  emitGameEvent('characterSheet', sheet)
   if (
     action.type === 'changeJob' ||
     action.type === 'assignSkillBar' ||
-    action.type === 'moveSkillBar'
+    action.type === 'moveSkillBar' ||
+    action.type === 'resetStats' ||
+    action.type === 'resetSkills' ||
+    action.type === 'learnSkill' ||
+    action.type === 'raiseStat'
   ) {
-    context.persistSession?.(result.state)
+    context.persistSession?.(synced)
   }
-  if (result.message && action.type === 'changeJob') {
+  if (
+    result.message &&
+    (action.type === 'changeJob' || action.type === 'resetStats' || action.type === 'resetSkills')
+  ) {
     emitGameEvent('status', result.message)
+    logActivity('character', result.message)
   }
+  return true
 }

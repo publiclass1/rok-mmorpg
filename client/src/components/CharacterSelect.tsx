@@ -175,6 +175,7 @@ export function CharacterSelect({ onSelect, onLogout }: Props) {
                   <CharacterEquipReadOnly
                     equipment={selectedEntry.equipment}
                     appearance={appearanceFromCharacterRow(selectedEntry.character)}
+                    jobId={selectedEntry.jobId}
                     compact
                     centerClassName="char-select-preview-bg"
                   />

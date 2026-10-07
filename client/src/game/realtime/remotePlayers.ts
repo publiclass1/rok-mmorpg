@@ -8,8 +8,7 @@ import {
   syncPecoMountGfx,
   type PecoMountGfx,
 } from '../player/pecoMountVisual'
-import { resolveJobAvatarKey } from '../player/playerJobAvatar'
-import type { PlayerAvatarKey } from '../player/playerJobAvatar'
+import { resolveJobAvatarKey, type PlayerAvatarKey } from '../player/playerJobAvatar'
 import {
   createPlayerDisplay,
   playPlayerAnim,
@@ -23,6 +22,7 @@ import {
 import { attackStyleForWeapon } from '../character/characterSpriteRegistry'
 import { getEquippedWeaponClass } from '../combat/playerAttackRange'
 import { startPlayerAttackAnim } from '../player/playerCombatAnim'
+import { createPlayerChatBubble, type PlayerChatBubble } from '../world/playerChatBubble'
 import { positionPlayerNameLabel, styleWorldNameLabel } from '../world/worldNameLabel'
 import type { MapCombatSkillId } from './mapCombatTypes'
 import type { SfxPlayer } from '../combat/sfx'
@@ -44,6 +44,7 @@ export type RemotePlayerEntity = {
   display: PlayerDisplay
   pecoMountGfx: PecoMountGfx
   label: Phaser.GameObjects.Text
+  chatBubble: PlayerChatBubble
   targetX: number
   targetY: number
   lastPayload: PlayerPresencePayload
@@ -92,10 +93,13 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
   positionPlayerNameLabel(label, payload.x, payload.y)
   label.setVisible(false)
 
+  const chatBubble = createPlayerChatBubble(scene)
+
   const entity: RemotePlayerEntity = {
     display,
     pecoMountGfx,
     label,
+    chatBubble,
     targetX: payload.x,
     targetY: payload.y,
     lastPayload: payload,
@@ -163,6 +167,7 @@ export function tickRemotePlayer(entity: RemotePlayerEntity, now: number, smooth
 }
 
 export function destroyRemotePlayer(entity: RemotePlayerEntity) {
+  entity.chatBubble.destroy()
   entity.label.destroy()
   entity.display.container.destroy()
 }

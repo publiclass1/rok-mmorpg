@@ -46,6 +46,7 @@ import {
 } from '../combat/mapObstacles'
 import { initMobAiFields, provokeMob, updateMob } from '../combat/mobAi'
 import { logActivity } from '../activityLog'
+import { isChatStripInputFocused } from '../chatInputFocus'
 import {
   calcMobSkillVsPlayerDamage,
   calcMobVsPlayerDamage,
@@ -133,6 +134,12 @@ import { findPortalAtPoint } from '../world/mapPortals'
 import { decorFootprintRects } from '../../lib/mapDecor/decorFootprints'
 import { preloadMapDecor, spawnMapDecor } from '../world/spawnMapDecor'
 import { setDepthByFeet } from '../world/depthSort'
+import {
+  chatBubbleDurationMs,
+  createPlayerChatBubble,
+  positionPlayerChatBubbleAtFeet,
+  type PlayerChatBubble,
+} from '../world/playerChatBubble'
 import {
   PLAYER_NAME_OFFSET_BELOW,
   positionPlayerNameLabel,
@@ -393,6 +400,8 @@ export class WorldScene extends Phaser.Scene {
     this.playerSkillCallout.setVisible(false)
     this.playerSkillCallout.setAlpha(0)
 
+    this.playerChatBubble = createPlayerChatBubble(this)
+
     this.cameras.main.centerOn(spawn.x, spawn.y)
     this.cameras.main.startFollow(this.playerDisplay.container, true, 0.12, 0.12)
     this.cameras.main.setFollowOffset(0, 48)
@@ -504,7 +513,13 @@ export class WorldScene extends Phaser.Scene {
       }),
       onGameEvent('uiKeyboardLock', (locked) => {
         this.uiKeyboardLocked = locked
-        if (locked) this.input.keyboard?.resetKeys()
+        const kb = this.input.keyboard
+        if (!kb) return
+        kb.enabled = !locked
+        kb.resetKeys()
+      }),
+      onGameEvent('chatBubble', ({ characterId, text }) => {
+        this.showChatBubbleForCharacter(characterId, text)
       }),
       onGameEvent('minimapUi', ({ expanded }) => {
         this.minimapExpanded = expanded
@@ -638,6 +653,27 @@ export class WorldScene extends Phaser.Scene {
 
   private playerLabel!: Phaser.GameObjects.Text
   private playerSkillCallout!: Phaser.GameObjects.Text
+  private playerChatBubble!: PlayerChatBubble
+
+  private showChatBubbleForCharacter(characterId: string, text: string) {
+    const duration = chatBubbleDurationMs(text)
+    if (characterId === this.character.id) {
+      this.playerChatBubble.show(text, duration)
+      const bounds = viewBoundsWithMargin(this.cameras.main)
+      const x = this.playerDisplay.container.x
+      const y = this.playerDisplay.container.y
+      positionPlayerChatBubbleAtFeet(this.playerChatBubble, x, this.playerFeetY())
+      const inView = entityInView(bounds, x, y)
+      this.playerChatBubble.container.setVisible(inView && !this.isPlayerDead)
+      return
+    }
+    const entity = this.remotePlayers.get(characterId)
+    if (!entity) return
+    entity.chatBubble.show(text, duration)
+    const c = entity.display.container
+    positionPlayerChatBubbleAtFeet(entity.chatBubble, c.x, c.y + PLAYER_FEET_OFFSET)
+    if (entity.inViewport) entity.chatBubble.container.setVisible(true)
+  }
 
   private enterPlayerDeath(options?: { animate?: boolean }) {
     if (this.isPlayerDead || this.session.hp > 0) return
@@ -714,6 +750,7 @@ export class WorldScene extends Phaser.Scene {
 
     if (
       !this.uiKeyboardLocked &&
+      !isChatStripInputFocused() &&
       !this.isPlayerDead &&
       !this.isSitting &&
       Phaser.Input.Keyboard.JustDown(this.spaceKey)
@@ -820,12 +857,19 @@ export class WorldScene extends Phaser.Scene {
     const localX = this.playerDisplay.container.x
     const localY = this.playerDisplay.container.y
 
+    const localFeetY = this.playerFeetY()
     positionPlayerNameLabel(this.playerLabel, localX, localY)
     positionSkillCalloutLabel(this.playerSkillCallout, localX, localY)
+    positionPlayerChatBubbleAtFeet(this.playerChatBubble, localX, localFeetY)
     const localInView = entityInView(bounds, localX, localY)
     this.playerLabel.setVisible(localInView && !this.isPlayerDead)
     if (!this.playerSkillCallout.visible || this.playerSkillCallout.alpha <= 0) {
       this.playerSkillCallout.setVisible(localInView && !this.isPlayerDead)
+    }
+    if (this.playerChatBubble.isShowing()) {
+      this.playerChatBubble.container.setVisible(localInView && !this.isPlayerDead)
+    } else {
+      this.playerChatBubble.container.setVisible(false)
     }
 
     if (this.uiPointerLocked) {
@@ -838,8 +882,13 @@ export class WorldScene extends Phaser.Scene {
     const hoveredRemote = this.findRemotePlayerAt(px, py)
     for (const entity of this.remotePlayers.values()) {
       const c = entity.display.container
+      const feetY = c.y + PLAYER_FEET_OFFSET
       positionPlayerNameLabel(entity.label, c.x, c.y)
+      positionPlayerChatBubbleAtFeet(entity.chatBubble, c.x, feetY)
       entity.label.setVisible(entity.inViewport && entity === hoveredRemote)
+      if (entity.chatBubble.isShowing()) {
+        entity.chatBubble.container.setVisible(entity.inViewport)
+      }
     }
   }
 
@@ -1178,6 +1227,7 @@ export class WorldScene extends Phaser.Scene {
     setDepthByFeet(this.playerDisplay.container, playerFeet)
     setDepthByFeet(this.playerLabel, playerFeet + PLAYER_NAME_OFFSET_BELOW, 0.05)
     setDepthByFeet(this.playerSkillCallout, playerFeet, 0.06)
+    setDepthByFeet(this.playerChatBubble.container, playerFeet, 0.07)
     this.syncMountVisuals(playerFeet)
 
     for (const mob of this.mobs) {
@@ -1202,6 +1252,7 @@ export class WorldScene extends Phaser.Scene {
       const feet = entity.display.container.y + PLAYER_FEET_OFFSET
       setDepthByFeet(entity.display.container, feet)
       setDepthByFeet(entity.label, feet + PLAYER_NAME_OFFSET_BELOW, 0.05)
+      setDepthByFeet(entity.chatBubble.container, feet, 0.07)
     }
 
     if (this.selectionRing && this.selectedMob?.alive) {

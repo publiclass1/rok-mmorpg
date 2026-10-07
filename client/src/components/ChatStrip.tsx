@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import type { ActivityLogEntry } from '../game/events'
 import { emitGameEvent } from '../game/events'
 import type { ChatMessage } from '../game/realtime/mapChat'
@@ -101,17 +109,20 @@ type Props = {
   mapChatPlaceholder?: string
 }
 
-export function ChatStrip({
-  partyEnabled,
-  onSend,
-  mapLines,
-  partyLines,
-  activityEntries,
-  mapChatPlaceholder,
-}: Props) {
+export type ChatStripHandle = {
+  focusChat: () => void
+  /** Empty draft blurs input; otherwise sends and shows chat / bubble. */
+  commitOrBlurChat: () => void
+}
+
+export const ChatStrip = forwardRef<ChatStripHandle, Props>(function ChatStrip(
+  { partyEnabled, onSend, mapLines, partyLines, activityEntries, mapChatPlaceholder },
+  ref,
+) {
   const [tab, setTab] = useState<Tab>('map')
   const [draft, setDraft] = useState('')
   const [minimized, setMinimized] = useState(false)
+  const [focusChatPending, setFocusChatPending] = useState(false)
   const [logHeightPx, setLogHeightPx] = useState(readStoredLogHeight)
   const [panelWidthPx, setPanelWidthPx] = useState(readStoredPanelWidth)
   const [position, setPosition] = useState<PanelPosition | null>(readStoredPosition)
@@ -122,6 +133,7 @@ export function ChatStrip({
   const positionRef = useRef(position)
   positionRef.current = position
   const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
   const resizeDragRef = useRef<{
     startX: number
@@ -135,6 +147,8 @@ export function ChatStrip({
   const defaultPositionedRef = useRef(Boolean(readStoredPosition()))
 
   const lines = tab === 'map' ? mapLines : tab === 'party' ? partyLines : []
+
+  useEffect(() => () => emitGameEvent('uiKeyboardLock', false), [])
 
   useEffect(() => {
     const el = scrollRef.current
@@ -324,11 +338,37 @@ export function ChatStrip({
     document.body.classList.add('chat-strip-dragging')
   }
 
-  function submit() {
-    if (tab === 'log' || !draft.trim()) return
+  const focusChat = useCallback(() => {
+    setFocusChatPending(true)
+    setMinimized(false)
+    setTab((current) => (current === 'log' ? 'map' : current))
+  }, [])
+
+  useEffect(() => {
+    if (!focusChatPending || minimized || tab === 'log') return
+    inputRef.current?.focus()
+    setFocusChatPending(false)
+  }, [focusChatPending, minimized, tab])
+
+  function blurChatInput() {
+    inputRef.current?.blur()
+  }
+
+  const commitOrBlurChat = useCallback(() => {
+    if (tab === 'log') {
+      setTab('map')
+      setFocusChatPending(true)
+      return
+    }
+    if (!draft.trim()) {
+      blurChatInput()
+      return
+    }
     const ok = onSend(tab, draft)
     if (ok) setDraft('')
-  }
+  }, [draft, onSend, tab])
+
+  useImperativeHandle(ref, () => ({ focusChat, commitOrBlurChat }), [focusChat, commitOrBlurChat])
 
   const logPaneStyle = {
     height: `${logHeightPx}px`,
@@ -419,6 +459,7 @@ export function ChatStrip({
           </div>
           {tab !== 'log' && (
             <input
+              ref={inputRef}
               className="chat-strip-input"
               value={draft}
               placeholder={
@@ -433,9 +474,13 @@ export function ChatStrip({
               onFocus={() => emitGameEvent('uiKeyboardLock', true)}
               onBlur={() => emitGameEvent('uiKeyboardLock', false)}
               onKeyDown={(e) => {
+                if (e.key === ' ' || e.code === 'Space') {
+                  e.stopPropagation()
+                }
                 if (e.key === 'Enter') {
                   e.preventDefault()
-                  submit()
+                  e.stopPropagation()
+                  commitOrBlurChat()
                 }
               }}
             />
@@ -444,4 +489,4 @@ export function ChatStrip({
       )}
     </div>
   )
-}
+})

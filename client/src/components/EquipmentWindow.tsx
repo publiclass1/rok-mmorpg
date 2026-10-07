@@ -23,6 +23,7 @@ export function EquipmentWindow({ sheet, appearance, onClose }: Props) {
       <CharacterEquipReadOnly
         equipment={sheet.equipment}
         appearance={appearance}
+        jobId={sheet.jobId}
         onUnequip={unequip}
       />
     </AnimatedModal>

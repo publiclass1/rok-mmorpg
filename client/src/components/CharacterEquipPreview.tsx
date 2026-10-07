@@ -31,12 +31,14 @@ function PreviewLayer({ className, itemId }: PreviewLayerProps) {
 type Props = {
   equipment: Record<EquipSlot, string | null>
   appearance?: CharacterAppearance
+  jobId?: string
   size?: 'sm' | 'lg'
 }
 
 export function CharacterEquipPreview({
   equipment,
   appearance = DEFAULT_CHARACTER_APPEARANCE,
+  jobId,
   size = 'lg',
 }: Props) {
   return (
@@ -45,7 +47,7 @@ export function CharacterEquipPreview({
       aria-hidden
     >
       <div className="character-equip-preview__figure">
-        <CharacterAppearancePreview appearance={appearance} size="sm" />
+        <CharacterAppearancePreview appearance={appearance} jobId={jobId} size="sm" />
         <div className="character-equip-preview__overlays">
           <PreviewLayer className="character-equip-preview__head-top" itemId={equipment.headTop} />
           <PreviewLayer className="character-equip-preview__head-middle" itemId={equipment.headMiddle} />

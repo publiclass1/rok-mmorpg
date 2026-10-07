@@ -11,7 +11,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Topic | Choice |
 |-------|--------|
 | Client | Vite + React UI, Phaser 4 world, Netlify static host |
-| Combat visuals | Pixel character sprites (palette-swapped player, NPC sheets) + Phaser tweens (attack/bash, flinch, mob death); skill bar uses `/skills/*.svg` icons only — not in-world casts |
+| Combat visuals | Pixel character sprites: palette-swapped player with **job-specific body silhouette** (`avatarKey` in [`jobs.json`](../content/ro/jobs.json), drawn in `characterSpriteAssets.ts`); NPC sheets; Phaser tweens (attack/bash, flinch, mob death). In-world equip overlays are head slots only; skill bar uses `/skills/*.svg` icons — not in-world casts |
 | Movement | Click-to-walk + jump (not classic RO keyboard-only) |
 | Progression persistence | Base/job/stats/skills/equip/session bag/HP/MP saved in Postgres (`character_progress`, `character_skills`, `character_equipment`); position/zeny/stack inventory as before |
 | Equipment slots | RO-style slots in data (`headTop`, `offhand`, etc.); UI may show a subset |
@@ -25,7 +25,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Accounts & characters | — | implemented | `client/src/lib/accountAuth.ts`, `supabase/migrations/*` |
 | Stats (STR–LUK) | [Stats](https://irowiki.org/wiki/Stats) | partial | Pre-Renewal HP/SP tables + stat point grants in `statFormulas.ts` / `content/ro/expTables.json` |
 | Base / job EXP | [Experience](https://irowiki.org/wiki/Experience) | implemented | `content/ro/expTables.json`, `combat/exp.ts` (Pre-Renewal tables, cap 99) |
-| Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `jobs.json` (Knight, Hunter); Job Master in `jobMaster.json` (overrides DB); starter kit `jobStarterGear.json` |
+| Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `jobs.json` (Knight, Hunter, per-job `avatarKey` for distinct player silhouettes); Job Master in `jobMaster.json` (overrides DB); starter kit `jobStarterGear.json`; presence broadcasts `jobId` for multiplayer avatars |
 | Skills | [Skills](https://irowiki.org/wiki/Skills) | partial | `content/ro/skills.json`; Swordman tree + prerequisites; Bash usable in combat |
 | Items & equipment | [Items](https://irowiki.org/wiki/Items), [Equipment](https://irowiki.org/wiki/Equipment) | partial | `content/ro/items.json` (`requiredBaseLevel`, `requiredJobIds`); equip enforced in `equipRequirements.ts` / `applyCharacterAction.ts`; `equipmentConfig.ts` |
 | Inventory weight | [Weight](https://irowiki.org/wiki/Weight) | planned | — |

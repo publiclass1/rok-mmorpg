@@ -486,7 +486,7 @@ function drawChibiFrame(
   const cx = ox + SPRITE_FRAME_WIDTH / 2
   const bodyW =
     isPlayer ? playerBodyWidth(female, mode.avatarKey) : female ? 18 : 20
-  let feetY = oy + SPRITE_FRAME_HEIGHT - 4
+  let feetY = oy + SPRITE_FRAME_HEIGHT
 
   if (motion.kind === 'sit') {
     drawChibiMountedSit(g, cx, feetY, facing, pal, bodyW, female, mode)

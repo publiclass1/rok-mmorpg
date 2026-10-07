@@ -114,11 +114,11 @@ export function hasRaisedPrimaryStats(state: CharacterSessionState): boolean {
 }
 
 export function resetAllocatedPrimaryStats(state: CharacterSessionState): CharacterSessionState {
+  if (!hasRaisedPrimaryStats(state)) return state
   let refund = 0
   for (const stat of PRIMARY_STATS) {
     refund += statPointsSpentRaising(state[stat])
   }
-  if (refund === 0) return state
   return {
     ...state,
     ...DEFAULT_STATS,
@@ -143,8 +143,8 @@ export function hasAllocatedSkillPoints(skills: Record<string, number>): boolean
 }
 
 export function resetAllocatedSkills(state: CharacterSessionState): CharacterSessionState {
+  if (!hasAllocatedSkillPoints(state.skills)) return state
   const refund = skillPointsSpentOnSkills(state.skills)
-  if (refund === 0) return state
   const skills = { basic_attack: 1, sit: 1 }
   const skillBar = state.skillBar.map((skillId) =>
     skillId === 'basic_attack' || skillId === 'sit' ? skillId : null,

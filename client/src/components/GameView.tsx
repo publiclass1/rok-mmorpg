@@ -21,9 +21,13 @@ import {
   dispatchCharacterAction,
   registerCharacterActionContext,
 } from '../game/character/characterActionDispatch'
-import { registerCharacterSessionBridge } from '../game/character/characterSessionBridge'
+import {
+  getCharacterSession,
+  registerCharacterSessionBridge,
+} from '../game/character/characterSessionBridge'
 import { sessionFromSheetPayload, toCharacterSheetPayload } from '../game/character/characterSheet'
 import { createInitialCharacterState } from '../game/character/characterState'
+import { isChatStripInputFocused } from '../game/chatInputFocus'
 import { createPhaserGame } from '../game/createGame'
 import {
   emitGameEvent,
@@ -44,7 +48,7 @@ import type {
 } from '../types/database'
 import type { BootDungeonState } from '../game/world/bootDungeon'
 import { dungeonFloors, isDungeonMapId } from '../game/world/dungeonConfig'
-import { ChatStrip } from './ChatStrip'
+import { ChatStrip, type ChatStripHandle } from './ChatStrip'
 import { PlayerTargetPopup } from './PlayerTargetPopup'
 import { GuildModal } from './GuildModal'
 import { PartyRequestModal } from './PartyRequestModal'
@@ -192,6 +196,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [mapChatLines, setMapChatLines] = useState<ChatMessage[]>([])
   const [partyChatLines, setPartyChatLines] = useState<ChatMessage[]>([])
   const mapChatRef = useRef<MapChatChannel | null>(null)
+  const chatStripRef = useRef<ChatStripHandle>(null)
   const partyChannelRef = useRef<PartyRealtimeChannel | null>(null)
   const [bootDungeon, setBootDungeon] = useState<BootDungeonState | null>(null)
   const [dungeonReady, setDungeonReady] = useState(true)
@@ -486,6 +491,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     let chat: MapChatChannel | null = new MapChatChannel(character.map_id, (msg) => {
       setMapChatLines((prev) => [...prev, msg].slice(-50))
+      if (msg.characterId !== characterRef.current.id) {
+        showOverheadChat(msg.characterId, msg.text)
+      }
     })
     mapChatRef.current = chat
     void chat.join()
@@ -527,6 +535,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     emitGameEvent('uiPointerLock', modalOpen)
   }, [modalOpen])
+
+  useEffect(() => {
+    if (!statsOpen && !skillsOpen) return
+    setSheet(toCharacterSheetPayload(getCharacterSession()))
+  }, [statsOpen, skillsOpen])
 
   useEffect(() => {
     const setSession = (state: typeof sessionRef.current) => {
@@ -713,6 +726,22 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [])
 
   useEffect(() => {
+    function syncChatKeyboardLock() {
+      emitGameEvent('uiKeyboardLock', isChatStripInputFocused())
+    }
+    function onFocusOut() {
+      requestAnimationFrame(syncChatKeyboardLock)
+    }
+    document.addEventListener('focusin', syncChatKeyboardLock)
+    document.addEventListener('focusout', onFocusOut)
+    return () => {
+      document.removeEventListener('focusin', syncChatKeyboardLock)
+      document.removeEventListener('focusout', onFocusOut)
+      emitGameEvent('uiKeyboardLock', false)
+    }
+  }, [])
+
+  useEffect(() => {
     const el = shellRef.current
     if (!el) return
     const block = (e: Event) => e.preventDefault()
@@ -827,9 +856,29 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const active = document.activeElement
-      if (active instanceof HTMLInputElement && active.classList.contains('chat-strip-input')) {
+      const chatFocused = isChatStripInputFocused()
+
+      if (e.key === 'Enter' && !e.repeat && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (modalOpen) return
+        if (chatFocused) {
+          e.preventDefault()
+          chatStripRef.current?.commitOrBlurChat()
+          return
+        }
+        if (active instanceof HTMLElement) {
+          if (active.closest('[role="dialog"]')) return
+          const tag = active.tagName
+          if (tag === 'TEXTAREA' || active.isContentEditable) return
+          if (tag === 'INPUT') return
+          if (tag === 'SELECT' || tag === 'BUTTON') return
+        }
+        e.preventDefault()
+        chatStripRef.current?.focusChat()
         return
       }
+
+      if (chatFocused) return
+
       if (e.altKey && e.key.toLowerCase() === 's') {
         e.preventDefault()
         setStatsOpen((o) => !o)
@@ -1001,6 +1050,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     )
   }
 
+  function showOverheadChat(characterId: string, text: string) {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    emitGameEvent('chatBubble', { characterId, text: trimmed })
+  }
+
   function sendChat(tab: 'map' | 'party', text: string) {
     const trimmed = text.trim()
     if (tab === 'map' && trimmed.startsWith('/')) {
@@ -1020,8 +1075,14 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       return true
     }
     const local = { characterId: character.id, name: character.name }
-    if (tab === 'map') return mapChatRef.current?.send(local, text) ?? false
-    return partyChannelRef.current?.sendChat(local, text) ?? false
+    if (tab === 'map') {
+      const sent = mapChatRef.current?.send(local, text) ?? false
+      if (sent) showOverheadChat(characterRef.current.id, trimmed)
+      return sent
+    }
+    const sent = partyChannelRef.current?.sendChat(local, text) ?? false
+    if (sent) showOverheadChat(characterRef.current.id, trimmed)
+    return sent
   }
 
   const hpRatio = sheet.hpMax > 0 ? Math.min(1, sheet.hp / sheet.hpMax) : 0
@@ -1220,6 +1281,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           </motion.div>
 
           <ChatStrip
+            ref={chatStripRef}
             partyEnabled={!!partySnapshot}
             mapLines={mapChatLines}
             partyLines={partyChatLines}

@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { sessionFromSheetPayload } from '../game/character/characterSheet'
 import { hasAllocatedSkillPoints } from '../game/character/characterState'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
+import { getCharacterSession, setCharacterSession } from '../game/character/characterSessionBridge'
 import { isSkillBarDragEvent, readSkillBarDrag } from '../game/character/skillBarDrag'
 import { JOB_NAMES, skillsForJob, skillWindowTabs } from '../game/character/skillsConfig'
 import { SKILL_RESET_ZENY_COST } from '../game/character/statFormulas'
@@ -49,6 +51,10 @@ export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: 
     }
     setBusy(true)
     try {
+      setCharacterSession(sessionFromSheetPayload(sheet, getCharacterSession()))
+      const resetOk = dispatchCharacterAction({ type: 'resetSkills' })
+      if (!resetOk) return
+
       const { data, error } = await supabase
         .from('characters')
         .update({ zeny: character.zeny - SKILL_RESET_ZENY_COST })
@@ -60,7 +66,6 @@ export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: 
         return
       }
       onCharacterUpdated(data as CharacterRow)
-      dispatchCharacterAction({ type: 'resetSkills' })
     } finally {
       setBusy(false)
     }
