@@ -1,4 +1,10 @@
-import type { TmjMapObject, TmjObjectProperty, PortalObjectProps } from './types'
+import type {
+  NpcObjectNpcType,
+  NpcObjectProps,
+  TmjMapObject,
+  TmjObjectProperty,
+  PortalObjectProps,
+} from './types'
 
 export function getObjectProperty(obj: TmjMapObject, name: string): string | number | boolean | undefined {
   const prop = obj.properties?.find((p) => p.name === name)
@@ -38,5 +44,43 @@ export function writePortalProps(obj: TmjMapObject, props: PortalObjectProps): v
     targetY: props.targetY,
     label: props.label,
     mode: props.mode,
+  })
+}
+
+const NPC_TYPES: NpcObjectNpcType[] = [
+  'teleport',
+  'storage',
+  'save',
+  'job_master',
+  'shop',
+  'healer',
+]
+
+function parseNpcType(raw: string): NpcObjectNpcType {
+  return NPC_TYPES.includes(raw as NpcObjectNpcType) ? (raw as NpcObjectNpcType) : 'shop'
+}
+
+export function readNpcProps(obj: TmjMapObject): NpcObjectProps {
+  const npcId = String(getObjectProperty(obj, 'npcId') ?? obj.name ?? `npc_${obj.id}`)
+  const npcType = parseNpcType(String(getObjectProperty(obj, 'npcType') ?? 'shop'))
+  const label = String(getObjectProperty(obj, 'label') ?? 'NPC')
+  const facingRaw = String(getObjectProperty(obj, 'facing') ?? 'down')
+  const facing =
+    facingRaw === 'up' || facingRaw === 'left' || facingRaw === 'right' ? facingRaw : 'down'
+  const spriteKey = String(getObjectProperty(obj, 'spriteKey') ?? '')
+  const configJson = String(getObjectProperty(obj, 'configJson') ?? '{}')
+  return { npcId, npcType, label, facing, spriteKey, configJson }
+}
+
+export function writeNpcProps(obj: TmjMapObject, props: NpcObjectProps): void {
+  obj.name = props.npcId
+  obj.type = 'npc'
+  setObjectProperties(obj, {
+    npcId: props.npcId,
+    npcType: props.npcType,
+    label: props.label,
+    facing: props.facing,
+    spriteKey: props.spriteKey,
+    configJson: props.configJson,
   })
 }

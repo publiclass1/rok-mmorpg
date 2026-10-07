@@ -94,6 +94,11 @@ import { clampToMap } from '../world/clampToMap'
 import { findPortalAtPoint } from '../world/mapPortals'
 import { preloadMapDecor, spawnMapDecor } from '../world/spawnMapDecor'
 import { setDepthByFeet } from '../world/depthSort'
+import {
+  PLAYER_NAME_OFFSET_BELOW,
+  positionPlayerNameLabel,
+  styleWorldNameLabel,
+} from '../world/worldNameLabel'
 import { pointInRect, rectsIntersect } from '../world/minimapGeometry'
 import type { MinimapPayload, MinimapWorldRect } from '../world/minimapTypes'
 import {
@@ -254,12 +259,10 @@ export class WorldScene extends Phaser.Scene {
     }
     updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
 
-    this.playerLabel = this.add
-      .text(spawn.x, spawn.y - 46, this.character.name, {
-        fontSize: '11px',
-        color: '#bfdbfe',
-      })
-      .setOrigin(0.5)
+    this.playerLabel = this.add.text(spawn.x, spawn.y, this.character.name)
+    styleWorldNameLabel(this.playerLabel)
+    positionPlayerNameLabel(this.playerLabel, spawn.x, spawn.y)
+    this.playerLabel.setVisible(false)
 
     this.cameras.main.centerOn(spawn.x, spawn.y)
     this.cameras.main.startFollow(this.playerDisplay.container, true, 0.12, 0.12)
@@ -532,8 +535,6 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
-    this.playerLabel.setPosition(this.playerDisplay.container.x, this.playerDisplay.container.y - 46)
-
     if (!this.isPlayerDead && !this.isSitting && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
       const jumped = tryJump(this, this.playerDisplay.container, () => this.isJumping, (v) => {
         this.isJumping = v
@@ -598,7 +599,38 @@ export class WorldScene extends Phaser.Scene {
     this.syncPlayerSelectionRing()
     this.syncWorldDepth()
     this.syncViewportVisibility()
+    this.refreshPlayerNameLabels()
     this.emitMinimap(now)
+  }
+
+  private refreshPlayerNameLabels() {
+    if (this.uiPointerLocked) {
+      this.playerLabel.setVisible(false)
+      for (const entity of this.remotePlayers.values()) {
+        entity.label.setVisible(false)
+      }
+      return
+    }
+
+    const bounds = viewBoundsWithMargin(this.cameras.main)
+    const px = this.input.activePointer.worldX
+    const py = this.input.activePointer.worldY
+    const localX = this.playerDisplay.container.x
+    const localY = this.playerDisplay.container.y
+
+    positionPlayerNameLabel(this.playerLabel, localX, localY)
+    const localInView = entityInView(bounds, localX, localY)
+    const localHovered =
+      !this.isPlayerDead &&
+      Phaser.Math.Distance.Between(px, py, localX, localY) <= MOB_CLICK_RADIUS
+    this.playerLabel.setVisible(localInView && localHovered)
+
+    const hoveredRemote = this.findRemotePlayerAt(px, py)
+    for (const entity of this.remotePlayers.values()) {
+      const c = entity.display.container
+      positionPlayerNameLabel(entity.label, c.x, c.y)
+      entity.label.setVisible(entity.inViewport && entity === hoveredRemote)
+    }
   }
 
   private syncViewportVisibility() {
@@ -761,7 +793,7 @@ export class WorldScene extends Phaser.Scene {
       this.playerDisplay.container.y + PLAYER_FEET_OFFSET,
     )
     setDepthByFeet(this.playerDisplay.container, playerFeet)
-    setDepthByFeet(this.playerLabel, playerFeet, 0.05)
+    setDepthByFeet(this.playerLabel, playerFeet + PLAYER_NAME_OFFSET_BELOW, 0.05)
 
     for (const mob of this.mobs) {
       if (!mob.alive) continue
@@ -774,13 +806,16 @@ export class WorldScene extends Phaser.Scene {
 
     for (const npc of this.npcVisuals) {
       setDepthByFeet(npc.sprite, npc.feetY)
+      if (npc.counterLine) {
+        setDepthByFeet(npc.counterLine, npc.feetY + 2, -0.02)
+      }
       setDepthByFeet(npc.label, npc.feetY, 0.05)
     }
 
     for (const entity of this.remotePlayers.values()) {
       const feet = entity.display.container.y + PLAYER_FEET_OFFSET
       setDepthByFeet(entity.display.container, feet)
-      setDepthByFeet(entity.label, feet, 0.05)
+      setDepthByFeet(entity.label, feet + PLAYER_NAME_OFFSET_BELOW, 0.05)
     }
 
     if (this.selectionRing && this.selectedMob?.alive) {

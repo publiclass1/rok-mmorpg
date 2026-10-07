@@ -1,12 +1,16 @@
 import Phaser from 'phaser'
 import {
-  KAFRA_SPRITE,
+  listNpcSpriteDefs,
   PLAYER_SPRITE_FEMALE,
   PLAYER_SPRITE_MALE,
   SPRITE_FRAME_HEIGHT,
   SPRITE_FRAME_WIDTH,
   type CharacterSpriteDef,
 } from './characterSpriteRegistry'
+import {
+  NPC_ARCHETYPE_PALETTES,
+  type NpcArchetype,
+} from './npcArchetypes'
 
 /** Source colors in master sheets — replaced by palette swap for players. */
 export const PALETTE_SOURCE = {
@@ -21,9 +25,10 @@ export const PALETTE_SOURCE = {
 type FrameMotion = {
   kind: 'idle' | 'walk'
   walkStep: number
-  /** NPC idle frame 1: eyes closed, body unchanged */
   idleBlink?: boolean
 }
+
+type DrawMode = { kind: 'player'; female: boolean } | { kind: 'npc'; archetype: NpcArchetype }
 
 function drawArms(
   g: Phaser.GameObjects.Graphics,
@@ -54,21 +59,66 @@ function drawArms(
   }
 }
 
+function drawArchetypeOverlay(
+  g: Phaser.GameObjects.Graphics,
+  archetype: NpcArchetype,
+  cx: number,
+  feetY: number,
+) {
+  switch (archetype) {
+    case 'kafra':
+      g.fillStyle(0xffffff, 1)
+      g.fillRect(cx - 6, feetY - 26, 12, 12)
+      g.fillStyle(0xdc2626, 1)
+      g.fillRect(cx - 2, feetY - 22, 4, 4)
+      break
+    case 'warp_agent':
+      g.fillStyle(0x6d28d9, 0.85)
+      g.fillTriangle(cx - 14, feetY - 24, cx, feetY - 38, cx + 14, feetY - 24)
+      break
+    case 'save_priest':
+      g.fillStyle(0xfbbf24, 1)
+      g.fillRect(cx - 1, feetY - 30, 2, 8)
+      g.fillRect(cx - 3, feetY - 27, 6, 2)
+      break
+    case 'job_master':
+      g.fillStyle(0xfcd34d, 1)
+      g.fillRect(cx - 4, feetY - 24, 8, 2)
+      break
+    case 'merchant':
+      g.fillStyle(0x166534, 1)
+      g.fillRect(cx - 7, feetY - 25, 14, 8)
+      g.fillStyle(0xca8a04, 1)
+      g.fillRect(cx - 5, feetY - 23, 10, 4)
+      break
+    case 'healer':
+      g.fillStyle(0xf472b6, 1)
+      g.fillRect(cx - 1, feetY - 26, 2, 6)
+      g.fillRect(cx - 3, feetY - 24, 6, 2)
+      break
+  }
+}
+
 function drawChibiFrame(
   g: Phaser.GameObjects.Graphics,
   ox: number,
   oy: number,
   facing: 'down' | 'left' | 'right' | 'up',
   motion: FrameMotion,
-  female: boolean,
-  kafra: boolean,
+  mode: DrawMode,
 ) {
-  const skin = kafra ? 0xffdbac : PALETTE_SOURCE.skin
-  const hair = kafra ? 0xec4899 : PALETTE_SOURCE.hair
-  const shirt = kafra ? 0x1d4ed8 : PALETTE_SOURCE.shirt
-  const pants = kafra ? 0x1e3a8a : PALETTE_SOURCE.pants
-  const shoes = kafra ? 0x111827 : PALETTE_SOURCE.shoes
-  const eyes = kafra ? 0x111827 : PALETTE_SOURCE.eyes
+  const isPlayer = mode.kind === 'player'
+  const female = isPlayer ? mode.female : NPC_ARCHETYPE_PALETTES[mode.archetype].female
+  const pal = isPlayer
+    ? {
+        skin: PALETTE_SOURCE.skin,
+        hair: PALETTE_SOURCE.hair,
+        shirt: PALETTE_SOURCE.shirt,
+        pants: PALETTE_SOURCE.pants,
+        shoes: PALETTE_SOURCE.shoes,
+        eyes: PALETTE_SOURCE.eyes,
+      }
+    : NPC_ARCHETYPE_PALETTES[mode.archetype]
 
   const walkStep = motion.kind === 'walk' ? motion.walkStep : 0
   const legSpread =
@@ -89,33 +139,28 @@ function drawChibiFrame(
   const feetY = oy + SPRITE_FRAME_HEIGHT - 4 + bob
   const bodyW = female ? 18 : 20
 
-  g.fillStyle(shoes, 1)
+  g.fillStyle(pal.shoes, 1)
   g.fillRect(cx - 10 - legSpread, feetY - 4, 8, 4)
   g.fillRect(cx + 2 + legSpread, feetY - 4, 8, 4)
 
-  g.fillStyle(pants, 1)
+  g.fillStyle(pal.pants, 1)
   g.fillRect(cx - 9 - legSpread, feetY - 14, 7, 12)
   g.fillRect(cx + 2 + legSpread, feetY - 14, 7, 12)
 
-  g.fillStyle(shirt, 1)
+  g.fillStyle(pal.shirt, 1)
   g.fillRoundedRect(cx - bodyW / 2, feetY - 28, bodyW, 16, 3)
-  if (kafra) {
-    g.fillStyle(0xffffff, 1)
-    g.fillRect(cx - 6, feetY - 26, 12, 12)
-    g.fillStyle(0xdc2626, 1)
-    g.fillRect(cx - 2, feetY - 22, 4, 4)
+  if (!isPlayer) {
+    drawArchetypeOverlay(g, mode.archetype, cx, feetY)
   }
 
-  drawArms(g, skin, cx, feetY, bodyW, facing, armSwing)
+  drawArms(g, pal.skin, cx, feetY, bodyW, facing, armSwing)
 
-  g.fillStyle(skin, 1)
+  g.fillStyle(pal.skin, 1)
   g.fillCircle(cx, feetY - 34, female ? 7 : 8)
 
-  g.fillStyle(hair, 1)
-  if (kafra) {
-    g.fillEllipse(cx, feetY - 38, 16, 10)
-  } else if (female) {
-    g.fillEllipse(cx, feetY - 38, 18, 10)
+  g.fillStyle(pal.hair, 1)
+  if (female) {
+    g.fillEllipse(cx, feetY - 38, femaleHairWidth(mode), 10)
   } else {
     g.fillEllipse(cx, feetY - 39, 14, 8)
   }
@@ -126,17 +171,19 @@ function drawChibiFrame(
 
   const blink = motion.idleBlink === true
   if (!blink) {
-    g.fillStyle(eyes, 1)
+    g.fillStyle(pal.eyes, 1)
     g.fillRect(cx - 4 + eyeDx, feetY - 35, 2, 2)
     g.fillRect(cx + 2 + eyeDx, feetY - 35, 2, 2)
   }
 }
 
-function motionForColumn(
-  def: CharacterSpriteDef,
-  col: number,
-  kafra: boolean,
-): FrameMotion {
+function femaleHairWidth(mode: DrawMode): number {
+  if (mode.kind === 'npc' && mode.archetype === 'kafra') return 16
+  if (mode.kind === 'player' && mode.female) return 18
+  return 16
+}
+
+function motionForColumn(def: CharacterSpriteDef, col: number, npcSheet: boolean): FrameMotion {
   if (
     col >= def.strips.idle.offset &&
     col < def.strips.idle.offset + def.strips.idle.count
@@ -145,7 +192,7 @@ function motionForColumn(
     return {
       kind: 'idle',
       walkStep: 0,
-      idleBlink: kafra && idleIndex === 1,
+      idleBlink: npcSheet && idleIndex === 1,
     }
   }
   if (col >= def.strips.walk.offset && col < def.strips.walk.offset + def.strips.walk.count) {
@@ -158,7 +205,7 @@ function generateSheet(
   scene: Phaser.Scene,
   textureKey: string,
   def: CharacterSpriteDef,
-  options: { female: boolean; kafra: boolean },
+  mode: DrawMode,
 ) {
   if (scene.textures.exists(textureKey)) return
 
@@ -167,6 +214,7 @@ function generateSheet(
   const w = cols * SPRITE_FRAME_WIDTH
   const h = rows * SPRITE_FRAME_HEIGHT
   const g = scene.add.graphics()
+  const npcSheet = mode.kind === 'npc'
 
   const facings: Array<'down' | 'left' | 'right' | 'up'> = ['down', 'left', 'right', 'up']
   for (let row = 0; row < rows; row++) {
@@ -174,8 +222,8 @@ function generateSheet(
     for (let col = 0; col < cols; col++) {
       const ox = col * SPRITE_FRAME_WIDTH
       const oy = row * SPRITE_FRAME_HEIGHT
-      const motion = motionForColumn(def, col, options.kafra)
-      drawChibiFrame(g, ox, oy, facing, motion, options.female, options.kafra)
+      const motion = motionForColumn(def, col, npcSheet)
+      drawChibiFrame(g, ox, oy, facing, motion, mode)
     }
   }
 
@@ -187,17 +235,20 @@ function generateSheet(
 
 export function ensureMasterCharacterSheets(scene: Phaser.Scene) {
   generateSheet(scene, PLAYER_SPRITE_MALE.masterTextureKey, PLAYER_SPRITE_MALE, {
+    kind: 'player',
     female: false,
-    kafra: false,
   })
   generateSheet(scene, PLAYER_SPRITE_FEMALE.masterTextureKey, PLAYER_SPRITE_FEMALE, {
+    kind: 'player',
     female: true,
-    kafra: false,
   })
-  generateSheet(scene, KAFRA_SPRITE.masterTextureKey, KAFRA_SPRITE, {
-    female: true,
-    kafra: true,
-  })
+  for (const def of listNpcSpriteDefs()) {
+    if (!def.npcArchetype) continue
+    generateSheet(scene, def.masterTextureKey, def, {
+      kind: 'npc',
+      archetype: def.npcArchetype,
+    })
+  }
 }
 
 export function addSpriteSheetFrames(scene: Phaser.Scene, textureKey: string, def: CharacterSpriteDef) {

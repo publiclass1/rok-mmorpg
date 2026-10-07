@@ -20,13 +20,17 @@ export function setMobViewportVisible(mob: MobInstance, inView: boolean) {
 }
 
 export function setRemoteViewportVisible(entity: RemotePlayerEntity, inView: boolean) {
+  entity.inViewport = inView
   entity.display.container.setVisible(inView)
-  entity.label.setVisible(inView)
+  if (!inView) {
+    entity.label.setVisible(false)
+  }
 }
 
 export function setNpcViewportVisible(npc: NpcWorldVisual, inView: boolean) {
   npc.sprite.setVisible(inView)
   npc.label.setVisible(inView)
+  npc.counterLine?.setVisible(inView)
 }
 
 export function setDecorViewportVisible(decor: Phaser.GameObjects.Image, inView: boolean) {

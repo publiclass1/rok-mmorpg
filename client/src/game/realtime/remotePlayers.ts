@@ -11,6 +11,7 @@ import {
   type PlayerDisplay,
 } from '../player/playerSprites'
 import { startPlayerAttackAnim } from '../player/playerCombatAnim'
+import { positionPlayerNameLabel, styleWorldNameLabel } from '../world/worldNameLabel'
 import type { MapCombatSkillId } from './mapCombatTypes'
 import type { SfxPlayer } from '../combat/sfx'
 
@@ -35,6 +36,7 @@ export type RemotePlayerEntity = {
   lastPayload: PlayerPresencePayload
   equipmentKey: string
   appearanceKey: string
+  inViewport: boolean
 }
 
 function equipmentKey(equipment: Record<EquipSlot, string | null>): string {
@@ -56,9 +58,10 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
   }
 
   const labelText = payload.isVending ? `${payload.name} [Shop]` : payload.name
-  const label = scene.add
-    .text(payload.x, payload.y - 46, labelText, { fontSize: '11px', color: payload.isVending ? '#fbbf24' : '#fff' })
-    .setOrigin(0.5)
+  const label = scene.add.text(payload.x, payload.y, labelText)
+  styleWorldNameLabel(label, payload.isVending ? '#fbbf24' : '#ffffff')
+  positionPlayerNameLabel(label, payload.x, payload.y)
+  label.setVisible(false)
 
   return {
     display,
@@ -68,6 +71,7 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
     lastPayload: payload,
     equipmentKey: eqKey,
     appearanceKey: appearanceKey(payload.appearance),
+    inViewport: true,
   }
 }
 
@@ -108,8 +112,8 @@ export function tickRemotePlayer(entity: RemotePlayerEntity, now: number, smooth
 
   const labelText = p.isVending ? `${p.name} [Shop]` : p.name
   entity.label.setText(labelText)
-  entity.label.setColor(p.isVending ? '#fbbf24' : '#ffffff')
-  entity.label.setPosition(container.x, container.y - 46)
+  styleWorldNameLabel(entity.label, p.isVending ? '#fbbf24' : '#ffffff')
+  positionPlayerNameLabel(entity.label, container.x, container.y)
 }
 
 export function destroyRemotePlayer(entity: RemotePlayerEntity) {

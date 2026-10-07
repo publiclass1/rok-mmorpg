@@ -89,3 +89,29 @@ export type PortalObjectProps = {
   label: string
   mode: 'walk' | 'npc' | 'both'
 }
+
+export type NpcObjectNpcType =
+  | 'teleport'
+  | 'storage'
+  | 'save'
+  | 'job_master'
+  | 'shop'
+  | 'healer'
+
+export type NpcObjectProps = {
+  npcId: string
+  npcType: NpcObjectNpcType
+  label: string
+  facing: 'up' | 'down' | 'left' | 'right'
+  spriteKey: string
+  configJson: string
+}
+
+export type MapNpcDef = {
+  id: string
+  x: number
+  y: number
+  npcType: NpcObjectNpcType
+  label: string
+  config: Record<string, unknown>
+}

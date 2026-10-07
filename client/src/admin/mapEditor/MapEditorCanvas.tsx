@@ -3,6 +3,7 @@ import {
   GID_WALL,
   TILE_SIZE,
   addDecorToMap,
+  ensureObjectGroups,
   getObjectGroup,
   getTileLayer,
   type TmjMap,
@@ -11,15 +12,19 @@ import {
 import { DECOR_DRAG_MIME, type DecorAssetId } from '../../lib/mapDecor/catalog'
 import { readDecorAssetId } from '../../lib/mapDecor/decorProps'
 import { getDecorImage, useDecorImages } from '../../lib/mapDecor/useDecorImages'
-import { readPortalProps, writePortalProps } from '../../lib/tmj/properties'
+import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../../lib/tmj/properties'
 import { collisionFillColor, gidFillColor } from './tileColors'
 
-export type EditorTool = 'ground' | 'collision' | 'obstacle' | 'portal' | 'select'
+export type EditorTool = 'ground' | 'collision' | 'obstacle' | 'portal' | 'npc' | 'select'
 
-type ObjectGroupName = 'obstacles' | 'portals' | 'decor'
+type ObjectGroupName = 'obstacles' | 'portals' | 'decor' | 'npcs'
+
+const NPC_MARKER_W = 48
+const NPC_MARKER_H = 64
 
 type Props = {
   map: TmjMap
+  mapId: string
   tool: EditorTool
   groundGid: number
   collisionBlocked: boolean
@@ -28,6 +33,7 @@ type Props = {
   showDecor: boolean
   showObstacles: boolean
   showPortals: boolean
+  showNpcs: boolean
   selectedObjectId: number | null
   onSelectObject: (id: number | null) => void
   onMapChange: (map: TmjMap) => void
@@ -51,6 +57,8 @@ function hitObject(objects: TmjMapObject[], x: number, y: number): TmjMapObject 
 }
 
 function objectGroupForHit(map: TmjMap, objectId: number): ObjectGroupName {
+  const npcs = getObjectGroup(map, 'npcs')?.objects ?? []
+  if (npcs.some((p) => p.id === objectId)) return 'npcs'
   const portals = getObjectGroup(map, 'portals')?.objects ?? []
   if (portals.some((p) => p.id === objectId)) return 'portals'
   const decor = getObjectGroup(map, 'decor')?.objects ?? []
@@ -60,6 +68,7 @@ function objectGroupForHit(map: TmjMap, objectId: number): ObjectGroupName {
 
 export function MapEditorCanvas({
   map,
+  mapId,
   tool,
   groundGid,
   collisionBlocked,
@@ -68,6 +77,7 @@ export function MapEditorCanvas({
   showDecor,
   showObstacles,
   showPortals,
+  showNpcs,
   selectedObjectId,
   onSelectObject,
   onMapChange,
@@ -105,46 +115,46 @@ export function MapEditorCanvas({
 
     const w = map.width * TILE_SIZE
     const h = map.height * TILE_SIZE
-    canvas.width = w
-    canvas.height = h
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w
+      canvas.height = h
+    }
 
-    ctx.fillStyle = '#020617'
-    ctx.fillRect(0, 0, w, h)
+    ctx.clearRect(0, 0, w, h)
 
     const ground = getTileLayer(map, 'ground')
-    const collision = getTileLayer(map, 'collision')
-
     if (showGround && ground) {
-      for (let y = 0; y < map.height; y++) {
-        for (let x = 0; x < map.width; x++) {
-          const gid = ground.data[y * map.width + x]
+      for (let ty = 0; ty < map.height; ty++) {
+        for (let tx = 0; tx < map.width; tx++) {
+          const gid = ground.data[ty * map.width + tx]
           ctx.fillStyle = gidFillColor(gid)
-          ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+          ctx.fillRect(tx * TILE_SIZE, ty * TILE_SIZE, TILE_SIZE, TILE_SIZE)
         }
       }
     }
 
+    const collision = getTileLayer(map, 'collision')
     if (showCollision && collision) {
-      for (let y = 0; y < map.height; y++) {
-        for (let x = 0; x < map.width; x++) {
-          const gid = collision.data[y * map.width + x]
-          const blocked = gid !== 0
-          ctx.fillStyle = collisionFillColor(blocked)
-          ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+      for (let ty = 0; ty < map.height; ty++) {
+        for (let tx = 0; tx < map.width; tx++) {
+          const gid = collision.data[ty * map.width + tx]
+          if (gid === 0) continue
+          ctx.fillStyle = collisionFillColor(true)
+          ctx.fillRect(tx * TILE_SIZE, ty * TILE_SIZE, TILE_SIZE, TILE_SIZE)
         }
       }
     }
 
-    const decorGroup = getObjectGroup(map, 'decor')
-    if (showDecor && decorGroup) {
-      for (const o of decorGroup.objects) {
+    const decor = getObjectGroup(map, 'decor')
+    if (showDecor && decor) {
+      for (const o of decor.objects) {
         const assetId = readDecorAssetId(o)
-        const img = assetId ? getDecorImage(assetId) : undefined
+        const img = assetId ? getDecorImage(assetId) : null
         const selected = o.id === selectedObjectId
         if (img) {
           ctx.drawImage(img, o.x, o.y, o.width, o.height)
         } else {
-          ctx.fillStyle = 'rgba(168, 85, 247, 0.35)'
+          ctx.fillStyle = selected ? 'rgba(34, 197, 94, 0.7)' : 'rgba(34, 197, 94, 0.45)'
           ctx.fillRect(o.x, o.y, o.width, o.height)
         }
         if (selected) {
@@ -153,21 +163,6 @@ export function MapEditorCanvas({
           ctx.strokeRect(o.x, o.y, o.width, o.height)
         }
       }
-    }
-
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)'
-    ctx.lineWidth = 1
-    for (let x = 0; x <= map.width; x++) {
-      ctx.beginPath()
-      ctx.moveTo(x * TILE_SIZE, 0)
-      ctx.lineTo(x * TILE_SIZE, h)
-      ctx.stroke()
-    }
-    for (let y = 0; y <= map.height; y++) {
-      ctx.beginPath()
-      ctx.moveTo(0, y * TILE_SIZE)
-      ctx.lineTo(w, y * TILE_SIZE)
-      ctx.stroke()
     }
 
     const obstacles = getObjectGroup(map, 'obstacles')
@@ -198,6 +193,29 @@ export function MapEditorCanvas({
       }
     }
 
+    const npcs = getObjectGroup(map, 'npcs')
+    if (showNpcs && npcs) {
+      for (const o of npcs.objects) {
+        const selected = o.id === selectedObjectId
+        ctx.fillStyle = selected ? 'rgba(167, 139, 250, 0.6)' : 'rgba(139, 92, 246, 0.45)'
+        ctx.fillRect(o.x, o.y, o.width, o.height)
+        ctx.strokeStyle = selected ? '#fbbf24' : '#7c3aed'
+        ctx.lineWidth = selected ? 2 : 1
+        ctx.strokeRect(o.x, o.y, o.width, o.height)
+        const label = readNpcProps(o).label
+        ctx.fillStyle = '#e5e7eb'
+        ctx.font = '11px system-ui'
+        ctx.fillText(label, o.x + 4, o.y + 14)
+        const cx = o.x + o.width / 2
+        const feetLineY = o.y + o.height - 4
+        ctx.strokeStyle = '#c4b5fd'
+        ctx.beginPath()
+        ctx.moveTo(cx - 12, feetLineY)
+        ctx.lineTo(cx + 12, feetLineY)
+        ctx.stroke()
+      }
+    }
+
     if (previewRect) {
       ctx.strokeStyle = '#fbbf24'
       ctx.lineWidth = 2
@@ -212,6 +230,7 @@ export function MapEditorCanvas({
     showDecor,
     showObstacles,
     showPortals,
+    showNpcs,
     selectedObjectId,
     previewRect,
     decorImagesReady,
@@ -246,6 +265,41 @@ export function MapEditorCanvas({
     onMapChange(next)
   }
 
+  const placeNpc = (x: number, y: number) => {
+    const draft: TmjMap = structuredClone(map)
+    ensureObjectGroups(draft)
+    const id = draft.nextobjectid
+    const ox = Math.round(x - NPC_MARKER_W / 2)
+    const oy = Math.round(y - NPC_MARKER_H / 2)
+    const obj: TmjMapObject = {
+      id,
+      name: `${mapId}_npc_${id}`,
+      type: 'npc',
+      x: ox,
+      y: oy,
+      width: NPC_MARKER_W,
+      height: NPC_MARKER_H,
+    }
+    writeNpcProps(obj, {
+      npcId: `${mapId}_npc_${id}`,
+      npcType: 'shop',
+      label: 'NPC',
+      facing: 'down',
+      spriteKey: '',
+      configJson: '{}',
+    })
+    const next: TmjMap = {
+      ...draft,
+      nextobjectid: draft.nextobjectid + 1,
+      layers: draft.layers.map((layer) => {
+        if (layer.type !== 'objectgroup' || layer.name !== 'npcs') return layer
+        return { ...layer, objects: [...layer.objects, obj] }
+      }),
+    }
+    onMapChange(next)
+    onSelectObject(obj.id)
+  }
+
   const onPointerDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const { x, y } = canvasCoords(e.clientX, e.clientY)
 
@@ -253,7 +307,8 @@ export function MapEditorCanvas({
       const decor = getObjectGroup(map, 'decor')?.objects ?? []
       const obstacles = getObjectGroup(map, 'obstacles')?.objects ?? []
       const portals = getObjectGroup(map, 'portals')?.objects ?? []
-      const hit = hitObject([...portals, ...obstacles, ...decor], x, y)
+      const npcs = getObjectGroup(map, 'npcs')?.objects ?? []
+      const hit = hitObject([...npcs, ...portals, ...obstacles, ...decor], x, y)
       if (hit) {
         onSelectObject(hit.id)
         const group = objectGroupForHit(map, hit.id)
@@ -286,6 +341,10 @@ export function MapEditorCanvas({
       const sy = snapTile(y) * TILE_SIZE
       setDrag({ kind: 'rect', group: 'portals', startX: sx, startY: sy })
       setPreviewRect({ x: sx, y: sy, w: TILE_SIZE, h: TILE_SIZE })
+      return
+    }
+    if (tool === 'npc') {
+      placeNpc(x, y)
     }
   }
 

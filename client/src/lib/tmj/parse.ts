@@ -1,8 +1,8 @@
 import type { MapPortalDef } from '../../content/ro/types'
 import type { DecorAssetId } from '../mapDecor/catalog'
 import { createDecorPlacement } from '../mapDecor/decorProps'
-import { readPortalProps } from './properties'
-import type { TmjMap, TmjMapObject, TmjObjectGroup, TmjTileLayer } from './types'
+import { readNpcProps, readPortalProps } from './properties'
+import type { MapNpcDef, TmjMap, TmjMapObject, TmjObjectGroup, TmjTileLayer } from './types'
 
 export function parseTmj(raw: unknown): TmjMap {
   if (!raw || typeof raw !== 'object') {
@@ -64,6 +64,19 @@ export function ensureObjectGroups(map: TmjMap): void {
       objects: [],
     })
   }
+  if (!getObjectGroup(map, 'npcs')) {
+    const id = map.nextlayerid++
+    map.layers.push({
+      id,
+      name: 'npcs',
+      opacity: 1,
+      type: 'objectgroup',
+      visible: true,
+      x: 0,
+      y: 0,
+      objects: [],
+    })
+  }
 }
 
 export function addDecorToMap(map: TmjMap, assetId: DecorAssetId, centerX: number, centerY: number): TmjMap {
@@ -97,6 +110,35 @@ export function obstacleDefsFromMap(map: TmjMap): Array<{ x: number; y: number; 
       width: o.width,
       height: o.height,
     }))
+}
+
+export function npcDefsFromMap(map: TmjMap, mapId: string): MapNpcDef[] {
+  const group = getObjectGroup(map, 'npcs')
+  if (!group) return []
+  return group.objects
+    .filter((o) => o.type === 'npc' || o.properties?.some((p) => p.name === 'npcId'))
+    .map((o) => {
+      const p = readNpcProps(o)
+      let config: Record<string, unknown> = {}
+      try {
+        const parsed = JSON.parse(p.configJson) as unknown
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          config = parsed as Record<string, unknown>
+        }
+      } catch {
+        config = {}
+      }
+      if (p.facing) config.facing = p.facing
+      if (p.spriteKey.trim()) config.spriteKey = p.spriteKey.trim()
+      return {
+        id: p.npcId || `${mapId}_npc_${o.id}`,
+        x: Math.round(o.x + o.width / 2),
+        y: Math.round(o.y + o.height / 2),
+        npcType: p.npcType,
+        label: p.label,
+        config,
+      }
+    })
 }
 
 export function portalDefsFromMap(map: TmjMap, _mapId: string): MapPortalDef[] {

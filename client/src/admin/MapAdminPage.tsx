@@ -5,11 +5,13 @@ import {
   createEmptyMap,
   ensureObjectGroups,
   parseTmj,
+  npcDefsFromMap,
   portalDefsFromMap,
   serializeTmj,
   type TmjMap,
 } from '../lib/tmj'
-import { readPortalProps, writePortalProps } from '../lib/tmj/properties'
+import type { NpcObjectNpcType, NpcObjectProps } from '../lib/tmj/types'
+import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../lib/tmj/properties'
 import { getObjectGroup } from '../lib/tmj/parse'
 import { fetchMapBundle, fetchMapList, saveMapBundle, type MapMeta } from './mapAdminApi'
 import { DecorAssetPalette } from './mapEditor/DecorAssetPalette'
@@ -37,6 +39,7 @@ export function MapAdminPage() {
   const [showDecor, setShowDecor] = useState(true)
   const [showObstacles, setShowObstacles] = useState(true)
   const [showPortals, setShowPortals] = useState(true)
+  const [showNpcs, setShowNpcs] = useState(true)
   const [selectedObjectId, setSelectedObjectId] = useState<number | null>(null)
   const [jsonText, setJsonText] = useState('')
   const [jsonDirty, setJsonDirty] = useState(false)
@@ -69,6 +72,7 @@ export function MapAdminPage() {
   }, [tmj, jsonDirty])
 
   const portalsForSave = useMemo((): MapPortalDef[] => portalDefsFromMap(tmj, meta.id), [tmj, meta.id])
+  const npcMarkersForSave = useMemo(() => npcDefsFromMap(tmj, meta.id), [tmj, meta.id])
 
   const selectedPortalObject = useMemo(() => {
     if (selectedObjectId == null) return null
@@ -79,6 +83,12 @@ export function MapAdminPage() {
   const selectedDecorObject = useMemo(() => {
     if (selectedObjectId == null) return null
     const group = getObjectGroup(tmj, 'decor')
+    return group?.objects.find((o) => o.id === selectedObjectId) ?? null
+  }, [tmj, selectedObjectId])
+
+  const selectedNpcObject = useMemo(() => {
+    if (selectedObjectId == null) return null
+    const group = getObjectGroup(tmj, 'npcs')
     return group?.objects.find((o) => o.id === selectedObjectId) ?? null
   }, [tmj, selectedObjectId])
 
@@ -177,6 +187,35 @@ export function MapAdminPage() {
             if (o.id !== selectedPortalObject.id) return o
             const updated = { ...o }
             writePortalProps(updated, merged)
+            return updated
+          }),
+        }
+      }),
+    }
+    setTmj(next)
+  }
+
+  const updateSelectedNpc = (patch: Partial<NpcObjectProps>) => {
+    if (!selectedNpcObject) return
+    const current = readNpcProps(selectedNpcObject)
+    const merged: NpcObjectProps = {
+      npcId: patch.npcId ?? current.npcId,
+      npcType: patch.npcType ?? current.npcType,
+      label: patch.label ?? current.label,
+      facing: patch.facing ?? current.facing,
+      spriteKey: patch.spriteKey ?? current.spriteKey,
+      configJson: patch.configJson ?? current.configJson,
+    }
+    const next: TmjMap = {
+      ...tmj,
+      layers: tmj.layers.map((layer) => {
+        if (layer.type !== 'objectgroup' || layer.name !== 'npcs') return layer
+        return {
+          ...layer,
+          objects: layer.objects.map((o) => {
+            if (o.id !== selectedNpcObject.id) return o
+            const updated = { ...o }
+            writeNpcProps(updated, merged)
             return updated
           }),
         }
@@ -320,7 +359,7 @@ export function MapAdminPage() {
           <fieldset className="map-admin-fieldset">
             <legend>Tool</legend>
             <div className="map-admin-tool-row">
-              {(['ground', 'collision', 'obstacle', 'portal', 'select'] as EditorTool[]).map((t) => (
+              {(['ground', 'collision', 'obstacle', 'portal', 'npc', 'select'] as EditorTool[]).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -361,6 +400,7 @@ export function MapAdminPage() {
             <label className="map-admin-check"><input type="checkbox" checked={showDecor} onChange={(e) => setShowDecor(e.target.checked)} /> Decor</label>
             <label className="map-admin-check"><input type="checkbox" checked={showObstacles} onChange={(e) => setShowObstacles(e.target.checked)} /> Obstacles</label>
             <label className="map-admin-check"><input type="checkbox" checked={showPortals} onChange={(e) => setShowPortals(e.target.checked)} /> Portals</label>
+            <label className="map-admin-check"><input type="checkbox" checked={showNpcs} onChange={(e) => setShowNpcs(e.target.checked)} /> NPCs</label>
           </fieldset>
 
           {selectedPortalObject && (
@@ -379,16 +419,26 @@ export function MapAdminPage() {
             </fieldset>
           )}
 
-          {selectedObjectId != null && !selectedPortalObject && !selectedDecorObject && (
+          {selectedNpcObject && (
+            <fieldset className="map-admin-fieldset">
+              <legend>NPC</legend>
+              <NpcFields object={selectedNpcObject} onChange={updateSelectedNpc} />
+              <button type="button" className="danger" onClick={deleteSelectedObject}>Delete NPC</button>
+            </fieldset>
+          )}
+
+          {selectedObjectId != null && !selectedPortalObject && !selectedDecorObject && !selectedNpcObject && (
             <button type="button" className="danger" onClick={deleteSelectedObject}>Delete obstacle</button>
           )}
 
           <p className="muted small">Walk portals: {portalsForSave.filter((p) => p.mode === 'walk' || p.mode === 'both').length}</p>
+          <p className="muted small">NPC markers: {npcMarkersForSave.length}</p>
         </aside>
 
         <section className="map-admin-canvas-wrap panel">
           <MapEditorCanvas
             map={tmj}
+            mapId={meta.id.trim() || 'new_map'}
             tool={tool}
             groundGid={groundGid}
             collisionBlocked={collisionBlocked}
@@ -397,6 +447,7 @@ export function MapAdminPage() {
             showDecor={showDecor}
             showObstacles={showObstacles}
             showPortals={showPortals}
+            showNpcs={showNpcs}
             selectedObjectId={selectedObjectId}
             onSelectObject={setSelectedObjectId}
             onMapChange={setTmj}
@@ -430,6 +481,93 @@ export function MapAdminPage() {
         </aside>
       </div>
     </main>
+  )
+}
+
+function NpcFields({
+  object,
+  onChange,
+}: {
+  object: { id: number }
+  onChange: (patch: Partial<NpcObjectProps>) => void
+}) {
+  const props = readNpcProps(object as import('../lib/tmj').TmjMapObject)
+  const [configError, setConfigError] = useState<string | null>(null)
+
+  const onConfigBlur = (raw: string) => {
+    try {
+      JSON.parse(raw)
+      setConfigError(null)
+      onChange({ configJson: raw })
+    } catch {
+      setConfigError('Invalid JSON')
+    }
+  }
+
+  return (
+    <div className="stack compact">
+      <label>
+        npc id
+        <input value={props.npcId} onChange={(e) => onChange({ npcId: e.target.value })} />
+      </label>
+      <label>
+        label
+        <input value={props.label} onChange={(e) => onChange({ label: e.target.value })} />
+      </label>
+      <label>
+        npc type
+        <select
+          value={props.npcType}
+          onChange={(e) => onChange({ npcType: e.target.value as NpcObjectNpcType })}
+        >
+          <option value="storage">storage (Kafra)</option>
+          <option value="teleport">teleport</option>
+          <option value="save">save</option>
+          <option value="job_master">job_master</option>
+          <option value="shop">shop</option>
+          <option value="healer">healer</option>
+        </select>
+      </label>
+      <label>
+        facing
+        <select
+          value={props.facing}
+          onChange={(e) =>
+            onChange({ facing: e.target.value as NpcObjectProps['facing'] })
+          }
+        >
+          <option value="down">down</option>
+          <option value="left">left</option>
+          <option value="right">right</option>
+          <option value="up">up</option>
+        </select>
+      </label>
+      <label>
+        sprite key (optional)
+        <input
+          value={props.spriteKey}
+          placeholder="auto from type"
+          onChange={(e) => onChange({ spriteKey: e.target.value })}
+        />
+      </label>
+      <label>
+        config JSON
+        <textarea
+          className="map-admin-json-editor"
+          rows={5}
+          value={props.configJson}
+          onChange={(e) => onChange({ configJson: e.target.value })}
+          onBlur={(e) => onConfigBlur(e.target.value)}
+        />
+      </label>
+      {props.npcType === 'teleport' && (
+        <p className="muted small">
+          Teleport: use destinations array, e.g.{' '}
+          {`{"destinations":[{"map_id":"prontera","label":"Prontera","x":640,"y":360}]}`}
+        </p>
+      )}
+      {configError && <p className="muted small" style={{ color: '#f87171' }}>{configError}</p>}
+    </div>
   )
 }
 

@@ -1,0 +1,104 @@
+/** Procedural NPC look — used when generating master sprite sheets. */
+export type NpcArchetype =
+  | 'kafra'
+  | 'warp_agent'
+  | 'save_priest'
+  | 'job_master'
+  | 'merchant'
+  | 'healer'
+
+export type NpcArchetypePalette = {
+  skin: number
+  hair: number
+  shirt: number
+  pants: number
+  shoes: number
+  eyes: number
+  female: boolean
+}
+
+export const NPC_ARCHETYPE_PALETTES: Record<NpcArchetype, NpcArchetypePalette> = {
+  kafra: {
+    skin: 0xffdbac,
+    hair: 0xec4899,
+    shirt: 0x1d4ed8,
+    pants: 0x1e3a8a,
+    shoes: 0x111827,
+    eyes: 0x111827,
+    female: true,
+  },
+  warp_agent: {
+    skin: 0xffdbac,
+    hair: 0x1a1a1a,
+    shirt: 0x4c1d95,
+    pants: 0x312e81,
+    shoes: 0x111827,
+    eyes: 0x111827,
+    female: false,
+  },
+  save_priest: {
+    skin: 0xffdbac,
+    hair: 0xc0c0c0,
+    shirt: 0xf8fafc,
+    pants: 0x64748b,
+    shoes: 0x111827,
+    eyes: 0x111827,
+    female: false,
+  },
+  job_master: {
+    skin: 0xffdbac,
+    hair: 0x422006,
+    shirt: 0x78350f,
+    pants: 0x292524,
+    shoes: 0x111827,
+    eyes: 0x111827,
+    female: false,
+  },
+  merchant: {
+    skin: 0xffdbac,
+    hair: 0x4a3728,
+    shirt: 0xca8a04,
+    pants: 0x713f12,
+    shoes: 0x111827,
+    eyes: 0x111827,
+    female: false,
+  },
+  healer: {
+    skin: 0xffdbac,
+    hair: 0xf472b6,
+    shirt: 0xffffff,
+    pants: 0xe2e8f0,
+    shoes: 0x111827,
+    eyes: 0x111827,
+    female: true,
+  },
+}
+
+export function npcArchetypeFromNpcType(
+  npcType: NpcRowNpcType,
+): NpcArchetype | null {
+  switch (npcType) {
+    case 'storage':
+      return 'kafra'
+    case 'teleport':
+      return 'warp_agent'
+    case 'save':
+      return 'save_priest'
+    case 'job_master':
+      return 'job_master'
+    case 'shop':
+      return 'merchant'
+    case 'healer':
+      return 'healer'
+    default:
+      return null
+  }
+}
+
+type NpcRowNpcType =
+  | 'teleport'
+  | 'storage'
+  | 'save'
+  | 'job_master'
+  | 'shop'
+  | 'healer'

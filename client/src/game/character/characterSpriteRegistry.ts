@@ -1,6 +1,7 @@
 import type { NpcRow } from '../../types/database'
 import type { CharacterAppearance } from './characterAppearance'
 import type { Facing } from '../movement/clickToMove'
+import { npcArchetypeFromNpcType, type NpcArchetype } from './npcArchetypes'
 
 export const SPRITE_FRAME_WIDTH = 48
 export const SPRITE_FRAME_HEIGHT = 64
@@ -25,6 +26,7 @@ export type CharacterSpriteDef = {
     dead: AnimStrip
   }
   paletteSwap: boolean
+  npcArchetype?: NpcArchetype
 }
 
 export const FACING_ROW: Record<Facing, number> = {
@@ -46,6 +48,28 @@ const PLAYER_STRIPS = {
 
 const PLAYER_FRAMES_PER_ROW = 6
 
+const NPC_IDLE_STRIPS = {
+  idle: { offset: 0, count: 2 },
+  walk: { offset: 0, count: 1 },
+  sit: { offset: 0, count: 1 },
+  attack: { offset: 0, count: 1 },
+  jump: { offset: 0, count: 1 },
+  flinch: { offset: 0, count: 1 },
+  dead: { offset: 0, count: 1 },
+}
+
+function npcSpriteDef(archetype: NpcArchetype): CharacterSpriteDef {
+  return {
+    id: archetype,
+    masterTextureKey: `master_npc_${archetype}_v3`,
+    framesPerRow: 2,
+    facingRow: FACING_ROW,
+    strips: NPC_IDLE_STRIPS,
+    paletteSwap: false,
+    npcArchetype: archetype,
+  }
+}
+
 export const PLAYER_SPRITE_MALE: CharacterSpriteDef = {
   id: 'player_male',
   masterTextureKey: 'master_player_male_v2',
@@ -64,25 +88,15 @@ export const PLAYER_SPRITE_FEMALE: CharacterSpriteDef = {
   paletteSwap: true,
 }
 
-export const KAFRA_SPRITE: CharacterSpriteDef = {
-  id: 'kafra',
-  masterTextureKey: 'master_kafra_v2',
-  framesPerRow: 2,
-  facingRow: FACING_ROW,
-  strips: {
-    idle: { offset: 0, count: 2 },
-    walk: { offset: 0, count: 1 },
-    sit: { offset: 0, count: 1 },
-    attack: { offset: 0, count: 1 },
-    jump: { offset: 0, count: 1 },
-    flinch: { offset: 0, count: 1 },
-    dead: { offset: 0, count: 1 },
-  },
-  paletteSwap: false,
-}
+export const KAFRA_SPRITE = npcSpriteDef('kafra')
 
 const NPC_SPRITES: Record<string, CharacterSpriteDef> = {
   kafra: KAFRA_SPRITE,
+  warp_agent: npcSpriteDef('warp_agent'),
+  save_priest: npcSpriteDef('save_priest'),
+  job_master: npcSpriteDef('job_master'),
+  merchant: npcSpriteDef('merchant'),
+  healer: npcSpriteDef('healer'),
 }
 
 export function resolvePlayerSpriteDef(appearance: CharacterAppearance): CharacterSpriteDef {
@@ -93,11 +107,15 @@ export function getNpcSpriteDef(spriteKey: string): CharacterSpriteDef | null {
   return NPC_SPRITES[spriteKey] ?? null
 }
 
+export function listNpcSpriteDefs(): CharacterSpriteDef[] {
+  return Object.values(NPC_SPRITES)
+}
+
 export function resolveNpcSpriteKey(npc: NpcRow): string | null {
   const fromConfig = (npc.config as { spriteKey?: string }).spriteKey
   if (fromConfig) return fromConfig
-  if (npc.npc_type === 'storage') return 'kafra'
-  return null
+  const archetype = npcArchetypeFromNpcType(npc.npc_type)
+  return archetype ?? null
 }
 
 export function stripFrameIndex(
