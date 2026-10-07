@@ -49,6 +49,13 @@
         { "slot": "armor", "baseItemId": "adventurers_suit" },
         { "slot": "boots", "baseItemId": "shoes" }
       ]
+    },
+    "hunter": {
+      "pieces": [
+        { "slot": "weapon", "baseItemId": "composite_bow" },
+        { "slot": "armor", "baseItemId": "adventurers_suit" },
+        { "slot": "boots", "baseItemId": "shoes" }
+      ]
     }
   }
 }

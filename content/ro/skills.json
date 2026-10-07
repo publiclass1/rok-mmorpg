@@ -309,6 +309,36 @@
       }
     },
     {
+      "id": "pushcart",
+      "name": "Pushcart",
+      "jobId": "merchant",
+      "maxLevel": 10,
+      "requiredJobLevel": 1,
+      "type": "passive",
+      "target": "self",
+      "mpCost": 0,
+      "castTimeMs": 0,
+      "range": 0,
+      "prerequisites": [],
+      "description": "Allows renting and using a pushcart.",
+      "sourceUrl": "https://irowiki.org/wiki/Pushcart"
+    },
+    {
+      "id": "falcon_mastery",
+      "name": "Falcon Mastery",
+      "jobId": "hunter",
+      "maxLevel": 10,
+      "requiredJobLevel": 1,
+      "type": "passive",
+      "target": "self",
+      "mpCost": 0,
+      "castTimeMs": 0,
+      "range": 0,
+      "prerequisites": [],
+      "description": "Allows renting and commanding a falcon.",
+      "sourceUrl": "https://irowiki.org/wiki/Falcon_Mastery"
+    },
+    {
       "id": "heal",
       "name": "Heal",
       "jobId": "acolyte",

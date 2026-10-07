@@ -47,6 +47,15 @@ values
     '{"zenyCost":0,"facing":"down"}'::jsonb
   ),
   (
+    'prontera_rental',
+    'prontera',
+    1464,
+    1360,
+    'rental',
+    'Rental Shop',
+    '{"facing":"down"}'::jsonb
+  ),
+  (
     'prontera_warp',
     'prontera',
     1616,

@@ -157,6 +157,30 @@ export function validateRoContent(pack: RoContentPack): void {
     }
   }
 
+  const rentalKinds = new Set(['cart', 'peco_peco', 'falcon'])
+  for (const [kind, entry] of Object.entries(pack.rentals.catalog)) {
+    assert(rentalKinds.has(kind), `rentals catalog unknown kind ${kind}`)
+    assert(entry.zenyCost >= 0, `rentals ${kind} zenyCost invalid`)
+    assert(entry.durationMs > 0, `rentals ${kind} durationMs invalid`)
+    assert(entry.speedMultiplier > 0, `rentals ${kind} speedMultiplier invalid`)
+    for (const jid of entry.requiredJobIds) {
+      assert(jobIds.has(jid), `rentals ${kind} unknown job ${jid}`)
+    }
+    for (const req of entry.requiredSkills) {
+      assert(skillIds.has(req.skillId), `rentals ${kind} unknown skill ${req.skillId}`)
+    }
+  }
+  for (const [npcId, offers] of Object.entries(pack.rentals.offersByNpcId)) {
+    assert(Boolean(npcId), 'rentals offer npc id required')
+    for (const kind of offers) {
+      assert(rentalKinds.has(kind), `rentals ${npcId} unknown offer ${kind}`)
+      assert(
+        kind in pack.rentals.catalog,
+        `rentals ${npcId} missing catalog ${kind}`,
+      )
+    }
+  }
+
   for (const [jobId, kit] of Object.entries(pack.jobStarterGear.kits)) {
     assert(jobIds.has(jobId), `jobStarterGear kit references unknown job ${jobId}`)
     for (const piece of kit.pieces) {

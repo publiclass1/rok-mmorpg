@@ -45,6 +45,7 @@ const NPC_ANCHORS = [
   { id: 'prontera_kafra', label: 'Kafra', npcType: 'storage', tileX: 57, tileY: 44 },
   { id: 'prontera_save', label: 'Save Point', npcType: 'save', tileX: 50, tileY: 46 },
   { id: 'prontera_healer', label: 'Healer', npcType: 'healer', tileX: 43, tileY: 44 },
+  { id: 'prontera_rental', label: 'Rental Shop', npcType: 'rental', tileX: 46, tileY: 44 },
   { id: 'prontera_warp', label: 'Warp Agent', npcType: 'teleport', tileX: 50, tileY: 51 },
   { id: 'prontera_job_master', label: 'Job Master', npcType: 'job_master', tileX: 50, tileY: 26 },
   { id: 'prontera_dungeon_guide', label: 'Dungeon Guide', npcType: 'dungeon', tileX: 90, tileY: 44 },

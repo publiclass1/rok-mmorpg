@@ -193,6 +193,12 @@ function drawArchetypeOverlay(
       g.fillStyle(0xa78bfa, 1)
       g.fillRect(cx - 3, feetY - 23, 6, 2)
       break
+    case 'rental_clerk':
+      g.fillStyle(0x0d9488, 1)
+      g.fillRect(cx - 6, feetY - 26, 12, 6)
+      g.fillStyle(0xfbbf24, 1)
+      g.fillCircle(cx + 8, feetY - 28, 3)
+      break
   }
 }
 

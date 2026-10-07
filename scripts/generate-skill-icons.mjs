@@ -348,6 +348,33 @@ function drawPecoPecoRide(id) {
   )
 }
 
+function drawPushcart(id) {
+  return wrap(
+    `
+  <rect x="6" y="14" width="20" height="10" rx="2" fill="#78716c"/>
+  <rect x="8" y="10" width="16" height="6" rx="1" fill="#a8a29e"/>
+  <circle cx="10" cy="26" r="3" fill="#44403c"/>
+  <circle cx="22" cy="26" r="3" fill="#44403c"/>
+  <path d="M4 12 L8 10" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+  `,
+    id,
+    '#ca8a04',
+  )
+}
+
+function drawFalconMastery(id) {
+  return wrap(
+    `
+  <path d="M8 20 Q16 6 24 18 L20 20 L16 14 L12 20 Z" fill="#1e293b"/>
+  <path d="M20 18 L28 14 L26 20 Z" fill="#334155"/>
+  <circle cx="22" cy="15" r="1.2" fill="#fbbf24"/>
+  <path d="M10 22 L6 24 M14 22 L12 26" stroke="#64748b" stroke-width="1.2" stroke-linecap="round"/>
+  `,
+    id,
+    '#0f766e',
+  )
+}
+
 function drawHeal(id) {
   return wrap(
     `
@@ -447,6 +474,8 @@ const builders = {
   riding: drawRiding,
   cavalier_mastery: drawCavalierMastery,
   peco_peco_ride: drawPecoPecoRide,
+  pushcart: drawPushcart,
+  falcon_mastery: drawFalconMastery,
   heal: drawHeal,
   mob_bash: drawMobBash,
   mob_hammer_fall: drawMobHammer,

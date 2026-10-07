@@ -1,0 +1,37 @@
+{
+  "catalog": {
+    "cart": {
+      "name": "Pushcart",
+      "zenyCost": 800,
+      "durationMs": 1800000,
+      "speedMultiplier": 0.85,
+      "requiredJobIds": ["merchant"],
+      "requiredSkills": [{ "skillId": "pushcart", "level": 1 }],
+      "sourceUrl": "https://irowiki.org/wiki/Pushcart"
+    },
+    "peco_peco": {
+      "name": "Peco Peco",
+      "zenyCost": 800,
+      "durationMs": 1800000,
+      "speedMultiplier": 1.35,
+      "requiredJobIds": ["knight"],
+      "requiredSkills": [
+        { "skillId": "riding", "level": 1 },
+        { "skillId": "peco_peco_ride", "level": 1 }
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Peco_Peco_Ride"
+    },
+    "falcon": {
+      "name": "Falcon",
+      "zenyCost": 800,
+      "durationMs": 1800000,
+      "speedMultiplier": 1,
+      "requiredJobIds": ["hunter"],
+      "requiredSkills": [{ "skillId": "falcon_mastery", "level": 1 }],
+      "sourceUrl": "https://irowiki.org/wiki/Falcon_Mastery"
+    }
+  },
+  "offersByNpcId": {
+    "prontera_rental": ["cart", "peco_peco", "falcon"]
+  }
+}

@@ -818,6 +818,13 @@
       "tileY": 44
     },
     {
+      "id": "prontera_rental",
+      "label": "Rental Shop",
+      "npcType": "rental",
+      "tileX": 46,
+      "tileY": 44
+    },
+    {
       "id": "prontera_warp",
       "label": "Warp Agent",
       "npcType": "teleport",

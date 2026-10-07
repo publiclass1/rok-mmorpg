@@ -106,6 +106,23 @@ export type RoJobMasterConfig = {
   offersByNpcId: Record<string, RoJobChangeOfferJson[]>
 }
 
+export type RoRentalKind = 'cart' | 'peco_peco' | 'falcon'
+
+export type RoRentalCatalogEntry = {
+  name: string
+  zenyCost: number
+  durationMs: number
+  speedMultiplier: number
+  requiredJobIds: string[]
+  requiredSkills: SkillPrerequisite[]
+  sourceUrl?: string | null
+}
+
+export type RoRentalsConfig = {
+  catalog: Record<RoRentalKind, RoRentalCatalogEntry>
+  offersByNpcId: Record<string, RoRentalKind[]>
+}
+
 export type RoExpTables = {
   sourceUrl?: string
   baseLevelCap: number
@@ -264,4 +281,5 @@ export type RoContentPack = {
   dungeons: RoDungeonsConfig
   jobStarterGear: RoJobStarterGearConfig
   jobMaster: RoJobMasterConfig
+  rentals: RoRentalsConfig
 }

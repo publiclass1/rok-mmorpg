@@ -26,7 +26,7 @@
     }
   ],
   "nextlayerid": 9,
-  "nextobjectid": 108,
+  "nextobjectid": 109,
   "layers": [
     {
       "data": [
@@ -25800,6 +25800,47 @@
         },
         {
           "id": 102,
+          "name": "prontera_rental",
+          "type": "npc",
+          "x": 1464,
+          "y": 1360,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "npcId",
+              "type": "string",
+              "value": "prontera_rental"
+            },
+            {
+              "name": "npcType",
+              "type": "string",
+              "value": "rental"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "Rental Shop"
+            },
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "down"
+            },
+            {
+              "name": "spriteKey",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "name": "configJson",
+              "type": "string",
+              "value": "{}"
+            }
+          ]
+        },
+        {
+          "id": 103,
           "name": "prontera_warp",
           "type": "npc",
           "x": 1592,
@@ -25840,7 +25881,7 @@
           ]
         },
         {
-          "id": 103,
+          "id": 104,
           "name": "prontera_job_master",
           "type": "npc",
           "x": 1592,
@@ -25881,7 +25922,7 @@
           ]
         },
         {
-          "id": 104,
+          "id": 105,
           "name": "prontera_dungeon_guide",
           "type": "npc",
           "x": 2872,
@@ -25922,7 +25963,7 @@
           ]
         },
         {
-          "id": 105,
+          "id": 106,
           "name": "prontera_weapon_dealer",
           "type": "npc",
           "x": 824,
@@ -25963,7 +26004,7 @@
           ]
         },
         {
-          "id": 106,
+          "id": 107,
           "name": "prontera_armor_dealer",
           "type": "npc",
           "x": 1080,
@@ -26004,7 +26045,7 @@
           ]
         },
         {
-          "id": 107,
+          "id": 108,
           "name": "prontera_tool_dealer",
           "type": "npc",
           "x": 2360,

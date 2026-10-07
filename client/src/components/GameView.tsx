@@ -62,6 +62,7 @@ import { LowHpVignette } from './LowHpVignette'
 import { Minimap } from './Minimap'
 import type { MinimapPayload } from '../game/world/minimapTypes'
 import { JobMasterModal } from './JobMasterModal'
+import { RentalModal } from './RentalModal'
 import { ShopModal } from './ShopModal'
 import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { DeathModal } from './DeathModal'
@@ -121,6 +122,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [storageNpc, setStorageNpc] = useState<NpcRow | null>(null)
   const [jobMasterNpc, setJobMasterNpc] = useState<NpcRow | null>(null)
   const [shopNpc, setShopNpc] = useState<NpcRow | null>(null)
+  const [rentalNpc, setRentalNpc] = useState<NpcRow | null>(null)
   const [npcMenu, setNpcMenu] = useState<NpcRow | null>(null)
   const [remotePlayers, setRemotePlayers] = useState<
     Array<{
@@ -183,6 +185,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     !!storageNpc ||
     !!jobMasterNpc ||
     !!shopNpc ||
+    !!rentalNpc ||
     !!npcMenu ||
     !!tradePartner ||
     !!partyRequest ||
@@ -815,6 +818,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       setShopNpc(npc)
       return
     }
+    if (choice.kind === 'rental') {
+      setRentalNpc(npc)
+      return
+    }
     if (choice.kind === 'healer') {
       try {
         if (choice.zenyCost > 0) {
@@ -1189,6 +1196,17 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             sheet={sheet}
             onClose={() => setShopNpc(null)}
             onCharacterUpdated={onCharacterUpdated}
+          />
+        )}
+        {rentalNpc && (
+          <RentalModal
+            key={`rental-${rentalNpc.id}`}
+            character={character}
+            npc={rentalNpc}
+            sheet={sheet}
+            onClose={() => setRentalNpc(null)}
+            onCharacterUpdated={onCharacterUpdated}
+            onMessage={setMessage}
           />
         )}
         {partyRequest && (

@@ -17,6 +17,7 @@ import { getItemDisplayName } from './itemCatalog'
 import { getEquipmentDefinition } from './equipmentConfig'
 import { isRolledGearItemId } from './itemCatalog'
 import { applyJobChange } from './jobChange'
+import { applyRental, clearActiveRental, rentalCatalogEntry } from './rental'
 import { canLearnSkill, canPlaceSkillOnBar, JOB_NAMES, SKILLS } from './skillsConfig'
 import {
   addItemsToSessionInventory,
@@ -190,6 +191,23 @@ export function applyCharacterAction(
     const next = syncDerivedVitals({ ...state, hp, mp })
     logActivity('character', 'Revived at save point with partial HP and SP.')
     return { state: next, changed: true, message: 'You have been revived.' }
+  }
+
+  if (action.type === 'rentEquipment') {
+    const entry = rentalCatalogEntry(action.kind)
+    const next = syncDerivedVitals(applyRental(state, action.kind))
+    logActivity('character', `Rented ${entry.name}.`)
+    return { state: next, changed: true, message: `${entry.name} rental started.` }
+  }
+
+  if (action.type === 'dismissRental') {
+    if (!state.activeRental) {
+      return { state, changed: false, message: 'No active rental.' }
+    }
+    const name = rentalCatalogEntry(state.activeRental.kind).name
+    const next = syncDerivedVitals(clearActiveRental(state))
+    logActivity('character', `Returned ${name}.`)
+    return { state: next, changed: true, message: `${name} returned.` }
   }
 
   return { state, changed: false }

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  
+  <defs>
+    <linearGradient id="falconmastery-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="falconmastery-steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="40%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <linearGradient id="falconmastery-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="55%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+    <linearGradient id="falconmastery-fire" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#fde047"/>
+    </linearGradient>
+    <linearGradient id="falconmastery-holy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="45%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+    <linearGradient id="falconmastery-wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a16207"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <radialGradient id="falconmastery-gem" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="50%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </radialGradient>
+    <filter id="falconmastery-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="32" height="32" rx="5" fill="url(#falconmastery-bg)"/>
+  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#0f766e" stroke-opacity="0.45" stroke-width="0.6"/>
+  <path d="M3 27 Q16 23 29 27" stroke="#000" stroke-opacity="0.3" stroke-width="1" fill="none"/>
+  <path d="M8 20 Q16 6 24 18 L20 20 L16 14 L12 20 Z" fill="#1e293b"/>
+  <path d="M20 18 L28 14 L26 20 Z" fill="#334155"/>
+  <circle cx="22" cy="15" r="1.2" fill="#fbbf24"/>
+  <path d="M10 22 L6 24 M14 22 L12 26" stroke="#64748b" stroke-width="1.2" stroke-linecap="round"/>
+  </svg>

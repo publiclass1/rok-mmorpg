@@ -28,6 +28,7 @@ const DEFAULT_GUILD: Record<NpcTypeKey, NpcGuildDisplay> = {
   shop: { name: 'Merchant Guild', iconId: 'merchant' },
   healer: { name: 'Healer Order', iconId: 'healer' },
   dungeon: { name: 'Dungeon Bureau', iconId: 'dungeon' },
+  rental: { name: 'Equipment Rental', iconId: 'merchant' },
 }
 
 const ICON_STYLE: Record<NpcGuildIconId, { fill: number; letters: string }> = {

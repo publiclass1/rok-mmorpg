@@ -36,6 +36,13 @@
       "sourceUrl": "https://irowiki.org/wiki/Archer"
     },
     {
+      "id": "hunter",
+      "name": "Hunter",
+      "maxJobLevel": 50,
+      "parentJobId": "archer",
+      "sourceUrl": "https://irowiki.org/wiki/Hunter"
+    },
+    {
       "id": "acolyte",
       "name": "Acolyte",
       "maxJobLevel": 50,

@@ -25,7 +25,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Accounts & characters | — | implemented | `client/src/lib/accountAuth.ts`, `supabase/migrations/*` |
 | Stats (STR–LUK) | [Stats](https://irowiki.org/wiki/Stats) | partial | Pre-Renewal HP/SP tables + stat point grants in `statFormulas.ts` / `content/ro/expTables.json` |
 | Base / job EXP | [Experience](https://irowiki.org/wiki/Experience) | implemented | `content/ro/expTables.json`, `combat/exp.ts` (Pre-Renewal tables, cap 99) |
-| Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `jobs.json`, Knight skills in `skills.json`; Job Master offers in `jobMaster.json` (overrides DB); starter kit `jobStarterGear.json` |
+| Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `jobs.json` (Knight, Hunter); Job Master in `jobMaster.json` (overrides DB); starter kit `jobStarterGear.json` |
 | Skills | [Skills](https://irowiki.org/wiki/Skills) | partial | `content/ro/skills.json`; Swordman tree + prerequisites; Bash usable in combat |
 | Items & equipment | [Items](https://irowiki.org/wiki/Items), [Equipment](https://irowiki.org/wiki/Equipment) | partial | `content/ro/items.json` (`requiredBaseLevel`, `requiredJobIds`); equip enforced in `equipRequirements.ts` / `applyCharacterAction.ts`; `equipmentConfig.ts` |
 | Inventory weight | [Weight](https://irowiki.org/wiki/Weight) | planned | — |
@@ -38,6 +38,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Player trade | [Trade](https://irowiki.org/wiki/Trade) | implemented | `TradeModal.tsx`, `trade-manage` function |
 | NPC shops | [Vending](https://irowiki.org/wiki/Vending) | partial | `ShopModal.tsx`, `shop` NPC type — Tool / Weapon / Armor dealers in Prontera; buy allowed without reqs, equip gated (client-trusted zeny) |
 | Healer NPC | — | implemented | `healer` NPC restores HP/SP to max (persisted on save) |
+| NPC rentals (cart / peco / falcon) | [Equipment Rental](https://irowiki.org/wiki/Equipment_Rental) | partial | `rental` NPC, `content/ro/rentals.json`, `rental.ts`, `RentalModal.tsx`; timed rental in `character_progress.active_rental`; client-trusted zeny |
 | Zeny economy | [Zeny](https://irowiki.org/wiki/Zeny) | partial | `characters.zeny`, trade, **auto zeny on mob kill** (`loot.json`, debounced save) |
 | Party | [Party](https://irowiki.org/wiki/Party) | partial | `party-manage`, `PartyPanel`, click-target actions |
 | Party dungeons | — | partial | `dungeon-manage`, `dun_f1`–`dun_f5`, Dungeon Guide NPC, per-party instances, MVP after clears, rolled gear drops (`content/ro/dungeons.json`) |
@@ -60,7 +61,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 
 ## Progression persistence (M2)
 
-- **`character_progress`** — levels/EXP, stats, job id, unspent points, HP/MP, skill bar, session inventory (JSONB)
+- **`character_progress`** — levels/EXP, stats, job id, unspent points, HP/MP, skill bar, session inventory (JSONB), `active_rental` (JSONB)
 - **`character_skills`** — `skill_id`, `level`
 - **`character_equipment`** — RO slots → `item_id` (FK `items`)
 - **`public.items`** — extended with `item_type`, `weight`, `equip_slot`, `metadata` (equippables seeded from content)

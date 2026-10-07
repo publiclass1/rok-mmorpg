@@ -10,6 +10,7 @@ import {
   type CharacterSessionState,
   type EquipSlot,
 } from '../game/character/characterState'
+import { parseActiveRental } from '../game/character/rental'
 import type { CharacterRow } from '../types/database'
 import { supabase } from './supabase'
 
@@ -46,6 +47,7 @@ type ProgressRow = {
   skill_bar: unknown
   session_inventory: unknown
   rolled_items?: unknown
+  active_rental?: unknown
 }
 
 type SkillRow = { skill_id: string; level: number }
@@ -108,6 +110,7 @@ function rowToSession(
     skillBar: parseSkillBar(progress.skill_bar),
     sessionInventory: parseSessionInventory(progress.session_inventory),
     rolledItems: parseRolledItemsRecord(progress.rolled_items),
+    activeRental: parseActiveRental(progress.active_rental),
     hp: progress.hp ?? 0,
     mp: progress.mp ?? 0,
   }
@@ -298,6 +301,7 @@ async function writeCharacterSession(characterId: string, state: CharacterSessio
     skill_bar: synced.skillBar,
     session_inventory: synced.sessionInventory,
     rolled_items: synced.rolledItems,
+    active_rental: synced.activeRental,
     updated_at: new Date().toISOString(),
   }
 

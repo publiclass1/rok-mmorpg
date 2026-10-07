@@ -98,6 +98,7 @@ export type NpcObjectNpcType =
   | 'shop'
   | 'healer'
   | 'dungeon'
+  | 'rental'
 
 export type NpcObjectProps = {
   npcId: string

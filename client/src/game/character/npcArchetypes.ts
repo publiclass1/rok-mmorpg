@@ -7,6 +7,7 @@ export type NpcArchetype =
   | 'merchant'
   | 'healer'
   | 'dungeon_guide'
+  | 'rental_clerk'
 
 export type NpcArchetypePalette = {
   skin: number
@@ -82,6 +83,15 @@ export const NPC_ARCHETYPE_PALETTES: Record<NpcArchetype, NpcArchetypePalette> =
     eyes: 0x111827,
     female: false,
   },
+  rental_clerk: {
+    skin: 0xffdbac,
+    hair: 0x1e293b,
+    shirt: 0x0d9488,
+    pants: 0x134e4a,
+    shoes: 0x111827,
+    eyes: 0x111827,
+    female: false,
+  },
 }
 
 export function npcArchetypeFromNpcType(
@@ -102,6 +112,8 @@ export function npcArchetypeFromNpcType(
       return 'healer'
     case 'dungeon':
       return 'dungeon_guide'
+    case 'rental':
+      return 'rental_clerk'
     default:
       return null
   }
@@ -115,3 +127,4 @@ type NpcRowNpcType =
   | 'shop'
   | 'healer'
   | 'dungeon'
+  | 'rental'

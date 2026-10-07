@@ -647,6 +647,7 @@ function NpcFields({
           <option value="job_master">job_master</option>
           <option value="shop">shop</option>
           <option value="healer">healer</option>
+          <option value="rental">rental</option>
           <option value="dungeon">dungeon (Dungeon Guide)</option>
         </select>
       </label>

@@ -9,6 +9,7 @@ export type NpcMenuChoice =
   | { kind: 'job_master'; label: string }
   | { kind: 'shop'; label: string }
   | { kind: 'healer'; label: string; zenyCost: number }
+  | { kind: 'rental'; label: string }
   | { kind: 'teleport'; label: string; destinationMapId: string }
   | { kind: 'dungeon'; label: string; floorId: string; disabled?: boolean }
   | { kind: 'cancel'; label: string }
@@ -41,6 +42,9 @@ export function npcMenuChoices(
       })
       break
     }
+    case 'rental':
+      choices.push({ kind: 'rental', label: 'Equipment rental' })
+      break
     case 'teleport': {
       const destinations = (npc.config?.destinations ?? []) as WarpDestination[]
       for (const dest of destinations) {

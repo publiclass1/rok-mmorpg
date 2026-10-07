@@ -143,6 +143,13 @@ import {
   type NpcWorldVisual,
 } from '../npc/npcWorldVisual'
 import type { CharacterRow, NpcRow } from '../../types/database'
+import {
+  activeRentalAt,
+  clearActiveRental,
+  rentalCatalogEntry,
+  rentalSpeedMultiplier,
+} from '../character/rental'
+import type { PlayerBuffPayload } from '../events'
 
 const INTERACT_RANGE = 64
 const MOB_CLICK_RADIUS = 24
@@ -159,6 +166,10 @@ export class WorldScene extends Phaser.Scene {
   private npcs: NpcRow[] = []
   private npcVisuals: NpcWorldVisual[] = []
   private playerShadow!: Phaser.GameObjects.Ellipse
+  private rentalPecoGfx!: Phaser.GameObjects.Ellipse
+  private rentalCartGfx!: Phaser.GameObjects.Rectangle
+  private rentalFalconGfx!: Phaser.GameObjects.Arc
+  private rentalFalconAngle = 0
   private presence: MapPresenceChannel | null = null
   private remotePlayers = new Map<string, RemotePlayerEntity>()
   private facing: Facing = 'down'
@@ -279,6 +290,9 @@ export class WorldScene extends Phaser.Scene {
       .setDepth(0.5)
 
     this.playerDisplay = createPlayerDisplay(this, spawn.x, spawn.y, appearanceFromCharacterRow(this.character))
+    this.rentalPecoGfx = this.add.ellipse(spawn.x, spawn.y, 38, 22, 0x854d0e, 0.92).setVisible(false)
+    this.rentalCartGfx = this.add.rectangle(spawn.x, spawn.y, 20, 14, 0x78716c, 1).setVisible(false)
+    this.rentalFalconGfx = this.add.circle(spawn.x, spawn.y, 6, 0x1e293b, 1).setVisible(false)
     const playerBody = this.playerDisplay.container.body as Phaser.Physics.Arcade.Body
     playerBody.setCollideWorldBounds(true)
     if (collision) {
@@ -596,9 +610,11 @@ export class WorldScene extends Phaser.Scene {
 
   update() {
     const sheet = toCharacterSheetPayload(this.session)
-    const speed = 140 + Math.min(sheet.effectiveAgi, 99)
+    const wallNow = Date.now()
+    const speed = (140 + Math.min(sheet.effectiveAgi, 99)) * rentalSpeedMultiplier(this.session, wallNow)
     const now = this.time.now
 
+    this.tickActiveRental(wallNow)
     this.tickStatusEffects(now)
 
     if (this.isPlayerDead) {
@@ -1052,6 +1068,7 @@ export class WorldScene extends Phaser.Scene {
     )
     setDepthByFeet(this.playerDisplay.container, playerFeet)
     setDepthByFeet(this.playerLabel, playerFeet + PLAYER_NAME_OFFSET_BELOW, 0.05)
+    this.syncRentalVisuals(playerFeet)
 
     for (const mob of this.mobs) {
       if (!mob.alive) continue
@@ -1187,6 +1204,35 @@ export class WorldScene extends Phaser.Scene {
     emitGameEvent('status', `${def.name} (Lv ${level}) — not implemented yet`)
   }
 
+  private tickActiveRental(wallNow: number) {
+    if (!this.session.activeRental) return
+    if (activeRentalAt(this.session, wallNow)) return
+    this.session = clearActiveRental(this.session)
+    emitGameEvent('sessionSync', structuredClone(this.session))
+    this.scheduleProgressSave()
+    this.emitPlayerBuffs()
+    logActivity('character', 'Equipment rental expired.')
+  }
+
+  private rentalHudBuffs(wallNow: number): PlayerBuffPayload[] {
+    const active = activeRentalAt(this.session, wallNow)
+    if (!active) return []
+    const entry = rentalCatalogEntry(active.kind)
+    const iconSkillId =
+      active.kind === 'cart' ? 'pushcart' : active.kind === 'falcon' ? 'falcon_mastery' : 'peco_peco_ride'
+    const durationMs = Math.max(1, entry.durationMs)
+    return [
+      {
+        statusId: `rental_${active.kind}`,
+        name: entry.name,
+        iconSkillId,
+        skillLevel: 1,
+        expiresAt: active.expiresAt,
+        durationMs,
+      },
+    ]
+  }
+
   private tickStatusEffects(now: number) {
     const pruned = pruneExpired(this.activeBuffs, now)
     if (!buffsEqual(pruned, this.activeBuffs)) {
@@ -1196,7 +1242,43 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private emitPlayerBuffs() {
-    emitGameEvent('playerBuffs', toPlayerBuffPayloads(this.activeBuffs))
+    const wallNow = Date.now()
+    emitGameEvent('playerBuffs', [
+      ...toPlayerBuffPayloads(this.activeBuffs),
+      ...this.rentalHudBuffs(wallNow),
+    ])
+  }
+
+  private syncRentalVisuals(playerFeet: number) {
+    const active = activeRentalAt(this.session, Date.now())
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    const showPeco = active?.kind === 'peco_peco'
+    const showCart = active?.kind === 'cart'
+    const showFalcon = active?.kind === 'falcon'
+
+    this.rentalPecoGfx.setVisible(showPeco)
+    this.rentalCartGfx.setVisible(showCart)
+    this.rentalFalconGfx.setVisible(showFalcon)
+
+    if (showPeco) {
+      this.rentalPecoGfx.setPosition(px, py + 6)
+      setDepthByFeet(this.rentalPecoGfx, playerFeet, -0.4)
+    }
+    if (showCart) {
+      const backX = this.facing === 'left' ? px + 14 : this.facing === 'right' ? px - 14 : px
+      const backY = this.facing === 'up' ? py + 12 : this.facing === 'down' ? py - 10 : py
+      this.rentalCartGfx.setPosition(backX, backY)
+      setDepthByFeet(this.rentalCartGfx, playerFeet, -0.35)
+    }
+    if (showFalcon) {
+      this.rentalFalconAngle += 0.04
+      const orbit = 28
+      const fx = px + Math.cos(this.rentalFalconAngle) * orbit
+      const fy = py - 18 + Math.sin(this.rentalFalconAngle) * 8
+      this.rentalFalconGfx.setPosition(fx, fy)
+      setDepthByFeet(this.rentalFalconGfx, playerFeet, 0.06)
+    }
   }
 
   private playerAttackElementOverride(): string | undefined {

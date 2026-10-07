@@ -22,7 +22,7 @@ export type NpcRow = {
   map_id: string
   x: number
   y: number
-  npc_type: 'teleport' | 'storage' | 'save' | 'job_master' | 'shop' | 'healer' | 'dungeon'
+  npc_type: 'teleport' | 'storage' | 'save' | 'job_master' | 'shop' | 'healer' | 'dungeon' | 'rental'
   label: string
   config: {
     destinations?: Array<{ map_id: string; label: string; x: number; y: number; category?: string }>

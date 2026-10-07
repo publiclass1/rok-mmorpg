@@ -84,6 +84,7 @@ export type CharacterSessionState = {
   rolledItems: Record<string, RolledItem>
   hp: number
   mp: number
+  activeRental: { kind: 'cart' | 'peco_peco' | 'falcon'; expiresAt: number } | null
 }
 
 const DEFAULT_STATS: Record<PrimaryStat, number> = {
@@ -106,6 +107,7 @@ export function createInitialCharacterState(): CharacterSessionState {
     equipment: createDefaultEquipment(),
     skillBar: ['basic_attack', 'sit', null, null, null, null, null, null, null],
     rolledItems: {},
+    activeRental: null,
     sessionInventory: parseSessionInventory([
       { itemId: 'red_potion', quantity: 2 },
       'knife',
