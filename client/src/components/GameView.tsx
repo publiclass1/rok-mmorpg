@@ -5,6 +5,7 @@ import { duelManage, dungeonManage, gmCommand, partyManage, portalWarp, savePoin
 import { clearCharacterPresence, upsertCharacterPresence } from '../lib/characterPresence'
 import { loadGuildForCharacter, type GuildSnapshot } from '../lib/guildState'
 import { loadPartyForCharacter, type PartySnapshot } from '../lib/partyState'
+import { flushActiveMapPresenceLeave } from '../game/realtime/activeMapPresence'
 import { MapChatChannel, type ChatMessage } from '../game/realtime/mapChat'
 import { PartyRealtimeChannel } from '../game/realtime/partyChannel'
 import { loadAccountSavePoint } from '../lib/accountSavePoint'
@@ -95,6 +96,7 @@ import { buildItemTooltipDetail } from '../game/character/itemTooltipDetail'
 import { ItemDetailTooltip } from './ItemDetailTooltip'
 import { FloatingTooltipPortal } from './tooltip/FloatingTooltipPortal'
 import { floatingTooltipPositionFromPoint } from './tooltip/floatingTooltipPosition'
+import { GameHudMenu, type GameHudMenuItem } from './GameHudMenu'
 
 type Props = {
   character: CharacterRow
@@ -142,6 +144,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     gameRef.current = null
     hostRef.current?.replaceChildren()
   }, [])
+
+  const tearDownGameForMapChange = useCallback(async () => {
+    await flushActiveMapPresenceLeave()
+    destroyActiveGame()
+  }, [destroyActiveGame])
 
   const flushZenyToDb = useCallback(async () => {
     pendingZenySaveRef.current = 0
@@ -854,7 +861,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       throw new Error(error?.message ?? 'Respawn failed')
     }
     setPosition({ x: save.x, y: save.y, mapId: save.mapId })
-    if (!sameMap) destroyActiveGame()
+    if (!sameMap) await tearDownGameForMapChange()
     onCharacterUpdated(data as CharacterRow)
     dispatchCharacterAction({ type: 'respawnPartial' })
     if (sameMap) {
@@ -906,7 +913,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         destinationMapId: exit.destinationMapId,
       })
       dispatchCharacterAction({ type: 'respawnPartial' })
-      destroyActiveGame()
+      await tearDownGameForMapChange()
       setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
       onCharacterUpdated(res.character)
       setMessage(`Left PVP room — warped to ${mapDisplayName(exit.destinationMapId)}.`)
@@ -932,7 +939,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             y: payload.y,
             portalId: payload.portalId,
           })
-          destroyActiveGame()
+          await tearDownGameForMapChange()
           setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
           onCharacterUpdated(res.character)
           emitGameEvent('status', `Warped to ${payload.label}`)
@@ -945,7 +952,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     return () => {
       unsub()
     }
-  }, [character.id, onCharacterUpdated, destroyActiveGame])
+  }, [character.id, onCharacterUpdated, tearDownGameForMapChange])
 
   useEffect(() => {
     if (!sessionReady || !npcsReady) return
@@ -1222,7 +1229,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           npcId: npc.id,
           destinationMapId: choice.destinationMapId,
         })
-        destroyActiveGame()
+        await tearDownGameForMapChange()
         setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
         onCharacterUpdated(res.character)
         emitGameEvent('status', `Warped to ${choice.label}`)
@@ -1255,7 +1262,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           emitGameEvent('dungeonSync', sync)
         }
         if (res.character) {
-          destroyActiveGame()
+          await tearDownGameForMapChange()
           setPosition({ x: res.character.x, y: res.character.y, mapId: res.character.map_id })
           onCharacterUpdated(res.character)
         }
@@ -1391,6 +1398,17 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     () => (mapDropHover ? buildItemTooltipDetail(mapDropHover.itemId) : null),
     [mapDropHover],
   )
+
+  const hudMenuItems: GameHudMenuItem[] = [
+    { id: 'stats', label: 'Stats', title: 'Stats (Alt+S)', onClick: () => setStatsOpen(true) },
+    { id: 'inventory', label: 'Inventory', title: 'Inventory (Alt+I)', onClick: () => setInventoryOpen(true) },
+    { id: 'equipment', label: 'Equipment', title: 'Equipment (Alt+E)', onClick: () => setEquipmentOpen(true) },
+    { id: 'skills', label: 'Skills', title: 'Skills (Alt+K)', onClick: () => setSkillsOpen(true) },
+    { id: 'party', label: 'Party', onClick: () => setPartyOpen(true) },
+    { id: 'guild', label: 'Guild', onClick: () => setGuildOpen(true) },
+    { id: 'vendor', label: 'Vending', onClick: () => setVendorSetupOpen(true) },
+    { id: 'leave', label: 'Leave world', variant: 'leave', onClick: () => void leaveWorld() },
+  ]
 
   return (
     <div
@@ -1531,34 +1549,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           </div>
 
           <motion.div
-            className="game-hud-panel game-hud-menu row"
             {...hudEnterMotion}
             transition={{ ...hudEnterMotion.transition, delay: 0.12 }}
           >
-            <button type="button" className="secondary hud-btn" onClick={() => setStatsOpen(true)} title="Alt+S">
-              Stats
-            </button>
-            <button type="button" className="secondary hud-btn" onClick={() => setInventoryOpen(true)} title="Alt+I">
-              Inv
-            </button>
-            <button type="button" className="secondary hud-btn" onClick={() => setEquipmentOpen(true)} title="Alt+E">
-              Equip
-            </button>
-            <button type="button" className="secondary hud-btn" onClick={() => setSkillsOpen(true)} title="Alt+K">
-              Skills
-            </button>
-            <button type="button" className="secondary hud-btn" onClick={() => setPartyOpen(true)}>
-              Party
-            </button>
-            <button type="button" className="secondary hud-btn" onClick={() => setGuildOpen(true)}>
-              Guild
-            </button>
-            <button type="button" className="secondary hud-btn" onClick={() => setVendorSetupOpen(true)}>
-              Vend
-            </button>
-            <button type="button" className="secondary hud-btn hud-btn--leave" onClick={() => void leaveWorld()}>
-              Leave
-            </button>
+            <GameHudMenu items={hudMenuItems} />
           </motion.div>
 
           <motion.div

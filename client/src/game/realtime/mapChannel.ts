@@ -4,11 +4,13 @@ import { DEFAULT_CHARACTER_APPEARANCE, type CharacterAppearance } from '../chara
 import { createDefaultEquipment } from '../character/characterState'
 import type { PlayerPresencePayload } from '../events'
 import { parseDuelCombatSnapshot } from '../duel/duelCombatSnapshot'
+import { clearActiveMapPresence } from './activeMapPresence'
 import { normalizeMapCombatPayload, type MapCombatPayload } from './mapCombatTypes'
 import { parsePresenceLeaveCharacterId, pruneStaleRemoteEntries } from './mapPresenceUtils'
 
 const BROADCAST_MS = 50
 const PRUNE_MS = 1000
+const LEAVE_SEND_TIMEOUT_MS = 500
 
 function normalizeAppearance(raw: Partial<CharacterAppearance> | undefined): CharacterAppearance {
   if (!raw) return { ...DEFAULT_CHARACTER_APPEARANCE }
@@ -22,11 +24,14 @@ function normalizeAppearance(raw: Partial<CharacterAppearance> | undefined): Cha
   }
 }
 
-function normalizePresence(raw: Partial<PlayerPresencePayload>): PlayerPresencePayload | null {
+function normalizePresence(raw: Partial<PlayerPresencePayload>, channelMapId: string): PlayerPresencePayload | null {
   if (!raw.characterId || !raw.name) return null
+  const mapId =
+    typeof raw.mapId === 'string' && raw.mapId.trim() ? raw.mapId.trim() : channelMapId
   return {
     characterId: raw.characterId,
     name: raw.name,
+    mapId,
     x: raw.x ?? 0,
     y: raw.y ?? 0,
     facing: raw.facing ?? 'down',
@@ -48,15 +53,30 @@ type RemoteEntry = {
   at: number
 }
 
+async function sendLeaveBroadcast(channel: RealtimeChannel, payload: { characterId: string; mapId: string }) {
+  await Promise.race([
+    channel.send({
+      type: 'broadcast',
+      event: 'leave',
+      payload,
+    }),
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, LEAVE_SEND_TIMEOUT_MS)
+    }),
+  ])
+}
+
 export class MapPresenceChannel {
   private channel: RealtimeChannel | null = null
   private readonly remotes = new Map<string, RemoteEntry>()
   private broadcastTimer: number | null = null
   private pruneTimer: number | null = null
+  private readonly mapId: string
   private channelKey: string
   private local: PlayerPresencePayload
   private onUpdate: (remotes: PlayerPresencePayload[]) => void
   private onCombat: ((payload: MapCombatPayload) => void) | null = null
+  private leaving = false
 
   constructor(
     mapId: string,
@@ -64,8 +84,9 @@ export class MapPresenceChannel {
     onUpdate: (remotes: PlayerPresencePayload[]) => void,
     channelKey?: string,
   ) {
+    this.mapId = mapId
     this.channelKey = channelKey ?? `map:${mapId}`
-    this.local = local
+    this.local = { ...local, mapId: local.mapId ?? mapId }
     this.onUpdate = onUpdate
   }
 
@@ -101,8 +122,12 @@ export class MapPresenceChannel {
     })
 
     this.channel.on('broadcast', { event: 'pos' }, ({ payload }) => {
-      const p = normalizePresence(payload as Partial<PlayerPresencePayload>)
+      const p = normalizePresence(payload as Partial<PlayerPresencePayload>, this.mapId)
       if (!p || p.characterId === this.local.characterId) return
+      if (p.mapId !== this.mapId) {
+        if (this.removeRemote(p.characterId)) this.emitRemotes()
+        return
+      }
       this.remotes.set(p.characterId, { payload: p, at: Date.now() })
       this.emitRemotes()
     })
@@ -145,18 +170,23 @@ export class MapPresenceChannel {
   }
 
   async leave() {
+    if (this.leaving) return
+    this.leaving = true
+    clearActiveMapPresence(this)
+
     this.stopBroadcast()
     if (this.pruneTimer) {
       window.clearInterval(this.pruneTimer)
       this.pruneTimer = null
     }
-    if (this.channel) {
-      void this.channel.send({
-        type: 'broadcast',
-        event: 'leave',
-        payload: { characterId: this.local.characterId },
+
+    const channel = this.channel
+    if (channel) {
+      await sendLeaveBroadcast(channel, {
+        characterId: this.local.characterId,
+        mapId: this.mapId,
       })
-      await supabase.removeChannel(this.channel)
+      await supabase.removeChannel(channel)
       this.channel = null
     }
     this.remotes.clear()

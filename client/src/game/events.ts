@@ -17,6 +17,8 @@ export type PositionPayload = {
 
 /** Map presence broadcast: position, pose, and equipment for remote avatars. */
 export type PlayerPresencePayload = PositionPayload & {
+  /** Map this position applies to; peers ignore mismatched mapId on the same channel. */
+  mapId: string
   anim: CharacterPose['anim']
   walkFrame: 0 | 1
   mounted?: boolean

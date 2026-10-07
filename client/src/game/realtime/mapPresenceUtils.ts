@@ -6,6 +6,12 @@ export function parsePresenceLeaveCharacterId(payload: unknown): string | null {
   return typeof id === 'string' && id.trim() ? id.trim() : null
 }
 
+export function parsePresenceLeaveMapId(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null
+  const mapId = (payload as { mapId?: unknown }).mapId
+  return typeof mapId === 'string' && mapId.trim() ? mapId.trim() : null
+}
+
 /** Returns true if any entry was removed. */
 export function pruneStaleRemoteEntries(
   remotes: Map<string, { at: number }>,

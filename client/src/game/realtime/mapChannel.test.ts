@@ -2,10 +2,13 @@ import assert from 'node:assert'
 import {
   PRESENCE_STALE_MS,
   parsePresenceLeaveCharacterId,
+  parsePresenceLeaveMapId,
   pruneStaleRemoteEntries,
 } from './mapPresenceUtils'
 
 assert.strictEqual(parsePresenceLeaveCharacterId({ characterId: 'abc' }), 'abc')
+assert.strictEqual(parsePresenceLeaveMapId({ characterId: 'abc', mapId: 'prontera' }), 'prontera')
+assert.strictEqual(parsePresenceLeaveMapId({ characterId: 'abc' }), null)
 assert.strictEqual(parsePresenceLeaveCharacterId({ characterId: '  x  ' }), 'x')
 assert.strictEqual(parsePresenceLeaveCharacterId({ characterId: '' }), null)
 assert.strictEqual(parsePresenceLeaveCharacterId(null), null)

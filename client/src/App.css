@@ -899,6 +899,8 @@ button:disabled {
 .game-hud-overlay .game-hud-bottom,
 .game-hud-overlay .skill-bar-panel,
 .game-hud-overlay .game-hud-minimap,
+.game-hud-overlay .game-hud-menu,
+.game-hud-overlay .hud-menu-btn,
 .game-hud-overlay .game-hud-menu button,
 .game-hud-overlay .game-hud-nearby button,
 .game-hud-overlay .hud-log-toggle,
@@ -1029,6 +1031,11 @@ button:disabled {
   border-radius: 8px;
   padding: 0.35rem 0.4rem 0.45rem;
   backdrop-filter: blur(4px);
+}
+
+.game-hud-minimap--expanded,
+.game-hud-minimap.modal-panel--dragging {
+  z-index: 16;
 }
 
 .game-hud-minimap-header {
@@ -1196,22 +1203,106 @@ button:disabled {
 }
 
 .game-hud-menu {
+  position: absolute;
   top: 0.65rem;
-  right: 0.65rem;
-  max-width: none;
+  right: calc(10px + 136px + 0.65rem);
+  left: auto;
+  z-index: 13;
+  display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  justify-content: flex-end;
   align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  max-width: min(520px, calc(100vw - 10px - 136px - 2rem));
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.hud-menu-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(75, 85, 99, 0.75);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e5e7eb;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.hud-menu-btn:hover,
+.hud-menu-btn:focus-visible {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: #9ca3af;
+  color: #f9fafb;
+}
+
+.hud-menu-btn--leave {
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #fecaca;
+}
+
+.hud-menu-btn--leave:hover,
+.hud-menu-btn--leave:focus-visible {
+  background: rgba(69, 10, 10, 0.85);
+  border-color: #f87171;
+  color: #fef2f2;
+}
+
+.hud-menu-btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hud-menu-btn__label {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 50%;
+  transform: translateX(-50%) translateY(2px);
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: #f3f4f6;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease,
+    visibility 0.12s ease;
+  z-index: 2;
+}
+
+.hud-menu-btn:hover .hud-menu-btn__label,
+.hud-menu-btn:focus-visible .hud-menu-btn__label {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
 }
 
 .hud-btn {
   padding: 0.35rem 0.55rem;
   font-size: 0.8rem;
-}
-
-.hud-btn--leave {
-  margin-left: 0.15rem;
 }
 
 .game-hud-status-message {

@@ -131,6 +131,10 @@ import {
 import { capturePlayerHudPortrait } from '../player/playerHudPortrait'
 import { resolveJobAvatarKey } from '../player/playerJobAvatar'
 import { sitRegenAmounts, sitRegenIntervalMs } from '../character/sitRegen'
+import {
+  flushActiveMapPresenceLeave,
+  registerActiveMapPresence,
+} from '../realtime/activeMapPresence'
 import { MapPresenceChannel } from '../realtime/mapChannel'
 import type { MapCombatPayload, MapCombatSkillId } from '../realtime/mapCombatTypes'
 import {
@@ -781,6 +785,7 @@ export class WorldScene extends Phaser.Scene {
     const presenceChannel = this.presence
     void presenceChannel.join().then(() => {
       if (!this.sys.isActive() || this.presence !== presenceChannel) return
+      registerActiveMapPresence(presenceChannel)
       presenceChannel.setCombatHandler((payload) => this.handleRemoteCombat(payload))
       presenceChannel.startBroadcast(() => this.buildPlayerPresencePayload())
     })
@@ -1403,6 +1408,7 @@ export class WorldScene extends Phaser.Scene {
       return {
         characterId: this.character.id,
         name: this.character.name,
+        mapId: this.character.map_id,
         x: this.character.x,
         y: this.character.y,
         facing: 'down',
@@ -1439,6 +1445,7 @@ export class WorldScene extends Phaser.Scene {
     return {
       characterId: this.character.id,
       name: this.character.name,
+      mapId: this.character.map_id,
       x: this.playerDisplay.container.x,
       y: this.playerDisplay.container.y,
       facing: this.facing,
@@ -3812,9 +3819,13 @@ export class WorldScene extends Phaser.Scene {
     this.eventUnsubs = []
     if (this.persistTimer) window.clearInterval(this.persistTimer)
     if (this.progressSaveTimer) window.clearTimeout(this.progressSaveTimer)
-    this.presence?.setCombatHandler(null)
-    void this.presence?.leave()
+    const presence = this.presence
     this.presence = null
+    presence?.setCombatHandler(null)
+    void (async () => {
+      await flushActiveMapPresenceLeave()
+      await presence?.leave()
+    })()
     this.disposeRemotePlayers()
     // Do not save world position here: this.character.map_id is from scene boot and can be
     // stale when React remounts the game after NPC/portal warp, overwriting the new map in DB.
