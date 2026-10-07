@@ -166,6 +166,8 @@ export type GameEvents = {
   activityLog: ActivityLogEntry
   sessionSync: CharacterSessionState
   worldReady: { mapId: string }
+  minimapUi: { expanded: boolean }
+  minimapMove: { x: number; y: number }
   minimap: MinimapPayload
   portalWarpRequest: {
     portalId: string

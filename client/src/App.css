@@ -794,6 +794,10 @@ body.game-active .game-canvas canvas {
   border-radius: 4px;
 }
 
+.game-hud-minimap-svg--interactive {
+  cursor: crosshair;
+}
+
 .buff-bar {
   position: absolute;
   top: 0.65rem;

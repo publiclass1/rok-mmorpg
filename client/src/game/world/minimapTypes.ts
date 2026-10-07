@@ -18,6 +18,11 @@ export type MinimapMob = MinimapPoint & {
   spawnIndex: number
 }
 
+export type MinimapNpc = MinimapPoint & {
+  npcId: string
+  name: string
+}
+
 export type MinimapPayload = {
   mapId: string
   worldWidth: number
@@ -26,6 +31,7 @@ export type MinimapPayload = {
   localPlayer: MinimapPoint
   remotes: MinimapRemote[]
   mobs: MinimapMob[]
+  npcs: MinimapNpc[]
   obstacles: MinimapWorldRect[]
   blockedTiles: MinimapWorldRect[]
 }

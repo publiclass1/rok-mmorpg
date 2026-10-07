@@ -76,6 +76,7 @@ import {
   type Facing,
   type MoveTarget,
 } from '../movement/clickToMove'
+import { buildWalkabilityGrid, findWorldPath } from '../movement/gridPathfind'
 import { tryJump } from '../movement/jump'
 import { playPlayerDeath, playPlayerFlinch, startPlayerAttackAnim } from '../player/playerCombatAnim'
 import {
@@ -169,6 +170,9 @@ export class WorldScene extends Phaser.Scene {
     setCharacterSession(state)
   }
   private chaseMob: MobInstance | null = null
+  private chasePathGoalX = 0
+  private chasePathGoalY = 0
+  private lastChaseRepathAt = 0
   private selectedMob: MobInstance | null = null
   private selectionRing: Phaser.GameObjects.Ellipse | null = null
   private uiPointerLocked = false
@@ -202,7 +206,10 @@ export class WorldScene extends Phaser.Scene {
   private worldHeight = 0
   private mapDecorSprites: Phaser.GameObjects.Image[] = []
   private lastMinimapEmitAt = 0
+  private minimapExpanded = false
   private minimapObstacleRects: MinimapWorldRect[] = []
+  private minimapBlockedTilesFull: MinimapWorldRect[] = []
+  private walkGrid: Uint8Array | null = null
   private mapTileWidth = 32
   private mapTileHeight = 32
   private mapTilesWide = 0
@@ -280,6 +287,18 @@ export class WorldScene extends Phaser.Scene {
         ? decorFootprintRects(decorLayer.objects as import('../../lib/tmj/types').TmjMapObject[])
         : []
     this.minimapObstacleRects = [...obstacleRectsForMap(this.character.map_id, map), ...decorFootprints]
+    this.walkGrid = buildWalkabilityGrid(
+      this.mapTilesWide,
+      this.mapTilesHigh,
+      (tx, ty) => {
+        const tile = this.collisionLayer?.getTileAt(tx, ty)
+        return Boolean(tile && tile.index > 0)
+      },
+      this.minimapObstacleRects,
+      this.mapTileWidth,
+      this.mapTileHeight,
+    )
+    this.minimapBlockedTilesFull = this.collectAllBlockedTiles()
     colliderWithObstacles(this, this.obstacles, this.playerDisplay.container)
 
     const boot = this.registry.get('bootSession') as ReturnType<typeof getCharacterSession> | undefined
@@ -370,11 +389,7 @@ export class WorldScene extends Phaser.Scene {
       const mob = this.findMobAt(wx, wy)
       if (mob) {
         if (this.isSitting) this.standUp()
-        this.chaseMob = mob
-        this.setSelectedMob(mob)
-        this.setSelectedPlayer(null)
-        setMoveTarget(this.moveTarget, mob.sprite.x, mob.sprite.y)
-        this.faceToward(mob.sprite.x, mob.sprite.y)
+        this.beginChaseMob(mob)
       } else {
         if (this.isSitting) {
           this.standUp()
@@ -383,7 +398,7 @@ export class WorldScene extends Phaser.Scene {
         this.chaseMob = null
         this.setSelectedMob(null)
         this.setSelectedPlayer(null)
-        setMoveTarget(this.moveTarget, wx, wy)
+        this.requestWalkTo(wx, wy)
       }
     })
 
@@ -409,6 +424,22 @@ export class WorldScene extends Phaser.Scene {
       }),
       onGameEvent('uiPointerLock', (locked) => {
         this.uiPointerLocked = locked
+      }),
+      onGameEvent('minimapUi', ({ expanded }) => {
+        this.minimapExpanded = expanded
+      }),
+      onGameEvent('minimapMove', ({ x, y }) => {
+        if (this.uiPointerLocked || this.isPlayerDead || this.pendingSkill) return
+        if (this.isSitting) {
+          this.standUp()
+          return
+        }
+        const wx = Phaser.Math.Clamp(x, 0, this.worldWidth)
+        const wy = Phaser.Math.Clamp(y, 0, this.worldHeight)
+        this.chaseMob = null
+        this.setSelectedMob(null)
+        this.setSelectedPlayer(null)
+        this.requestWalkTo(wx, wy)
       }),
       onGameEvent('socialPresence', (payload) => {
         this.socialPresence = { ...this.socialPresence, ...payload }
@@ -574,19 +605,7 @@ export class WorldScene extends Phaser.Scene {
       this.tickSitRegen(now, sheet)
     } else if (!this.isAttacking && !this.isJumping) {
       if (this.chaseMob?.alive) {
-        setMoveTarget(this.moveTarget, this.chaseMob.sprite.x, this.chaseMob.sprite.y)
-        const dist = Phaser.Math.Distance.Between(
-          this.playerDisplay.container.x,
-          this.playerDisplay.container.y,
-          this.chaseMob.sprite.x,
-          this.chaseMob.sprite.y,
-        )
-        if (dist <= this.playerAttackRangePx()) {
-          clearMoveTarget(this.moveTarget)
-          this.stopPlayerMotion()
-          this.faceToward(this.chaseMob.sprite.x, this.chaseMob.sprite.y)
-          this.tryBasicAttack()
-        }
+        this.tickChaseMob(now)
       }
 
       const playerBody = this.getPlayerBody()
@@ -744,6 +763,90 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  private beginChaseMob(mob: MobInstance) {
+    this.chaseMob = mob
+    this.setSelectedMob(mob)
+    this.setSelectedPlayer(null)
+    this.lastChaseRepathAt = 0
+    this.requestChaseMobPath(mob)
+    this.faceToward(mob.sprite.x, mob.sprite.y)
+  }
+
+  private requestChaseMobPath(mob: MobInstance) {
+    this.chasePathGoalX = mob.sprite.x
+    this.chasePathGoalY = mob.sprite.y
+    this.requestWalkTo(mob.sprite.x, mob.sprite.y)
+  }
+
+  private tickChaseMob(now: number) {
+    const mob = this.chaseMob
+    if (!mob?.alive || !this.playerDisplay) return
+
+    const mx = mob.sprite.x
+    const my = mob.sprite.y
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    const dist = Phaser.Math.Distance.Between(px, py, mx, my)
+    const attackRange = this.playerAttackRangePx()
+
+    if (dist <= attackRange) {
+      clearMoveTarget(this.moveTarget)
+      this.stopPlayerMotion()
+      this.faceToward(mx, my)
+      this.tryBasicAttack()
+      return
+    }
+
+    const mobShift = Math.hypot(mx - this.chasePathGoalX, my - this.chasePathGoalY)
+    const needRepath =
+      now - this.lastChaseRepathAt >= 350 ||
+      mobShift >= 48 ||
+      (!this.moveTarget.active && dist > attackRange + 8)
+
+    if (needRepath) {
+      this.requestChaseMobPath(mob)
+      this.lastChaseRepathAt = now
+    }
+  }
+
+  private requestWalkTo(wx: number, wy: number) {
+    if (!this.playerDisplay) return
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (!this.walkGrid) {
+      setMoveTarget(this.moveTarget, wx, wy)
+      return
+    }
+    const path = findWorldPath(
+      this.walkGrid,
+      this.mapTilesWide,
+      this.mapTilesHigh,
+      this.mapTileWidth,
+      this.mapTileHeight,
+      px,
+      py,
+      wx,
+      wy,
+    )
+    if (!path || path.length === 0) {
+      setMoveTarget(this.moveTarget, wx, wy)
+      return
+    }
+    let start = 0
+    while (
+      start < path.length - 1 &&
+      Math.hypot(path[start].x - px, path[start].y - py) < 10
+    ) {
+      start += 1
+    }
+    const trimmed = path.slice(start)
+    if (trimmed.length === 0) {
+      setMoveTarget(this.moveTarget, wx, wy)
+      return
+    }
+    setMoveTarget(this.moveTarget, wx, wy, trimmed)
+  }
+
   private collectBlockedTilesInView(view: MinimapWorldRect): MinimapWorldRect[] {
     const layer = this.collisionLayer
     if (!layer || view.width <= 0 || view.height <= 0) return []
@@ -757,6 +860,38 @@ export class WorldScene extends Phaser.Scene {
     const tileCount = (tx1 - tx0 + 1) * (ty1 - ty0 + 1)
     if (tileCount <= 0 || tileCount > 500) return []
 
+    return this.collectBlockedTilesInTileRange(layer, tw, th, tx0, ty0, tx1, ty1)
+  }
+
+  private collectAllBlockedTiles(): MinimapWorldRect[] {
+    const layer = this.collisionLayer
+    if (!layer || this.mapTilesWide <= 0 || this.mapTilesHigh <= 0) return []
+
+    const tw = this.mapTileWidth
+    const th = this.mapTileHeight
+    const tileCount = this.mapTilesWide * this.mapTilesHigh
+    if (tileCount > 12000) return []
+
+    return this.collectBlockedTilesInTileRange(
+      layer,
+      tw,
+      th,
+      0,
+      0,
+      this.mapTilesWide - 1,
+      this.mapTilesHigh - 1,
+    )
+  }
+
+  private collectBlockedTilesInTileRange(
+    layer: Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer,
+    tw: number,
+    th: number,
+    tx0: number,
+    ty0: number,
+    tx1: number,
+    ty1: number,
+  ): MinimapWorldRect[] {
     const tiles: MinimapWorldRect[] = []
     for (let ty = ty0; ty <= ty1; ty++) {
       for (let tx = tx0; tx <= tx1; tx++) {
@@ -783,33 +918,61 @@ export class WorldScene extends Phaser.Scene {
       localPlayer: { x: px, y: py },
       remotes: [],
       mobs: [],
+      npcs: [],
       obstacles: [],
       blockedTiles: [],
     }
 
-    for (const rect of this.minimapObstacleRects) {
-      if (rectsIntersect(rect, view)) payload.obstacles.push(rect)
-    }
-    payload.blockedTiles = this.collectBlockedTilesInView(view)
+    if (this.minimapExpanded) {
+      payload.obstacles = this.minimapObstacleRects
+      payload.blockedTiles = this.minimapBlockedTilesFull
+      payload.npcs = this.npcs.map((npc) => ({
+        npcId: npc.id,
+        name: npc.label,
+        x: npc.x,
+        y: npc.y,
+      }))
+      for (const entity of this.remotePlayers.values()) {
+        const c = entity.display.container
+        payload.remotes.push({
+          characterId: entity.lastPayload.characterId,
+          x: c.x,
+          y: c.y,
+        })
+      }
+      for (const mob of this.mobs) {
+        if (!mob.alive) continue
+        payload.mobs.push({
+          spawnIndex: mob.spawnIndex,
+          x: mob.sprite.x,
+          y: mob.sprite.y,
+        })
+      }
+    } else {
+      for (const rect of this.minimapObstacleRects) {
+        if (rectsIntersect(rect, view)) payload.obstacles.push(rect)
+      }
+      payload.blockedTiles = this.collectBlockedTilesInView(view)
 
-    for (const entity of this.remotePlayers.values()) {
-      const c = entity.display.container
-      if (!pointInRect(c.x, c.y, view)) continue
-      payload.remotes.push({
-        characterId: entity.lastPayload.characterId,
-        x: c.x,
-        y: c.y,
-      })
-    }
+      for (const entity of this.remotePlayers.values()) {
+        const c = entity.display.container
+        if (!pointInRect(c.x, c.y, view)) continue
+        payload.remotes.push({
+          characterId: entity.lastPayload.characterId,
+          x: c.x,
+          y: c.y,
+        })
+      }
 
-    for (const mob of this.mobs) {
-      if (!mob.alive) continue
-      if (!pointInRect(mob.sprite.x, mob.sprite.y, view)) continue
-      payload.mobs.push({
-        spawnIndex: mob.spawnIndex,
-        x: mob.sprite.x,
-        y: mob.sprite.y,
-      })
+      for (const mob of this.mobs) {
+        if (!mob.alive) continue
+        if (!pointInRect(mob.sprite.x, mob.sprite.y, view)) continue
+        payload.mobs.push({
+          spawnIndex: mob.spawnIndex,
+          x: mob.sprite.x,
+          y: mob.sprite.y,
+        })
+      }
     }
 
     emitGameEvent('minimap', payload)
@@ -1004,11 +1167,7 @@ export class WorldScene extends Phaser.Scene {
       return
     }
     if (this.isSitting) this.standUp()
-    this.chaseMob = mob
-    this.setSelectedMob(mob)
-    this.setSelectedPlayer(null)
-    setMoveTarget(this.moveTarget, mob.sprite.x, mob.sprite.y)
-    this.faceToward(mob.sprite.x, mob.sprite.y)
+    this.beginChaseMob(mob)
     this.castSkillById(skillId, level, def)
     this.refreshCursor()
   }
@@ -2008,6 +2167,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   shutdown() {
+    this.minimapExpanded = false
     this.eventUnsubs.forEach((u) => u())
     this.eventUnsubs = []
     if (this.persistTimer) window.clearInterval(this.persistTimer)
