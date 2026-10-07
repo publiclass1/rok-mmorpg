@@ -56,6 +56,13 @@
         "requiredJobLevel": 40,
         "requiredBaseLevel": 40,
         "zenyCost": 0
+      },
+      {
+        "jobId": "wizard",
+        "fromJobId": "mage",
+        "requiredJobLevel": 40,
+        "requiredBaseLevel": 40,
+        "zenyCost": 0
       }
     ]
   }

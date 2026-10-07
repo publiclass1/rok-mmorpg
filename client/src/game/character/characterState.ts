@@ -237,6 +237,28 @@ export function grantJobLevelRewards(state: CharacterSessionState, levelsGained:
   }
 }
 
+/** Classic: on base level up, current HP/SP increase by the gain in max (job level alone does not change max). */
+export function applyVitalGainAfterProgress(
+  state: CharacterSessionState,
+  before: { baseLevel: number; jobId: string },
+): CharacterSessionState {
+  if (state.progress.baseLevel <= before.baseLevel) return state
+  const bonuses = equipmentBonusesFromState(state.equipment)
+  const vit = state.vit + bonuses.vit
+  const int = state.int + bonuses.int
+  const oldHpMax = derivedMaxHp(before.jobId, before.baseLevel, vit)
+  const oldMpMax = derivedMaxMp(before.jobId, before.baseLevel, int)
+  const newHpMax = derivedMaxHp(state.jobId, state.progress.baseLevel, vit)
+  const newMpMax = derivedMaxMp(state.jobId, state.progress.baseLevel, int)
+  const hpGain = Math.max(0, newHpMax - oldHpMax)
+  const mpGain = Math.max(0, newMpMax - oldMpMax)
+  return {
+    ...state,
+    hp: Math.min(newHpMax, state.hp + hpGain),
+    mp: Math.min(newMpMax, state.mp + mpGain),
+  }
+}
+
 export function raiseStat(state: CharacterSessionState, stat: PrimaryStat): CharacterSessionState {
   const current = state[stat]
   const cost = statRaiseCost(current)
@@ -263,6 +285,7 @@ export function addExperience(
   const jobLeveled = progress.jobLevel - beforeJob
   next = grantBaseLevelRewards(next, baseLeveled, beforeBase)
   next = grantJobLevelRewards(next, jobLeveled)
+  next = applyVitalGainAfterProgress(next, { baseLevel: beforeBase, jobId: next.jobId })
   return { state: next, baseLeveled, jobLeveled }
 }
 

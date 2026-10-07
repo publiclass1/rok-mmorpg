@@ -61,11 +61,19 @@ const IDLE_CONFIG: Record<PlayerAvatarKey, IdleConfig> = {
   },
   mage: {
     sprite: [
+      { bob: -1, armSwing: 0, legSpread: 2 },
+      { bob: -2, armSwing: -1, legSpread: 3 },
+    ],
+    anim: { frameRate: 1.8, frames: [0, 0, 0, 1, 0] },
+    rig: { dx: 0, dy: -2, durationMs: 2400, ease: 'Sine.easeInOut' },
+  },
+  wizard: {
+    sprite: [
       { bob: -1, armSwing: 0, legSpread: 0 },
       { bob: -2, armSwing: -1, legSpread: 0 },
     ],
     anim: { frameRate: 1.8, frames: [0, 0, 0, 1, 0] },
-    rig: { dx: 0, dy: -2, durationMs: 2400, ease: 'Sine.easeInOut' },
+    rig: { dx: 0, dy: -2, durationMs: 2600, ease: 'Sine.easeInOut' },
   },
   archer: {
     sprite: [

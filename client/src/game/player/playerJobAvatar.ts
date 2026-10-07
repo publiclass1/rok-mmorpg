@@ -5,6 +5,7 @@ export const PLAYER_AVATAR_KEYS = [
   'swordman',
   'knight',
   'mage',
+  'wizard',
   'archer',
   'hunter',
   'acolyte',

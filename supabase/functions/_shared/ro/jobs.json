@@ -33,6 +33,14 @@
       "sourceUrl": "https://irowiki.org/wiki/Mage"
     },
     {
+      "id": "wizard",
+      "name": "Wizard",
+      "maxJobLevel": 50,
+      "parentJobId": "mage",
+      "avatarKey": "wizard",
+      "sourceUrl": "https://irowiki.org/wiki/Wizard"
+    },
+    {
       "id": "archer",
       "name": "Archer",
       "maxJobLevel": 50,

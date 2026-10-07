@@ -12,6 +12,14 @@ export type RoJob = {
   parentJobId: string | null
   /** Procedural player body silhouette key (see playerJobAvatar.ts). */
   avatarKey?: string | null
+  /** iRO Classic Max HP: HP_JOB_A (wiki job modifier table). */
+  hpJobA?: number
+  /** iRO Classic Max HP: HP_JOB_B (parenthetical value, default 5). */
+  hpJobB?: number
+  /** iRO Classic Max SP: SP_JOB per base level. */
+  spJob?: number
+  /** Pre-Renewal transcendent max HP/SP multiplier (1.25 when true). */
+  transcendent?: boolean
   sourceUrl?: string | null
 }
 

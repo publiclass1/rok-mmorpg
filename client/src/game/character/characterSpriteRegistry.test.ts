@@ -61,6 +61,11 @@ function run() {
   assert.equal(swordman.masterTextureKey, playerMasterTextureKey(false, 'swordman'))
   assert.equal(knight.masterTextureKey, playerMasterTextureKey(false, 'knight'))
 
+  const mage = resolvePlayerSpriteDef(DEFAULT_CHARACTER_APPEARANCE, 'mage')
+  const wizard = resolvePlayerSpriteDef(DEFAULT_CHARACTER_APPEARANCE, 'wizard')
+  assert.notEqual(mage.masterTextureKey, wizard.masterTextureKey)
+  assert.equal(wizard.masterTextureKey, playerMasterTextureKey(false, 'wizard'))
+
   console.log('characterSpriteRegistry.test.ts: ok')
 }
 

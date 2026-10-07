@@ -26,6 +26,9 @@ export function validateRoContent(pack: RoContentPack): void {
     if (job.id !== 'monster') {
       const key = job.avatarKey ?? 'novice'
       assert(ALLOWED_AVATAR_KEYS.has(key), `job ${job.id} invalid avatarKey: ${key}`)
+      assert(job.hpJobA != null && job.hpJobA >= 0, `job ${job.id} must define hpJobA >= 0`)
+      assert(job.hpJobB != null && job.hpJobB > 0, `job ${job.id} must define hpJobB > 0`)
+      assert(job.spJob != null && job.spJob > 0, `job ${job.id} must define spJob > 0`)
     }
   }
 

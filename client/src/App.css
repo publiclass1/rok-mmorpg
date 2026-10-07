@@ -381,16 +381,47 @@
   pointer-events: none;
 }
 
-.character-appearance-preview--job-mage .character-appearance-preview__legs,
-.character-appearance-preview--job-acolyte .character-appearance-preview__legs {
+.character-appearance-preview--job-acolyte .character-appearance-preview__legs,
+.character-appearance-preview--job-wizard .character-appearance-preview__legs {
   display: none;
 }
 
-.character-appearance-preview--job-mage .character-appearance-preview__body,
-.character-appearance-preview--job-acolyte .character-appearance-preview__body {
+.character-appearance-preview--job-mage .character-appearance-preview__body {
+  height: 20px;
+  top: 38px;
+  border-radius: 3px 3px 4px 4px;
+}
+
+.character-appearance-preview--job-acolyte .character-appearance-preview__body,
+.character-appearance-preview--job-wizard .character-appearance-preview__body {
   height: 30px;
   top: 34px;
   border-radius: 3px 3px 6px 6px;
+}
+
+.character-appearance-preview--job-wizard .character-appearance-preview__job-accent::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 16px;
+  height: 3px;
+  margin-left: -8px;
+  background: #8a7a98;
+  border-radius: 1px;
+  box-shadow: 0 -9px 0 -2px #8a7a98;
+}
+
+.character-appearance-preview--job-wizard .character-appearance-preview__job-accent::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  width: 8px;
+  height: 12px;
+  margin-left: -4px;
+  background: #e8e8f0;
+  border-radius: 2px 2px 4px 4px;
 }
 
 .character-appearance-preview--job-swordman .character-appearance-preview__body,

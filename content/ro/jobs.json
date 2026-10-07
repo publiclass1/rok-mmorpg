@@ -6,6 +6,9 @@
       "maxJobLevel": 10,
       "parentJobId": null,
       "avatarKey": "novice",
+      "hpJobA": 0,
+      "hpJobB": 5,
+      "spJob": 1,
       "sourceUrl": "https://irowiki.org/wiki/Novice"
     },
     {
@@ -14,6 +17,9 @@
       "maxJobLevel": 50,
       "parentJobId": "novice",
       "avatarKey": "swordman",
+      "hpJobA": 0.7,
+      "hpJobB": 5,
+      "spJob": 2,
       "sourceUrl": "https://irowiki.org/wiki/Swordman"
     },
     {
@@ -22,6 +28,9 @@
       "maxJobLevel": 50,
       "parentJobId": "swordman",
       "avatarKey": "knight",
+      "hpJobA": 1.5,
+      "hpJobB": 5,
+      "spJob": 3,
       "sourceUrl": "https://irowiki.org/wiki/Knight"
     },
     {
@@ -30,7 +39,21 @@
       "maxJobLevel": 50,
       "parentJobId": "novice",
       "avatarKey": "mage",
+      "hpJobA": 0.3,
+      "hpJobB": 5,
+      "spJob": 6,
       "sourceUrl": "https://irowiki.org/wiki/Mage"
+    },
+    {
+      "id": "wizard",
+      "name": "Wizard",
+      "maxJobLevel": 50,
+      "parentJobId": "mage",
+      "avatarKey": "wizard",
+      "hpJobA": 0.45,
+      "hpJobB": 5,
+      "spJob": 8,
+      "sourceUrl": "https://irowiki.org/wiki/Wizard"
     },
     {
       "id": "archer",
@@ -38,6 +61,9 @@
       "maxJobLevel": 50,
       "parentJobId": "novice",
       "avatarKey": "archer",
+      "hpJobA": 0.5,
+      "hpJobB": 5,
+      "spJob": 2,
       "sourceUrl": "https://irowiki.org/wiki/Archer"
     },
     {
@@ -46,6 +72,9 @@
       "maxJobLevel": 50,
       "parentJobId": "archer",
       "avatarKey": "hunter",
+      "hpJobA": 0.85,
+      "hpJobB": 5,
+      "spJob": 4,
       "sourceUrl": "https://irowiki.org/wiki/Hunter"
     },
     {
@@ -54,6 +83,9 @@
       "maxJobLevel": 50,
       "parentJobId": "novice",
       "avatarKey": "acolyte",
+      "hpJobA": 0.4,
+      "hpJobB": 5,
+      "spJob": 5,
       "sourceUrl": "https://irowiki.org/wiki/Acolyte"
     },
     {
@@ -62,6 +94,9 @@
       "maxJobLevel": 50,
       "parentJobId": "novice",
       "avatarKey": "merchant",
+      "hpJobA": 0.4,
+      "hpJobB": 5,
+      "spJob": 3,
       "sourceUrl": "https://irowiki.org/wiki/Merchant"
     },
     {
@@ -70,6 +105,9 @@
       "maxJobLevel": 50,
       "parentJobId": "novice",
       "avatarKey": "thief",
+      "hpJobA": 0.5,
+      "hpJobB": 5,
+      "spJob": 2,
       "sourceUrl": "https://irowiki.org/wiki/Thief"
     },
     {

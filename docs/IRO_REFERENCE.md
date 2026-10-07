@@ -23,7 +23,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | System | Wiki | Status | Code / data |
 |--------|------|--------|-------------|
 | Accounts & characters | — | implemented | `client/src/lib/accountAuth.ts`, `supabase/migrations/*` |
-| Stats (STR–LUK) | [Stats](https://irowiki.org/wiki/Stats) | partial | Pre-Renewal HP/SP + stat points (`statFormulas.ts`, `expTables.json`); classic ASPD from `content/ro/aspd.json` + `preRenewalAspd.ts` (AGI/DEX, job/weapon, shield) |
+| Stats (STR–LUK) | [Stats](https://irowiki.org/wiki/Stats) | partial | Classic max HP/SP (`jobs.json` vitals + `statFormulas.ts`); base-level HP/SP gain + stat/skill grants on level up (`characterState.ts`, `progressApply.ts`); stat tables in `expTables.json`; classic ASPD from `aspd.json` + `preRenewalAspd.ts` |
 | Base / job EXP | [Experience](https://irowiki.org/wiki/Experience) | implemented | `content/ro/expTables.json`, `combat/exp.ts` (Pre-Renewal tables, cap 99) |
 | Jobs & job change | [Classes](https://irowiki.org/wiki/Classes) | partial | `jobs.json` (Knight, Hunter, per-job `avatarKey` for distinct player silhouettes); Job Master in `jobMaster.json` (overrides DB); starter kit `jobStarterGear.json`; presence broadcasts `jobId` for multiplayer avatars |
 | Skills | [Skills](https://irowiki.org/wiki/Skills) | partial | `content/ro/skills.json`; Swordman tree + prerequisites; Bash usable in combat |

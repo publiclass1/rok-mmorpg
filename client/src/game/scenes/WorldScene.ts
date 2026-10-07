@@ -6,12 +6,12 @@ import {
   isSkillBarConsumable,
 } from '../character/skillBarEntry'
 import {
-  addExperience,
   createInitialCharacterState,
   grantRolledGear,
   normalizeEquipment,
   useConsumableFromSession,
 } from '../character/characterState'
+import { applyProgressAfterExp, applyServerProgressUpdate } from '../character/progressApply'
 import {
   getCharacterSession,
   setCharacterSession,
@@ -3720,6 +3720,8 @@ export class WorldScene extends Phaser.Scene {
         }
         const beforeBase = this.session.progress.baseLevel
         const beforeJob = this.session.progress.jobLevel
+        let baseGained = 0
+        let jobGained = 0
         updateCharacterSession((s) => {
           const progress = progressFromLevels(
             result.progress.baseLevel,
@@ -3728,17 +3730,20 @@ export class WorldScene extends Phaser.Scene {
             result.progress.jobExp,
             s.jobId,
           )
-          return syncDerivedVitals({
-            ...s,
+          const applied = applyServerProgressUpdate(
+            {
+              ...s,
+              sessionInventory: Array.isArray(result.sessionInventory)
+                ? (result.sessionInventory as typeof s.sessionInventory)
+                : s.sessionInventory,
+            },
             progress,
-            sessionInventory: Array.isArray(result.sessionInventory)
-              ? (result.sessionInventory as typeof s.sessionInventory)
-              : s.sessionInventory,
-          })
+          )
+          baseGained = applied.baseGained
+          jobGained = applied.jobGained
+          return applied.state
         })
         logActivity('exp', `Gained ${result.baseExp} Base EXP and ${result.jobExp} Job EXP.`)
-        const baseGained = result.progress.baseLevel - beforeBase
-        const jobGained = result.progress.jobLevel - beforeJob
         this.enqueueLevelUps(baseGained, jobGained, beforeBase, beforeJob)
         this.emitCharacterSheet()
       })
@@ -3826,10 +3831,10 @@ export class WorldScene extends Phaser.Scene {
     let baseGained = 0
     let jobGained = 0
     updateCharacterSession((s) => {
-      const r = addExperience(s, shareBase, shareJob)
+      const r = applyProgressAfterExp(s, shareBase, shareJob)
       baseGained = r.baseLeveled
       jobGained = r.jobLeveled
-      return syncDerivedVitals(r.state)
+      return r.state
     })
     logActivity('exp', `Gained ${shareBase} Base EXP and ${shareJob} Job EXP.`)
     this.enqueueLevelUps(baseGained, jobGained, beforeBase, beforeJob)
@@ -3852,10 +3857,10 @@ export class WorldScene extends Phaser.Scene {
     let baseGained = 0
     let jobGained = 0
     updateCharacterSession((s) => {
-      const r = addExperience(s, payload.baseExp, payload.jobExp)
+      const r = applyProgressAfterExp(s, payload.baseExp, payload.jobExp)
       baseGained = r.baseLeveled
       jobGained = r.jobLeveled
-      return syncDerivedVitals(r.state)
+      return r.state
     })
     logActivity('exp', `Party share: ${payload.baseExp} Base / ${payload.jobExp} Job EXP.`)
     this.enqueueLevelUps(baseGained, jobGained, beforeBase, beforeJob)

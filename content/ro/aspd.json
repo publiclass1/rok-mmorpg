@@ -51,6 +51,18 @@
       }
     },
     {
+      "jobId": "wizard",
+      "shieldAspdPenalty": 6,
+      "baseAspdAt1Agi1Dex": {
+        "unarmed": 146,
+        "knife": 146,
+        "sword": 146,
+        "spear": 146,
+        "staff": 146,
+        "bow": 146
+      }
+    },
+    {
       "jobId": "archer",
       "shieldAspdPenalty": 6,
       "baseAspdAt1Agi1Dex": {

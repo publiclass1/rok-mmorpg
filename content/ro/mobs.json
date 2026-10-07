@@ -31,6 +31,68 @@
       }
     },
     {
+      "id": "small_poring",
+      "name": "Small Poring",
+      "sourceUrl": "https://irowiki.org/wiki/Poring",
+      "level": 1,
+      "hp": 17,
+      "atk": 2,
+      "def": 0,
+      "mdef": 2,
+      "size": "small",
+      "element": "water",
+      "wikiBaseExp": 9,
+      "wikiJobExp": 7,
+      "drops": [
+        { "itemId": "jellopy", "rate": 3500, "note": "per-mille" }
+      ],
+      "runtime": {
+        "maxHp": 17,
+        "color": "0xfbcfe8",
+        "aggroRange": 47,
+        "attackRange": 12,
+        "attackDamage": 1,
+        "attackCooldownMs": 1200,
+        "roamRadius": 32,
+        "moveSpeed": 18,
+        "wanderPauseMs": 2000,
+        "baseExp": 9,
+        "jobExp": 7
+      }
+    },
+    {
+      "id": "pupa",
+      "name": "Pupa",
+      "sourceUrl": "https://irowiki.org/wiki/Pupa",
+      "level": 2,
+      "hp": 66,
+      "atk": 13,
+      "def": 0,
+      "mdef": 1,
+      "size": "small",
+      "element": "earth",
+      "wikiBaseExp": 31,
+      "wikiJobExp": 23,
+      "drops": [
+        { "itemId": "chrysalis", "rate": 5500 },
+        { "itemId": "sticky_mucus", "rate": 500 },
+        { "itemId": "fluff", "rate": 350 }
+      ],
+      "runtime": {
+        "maxHp": 66,
+        "color": "0xca8a04",
+        "aggroRange": 90,
+        "attackRange": 28,
+        "attackDamage": 6,
+        "attackCooldownMs": 1400,
+        "roamRadius": 40,
+        "moveSpeed": 30,
+        "wanderPauseMs": 2500,
+        "baseExp": 31,
+        "jobExp": 23
+      }
+    },
+    {
       "id": "lunatic",
       "name": "Lunatic",
       "sourceUrl": "https://irowiki.org/wiki/Lunatic",

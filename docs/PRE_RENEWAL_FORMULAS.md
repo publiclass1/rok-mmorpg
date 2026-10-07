@@ -21,9 +21,16 @@ We align with **Pre-Renewal / Classic** iRO rules per [iRO Wiki](https://irowiki
 
 ## HP and SP (MP)
 
-Classic max HP/SP depend on base level, job, VIT, INT, and job bonuses ([Stats](https://irowiki.org/wiki/Stats), job pages).
+Classic max HP/SP depend on base level, job coefficients, VIT, and INT ([Max HP Classic](https://irowiki.org/classic/Max_HP), [Max SP Classic](https://irowiki.org/classic/Max_SP)).
 
-**Today:** Job base HP/SP tables (`expTables.json`) + VIT×5 / INT×2 (default HpIncrease/SpIncrease).
+- **Base HP:** `35 + baseLevel × HP_JOB_B` plus `Σ round(HP_JOB_A × i)` for `i = 2..baseLevel`
+- **Max HP:** `floor(baseHp × (1 + VIT × 0.01) × TRANS_MOD)` (+ equipment mods when wired)
+- **Base SP:** `10 + baseLevel × SP_JOB`
+- **Max SP:** `floor(baseSp × (1 + INT × 0.01))`, then `× TRANS_MOD`
+- **Base level up:** current HP/SP increase by the gain in max; stat points from `statPointsOnBaseLevelUp`
+- **Job level up:** skill points only (max HP/SP unchanged until base level or job class changes)
+
+**Today:** `hpJobA` / `hpJobB` / `spJob` on each job in `content/ro/jobs.json`; `statFormulas.ts` + `progressApply.ts` on all EXP paths. `expTables.json` `jobBaseHp`/`jobBaseSp` novice rows kept as reference for validation.
 
 ## Experience tables
 
@@ -81,7 +88,7 @@ Kill reward uses mob base EXP and job EXP from data ([Poring](https://irowiki.or
 
 - [x] `expTables.json` + wire `exp.ts`
 - [x] Pre-Renewal stat point cost + grants
-- [x] Job-aware HP/SP (novice table; extend per job in content as needed)
+- [x] Job-aware HP/SP (classic formulas + `jobs.json` vitals; level-up HP/SP gain on base level)
 - [x] HIT/FLEE and damage pipeline in combat
 - [x] LUK-based critical hits (physical + magic helper)
 - [x] Drops from `mobs.json` `drops[]`

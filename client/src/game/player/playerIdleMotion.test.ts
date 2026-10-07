@@ -11,6 +11,7 @@ const EXPECTED_AVATAR_KEYS = [
   'swordman',
   'knight',
   'mage',
+  'wizard',
   'archer',
   'hunter',
   'acolyte',
