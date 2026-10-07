@@ -1,7 +1,7 @@
 {
   "id": "prontera",
-  "width": 40,
-  "height": 28,
+  "width": 100,
+  "height": 80,
   "legend": {
     "W": {
       "gid": 1,
@@ -23,106 +23,845 @@
       "decor": 0,
       "collision": 0,
       "preview": "#c4a574"
-    },
-    "B": {
-      "gid": 5,
-      "ground": 5,
-      "decor": 0,
-      "collision": 1,
-      "preview": "#b45309"
-    },
-    "T": {
-      "gid": 2,
-      "ground": "checker",
-      "decor": 6,
-      "collision": 1,
-      "preview": "#166534"
-    },
-    "F": {
-      "gid": 7,
-      "ground": 7,
-      "decor": 0,
-      "collision": 0,
-      "preview": "#38bdf8"
-    },
-    "O": {
-      "gid": 8,
-      "ground": 8,
-      "decor": 0,
-      "collision": 0,
-      "preview": "#818cf8"
     }
   },
   "rows": [
-    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
-    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGGGGGW",
-    "WGTTTTTTTTTTTGGGGGGPPGGGGGGTTTTTTTTTTTGW",
-    "WGTTTTTTTTTTTGGGGGGPPGGGGGGTTTTTTTTTTTGW",
-    "WGTTTTTTTTTTTGGGGGGPPGGGGGGTTTTTTTTTTTGW",
-    "WGTTTTTTTTTTTGGGGGGPPGGGGGGTTTTTTTTTTTGW",
-    "WGTTTGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGTTTGW",
-    "WGTTTGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGTTTGW",
-    "WGTTTGGGGGGGGGGGGBBBBGGGGGGGGGGGGGGTTTGW",
-    "WGTTTGGGGGGGGGGGGBBBBGGGGGGGGGGGGGGTTTGW",
-    "WGGGGBBBGGGGGGGGGBBBBGGGBBBBGGGGBBBTTTGW",
-    "WGGGGBBBGGGGGGGGGFFFFFFGBBBBGGGGBBBGGGGW",
-    "WGGGGBBBGGGGGGGGGFFFFFFGBBBBGGGGBBBGGGGW",
-    "WPPPPBBBPPPPPPPPPFFFFFFPPPPPPPPPBBBPPPPW",
-    "WPPPPPPPPPPPPPPPPFFFFFFPPPPPPPPPPPPPPPPW",
-    "WGGGGGGGGGGGGBBBGFFFFFFGBBBBGGGGGGGGGGGW",
-    "WGGGGGGGGGGGGBBBGFFFFFFGBBBBGGGGGGGGGGGW",
-    "WGGGGGGGGGGGGBBBGGGPPGGGBBBBGGGGGGGGGGGW",
-    "WGGGGGGGBBBBGGGGGGGPPGGGGGGGBBBBGGGGGGGW",
-    "WGGGGGGGBBBBGGGGGGGPPGGGGGGGBBBBGGGGGGGW",
-    "WGGTTTTGBBBBGGGGGGGPPGGGGGGGBBBBGGGGGGGW",
-    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGTTTTGGW",
-    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGGGGGW",
-    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGGGGGW",
-    "WGGGGGGGGGGGGGGGGGGPPGGGGGGGGGGGGGGGGGGW",
-    "WGGGGGGGGGGGGGGGGGOOOOGGGGGGGGGGGGGGGGGW",
-    "WGGGGGGGGGGGGGGGGGOOOOGGGGGGGGGGGGGGGGGW",
-    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+    "WWWWWWWWWWWWWWWWWWWWWWWWPPPWWWWWWWWWWWWWWWWWWWWPPPPPPPWWWWWWWWWWWWWWWWWWWPPPWWWWWWWWWWWWWWWWWWWWWWWW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGPPPPPPPPPGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGPPPPPPPPPPPGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGPPPPPPPPPPPPPGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGPPPPPPPPPPPPPPPGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGPPPPPPPPPPPPPPPPPGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGPPPPPPPPPPPPPPPPPGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGPPPPPPPPPPPPPPPGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGPPPPPPPPPPPPPGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGPPPPPPPPPPPGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGPPPPPPPPPGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WGGGGGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGPPPPPPPGGGGGGGGGGGGGGGGGGGPPPGGGGGGGGGGGGGGGGGGGGGGGW",
+    "WWWWWWWWWWWWWWWWWWWWWWWWPPPWWWWWWWWWWWWWWWWWWWWPPPPPPPWWWWWWWWWWWWWWWWWWWPPPWWWWWWWWWWWWWWWWWWWWWWWW"
   ],
-  "npcAnchors": {
-    "prontera_kafra": {
-      "tileX": 16,
-      "tileY": 14
+  "decor": [
+    {
+      "asset": "castle",
+      "x": 1328,
+      "y": 224,
+      "width": 576,
+      "height": 416
     },
-    "prontera_save": {
-      "tileX": 19,
-      "tileY": 9
+    {
+      "asset": "sanctuary",
+      "x": 2224,
+      "y": 448,
+      "width": 320,
+      "height": 320
     },
-    "prontera_warp": {
-      "tileX": 22,
-      "tileY": 23
+    {
+      "asset": "kafra_hq",
+      "x": 1024,
+      "y": 1120,
+      "width": 288,
+      "height": 224
     },
-    "prontera_job_master": {
-      "tileX": 24,
-      "tileY": 16
+    {
+      "asset": "fountain",
+      "x": 1520,
+      "y": 1056,
+      "width": 192,
+      "height": 192
     },
-    "prontera_tool_dealer": {
-      "tileX": 25,
-      "tileY": 11
+    {
+      "asset": "shop_weapon",
+      "x": 752,
+      "y": 1488,
+      "width": 192,
+      "height": 176
     },
-    "prontera_armor_dealer": {
-      "tileX": 24,
-      "tileY": 11
+    {
+      "asset": "shop_armor",
+      "x": 1008,
+      "y": 1488,
+      "width": 192,
+      "height": 176
     },
-    "prontera_weapon_dealer": {
-      "tileX": 26,
-      "tileY": 11
+    {
+      "asset": "inn",
+      "x": 752,
+      "y": 1296,
+      "width": 192,
+      "height": 176
     },
-    "prontera_healer": {
-      "tileX": 14,
-      "tileY": 15
+    {
+      "asset": "shop_tool",
+      "x": 2160,
+      "y": 1488,
+      "width": 192,
+      "height": 176
     },
-    "field_return_landing": {
-      "tileX": 19,
-      "tileY": 24
+    {
+      "asset": "large_house",
+      "x": 480,
+      "y": 1344,
+      "width": 224,
+      "height": 192
     },
-    "default_spawn": {
-      "tileX": 20,
-      "tileY": 14
+    {
+      "asset": "large_house_b",
+      "x": 1248,
+      "y": 1344,
+      "width": 224,
+      "height": 192
+    },
+    {
+      "asset": "large_house",
+      "x": 1888,
+      "y": 1344,
+      "width": 224,
+      "height": 192
+    },
+    {
+      "asset": "large_house_b",
+      "x": 2528,
+      "y": 1344,
+      "width": 224,
+      "height": 192
+    },
+    {
+      "asset": "house",
+      "x": 384,
+      "y": 1840,
+      "width": 160,
+      "height": 144
+    },
+    {
+      "asset": "house",
+      "x": 2688,
+      "y": 1840,
+      "width": 160,
+      "height": 144
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 768,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 896,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 1024,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 1152,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 1280,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 1408,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 1536,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 1664,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 1792,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 1920,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 624,
+      "y": 2048,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 768,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 896,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 1024,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 1152,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 1280,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 1408,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 1536,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 1664,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 1792,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 1920,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 656,
+      "y": 2048,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 768,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 896,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 1024,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 1152,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 1280,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 1408,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 1536,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 1664,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 1792,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 1920,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2384,
+      "y": 2048,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 768,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 896,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 1024,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 1152,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 1280,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 1408,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 1536,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 1664,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 1792,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 1920,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "canal",
+      "x": 2416,
+      "y": 2048,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "asset": "bridge_h",
+      "x": 624,
+      "y": 768,
+      "width": 192,
+      "height": 128
+    },
+    {
+      "asset": "bridge_h",
+      "x": 2384,
+      "y": 768,
+      "width": 192,
+      "height": 128
+    },
+    {
+      "asset": "bridge_h",
+      "x": 624,
+      "y": 1152,
+      "width": 192,
+      "height": 128
+    },
+    {
+      "asset": "bridge_h",
+      "x": 2384,
+      "y": 1152,
+      "width": 192,
+      "height": 128
+    },
+    {
+      "asset": "bridge_h",
+      "x": 624,
+      "y": 1536,
+      "width": 192,
+      "height": 128
+    },
+    {
+      "asset": "bridge_h",
+      "x": 2384,
+      "y": 1536,
+      "width": 192,
+      "height": 128
+    },
+    {
+      "asset": "gate",
+      "x": 1504,
+      "y": -128,
+      "width": 224,
+      "height": 192
+    },
+    {
+      "asset": "gate",
+      "x": 1504,
+      "y": 2272,
+      "width": 224,
+      "height": 192
+    },
+    {
+      "asset": "gate",
+      "x": -32,
+      "y": 1088,
+      "width": 224,
+      "height": 192
+    },
+    {
+      "asset": "gate",
+      "x": 3008,
+      "y": 1088,
+      "width": 224,
+      "height": 192
+    },
+    {
+      "asset": "wall_tower",
+      "x": 32,
+      "y": -112,
+      "width": 96,
+      "height": 176
+    },
+    {
+      "asset": "wall_tower",
+      "x": 3072,
+      "y": -112,
+      "width": 96,
+      "height": 176
+    },
+    {
+      "asset": "wall_tower",
+      "x": 32,
+      "y": 2288,
+      "width": 96,
+      "height": 176
+    },
+    {
+      "asset": "wall_tower",
+      "x": 3072,
+      "y": 2288,
+      "width": 96,
+      "height": 176
+    },
+    {
+      "asset": "wall_tower",
+      "x": 352,
+      "y": -112,
+      "width": 96,
+      "height": 176
+    },
+    {
+      "asset": "wall_tower",
+      "x": 2752,
+      "y": -112,
+      "width": 96,
+      "height": 176
+    },
+    {
+      "asset": "tree_oak",
+      "x": 176,
+      "y": 16,
+      "width": 192,
+      "height": 240
+    },
+    {
+      "asset": "tree_oak",
+      "x": 2864,
+      "y": 16,
+      "width": 192,
+      "height": 240
+    },
+    {
+      "asset": "tree_large",
+      "x": 192,
+      "y": 2080,
+      "width": 160,
+      "height": 224
+    },
+    {
+      "asset": "tree_large",
+      "x": 2880,
+      "y": 2080,
+      "width": 160,
+      "height": 224
+    },
+    {
+      "asset": "tree_pine",
+      "x": 152,
+      "y": 1072,
+      "width": 112,
+      "height": 208
+    },
+    {
+      "asset": "tree_pine",
+      "x": 2968,
+      "y": 1072,
+      "width": 112,
+      "height": 208
+    },
+    {
+      "asset": "tree",
+      "x": 272,
+      "y": 144,
+      "width": 128,
+      "height": 176
+    },
+    {
+      "asset": "tree",
+      "x": 400,
+      "y": 144,
+      "width": 128,
+      "height": 176
+    },
+    {
+      "asset": "tree",
+      "x": 528,
+      "y": 144,
+      "width": 128,
+      "height": 176
+    },
+    {
+      "asset": "tree",
+      "x": 2576,
+      "y": 144,
+      "width": 128,
+      "height": 176
+    },
+    {
+      "asset": "tree",
+      "x": 2704,
+      "y": 144,
+      "width": 128,
+      "height": 176
+    },
+    {
+      "asset": "tree",
+      "x": 2832,
+      "y": 144,
+      "width": 128,
+      "height": 176
+    },
+    {
+      "asset": "lamp_post",
+      "x": 1952,
+      "y": 1184,
+      "width": 32,
+      "height": 96
+    },
+    {
+      "asset": "bush",
+      "x": 1968,
+      "y": 1232,
+      "width": 64,
+      "height": 48
+    },
+    {
+      "asset": "lamp_post",
+      "x": 1856,
+      "y": 1376,
+      "width": 32,
+      "height": 96
+    },
+    {
+      "asset": "lamp_post",
+      "x": 1600,
+      "y": 1440,
+      "width": 32,
+      "height": 96
+    },
+    {
+      "asset": "bush",
+      "x": 1616,
+      "y": 1488,
+      "width": 64,
+      "height": 48
+    },
+    {
+      "asset": "lamp_post",
+      "x": 1344,
+      "y": 1376,
+      "width": 32,
+      "height": 96
+    },
+    {
+      "asset": "lamp_post",
+      "x": 1248,
+      "y": 1184,
+      "width": 32,
+      "height": 96
+    },
+    {
+      "asset": "bush",
+      "x": 1264,
+      "y": 1232,
+      "width": 64,
+      "height": 48
+    },
+    {
+      "asset": "lamp_post",
+      "x": 1344,
+      "y": 992,
+      "width": 32,
+      "height": 96
+    },
+    {
+      "asset": "lamp_post",
+      "x": 1600,
+      "y": 928,
+      "width": 32,
+      "height": 96
+    },
+    {
+      "asset": "bush",
+      "x": 1616,
+      "y": 976,
+      "width": 64,
+      "height": 48
+    },
+    {
+      "asset": "lamp_post",
+      "x": 1856,
+      "y": 992,
+      "width": 32,
+      "height": 96
     }
+  ],
+  "npcAnchors": [
+    {
+      "id": "prontera_kafra",
+      "label": "Kafra",
+      "npcType": "storage",
+      "tileX": 57,
+      "tileY": 44
+    },
+    {
+      "id": "prontera_save",
+      "label": "Save Point",
+      "npcType": "save",
+      "tileX": 50,
+      "tileY": 46
+    },
+    {
+      "id": "prontera_healer",
+      "label": "Healer",
+      "npcType": "healer",
+      "tileX": 43,
+      "tileY": 44
+    },
+    {
+      "id": "prontera_warp",
+      "label": "Warp Agent",
+      "npcType": "teleport",
+      "tileX": 50,
+      "tileY": 51
+    },
+    {
+      "id": "prontera_job_master",
+      "label": "Job Master",
+      "npcType": "job_master",
+      "tileX": 50,
+      "tileY": 26
+    },
+    {
+      "id": "prontera_dungeon_guide",
+      "label": "Dungeon Guide",
+      "npcType": "dungeon",
+      "tileX": 90,
+      "tileY": 44
+    },
+    {
+      "id": "prontera_weapon_dealer",
+      "label": "Weapon Dealer",
+      "npcType": "shop",
+      "tileX": 26,
+      "tileY": 58
+    },
+    {
+      "id": "prontera_armor_dealer",
+      "label": "Armor Dealer",
+      "npcType": "shop",
+      "tileX": 34,
+      "tileY": 58
+    },
+    {
+      "id": "prontera_tool_dealer",
+      "label": "Tool Dealer",
+      "npcType": "shop",
+      "tileX": 74,
+      "tileY": 58
+    }
+  ],
+  "spawnTile": {
+    "tileX": 50,
+    "tileY": 44
   }
 }

@@ -102,6 +102,7 @@ import { rollDungeonGear, rolledItemDisplayName } from '../items/rolledItem'
 import type { BootDungeonState } from '../world/bootDungeon'
 import { dungeonFloorByMapId, isDungeonMapId } from '../world/dungeonConfig'
 import { findPortalAtPoint } from '../world/mapPortals'
+import { decorFootprintRects } from '../../lib/mapDecor/decorFootprints'
 import { preloadMapDecor, spawnMapDecor } from '../world/spawnMapDecor'
 import { setDepthByFeet } from '../world/depthSort'
 import {
@@ -239,7 +240,8 @@ export class WorldScene extends Phaser.Scene {
     ground?.setDepth(0)
     const decorTiles = map.createLayer('decor', tileset, 0, 0)
     decorTiles?.setDepth(2)
-    this.mapDecorSprites = spawnMapDecor(this, map)
+    const mapDecor = spawnMapDecor(this, map)
+    this.mapDecorSprites = mapDecor.sprites
     const collision = map.createLayer('collision', tileset, 0, 0)
     collision?.setVisible(false)
     collision?.setCollisionByExclusion([-1, 0])
@@ -270,8 +272,14 @@ export class WorldScene extends Phaser.Scene {
     }
 
     const fromTmj = spawnObstaclesFromTilemap(this, map)
-    this.obstacles = fromTmj.length > 0 ? fromTmj : spawnObstacles(this, this.character.map_id)
-    this.minimapObstacleRects = obstacleRectsForMap(this.character.map_id, map)
+    const baseObstacles = fromTmj.length > 0 ? fromTmj : spawnObstacles(this, this.character.map_id)
+    this.obstacles = [...baseObstacles, ...mapDecor.blockers]
+    const decorLayer = map.getObjectLayer('decor')
+    const decorFootprints =
+      decorLayer?.objects?.length
+        ? decorFootprintRects(decorLayer.objects as import('../../lib/tmj/types').TmjMapObject[])
+        : []
+    this.minimapObstacleRects = [...obstacleRectsForMap(this.character.map_id, map), ...decorFootprints]
     colliderWithObstacles(this, this.obstacles, this.playerDisplay.container)
 
     const boot = this.registry.get('bootSession') as ReturnType<typeof getCharacterSession> | undefined

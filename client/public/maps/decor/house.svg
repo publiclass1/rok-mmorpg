@@ -1,8 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 80" width="96" height="80">
-  <path fill="#7c2d12" d="M48 8 88 36v36H8V36z"/>
-  <path fill="#9a3412" d="M48 8 8 36h80z"/>
-  <rect x="20" y="40" width="56" height="32" fill="#d6d3d1"/>
-  <rect x="40" y="52" width="16" height="20" fill="#44403c"/>
-  <rect x="24" y="46" width="14" height="12" fill="#7dd3fc" opacity="0.85"/>
-  <rect x="58" y="46" width="14" height="12" fill="#7dd3fc" opacity="0.85"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 144" width="160" height="144">
+  <rect x="0" y="120" width="160" height="24" fill="#1c1917" opacity="0.15"/>
+  <path fill="#7c2d12" d="M80 12 148 56v76H12V56z"/>
+  <path fill="#9a3412" d="M80 12 12 56h136z"/>
+  <rect x="24" y="68" width="112" height="64" fill="#e7e5e4"/>
+  <rect x="68" y="96" width="24" height="36" fill="#44403c"/>
+  <rect x="32" y="78" width="22" height="18" fill="#7dd3fc" opacity="0.9"/>
+  <rect x="106" y="78" width="22" height="18" fill="#7dd3fc" opacity="0.9"/>
+  <rect x="56" y="78" width="48" height="8" fill="#d6d3d1"/>
 </svg>

@@ -7,6 +7,7 @@ import { loadPartyForCharacter, type PartySnapshot } from '../lib/partyState'
 import { MapChatChannel, type ChatMessage } from '../game/realtime/mapChat'
 import { PartyRealtimeChannel } from '../game/realtime/partyChannel'
 import { loadAccountSavePoint } from '../lib/accountSavePoint'
+import { PRONTERA_TOWN_SPAWN } from '../lib/pronteraSpawn'
 import {
   loadCharacterSession,
   persistCharacterWorld,
@@ -224,7 +225,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     if (!partyId) {
       void supabase
         .from('characters')
-        .update({ map_id: 'prontera', x: 640, y: 400 })
+        .update({
+          map_id: 'prontera',
+          x: PRONTERA_TOWN_SPAWN.x,
+          y: PRONTERA_TOWN_SPAWN.y,
+        })
         .eq('id', character.id)
         .select('*')
         .single()
@@ -249,7 +254,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         if (error || !data) {
           void supabase
             .from('characters')
-            .update({ map_id: 'prontera', x: 640, y: 400 })
+            .update({
+              map_id: 'prontera',
+              x: PRONTERA_TOWN_SPAWN.x,
+              y: PRONTERA_TOWN_SPAWN.y,
+            })
             .eq('id', character.id)
             .select('*')
             .single()

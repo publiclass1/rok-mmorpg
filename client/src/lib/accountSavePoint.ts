@@ -1,3 +1,4 @@
+import { PRONTERA_TOWN_SPAWN } from './pronteraSpawn'
 import { supabase } from './supabase'
 
 export type AccountSavePoint = {
@@ -8,8 +9,8 @@ export type AccountSavePoint = {
 
 const DEFAULT_SAVE: AccountSavePoint = {
   mapId: 'prontera',
-  x: 480,
-  y: 360,
+  x: PRONTERA_TOWN_SPAWN.x,
+  y: PRONTERA_TOWN_SPAWN.y,
 }
 
 export async function loadAccountSavePoint(): Promise<AccountSavePoint> {

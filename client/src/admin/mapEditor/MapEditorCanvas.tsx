@@ -12,6 +12,7 @@ import {
   type TmjMapObject,
 } from '../../lib/tmj'
 import { DECOR_DRAG_MIME, type DecorAssetId } from '../../lib/mapDecor/catalog'
+import { decorFootprintRects } from '../../lib/mapDecor/decorFootprints'
 import { readDecorAssetId } from '../../lib/mapDecor/decorProps'
 import { getDecorImage, useDecorImages } from '../../lib/mapDecor/useDecorImages'
 import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../../lib/tmj/properties'
@@ -207,6 +208,13 @@ export function MapEditorCanvas({
           ctx.lineWidth = 2
           ctx.strokeRect(o.x, o.y, o.width, o.height)
         }
+      }
+      for (const fp of decorFootprintRects(decor.objects)) {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.35)'
+        ctx.fillRect(fp.x, fp.y, fp.width, fp.height)
+        ctx.strokeStyle = 'rgba(220, 38, 38, 0.6)'
+        ctx.lineWidth = 1
+        ctx.strokeRect(fp.x, fp.y, fp.width, fp.height)
       }
     }
 
