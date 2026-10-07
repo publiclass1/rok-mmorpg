@@ -1,7 +1,8 @@
-import type { MapPortalDef } from '../../content/ro/types'
+import type { MapPortalDef, MobSpawnSpotJson } from '../../content/ro/types'
 import type { DecorAssetId } from '../mapDecor/catalog'
 import { createDecorPlacement } from '../mapDecor/decorProps'
-import { readNpcProps, readPortalProps } from './properties'
+import { defaultLureRadius } from '../../content/ro/expandMobSpots'
+import { readMobSpotProps, readNpcProps, readPortalProps } from './properties'
 import type { MapNpcDef, TmjMap, TmjMapObject, TmjObjectGroup, TmjTileLayer } from './types'
 
 export function parseTmj(raw: unknown): TmjMap {
@@ -77,6 +78,19 @@ export function ensureObjectGroups(map: TmjMap): void {
       objects: [],
     })
   }
+  if (!getObjectGroup(map, 'mob_spots')) {
+    const id = map.nextlayerid++
+    map.layers.push({
+      id,
+      name: 'mob_spots',
+      opacity: 1,
+      type: 'objectgroup',
+      visible: true,
+      x: 0,
+      y: 0,
+      objects: [],
+    })
+  }
 }
 
 export function addDecorToMap(map: TmjMap, assetId: DecorAssetId, centerX: number, centerY: number): TmjMap {
@@ -138,6 +152,33 @@ export function npcDefsFromMap(map: TmjMap, mapId: string): MapNpcDef[] {
         label: p.label,
         config,
       }
+    })
+}
+
+export function mobSpotDefsFromMap(map: TmjMap, mapId: string): MobSpawnSpotJson[] {
+  const group = getObjectGroup(map, 'mob_spots')
+  if (!group) return []
+  return group.objects
+    .filter((o) => o.type === 'mob_spot' || o.properties?.some((p) => p.name === 'spotId'))
+    .map((o) => {
+      const p = readMobSpotProps(o)
+      const spot: MobSpawnSpotJson = {
+        id: p.spotId || `${mapId}_spot_${o.id}`,
+        x: o.x,
+        y: o.y,
+        width: o.width,
+        height: o.height,
+        defId: p.defId,
+        count: Math.max(1, Math.floor(p.count)),
+        spawnsPerMinute: p.spawnsPerMinute > 0 ? p.spawnsPerMinute : 7.5,
+        canLure: p.canLure,
+      }
+      if (p.lureRadius > 0) {
+        spot.lureRadius = p.lureRadius
+      } else if (p.canLure) {
+        spot.lureRadius = defaultLureRadius(spot)
+      }
+      return spot
     })
 }
 

@@ -1,4 +1,4 @@
-import type { MapPortalDef } from '../content/ro/types'
+import type { MapPortalDef, MobSpawnSpotJson } from '../content/ro/types'
 import type { TmjMap } from '../lib/tmj'
 
 export type WarpWiringPayload = {
@@ -35,6 +35,7 @@ export async function fetchMapBundle(mapId: string): Promise<{
   meta: MapMeta | null
   tmj: TmjMap | null
   portals: MapPortalDef[]
+  mobSpots: MobSpawnSpotJson[]
 }> {
   const res = await fetch(`/__admin/maps/${encodeURIComponent(mapId)}`)
   if (!res.ok) throw new Error(await res.text())
@@ -42,6 +43,7 @@ export async function fetchMapBundle(mapId: string): Promise<{
     meta: MapMeta | null
     tmj: TmjMap | null
     portals: MapPortalDef[]
+    mobSpots: MobSpawnSpotJson[]
   }
 }
 
@@ -49,6 +51,7 @@ export async function saveMapBundle(payload: {
   mapMeta: MapMeta
   tmj: TmjMap
   portals: MapPortalDef[]
+  mobSpots: MobSpawnSpotJson[]
   warpWiring?: WarpWiringPayload
 }): Promise<{
   ok: boolean

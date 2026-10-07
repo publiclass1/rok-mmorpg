@@ -21,6 +21,22 @@ function spawnLeashDistance(def: MobDefinition): number {
   return def.roamRadius * 2.5
 }
 
+/** Exported for tests — whether mob exceeded spot leash / lure range. */
+export function mobBrokeSpotLeash(mob: MobInstance, def: MobDefinition): boolean {
+  if (mob.spotRect) {
+    if (!mob.canLure) {
+      const r = mob.spotRect
+      const px = mob.sprite.x
+      const py = mob.sprite.y
+      return px < r.x || px > r.x + r.width || py < r.y || py > r.y + r.height
+    }
+    const dSpot = dist(mob.sprite.x, mob.sprite.y, mob.spotCenterX, mob.spotCenterY)
+    return dSpot > mob.lureRadius
+  }
+  const dSpawn = dist(mob.sprite.x, mob.sprite.y, mob.spawnX, mob.spawnY)
+  return dSpawn > spawnLeashDistance(def)
+}
+
 export function provokeMob(mob: MobInstance) {
   mob.provokedByPlayer = true
 }
@@ -88,9 +104,8 @@ export function updateMob(
   if (!mob.alive) return
 
   const dPlayer = dist(mob.sprite.x, mob.sprite.y, playerX, playerY)
-  const dSpawn = dist(mob.sprite.x, mob.sprite.y, mob.spawnX, mob.spawnY)
   const deaggroRange = deaggroDistance(def)
-  const leash = spawnLeashDistance(def)
+  const brokeLeash = mobBrokeSpotLeash(mob, def)
   const inCombatRange = mob.provokedByPlayer || dPlayer <= def.aggroRange
 
   let state: MobState = mob.state
@@ -98,7 +113,7 @@ export function updateMob(
   if (!playerAlive) {
     state = 'wander'
     mob.provokedByPlayer = false
-  } else if (mob.provokedByPlayer && (dPlayer > deaggroRange || dSpawn > leash)) {
+  } else if (mob.provokedByPlayer && (dPlayer > deaggroRange || brokeLeash)) {
     state = 'wander'
     clearProvoke(mob)
   } else if (dPlayer <= def.attackRange) {

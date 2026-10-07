@@ -1,4 +1,5 @@
 import type {
+  MobSpotObjectProps,
   NpcObjectNpcType,
   NpcObjectProps,
   TmjMapObject,
@@ -85,4 +86,31 @@ export function writeNpcProps(obj: TmjMapObject, props: NpcObjectProps): void {
     spriteKey: props.spriteKey,
     configJson: props.configJson,
   })
+}
+
+export function readMobSpotProps(obj: TmjMapObject): MobSpotObjectProps {
+  const spotId = String(getObjectProperty(obj, 'spotId') ?? obj.name ?? `spot_${obj.id}`)
+  const defId = String(getObjectProperty(obj, 'defId') ?? 'poring')
+  const count = Number(getObjectProperty(obj, 'count') ?? 1)
+  const spawnsPerMinute = Number(getObjectProperty(obj, 'spawnsPerMinute') ?? 7.5)
+  const canLureRaw = getObjectProperty(obj, 'canLure')
+  const canLure = canLureRaw === undefined ? true : Boolean(canLureRaw)
+  const lureRadius = Number(getObjectProperty(obj, 'lureRadius') ?? 0)
+  return { spotId, defId, count, spawnsPerMinute, canLure, lureRadius }
+}
+
+export function writeMobSpotProps(obj: TmjMapObject, props: MobSpotObjectProps): void {
+  obj.name = props.spotId
+  obj.type = 'mob_spot'
+  const entries: Record<string, string | number | boolean> = {
+    spotId: props.spotId,
+    defId: props.defId,
+    count: props.count,
+    spawnsPerMinute: props.spawnsPerMinute,
+    canLure: props.canLure,
+  }
+  if (props.lureRadius > 0) {
+    entries.lureRadius = props.lureRadius
+  }
+  setObjectProperties(obj, entries)
 }

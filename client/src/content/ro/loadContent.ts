@@ -18,7 +18,7 @@ import type {
   RoSkill,
   RoItem,
   RoMap,
-  MobSpawnPointJson,
+  MobSpawnSpotJson,
   MapPortalDef,
   RoExpTables,
   RoLootConfig,
@@ -27,9 +27,11 @@ import type {
   RoJobMasterConfig,
   RoRentalsConfig,
 } from './types'
+import { expandAllMobSpots, type RuntimeMobSpawn } from './expandMobSpots'
 import { validateRoContent } from './validateRoContent'
 
 let cached: RoContentPack | null = null
+let cachedRuntimeMobSpawns: Record<string, RuntimeMobSpawn[]> | null = null
 
 function asJobs(raw: { jobs: RoJob[] }): RoJob[] {
   return raw.jobs
@@ -49,21 +51,25 @@ function asMobs(raw: { mobs: RoMob[] }): RoMob[] {
 
 function asMaps(raw: {
   maps: RoMap[]
-  mobSpawns: Record<string, MobSpawnPointJson[]>
+  mobSpots?: Record<string, MobSpawnSpotJson[]>
   portals?: Record<string, MapPortalDef[]>
 }): {
   maps: RoMap[]
-  mobSpawns: Record<string, MobSpawnPointJson[]>
+  mobSpots: Record<string, MobSpawnSpotJson[]>
   portals: Record<string, MapPortalDef[]>
 } {
-  return { maps: raw.maps, mobSpawns: raw.mobSpawns, portals: raw.portals ?? {} }
+  return { maps: raw.maps, mobSpots: raw.mobSpots ?? {}, portals: raw.portals ?? {} }
 }
 
 export function loadRoContent(): RoContentPack {
   if (cached) return cached
 
-  const { maps, mobSpawns, portals } = asMaps(
-    mapsJson as { maps: RoMap[]; mobSpawns: Record<string, MobSpawnPointJson[]>; portals?: Record<string, MapPortalDef[]> },
+  const { maps, mobSpots, portals } = asMaps(
+    mapsJson as {
+      maps: RoMap[]
+      mobSpots?: Record<string, MobSpawnSpotJson[]>
+      portals?: Record<string, MapPortalDef[]>
+    },
   )
 
   const pack: RoContentPack = {
@@ -73,7 +79,7 @@ export function loadRoContent(): RoContentPack {
     items: asItems(itemsJson as { items: RoItem[] }),
     mobs: [...asMobs(mobsJson as { mobs: RoMob[] }), ...asMobs(dungeonMobsJson as { mobs: RoMob[] })],
     maps,
-    mobSpawns,
+    mobSpots,
     portals,
     expTables: expTablesJson as RoExpTables,
     loot: lootJson as RoLootConfig,
@@ -84,6 +90,14 @@ export function loadRoContent(): RoContentPack {
   }
 
   validateRoContent(pack)
+  cachedRuntimeMobSpawns = expandAllMobSpots(pack.mobSpots)
   cached = pack
   return pack
+}
+
+export function getRuntimeMobSpawnsByMap(): Record<string, RuntimeMobSpawn[]> {
+  if (!cachedRuntimeMobSpawns) {
+    loadRoContent()
+  }
+  return cachedRuntimeMobSpawns!
 }

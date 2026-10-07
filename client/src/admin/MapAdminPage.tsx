@@ -8,11 +8,13 @@ import {
   parseTmj,
   npcDefsFromMap,
   portalDefsFromMap,
+  mobSpotDefsFromMap,
+  importMobSpotsIntoMap,
   resizeTmjMap,
   type TmjMap,
 } from '../lib/tmj'
 import { supabase } from '../lib/supabase'
-import type { NpcObjectNpcType, NpcObjectProps } from '../lib/tmj/types'
+import type { MobSpotObjectProps, NpcObjectNpcType, NpcObjectProps } from '../lib/tmj/types'
 import {
   listNpcSpriteKeys,
   NPC_SPRITE_LABELS,
@@ -24,7 +26,14 @@ import {
   patchNpcConfigJson,
   resolveNpcGuildFromParts,
 } from '../game/npc/npcGuildBadge'
-import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../lib/tmj/properties'
+import {
+  readMobSpotProps,
+  readNpcProps,
+  readPortalProps,
+  writeMobSpotProps,
+  writeNpcProps,
+  writePortalProps,
+} from '../lib/tmj/properties'
 import { getObjectGroup } from '../lib/tmj/parse'
 import { fetchMapBundle, fetchMapList, saveMapBundle, type MapMeta } from './mapAdminApi'
 import { MapEditorCanvas, type EditorTool } from './mapEditor/MapEditorCanvas'
@@ -56,6 +65,7 @@ export function MapAdminPage() {
   const [showObstacles, setShowObstacles] = useState(true)
   const [showPortals, setShowPortals] = useState(true)
   const [showNpcs, setShowNpcs] = useState(true)
+  const [showMobSpots, setShowMobSpots] = useState(true)
   const [selectedObjectId, setSelectedObjectId] = useState<number | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -79,6 +89,7 @@ export function MapAdminPage() {
   }, [tmj.width, tmj.height])
 
   const allMapIds = useMemo(() => loadRoContent().maps.map((m) => m.id), [])
+  const allMobDefs = useMemo(() => loadRoContent().mobs, [])
 
   const refreshList = useCallback(async () => {
     try {
@@ -94,6 +105,7 @@ export function MapAdminPage() {
   }, [refreshList])
 
   const portalsForSave = useMemo((): MapPortalDef[] => portalDefsFromMap(tmj, meta.id), [tmj, meta.id])
+  const mobSpotsForSave = useMemo(() => mobSpotDefsFromMap(tmj, meta.id.trim() || 'new_map'), [tmj, meta.id])
   const npcMarkersForSave = useMemo(() => npcDefsFromMap(tmj, meta.id), [tmj, meta.id])
 
   const selectedPortalObject = useMemo(() => {
@@ -111,6 +123,12 @@ export function MapAdminPage() {
   const selectedNpcObject = useMemo(() => {
     if (selectedObjectId == null) return null
     const group = getObjectGroup(tmj, 'npcs')
+    return group?.objects.find((o) => o.id === selectedObjectId) ?? null
+  }, [tmj, selectedObjectId])
+
+  const selectedMobSpotObject = useMemo(() => {
+    if (selectedObjectId == null) return null
+    const group = getObjectGroup(tmj, 'mob_spots')
     return group?.objects.find((o) => o.id === selectedObjectId) ?? null
   }, [tmj, selectedObjectId])
 
@@ -136,12 +154,18 @@ export function MapAdminPage() {
         .eq('map_id', mapId)
 
       if (npcError) {
-        setTmj(loadedTmj)
+        setTmj(importMobSpotsIntoMap(loadedTmj, bundle.mobSpots ?? []))
         setStatus(`Loaded ${mapId}; NPC import failed: ${npcError.message}`)
       } else {
-        setTmj(importNpcRowsIntoMap(loadedTmj, mapId, npcRows ?? []))
+        const withNpcs = importNpcRowsIntoMap(loadedTmj, mapId, npcRows ?? [])
+        setTmj(importMobSpotsIntoMap(withNpcs, bundle.mobSpots ?? []))
         const npcCount = npcRows?.length ?? 0
-        setStatus(npcCount > 0 ? `Loaded ${mapId} (${npcCount} NPCs from DB)` : `Loaded ${mapId}`)
+        const spotCount = bundle.mobSpots?.length ?? 0
+        setStatus(
+          npcCount > 0 || spotCount > 0
+            ? `Loaded ${mapId} (${npcCount} NPCs, ${spotCount} mob spots)`
+            : `Loaded ${mapId}`,
+        )
       }
 
       setSelectedObjectId(null)
@@ -178,7 +202,8 @@ export function MapAdminPage() {
         returnPronteraX: returnPronteraX,
         returnPronteraY: returnPronteraY,
       }
-      const res = await saveMapBundle({ mapMeta, tmj: mapToSave, portals, warpWiring })
+      const mobSpots = mobSpotDefsFromMap(mapToSave, mapId)
+      const res = await saveMapBundle({ mapMeta, tmj: mapToSave, portals, mobSpots, warpWiring })
       setMeta(res.mapMeta)
       const fileList = res.filesWritten.join(', ')
       setStatus(
@@ -243,6 +268,35 @@ export function MapAdminPage() {
             if (o.id !== selectedNpcObject.id) return o
             const updated = { ...o }
             writeNpcProps(updated, merged)
+            return updated
+          }),
+        }
+      }),
+    }
+    setTmj(next)
+  }
+
+  const updateSelectedMobSpot = (patch: Partial<MobSpotObjectProps>) => {
+    if (!selectedMobSpotObject) return
+    const current = readMobSpotProps(selectedMobSpotObject)
+    const merged: MobSpotObjectProps = {
+      spotId: patch.spotId ?? current.spotId,
+      defId: patch.defId ?? current.defId,
+      count: patch.count ?? current.count,
+      spawnsPerMinute: patch.spawnsPerMinute ?? current.spawnsPerMinute,
+      canLure: patch.canLure ?? current.canLure,
+      lureRadius: patch.lureRadius ?? current.lureRadius,
+    }
+    const next: TmjMap = {
+      ...tmj,
+      layers: tmj.layers.map((layer) => {
+        if (layer.type !== 'objectgroup' || layer.name !== 'mob_spots') return layer
+        return {
+          ...layer,
+          objects: layer.objects.map((o) => {
+            if (o.id !== selectedMobSpotObject.id) return o
+            const updated = { ...o }
+            writeMobSpotProps(updated, merged)
             return updated
           }),
         }
@@ -459,10 +513,12 @@ export function MapAdminPage() {
             <label className="map-admin-check"><input type="checkbox" checked={showObstacles} onChange={(e) => setShowObstacles(e.target.checked)} /> Obstacles</label>
             <label className="map-admin-check"><input type="checkbox" checked={showPortals} onChange={(e) => setShowPortals(e.target.checked)} /> Portals</label>
             <label className="map-admin-check"><input type="checkbox" checked={showNpcs} onChange={(e) => setShowNpcs(e.target.checked)} /> NPCs</label>
+            <label className="map-admin-check"><input type="checkbox" checked={showMobSpots} onChange={(e) => setShowMobSpots(e.target.checked)} /> Mob spots</label>
           </CollapsibleSection>
 
           <p className="muted small">Walk portals: {portalsForSave.filter((p) => p.mode === 'walk' || p.mode === 'both').length}</p>
           <p className="muted small">NPC markers: {npcMarkersForSave.length}</p>
+          <p className="muted small">Mob spots: {mobSpotsForSave.length}</p>
         </aside>
 
         <section className="map-admin-canvas-wrap panel">
@@ -485,6 +541,7 @@ export function MapAdminPage() {
               showObstacles={showObstacles}
               showPortals={showPortals}
               showNpcs={showNpcs}
+              showMobSpots={showMobSpots}
               selectedObjectId={selectedObjectId}
               onSelectObject={setSelectedObjectId}
               onMapChange={setTmj}
@@ -524,6 +581,12 @@ export function MapAdminPage() {
                   <h3 className="map-admin-props-heading">NPC</h3>
                   <NpcFields object={selectedNpcObject} onChange={updateSelectedNpc} />
                   <button type="button" className="danger" onClick={deleteSelectedObject}>Delete NPC</button>
+                </section>
+              ) : selectedMobSpotObject ? (
+                <section className="map-admin-props-section">
+                  <h3 className="map-admin-props-heading">Mob spot</h3>
+                  <MobSpotFields object={selectedMobSpotObject} mobDefs={allMobDefs} onChange={updateSelectedMobSpot} />
+                  <button type="button" className="danger" onClick={deleteSelectedObject}>Delete mob spot</button>
                 </section>
               ) : selectedObjectId != null ? (
                 <section className="map-admin-props-section">
@@ -567,6 +630,9 @@ export function MapAdminPage() {
                   )}
                   {tool === 'npc' && (
                     <p className="muted small">Click the map to place an NPC marker, then edit fields here.</p>
+                  )}
+                  {tool === 'mob_spot' && (
+                    <p className="muted small">Drag to draw a mob spawn zone, then set mob type, count, and spawn rate.</p>
                   )}
                   {tool === 'select' && (
                     <p className="muted small">Click objects to select. Space + drag or middle-mouse to pan the view.</p>
@@ -735,6 +801,72 @@ function NpcFields({
         </p>
       )}
       {configError && <p className="muted small" style={{ color: '#f87171' }}>{configError}</p>}
+    </div>
+  )
+}
+
+function MobSpotFields({
+  object,
+  mobDefs,
+  onChange,
+}: {
+  object: { id: number }
+  mobDefs: Array<{ id: string; name: string }>
+  onChange: (patch: Partial<MobSpotObjectProps>) => void
+}) {
+  const props = readMobSpotProps(object as import('../lib/tmj').TmjMapObject)
+  return (
+    <div className="stack compact">
+      <label>
+        spot id
+        <input value={props.spotId} onChange={(e) => onChange({ spotId: e.target.value })} />
+      </label>
+      <label>
+        mob
+        <select value={props.defId} onChange={(e) => onChange({ defId: e.target.value })}>
+          {mobDefs.map((m) => (
+            <option key={m.id} value={m.id}>{m.name} ({m.id})</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        count
+        <input
+          type="number"
+          min={1}
+          value={props.count}
+          onChange={(e) => onChange({ count: Math.max(1, Number(e.target.value)) })}
+        />
+      </label>
+      <label>
+        spawns per minute (spot total)
+        <input
+          type="number"
+          min={0.1}
+          step={0.1}
+          value={props.spawnsPerMinute}
+          onChange={(e) => onChange({ spawnsPerMinute: Number(e.target.value) })}
+        />
+      </label>
+      <label className="map-admin-check">
+        <input
+          type="checkbox"
+          checked={props.canLure}
+          onChange={(e) => onChange({ canLure: e.target.checked })}
+        />
+        Can lure
+      </label>
+      {props.canLure && (
+        <label>
+          lure radius (px, 0 = auto)
+          <input
+            type="number"
+            min={0}
+            value={props.lureRadius}
+            onChange={(e) => onChange({ lureRadius: Number(e.target.value) })}
+          />
+        </label>
+      )}
     </div>
   )
 }

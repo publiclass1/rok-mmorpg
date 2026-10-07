@@ -1,4 +1,5 @@
-import { loadRoContent } from '../../content/ro/loadContent'
+import { getRuntimeMobSpawnsByMap, loadRoContent } from '../../content/ro/loadContent'
+import type { RuntimeMobSpawn } from '../../content/ro/expandMobSpots'
 import { parseLayerColor } from '../../content/ro/parseColor'
 import type { RoMob, RoMobDrop, RoMobSkill } from '../../content/ro/types'
 
@@ -67,9 +68,9 @@ export const MOB_DEFS: Record<string, MobDefinition> = Object.fromEntries(
 
 export const PORING = MOB_DEFS.poring
 
-export type MobSpawnPoint = { x: number; y: number; defId: string }
+export type MobSpawnPoint = RuntimeMobSpawn
 
-export const MOB_SPAWNS_BY_MAP: Record<string, MobSpawnPoint[]> = ro.mobSpawns
+export const MOB_SPAWNS_BY_MAP: Record<string, MobSpawnPoint[]> = getRuntimeMobSpawnsByMap()
 
 export const PLAYER_DEFAULT_HP = 50
 export const PLAYER_DEFAULT_MP = 30

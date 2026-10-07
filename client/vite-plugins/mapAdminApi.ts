@@ -5,7 +5,7 @@ import type { Plugin } from 'vite'
 
 type MapsJson = {
   maps: Array<{ id: string; displayName: string; fieldType: string; sourceUrl: string | null }>
-  mobSpawns: Record<string, unknown[]>
+  mobSpots?: Record<string, unknown[]>
   portals?: Record<
     string,
     Array<{
@@ -38,6 +38,7 @@ type SaveBody = {
   mapMeta: { id: string; displayName: string; fieldType: string; sourceUrl: string | null }
   tmj: unknown
   portals: PortalEntry[]
+  mobSpots?: unknown[]
   warpWiring?: WarpWiringPayload
 }
 
@@ -355,6 +356,7 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
               meta: meta ?? null,
               tmj,
               portals: mapsJson.portals?.[mapId] ?? [],
+              mobSpots: mapsJson.mobSpots?.[mapId] ?? [],
             })
             return
           }
@@ -372,7 +374,7 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
               })
               req.on('error', reject)
             })
-            const { mapMeta, tmj, portals, warpWiring } = body
+            const { mapMeta, tmj, portals, mobSpots, warpWiring } = body
             if (!mapMeta?.id || !tmj) {
               json(res, 400, { error: 'mapMeta.id and tmj required' })
               return
@@ -401,10 +403,8 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
             if (!mapsJson.portals) mapsJson.portals = {}
             mapsJson.portals[mapMeta.id] = portals ?? []
 
-            if (!mapsJson.mobSpawns) mapsJson.mobSpawns = {}
-            if (!mapsJson.mobSpawns[mapMeta.id]) {
-              mapsJson.mobSpawns[mapMeta.id] = []
-            }
+            if (!mapsJson.mobSpots) mapsJson.mobSpots = {}
+            mapsJson.mobSpots[mapMeta.id] = mobSpots ?? []
 
             await fs.writeFile(mapsJsonPath, `${JSON.stringify(mapsJson, null, 2)}\n`, 'utf8')
 

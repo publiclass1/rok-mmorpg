@@ -61,1631 +61,6 @@
       "sourceUrl": null
     }
   ],
-  "mobSpawns": {
-    "prt_fild01": [
-      {
-        "x": 320,
-        "y": 260,
-        "defId": "lunatic"
-      },
-      {
-        "x": 480,
-        "y": 220,
-        "defId": "lunatic"
-      },
-      {
-        "x": 640,
-        "y": 320,
-        "defId": "fabre"
-      },
-      {
-        "x": 520,
-        "y": 420,
-        "defId": "fabre"
-      },
-      {
-        "x": 400,
-        "y": 360,
-        "defId": "poring"
-      },
-      {
-        "x": 720,
-        "y": 480,
-        "defId": "poring"
-      }
-    ],
-    "field_01": [
-      {
-        "x": 400,
-        "y": 280,
-        "defId": "poring"
-      },
-      {
-        "x": 560,
-        "y": 240,
-        "defId": "poring"
-      },
-      {
-        "x": 720,
-        "y": 400,
-        "defId": "poring"
-      },
-      {
-        "x": 480,
-        "y": 480,
-        "defId": "poring"
-      }
-    ],
-    "prt_sewb1": [
-      {
-        "x": 720,
-        "y": 48,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1072,
-        "y": 592,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1360,
-        "y": 496,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 592,
-        "y": 336,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 144,
-        "y": 1008,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1424,
-        "y": 1104,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 240,
-        "y": 528,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1488,
-        "y": 48,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 464,
-        "y": 336,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1424,
-        "y": 48,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 272,
-        "y": 1296,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1200,
-        "y": 240,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 592,
-        "y": 752,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 80,
-        "y": 816,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 80,
-        "y": 48,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1136,
-        "y": 816,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 752,
-        "y": 944,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1008,
-        "y": 144,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1456,
-        "y": 944,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 304,
-        "y": 752,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1104,
-        "y": 1328,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 912,
-        "y": 528,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 496,
-        "y": 1072,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 560,
-        "y": 816,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 48,
-        "y": 848,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 560,
-        "y": 368,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1360,
-        "y": 1168,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1008,
-        "y": 1200,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 560,
-        "y": 528,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1488,
-        "y": 1328,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 976,
-        "y": 144,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 48,
-        "y": 624,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 784,
-        "y": 368,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 592,
-        "y": 144,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 80,
-        "y": 208,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 944,
-        "y": 208,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 272,
-        "y": 432,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 688,
-        "y": 624,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 784,
-        "y": 1200,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1072,
-        "y": 432,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 656,
-        "y": 752,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1072,
-        "y": 1360,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1072,
-        "y": 1328,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1296,
-        "y": 304,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1456,
-        "y": 528,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 720,
-        "y": 1296,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 624,
-        "y": 1104,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 144,
-        "y": 944,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 144,
-        "y": 1072,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 240,
-        "y": 560,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 208,
-        "y": 1360,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 976,
-        "y": 176,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1264,
-        "y": 336,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 784,
-        "y": 496,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 592,
-        "y": 432,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1232,
-        "y": 1200,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1136,
-        "y": 1296,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 624,
-        "y": 880,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1424,
-        "y": 528,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 240,
-        "y": 1168,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1392,
-        "y": 336,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1232,
-        "y": 528,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1392,
-        "y": 432,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 80,
-        "y": 1168,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 752,
-        "y": 688,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 944,
-        "y": 912,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 176,
-        "y": 112,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 912,
-        "y": 688,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1328,
-        "y": 560,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1392,
-        "y": 1360,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 560,
-        "y": 1072,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 816,
-        "y": 1136,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 176,
-        "y": 944,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1072,
-        "y": 528,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1456,
-        "y": 976,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 688,
-        "y": 48,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 528,
-        "y": 1296,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1040,
-        "y": 1360,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 1232,
-        "y": 592,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 80,
-        "y": 1136,
-        "defId": "thief_bug_egg"
-      },
-      {
-        "x": 592,
-        "y": 1168,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1008,
-        "y": 528,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1328,
-        "y": 48,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1136,
-        "y": 48,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1456,
-        "y": 1232,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 400,
-        "y": 1360,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 688,
-        "y": 912,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 48,
-        "y": 752,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 496,
-        "y": 880,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1104,
-        "y": 1360,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 944,
-        "y": 1360,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 912,
-        "y": 112,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 720,
-        "y": 336,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 496,
-        "y": 1168,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 432,
-        "y": 752,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1392,
-        "y": 912,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 272,
-        "y": 752,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 48,
-        "y": 1072,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1392,
-        "y": 1072,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 560,
-        "y": 176,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1296,
-        "y": 1296,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1136,
-        "y": 240,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1104,
-        "y": 400,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 272,
-        "y": 912,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 144,
-        "y": 688,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 112,
-        "y": 80,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1264,
-        "y": 880,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1488,
-        "y": 144,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 1136,
-        "y": 1008,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 624,
-        "y": 144,
-        "defId": "thief_bug"
-      },
-      {
-        "x": 592,
-        "y": 816,
-        "defId": "tarou"
-      },
-      {
-        "x": 1136,
-        "y": 1328,
-        "defId": "tarou"
-      },
-      {
-        "x": 1072,
-        "y": 496,
-        "defId": "tarou"
-      },
-      {
-        "x": 144,
-        "y": 752,
-        "defId": "tarou"
-      },
-      {
-        "x": 1328,
-        "y": 1072,
-        "defId": "tarou"
-      },
-      {
-        "x": 48,
-        "y": 336,
-        "defId": "tarou"
-      },
-      {
-        "x": 944,
-        "y": 432,
-        "defId": "tarou"
-      },
-      {
-        "x": 1328,
-        "y": 1168,
-        "defId": "tarou"
-      },
-      {
-        "x": 336,
-        "y": 144,
-        "defId": "tarou"
-      },
-      {
-        "x": 1072,
-        "y": 880,
-        "defId": "tarou"
-      },
-      {
-        "x": 1232,
-        "y": 176,
-        "defId": "familiar"
-      },
-      {
-        "x": 1424,
-        "y": 240,
-        "defId": "familiar"
-      },
-      {
-        "x": 48,
-        "y": 656,
-        "defId": "familiar"
-      },
-      {
-        "x": 1392,
-        "y": 528,
-        "defId": "familiar"
-      },
-      {
-        "x": 592,
-        "y": 496,
-        "defId": "familiar"
-      },
-      {
-        "x": 240,
-        "y": 496,
-        "defId": "familiar"
-      },
-      {
-        "x": 1136,
-        "y": 720,
-        "defId": "familiar"
-      },
-      {
-        "x": 1136,
-        "y": 432,
-        "defId": "familiar"
-      },
-      {
-        "x": 112,
-        "y": 720,
-        "defId": "familiar"
-      },
-      {
-        "x": 336,
-        "y": 816,
-        "defId": "familiar"
-      }
-    ],
-    "dun_f1": [
-      {
-        "x": 48,
-        "y": 816,
-        "defId": "zombie"
-      },
-      {
-        "x": 880,
-        "y": 368,
-        "defId": "zombie"
-      },
-      {
-        "x": 368,
-        "y": 1136,
-        "defId": "zombie"
-      },
-      {
-        "x": 816,
-        "y": 1264,
-        "defId": "zombie"
-      },
-      {
-        "x": 368,
-        "y": 1168,
-        "defId": "zombie"
-      },
-      {
-        "x": 336,
-        "y": 816,
-        "defId": "zombie"
-      },
-      {
-        "x": 560,
-        "y": 624,
-        "defId": "zombie"
-      },
-      {
-        "x": 848,
-        "y": 688,
-        "defId": "zombie"
-      },
-      {
-        "x": 272,
-        "y": 688,
-        "defId": "zombie"
-      },
-      {
-        "x": 688,
-        "y": 752,
-        "defId": "zombie"
-      },
-      {
-        "x": 112,
-        "y": 272,
-        "defId": "skeleton"
-      },
-      {
-        "x": 432,
-        "y": 1296,
-        "defId": "skeleton"
-      },
-      {
-        "x": 976,
-        "y": 592,
-        "defId": "skeleton"
-      },
-      {
-        "x": 624,
-        "y": 816,
-        "defId": "skeleton"
-      },
-      {
-        "x": 528,
-        "y": 1104,
-        "defId": "skeleton"
-      },
-      {
-        "x": 528,
-        "y": 1232,
-        "defId": "skeleton"
-      },
-      {
-        "x": 464,
-        "y": 112,
-        "defId": "skeleton"
-      },
-      {
-        "x": 976,
-        "y": 240,
-        "defId": "skeleton"
-      },
-      {
-        "x": 656,
-        "y": 1008,
-        "defId": "skeleton"
-      },
-      {
-        "x": 912,
-        "y": 912,
-        "defId": "skeleton"
-      },
-      {
-        "x": 144,
-        "y": 432,
-        "defId": "poporing"
-      },
-      {
-        "x": 976,
-        "y": 48,
-        "defId": "poporing"
-      },
-      {
-        "x": 784,
-        "y": 208,
-        "defId": "poporing"
-      },
-      {
-        "x": 176,
-        "y": 1136,
-        "defId": "poporing"
-      },
-      {
-        "x": 560,
-        "y": 592,
-        "defId": "poporing"
-      },
-      {
-        "x": 48,
-        "y": 1264,
-        "defId": "poporing"
-      },
-      {
-        "x": 528,
-        "y": 240,
-        "defId": "poporing"
-      },
-      {
-        "x": 752,
-        "y": 48,
-        "defId": "poporing"
-      },
-      {
-        "x": 944,
-        "y": 240,
-        "defId": "familiar"
-      },
-      {
-        "x": 656,
-        "y": 528,
-        "defId": "familiar"
-      },
-      {
-        "x": 80,
-        "y": 208,
-        "defId": "familiar"
-      },
-      {
-        "x": 240,
-        "y": 816,
-        "defId": "familiar"
-      },
-      {
-        "x": 304,
-        "y": 1040,
-        "defId": "familiar"
-      },
-      {
-        "x": 336,
-        "y": 1232,
-        "defId": "familiar"
-      },
-      {
-        "x": 720,
-        "y": 880,
-        "defId": "familiar"
-      },
-      {
-        "x": 976,
-        "y": 304,
-        "defId": "familiar"
-      }
-    ],
-    "dun_f2": [
-      {
-        "x": 528,
-        "y": 1040,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 560,
-        "y": 1104,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 528,
-        "y": 976,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 368,
-        "y": 1200,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 880,
-        "y": 1136,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 272,
-        "y": 816,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 880,
-        "y": 656,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 80,
-        "y": 240,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 656,
-        "y": 1200,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 240,
-        "y": 400,
-        "defId": "orc_warrior"
-      },
-      {
-        "x": 560,
-        "y": 1296,
-        "defId": "orc_lady"
-      },
-      {
-        "x": 368,
-        "y": 496,
-        "defId": "orc_lady"
-      },
-      {
-        "x": 624,
-        "y": 592,
-        "defId": "orc_lady"
-      },
-      {
-        "x": 816,
-        "y": 336,
-        "defId": "orc_lady"
-      },
-      {
-        "x": 368,
-        "y": 432,
-        "defId": "orc_lady"
-      },
-      {
-        "x": 496,
-        "y": 1040,
-        "defId": "orc_lady"
-      },
-      {
-        "x": 752,
-        "y": 656,
-        "defId": "orc_lady"
-      },
-      {
-        "x": 304,
-        "y": 48,
-        "defId": "orc_lady"
-      },
-      {
-        "x": 688,
-        "y": 80,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 912,
-        "y": 880,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 784,
-        "y": 944,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 848,
-        "y": 976,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 624,
-        "y": 336,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 624,
-        "y": 752,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 688,
-        "y": 1296,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 272,
-        "y": 1296,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 304,
-        "y": 176,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 80,
-        "y": 752,
-        "defId": "orc_zombie"
-      },
-      {
-        "x": 560,
-        "y": 592,
-        "defId": "orc_archer"
-      },
-      {
-        "x": 112,
-        "y": 272,
-        "defId": "orc_archer"
-      },
-      {
-        "x": 656,
-        "y": 80,
-        "defId": "orc_archer"
-      },
-      {
-        "x": 368,
-        "y": 560,
-        "defId": "orc_archer"
-      },
-      {
-        "x": 528,
-        "y": 720,
-        "defId": "orc_archer"
-      },
-      {
-        "x": 528,
-        "y": 656,
-        "defId": "orc_archer"
-      },
-      {
-        "x": 496,
-        "y": 1072,
-        "defId": "orc_archer"
-      },
-      {
-        "x": 112,
-        "y": 688,
-        "defId": "orc_archer"
-      }
-    ],
-    "dun_f3": [
-      {
-        "x": 784,
-        "y": 304,
-        "defId": "raydric"
-      },
-      {
-        "x": 560,
-        "y": 688,
-        "defId": "raydric"
-      },
-      {
-        "x": 336,
-        "y": 1264,
-        "defId": "raydric"
-      },
-      {
-        "x": 624,
-        "y": 688,
-        "defId": "raydric"
-      },
-      {
-        "x": 176,
-        "y": 1040,
-        "defId": "raydric"
-      },
-      {
-        "x": 304,
-        "y": 560,
-        "defId": "raydric"
-      },
-      {
-        "x": 496,
-        "y": 752,
-        "defId": "raydric"
-      },
-      {
-        "x": 752,
-        "y": 1072,
-        "defId": "raydric"
-      },
-      {
-        "x": 560,
-        "y": 1072,
-        "defId": "raydric"
-      },
-      {
-        "x": 112,
-        "y": 272,
-        "defId": "raydric_archer"
-      },
-      {
-        "x": 912,
-        "y": 176,
-        "defId": "raydric_archer"
-      },
-      {
-        "x": 912,
-        "y": 1168,
-        "defId": "raydric_archer"
-      },
-      {
-        "x": 720,
-        "y": 208,
-        "defId": "raydric_archer"
-      },
-      {
-        "x": 976,
-        "y": 304,
-        "defId": "raydric_archer"
-      },
-      {
-        "x": 720,
-        "y": 1232,
-        "defId": "raydric_archer"
-      },
-      {
-        "x": 464,
-        "y": 1072,
-        "defId": "raydric_archer"
-      },
-      {
-        "x": 240,
-        "y": 432,
-        "defId": "raydric_archer"
-      },
-      {
-        "x": 80,
-        "y": 80,
-        "defId": "raydric_archer"
-      },
-      {
-        "x": 912,
-        "y": 880,
-        "defId": "khalitzburg"
-      },
-      {
-        "x": 80,
-        "y": 1040,
-        "defId": "khalitzburg"
-      },
-      {
-        "x": 880,
-        "y": 560,
-        "defId": "khalitzburg"
-      },
-      {
-        "x": 816,
-        "y": 1040,
-        "defId": "khalitzburg"
-      },
-      {
-        "x": 976,
-        "y": 1200,
-        "defId": "khalitzburg"
-      },
-      {
-        "x": 720,
-        "y": 1040,
-        "defId": "khalitzburg"
-      },
-      {
-        "x": 624,
-        "y": 336,
-        "defId": "khalitzburg"
-      },
-      {
-        "x": 976,
-        "y": 368,
-        "defId": "khalitzburg"
-      },
-      {
-        "x": 48,
-        "y": 688,
-        "defId": "khalitzburg"
-      },
-      {
-        "x": 816,
-        "y": 688,
-        "defId": "abysmal_knight"
-      },
-      {
-        "x": 944,
-        "y": 1296,
-        "defId": "abysmal_knight"
-      },
-      {
-        "x": 752,
-        "y": 496,
-        "defId": "abysmal_knight"
-      },
-      {
-        "x": 144,
-        "y": 1136,
-        "defId": "abysmal_knight"
-      },
-      {
-        "x": 368,
-        "y": 1008,
-        "defId": "abysmal_knight"
-      },
-      {
-        "x": 176,
-        "y": 176,
-        "defId": "abysmal_knight"
-      },
-      {
-        "x": 944,
-        "y": 1008,
-        "defId": "abysmal_knight"
-      },
-      {
-        "x": 240,
-        "y": 1264,
-        "defId": "abysmal_knight"
-      },
-      {
-        "x": 432,
-        "y": 720,
-        "defId": "abysmal_knight"
-      }
-    ],
-    "dun_f4": [
-      {
-        "x": 144,
-        "y": 752,
-        "defId": "wanderer"
-      },
-      {
-        "x": 496,
-        "y": 656,
-        "defId": "wanderer"
-      },
-      {
-        "x": 528,
-        "y": 176,
-        "defId": "wanderer"
-      },
-      {
-        "x": 560,
-        "y": 208,
-        "defId": "wanderer"
-      },
-      {
-        "x": 112,
-        "y": 1136,
-        "defId": "wanderer"
-      },
-      {
-        "x": 496,
-        "y": 752,
-        "defId": "wanderer"
-      },
-      {
-        "x": 720,
-        "y": 1232,
-        "defId": "wanderer"
-      },
-      {
-        "x": 720,
-        "y": 48,
-        "defId": "wanderer"
-      },
-      {
-        "x": 496,
-        "y": 816,
-        "defId": "wanderer"
-      },
-      {
-        "x": 496,
-        "y": 1008,
-        "defId": "dark_priest"
-      },
-      {
-        "x": 592,
-        "y": 528,
-        "defId": "dark_priest"
-      },
-      {
-        "x": 976,
-        "y": 1136,
-        "defId": "dark_priest"
-      },
-      {
-        "x": 304,
-        "y": 688,
-        "defId": "dark_priest"
-      },
-      {
-        "x": 400,
-        "y": 528,
-        "defId": "dark_priest"
-      },
-      {
-        "x": 80,
-        "y": 368,
-        "defId": "dark_priest"
-      },
-      {
-        "x": 624,
-        "y": 496,
-        "defId": "dark_priest"
-      },
-      {
-        "x": 400,
-        "y": 464,
-        "defId": "dark_priest"
-      },
-      {
-        "x": 784,
-        "y": 368,
-        "defId": "dark_priest"
-      },
-      {
-        "x": 816,
-        "y": 1264,
-        "defId": "chimera"
-      },
-      {
-        "x": 304,
-        "y": 496,
-        "defId": "chimera"
-      },
-      {
-        "x": 432,
-        "y": 1296,
-        "defId": "chimera"
-      },
-      {
-        "x": 688,
-        "y": 528,
-        "defId": "chimera"
-      },
-      {
-        "x": 48,
-        "y": 48,
-        "defId": "chimera"
-      },
-      {
-        "x": 656,
-        "y": 272,
-        "defId": "chimera"
-      },
-      {
-        "x": 304,
-        "y": 720,
-        "defId": "chimera"
-      },
-      {
-        "x": 528,
-        "y": 1264,
-        "defId": "chimera"
-      },
-      {
-        "x": 176,
-        "y": 400,
-        "defId": "chimera"
-      },
-      {
-        "x": 880,
-        "y": 720,
-        "defId": "alice"
-      },
-      {
-        "x": 976,
-        "y": 1296,
-        "defId": "alice"
-      },
-      {
-        "x": 144,
-        "y": 208,
-        "defId": "alice"
-      },
-      {
-        "x": 112,
-        "y": 1296,
-        "defId": "alice"
-      },
-      {
-        "x": 48,
-        "y": 336,
-        "defId": "alice"
-      },
-      {
-        "x": 432,
-        "y": 592,
-        "defId": "alice"
-      },
-      {
-        "x": 48,
-        "y": 1200,
-        "defId": "alice"
-      },
-      {
-        "x": 240,
-        "y": 560,
-        "defId": "alice"
-      },
-      {
-        "x": 48,
-        "y": 1104,
-        "defId": "alice"
-      }
-    ],
-    "dun_f5": [
-      {
-        "x": 592,
-        "y": 656,
-        "defId": "dullahan"
-      },
-      {
-        "x": 880,
-        "y": 368,
-        "defId": "dullahan"
-      },
-      {
-        "x": 144,
-        "y": 976,
-        "defId": "dullahan"
-      },
-      {
-        "x": 272,
-        "y": 656,
-        "defId": "dullahan"
-      },
-      {
-        "x": 592,
-        "y": 272,
-        "defId": "dullahan"
-      },
-      {
-        "x": 976,
-        "y": 144,
-        "defId": "dullahan"
-      },
-      {
-        "x": 112,
-        "y": 688,
-        "defId": "dullahan"
-      },
-      {
-        "x": 80,
-        "y": 880,
-        "defId": "dullahan"
-      },
-      {
-        "x": 240,
-        "y": 432,
-        "defId": "dullahan"
-      },
-      {
-        "x": 272,
-        "y": 1136,
-        "defId": "bloody_murderer"
-      },
-      {
-        "x": 592,
-        "y": 336,
-        "defId": "bloody_murderer"
-      },
-      {
-        "x": 112,
-        "y": 400,
-        "defId": "bloody_murderer"
-      },
-      {
-        "x": 784,
-        "y": 400,
-        "defId": "bloody_murderer"
-      },
-      {
-        "x": 48,
-        "y": 1296,
-        "defId": "bloody_murderer"
-      },
-      {
-        "x": 912,
-        "y": 432,
-        "defId": "bloody_murderer"
-      },
-      {
-        "x": 48,
-        "y": 368,
-        "defId": "bloody_murderer"
-      },
-      {
-        "x": 752,
-        "y": 368,
-        "defId": "bloody_murderer"
-      },
-      {
-        "x": 272,
-        "y": 592,
-        "defId": "bloody_murderer"
-      },
-      {
-        "x": 304,
-        "y": 720,
-        "defId": "gibbet"
-      },
-      {
-        "x": 240,
-        "y": 1200,
-        "defId": "gibbet"
-      },
-      {
-        "x": 656,
-        "y": 720,
-        "defId": "gibbet"
-      },
-      {
-        "x": 80,
-        "y": 432,
-        "defId": "gibbet"
-      },
-      {
-        "x": 336,
-        "y": 592,
-        "defId": "gibbet"
-      },
-      {
-        "x": 496,
-        "y": 304,
-        "defId": "gibbet"
-      },
-      {
-        "x": 208,
-        "y": 1040,
-        "defId": "gibbet"
-      },
-      {
-        "x": 336,
-        "y": 688,
-        "defId": "gibbet"
-      },
-      {
-        "x": 880,
-        "y": 496,
-        "defId": "gibbet"
-      },
-      {
-        "x": 752,
-        "y": 560,
-        "defId": "loli_ruri"
-      },
-      {
-        "x": 400,
-        "y": 272,
-        "defId": "loli_ruri"
-      },
-      {
-        "x": 80,
-        "y": 816,
-        "defId": "loli_ruri"
-      },
-      {
-        "x": 432,
-        "y": 48,
-        "defId": "loli_ruri"
-      },
-      {
-        "x": 304,
-        "y": 48,
-        "defId": "loli_ruri"
-      },
-      {
-        "x": 528,
-        "y": 464,
-        "defId": "loli_ruri"
-      },
-      {
-        "x": 80,
-        "y": 240,
-        "defId": "loli_ruri"
-      },
-      {
-        "x": 944,
-        "y": 592,
-        "defId": "loli_ruri"
-      },
-      {
-        "x": 688,
-        "y": 656,
-        "defId": "loli_ruri"
-      }
-    ],
-    "prontera": [
-      {
-        "x": 1712,
-        "y": 1408,
-        "defId": "training_dummy"
-      }
-    ]
-  },
   "portals": {
     "new_map_rfpp": [],
     "prt_sewb1": [
@@ -1773,5 +148,3556 @@
       }
     ],
     "prontera": []
+  },
+  "mobSpots": {
+    "prt_fild01": [
+      {
+        "id": "prt_fild01_spot_0",
+        "x": 304,
+        "y": 244,
+        "width": 32,
+        "height": 32,
+        "defId": "lunatic",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_fild01_spot_1",
+        "x": 464,
+        "y": 204,
+        "width": 32,
+        "height": 32,
+        "defId": "lunatic",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_fild01_spot_2",
+        "x": 624,
+        "y": 304,
+        "width": 32,
+        "height": 32,
+        "defId": "fabre",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_fild01_spot_3",
+        "x": 504,
+        "y": 404,
+        "width": 32,
+        "height": 32,
+        "defId": "fabre",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_fild01_spot_4",
+        "x": 384,
+        "y": 344,
+        "width": 32,
+        "height": 32,
+        "defId": "poring",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_fild01_spot_5",
+        "x": 704,
+        "y": 464,
+        "width": 32,
+        "height": 32,
+        "defId": "poring",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      }
+    ],
+    "field_01": [
+      {
+        "id": "field_01_spot_0",
+        "x": 384,
+        "y": 264,
+        "width": 32,
+        "height": 32,
+        "defId": "poring",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "field_01_spot_1",
+        "x": 544,
+        "y": 224,
+        "width": 32,
+        "height": 32,
+        "defId": "poring",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "field_01_spot_2",
+        "x": 704,
+        "y": 384,
+        "width": 32,
+        "height": 32,
+        "defId": "poring",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "field_01_spot_3",
+        "x": 464,
+        "y": 464,
+        "width": 32,
+        "height": 32,
+        "defId": "poring",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      }
+    ],
+    "prt_sewb1": [
+      {
+        "id": "prt_sewb1_spot_0",
+        "x": 704,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_1",
+        "x": 1056,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_2",
+        "x": 1344,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_3",
+        "x": 576,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_4",
+        "x": 128,
+        "y": 992,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_5",
+        "x": 1408,
+        "y": 1088,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_6",
+        "x": 224,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_7",
+        "x": 1472,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_8",
+        "x": 448,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_9",
+        "x": 1408,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_10",
+        "x": 256,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_11",
+        "x": 1184,
+        "y": 224,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_12",
+        "x": 576,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_13",
+        "x": 64,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_14",
+        "x": 64,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_15",
+        "x": 1120,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_16",
+        "x": 736,
+        "y": 928,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_17",
+        "x": 992,
+        "y": 128,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_18",
+        "x": 1440,
+        "y": 928,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_19",
+        "x": 288,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_20",
+        "x": 1088,
+        "y": 1312,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_21",
+        "x": 896,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_22",
+        "x": 480,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_23",
+        "x": 544,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_24",
+        "x": 32,
+        "y": 832,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_25",
+        "x": 544,
+        "y": 352,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_26",
+        "x": 1344,
+        "y": 1152,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_27",
+        "x": 992,
+        "y": 1184,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_28",
+        "x": 544,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_29",
+        "x": 1472,
+        "y": 1312,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_30",
+        "x": 960,
+        "y": 128,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_31",
+        "x": 32,
+        "y": 608,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_32",
+        "x": 768,
+        "y": 352,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_33",
+        "x": 576,
+        "y": 128,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_34",
+        "x": 64,
+        "y": 192,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_35",
+        "x": 928,
+        "y": 192,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_36",
+        "x": 256,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_37",
+        "x": 672,
+        "y": 608,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_38",
+        "x": 768,
+        "y": 1184,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_39",
+        "x": 1056,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_40",
+        "x": 640,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_41",
+        "x": 1056,
+        "y": 1344,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_42",
+        "x": 1056,
+        "y": 1312,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_43",
+        "x": 1280,
+        "y": 288,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_44",
+        "x": 1440,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_45",
+        "x": 704,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_46",
+        "x": 608,
+        "y": 1088,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_47",
+        "x": 128,
+        "y": 928,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_48",
+        "x": 128,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_49",
+        "x": 224,
+        "y": 544,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_50",
+        "x": 192,
+        "y": 1344,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_51",
+        "x": 960,
+        "y": 160,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_52",
+        "x": 1248,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_53",
+        "x": 768,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_54",
+        "x": 576,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_55",
+        "x": 1216,
+        "y": 1184,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_56",
+        "x": 1120,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_57",
+        "x": 608,
+        "y": 864,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_58",
+        "x": 1408,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_59",
+        "x": 224,
+        "y": 1152,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_60",
+        "x": 1376,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_61",
+        "x": 1216,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_62",
+        "x": 1376,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_63",
+        "x": 64,
+        "y": 1152,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_64",
+        "x": 736,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_65",
+        "x": 928,
+        "y": 896,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_66",
+        "x": 160,
+        "y": 96,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_67",
+        "x": 896,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_68",
+        "x": 1312,
+        "y": 544,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_69",
+        "x": 1376,
+        "y": 1344,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_70",
+        "x": 544,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_71",
+        "x": 800,
+        "y": 1120,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_72",
+        "x": 160,
+        "y": 928,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_73",
+        "x": 1056,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_74",
+        "x": 1440,
+        "y": 960,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_75",
+        "x": 672,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_76",
+        "x": 512,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_77",
+        "x": 1024,
+        "y": 1344,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_78",
+        "x": 1216,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_79",
+        "x": 64,
+        "y": 1120,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug_egg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_80",
+        "x": 576,
+        "y": 1152,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_81",
+        "x": 992,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_82",
+        "x": 1312,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_83",
+        "x": 1120,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_84",
+        "x": 1440,
+        "y": 1216,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_85",
+        "x": 384,
+        "y": 1344,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_86",
+        "x": 672,
+        "y": 896,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_87",
+        "x": 32,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_88",
+        "x": 480,
+        "y": 864,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_89",
+        "x": 1088,
+        "y": 1344,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_90",
+        "x": 928,
+        "y": 1344,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_91",
+        "x": 896,
+        "y": 96,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_92",
+        "x": 704,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_93",
+        "x": 480,
+        "y": 1152,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_94",
+        "x": 416,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_95",
+        "x": 1376,
+        "y": 896,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_96",
+        "x": 256,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_97",
+        "x": 32,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_98",
+        "x": 1376,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_99",
+        "x": 544,
+        "y": 160,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_100",
+        "x": 1280,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_101",
+        "x": 1120,
+        "y": 224,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_102",
+        "x": 1088,
+        "y": 384,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_103",
+        "x": 256,
+        "y": 896,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_104",
+        "x": 128,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_105",
+        "x": 96,
+        "y": 64,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_106",
+        "x": 1248,
+        "y": 864,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_107",
+        "x": 1472,
+        "y": 128,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_108",
+        "x": 1120,
+        "y": 992,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_109",
+        "x": 608,
+        "y": 128,
+        "width": 32,
+        "height": 32,
+        "defId": "thief_bug",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_110",
+        "x": 576,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_111",
+        "x": 1120,
+        "y": 1312,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_112",
+        "x": 1056,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_113",
+        "x": 128,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_114",
+        "x": 1312,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_115",
+        "x": 32,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_116",
+        "x": 928,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_117",
+        "x": 1312,
+        "y": 1152,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_118",
+        "x": 320,
+        "y": 128,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_119",
+        "x": 1056,
+        "y": 864,
+        "width": 32,
+        "height": 32,
+        "defId": "tarou",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_120",
+        "x": 1216,
+        "y": 160,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_121",
+        "x": 1408,
+        "y": 224,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_122",
+        "x": 32,
+        "y": 640,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_123",
+        "x": 1376,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_124",
+        "x": 576,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_125",
+        "x": 224,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_126",
+        "x": 1120,
+        "y": 704,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_127",
+        "x": 1120,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_128",
+        "x": 96,
+        "y": 704,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "prt_sewb1_spot_129",
+        "x": 320,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      }
+    ],
+    "dun_f1": [
+      {
+        "id": "dun_f1_spot_0",
+        "x": 32,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_1",
+        "x": 864,
+        "y": 352,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_2",
+        "x": 352,
+        "y": 1120,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_3",
+        "x": 800,
+        "y": 1248,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_4",
+        "x": 352,
+        "y": 1152,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_5",
+        "x": 320,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_6",
+        "x": 544,
+        "y": 608,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_7",
+        "x": 832,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_8",
+        "x": 256,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_9",
+        "x": 672,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_10",
+        "x": 96,
+        "y": 256,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_11",
+        "x": 416,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_12",
+        "x": 960,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_13",
+        "x": 608,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_14",
+        "x": 512,
+        "y": 1088,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_15",
+        "x": 512,
+        "y": 1216,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_16",
+        "x": 448,
+        "y": 96,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_17",
+        "x": 960,
+        "y": 224,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_18",
+        "x": 640,
+        "y": 992,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_19",
+        "x": 896,
+        "y": 896,
+        "width": 32,
+        "height": 32,
+        "defId": "skeleton",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_20",
+        "x": 128,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "poporing",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_21",
+        "x": 960,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "poporing",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_22",
+        "x": 768,
+        "y": 192,
+        "width": 32,
+        "height": 32,
+        "defId": "poporing",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_23",
+        "x": 160,
+        "y": 1120,
+        "width": 32,
+        "height": 32,
+        "defId": "poporing",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_24",
+        "x": 544,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "poporing",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_25",
+        "x": 32,
+        "y": 1248,
+        "width": 32,
+        "height": 32,
+        "defId": "poporing",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_26",
+        "x": 512,
+        "y": 224,
+        "width": 32,
+        "height": 32,
+        "defId": "poporing",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_27",
+        "x": 736,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "poporing",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_28",
+        "x": 928,
+        "y": 224,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_29",
+        "x": 640,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_30",
+        "x": 64,
+        "y": 192,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_31",
+        "x": 224,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_32",
+        "x": 288,
+        "y": 1024,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_33",
+        "x": 320,
+        "y": 1216,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_34",
+        "x": 704,
+        "y": 864,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f1_spot_35",
+        "x": 960,
+        "y": 288,
+        "width": 32,
+        "height": 32,
+        "defId": "familiar",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      }
+    ],
+    "dun_f2": [
+      {
+        "id": "dun_f2_spot_0",
+        "x": 512,
+        "y": 1024,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_1",
+        "x": 544,
+        "y": 1088,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_2",
+        "x": 512,
+        "y": 960,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_3",
+        "x": 352,
+        "y": 1184,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_4",
+        "x": 864,
+        "y": 1120,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_5",
+        "x": 256,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_6",
+        "x": 864,
+        "y": 640,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_7",
+        "x": 64,
+        "y": 224,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_8",
+        "x": 640,
+        "y": 1184,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_9",
+        "x": 224,
+        "y": 384,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_warrior",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_10",
+        "x": 544,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_lady",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_11",
+        "x": 352,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_lady",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_12",
+        "x": 608,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_lady",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_13",
+        "x": 800,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_lady",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_14",
+        "x": 352,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_lady",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_15",
+        "x": 480,
+        "y": 1024,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_lady",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_16",
+        "x": 736,
+        "y": 640,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_lady",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_17",
+        "x": 288,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_lady",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_18",
+        "x": 672,
+        "y": 64,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_19",
+        "x": 896,
+        "y": 864,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_20",
+        "x": 768,
+        "y": 928,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_21",
+        "x": 832,
+        "y": 960,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_22",
+        "x": 608,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_23",
+        "x": 608,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_24",
+        "x": 672,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_25",
+        "x": 256,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_26",
+        "x": 288,
+        "y": 160,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_27",
+        "x": 64,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_zombie",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_28",
+        "x": 544,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_29",
+        "x": 96,
+        "y": 256,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_30",
+        "x": 640,
+        "y": 64,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_31",
+        "x": 352,
+        "y": 544,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_32",
+        "x": 512,
+        "y": 704,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_33",
+        "x": 512,
+        "y": 640,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_34",
+        "x": 480,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f2_spot_35",
+        "x": 96,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "orc_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      }
+    ],
+    "dun_f3": [
+      {
+        "id": "dun_f3_spot_0",
+        "x": 768,
+        "y": 288,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_1",
+        "x": 544,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_2",
+        "x": 320,
+        "y": 1248,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_3",
+        "x": 608,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_4",
+        "x": 160,
+        "y": 1024,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_5",
+        "x": 288,
+        "y": 544,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_6",
+        "x": 480,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_7",
+        "x": 736,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_8",
+        "x": 544,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_9",
+        "x": 96,
+        "y": 256,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_10",
+        "x": 896,
+        "y": 160,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_11",
+        "x": 896,
+        "y": 1152,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_12",
+        "x": 704,
+        "y": 192,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_13",
+        "x": 960,
+        "y": 288,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_14",
+        "x": 704,
+        "y": 1216,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_15",
+        "x": 448,
+        "y": 1056,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_16",
+        "x": 224,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_17",
+        "x": 64,
+        "y": 64,
+        "width": 32,
+        "height": 32,
+        "defId": "raydric_archer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_18",
+        "x": 896,
+        "y": 864,
+        "width": 32,
+        "height": 32,
+        "defId": "khalitzburg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_19",
+        "x": 64,
+        "y": 1024,
+        "width": 32,
+        "height": 32,
+        "defId": "khalitzburg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_20",
+        "x": 864,
+        "y": 544,
+        "width": 32,
+        "height": 32,
+        "defId": "khalitzburg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_21",
+        "x": 800,
+        "y": 1024,
+        "width": 32,
+        "height": 32,
+        "defId": "khalitzburg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_22",
+        "x": 960,
+        "y": 1184,
+        "width": 32,
+        "height": 32,
+        "defId": "khalitzburg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_23",
+        "x": 704,
+        "y": 1024,
+        "width": 32,
+        "height": 32,
+        "defId": "khalitzburg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_24",
+        "x": 608,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "khalitzburg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_25",
+        "x": 960,
+        "y": 352,
+        "width": 32,
+        "height": 32,
+        "defId": "khalitzburg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_26",
+        "x": 32,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "khalitzburg",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_27",
+        "x": 800,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "abysmal_knight",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_28",
+        "x": 928,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "abysmal_knight",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_29",
+        "x": 736,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "abysmal_knight",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_30",
+        "x": 128,
+        "y": 1120,
+        "width": 32,
+        "height": 32,
+        "defId": "abysmal_knight",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_31",
+        "x": 352,
+        "y": 992,
+        "width": 32,
+        "height": 32,
+        "defId": "abysmal_knight",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_32",
+        "x": 160,
+        "y": 160,
+        "width": 32,
+        "height": 32,
+        "defId": "abysmal_knight",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_33",
+        "x": 928,
+        "y": 992,
+        "width": 32,
+        "height": 32,
+        "defId": "abysmal_knight",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_34",
+        "x": 224,
+        "y": 1248,
+        "width": 32,
+        "height": 32,
+        "defId": "abysmal_knight",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f3_spot_35",
+        "x": 416,
+        "y": 704,
+        "width": 32,
+        "height": 32,
+        "defId": "abysmal_knight",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      }
+    ],
+    "dun_f4": [
+      {
+        "id": "dun_f4_spot_0",
+        "x": 128,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "wanderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_1",
+        "x": 480,
+        "y": 640,
+        "width": 32,
+        "height": 32,
+        "defId": "wanderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_2",
+        "x": 512,
+        "y": 160,
+        "width": 32,
+        "height": 32,
+        "defId": "wanderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_3",
+        "x": 544,
+        "y": 192,
+        "width": 32,
+        "height": 32,
+        "defId": "wanderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_4",
+        "x": 96,
+        "y": 1120,
+        "width": 32,
+        "height": 32,
+        "defId": "wanderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_5",
+        "x": 480,
+        "y": 736,
+        "width": 32,
+        "height": 32,
+        "defId": "wanderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_6",
+        "x": 704,
+        "y": 1216,
+        "width": 32,
+        "height": 32,
+        "defId": "wanderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_7",
+        "x": 704,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "wanderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_8",
+        "x": 480,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "wanderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_9",
+        "x": 480,
+        "y": 992,
+        "width": 32,
+        "height": 32,
+        "defId": "dark_priest",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_10",
+        "x": 576,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "dark_priest",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_11",
+        "x": 960,
+        "y": 1120,
+        "width": 32,
+        "height": 32,
+        "defId": "dark_priest",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_12",
+        "x": 288,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "dark_priest",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_13",
+        "x": 384,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "dark_priest",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_14",
+        "x": 64,
+        "y": 352,
+        "width": 32,
+        "height": 32,
+        "defId": "dark_priest",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_15",
+        "x": 608,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "dark_priest",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_16",
+        "x": 384,
+        "y": 448,
+        "width": 32,
+        "height": 32,
+        "defId": "dark_priest",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_17",
+        "x": 768,
+        "y": 352,
+        "width": 32,
+        "height": 32,
+        "defId": "dark_priest",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_18",
+        "x": 800,
+        "y": 1248,
+        "width": 32,
+        "height": 32,
+        "defId": "chimera",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_19",
+        "x": 288,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "chimera",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_20",
+        "x": 416,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "chimera",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_21",
+        "x": 672,
+        "y": 512,
+        "width": 32,
+        "height": 32,
+        "defId": "chimera",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_22",
+        "x": 32,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "chimera",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_23",
+        "x": 640,
+        "y": 256,
+        "width": 32,
+        "height": 32,
+        "defId": "chimera",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_24",
+        "x": 288,
+        "y": 704,
+        "width": 32,
+        "height": 32,
+        "defId": "chimera",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_25",
+        "x": 512,
+        "y": 1248,
+        "width": 32,
+        "height": 32,
+        "defId": "chimera",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_26",
+        "x": 160,
+        "y": 384,
+        "width": 32,
+        "height": 32,
+        "defId": "chimera",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_27",
+        "x": 864,
+        "y": 704,
+        "width": 32,
+        "height": 32,
+        "defId": "alice",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_28",
+        "x": 960,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "alice",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_29",
+        "x": 128,
+        "y": 192,
+        "width": 32,
+        "height": 32,
+        "defId": "alice",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_30",
+        "x": 96,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "alice",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_31",
+        "x": 32,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "alice",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_32",
+        "x": 416,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "alice",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_33",
+        "x": 32,
+        "y": 1184,
+        "width": 32,
+        "height": 32,
+        "defId": "alice",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_34",
+        "x": 224,
+        "y": 544,
+        "width": 32,
+        "height": 32,
+        "defId": "alice",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f4_spot_35",
+        "x": 32,
+        "y": 1088,
+        "width": 32,
+        "height": 32,
+        "defId": "alice",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      }
+    ],
+    "dun_f5": [
+      {
+        "id": "dun_f5_spot_0",
+        "x": 576,
+        "y": 640,
+        "width": 32,
+        "height": 32,
+        "defId": "dullahan",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_1",
+        "x": 864,
+        "y": 352,
+        "width": 32,
+        "height": 32,
+        "defId": "dullahan",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_2",
+        "x": 128,
+        "y": 960,
+        "width": 32,
+        "height": 32,
+        "defId": "dullahan",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_3",
+        "x": 256,
+        "y": 640,
+        "width": 32,
+        "height": 32,
+        "defId": "dullahan",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_4",
+        "x": 576,
+        "y": 256,
+        "width": 32,
+        "height": 32,
+        "defId": "dullahan",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_5",
+        "x": 960,
+        "y": 128,
+        "width": 32,
+        "height": 32,
+        "defId": "dullahan",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_6",
+        "x": 96,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "dullahan",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_7",
+        "x": 64,
+        "y": 864,
+        "width": 32,
+        "height": 32,
+        "defId": "dullahan",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_8",
+        "x": 224,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "dullahan",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_9",
+        "x": 256,
+        "y": 1120,
+        "width": 32,
+        "height": 32,
+        "defId": "bloody_murderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_10",
+        "x": 576,
+        "y": 320,
+        "width": 32,
+        "height": 32,
+        "defId": "bloody_murderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_11",
+        "x": 96,
+        "y": 384,
+        "width": 32,
+        "height": 32,
+        "defId": "bloody_murderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_12",
+        "x": 768,
+        "y": 384,
+        "width": 32,
+        "height": 32,
+        "defId": "bloody_murderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_13",
+        "x": 32,
+        "y": 1280,
+        "width": 32,
+        "height": 32,
+        "defId": "bloody_murderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_14",
+        "x": 896,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "bloody_murderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_15",
+        "x": 32,
+        "y": 352,
+        "width": 32,
+        "height": 32,
+        "defId": "bloody_murderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_16",
+        "x": 736,
+        "y": 352,
+        "width": 32,
+        "height": 32,
+        "defId": "bloody_murderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_17",
+        "x": 256,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "bloody_murderer",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_18",
+        "x": 288,
+        "y": 704,
+        "width": 32,
+        "height": 32,
+        "defId": "gibbet",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_19",
+        "x": 224,
+        "y": 1184,
+        "width": 32,
+        "height": 32,
+        "defId": "gibbet",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_20",
+        "x": 640,
+        "y": 704,
+        "width": 32,
+        "height": 32,
+        "defId": "gibbet",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_21",
+        "x": 64,
+        "y": 416,
+        "width": 32,
+        "height": 32,
+        "defId": "gibbet",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_22",
+        "x": 320,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "gibbet",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_23",
+        "x": 480,
+        "y": 288,
+        "width": 32,
+        "height": 32,
+        "defId": "gibbet",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_24",
+        "x": 192,
+        "y": 1024,
+        "width": 32,
+        "height": 32,
+        "defId": "gibbet",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_25",
+        "x": 320,
+        "y": 672,
+        "width": 32,
+        "height": 32,
+        "defId": "gibbet",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_26",
+        "x": 864,
+        "y": 480,
+        "width": 32,
+        "height": 32,
+        "defId": "gibbet",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_27",
+        "x": 736,
+        "y": 544,
+        "width": 32,
+        "height": 32,
+        "defId": "loli_ruri",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_28",
+        "x": 384,
+        "y": 256,
+        "width": 32,
+        "height": 32,
+        "defId": "loli_ruri",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_29",
+        "x": 64,
+        "y": 800,
+        "width": 32,
+        "height": 32,
+        "defId": "loli_ruri",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_30",
+        "x": 416,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "loli_ruri",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_31",
+        "x": 288,
+        "y": 32,
+        "width": 32,
+        "height": 32,
+        "defId": "loli_ruri",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_32",
+        "x": 512,
+        "y": 448,
+        "width": 32,
+        "height": 32,
+        "defId": "loli_ruri",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_33",
+        "x": 64,
+        "y": 224,
+        "width": 32,
+        "height": 32,
+        "defId": "loli_ruri",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_34",
+        "x": 928,
+        "y": 576,
+        "width": 32,
+        "height": 32,
+        "defId": "loli_ruri",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      },
+      {
+        "id": "dun_f5_spot_35",
+        "x": 672,
+        "y": 640,
+        "width": 32,
+        "height": 32,
+        "defId": "loli_ruri",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      }
+    ],
+    "prontera": [
+      {
+        "id": "prontera_spot_0",
+        "x": 1696,
+        "y": 1392,
+        "width": 32,
+        "height": 32,
+        "defId": "training_dummy",
+        "count": 1,
+        "spawnsPerMinute": 7.5,
+        "canLure": true
+      }
+    ]
   }
 }

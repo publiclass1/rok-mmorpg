@@ -205,7 +205,21 @@ export type MapPortalDef = {
   mode: 'walk' | 'npc' | 'both'
 }
 
+/** @deprecated Authoring uses MobSpawnSpotJson; runtime uses RuntimeMobSpawn from expandMobSpots. */
 export type MobSpawnPointJson = { x: number; y: number; defId: string }
+
+export type MobSpawnSpotJson = {
+  id: string
+  x: number
+  y: number
+  width: number
+  height: number
+  defId: string
+  count: number
+  spawnsPerMinute: number
+  canLure: boolean
+  lureRadius?: number
+}
 
 export type RoLootZenyLinear = {
   levelMul: number
@@ -279,7 +293,7 @@ export type RoContentPack = {
   items: RoItem[]
   mobs: RoMob[]
   maps: RoMap[]
-  mobSpawns: Record<string, MobSpawnPointJson[]>
+  mobSpots: Record<string, MobSpawnSpotJson[]>
   portals: Record<string, MapPortalDef[]>
   expTables: RoExpTables
   loot: RoLootConfig

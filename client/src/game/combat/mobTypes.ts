@@ -24,4 +24,10 @@ export type MobInstance = {
   lastWanderAt: number
   provokedByPlayer: boolean
   skillCooldownUntil: Record<string, number>
+  respawnMs: number
+  canLure: boolean
+  lureRadius: number
+  spotCenterX: number
+  spotCenterY: number
+  spotRect: { x: number; y: number; width: number; height: number } | null
 }

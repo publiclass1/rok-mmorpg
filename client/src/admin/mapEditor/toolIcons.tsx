@@ -46,6 +46,14 @@ export function ToolIcon({ tool, size = s }: { tool: EditorTool; size?: number }
           <path d="M6 20c0-4 2.5-6 6-6s6 2 6 6" fill="#60a5fa" />
         </svg>
       )
+    case 'mob_spot':
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+          <rect x="4" y="6" width="16" height="14" rx="2" fill="#ec4899" opacity="0.45" />
+          <circle cx="9" cy="12" r="2" fill="#fbcfe8" />
+          <circle cx="15" cy="14" r="2" fill="#fbcfe8" />
+        </svg>
+      )
     case 'select':
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
@@ -57,7 +65,16 @@ export function ToolIcon({ tool, size = s }: { tool: EditorTool; size?: number }
   }
 }
 
-export const EDITOR_TOOLS: EditorTool[] = ['ground', 'collision', 'tiles', 'obstacle', 'portal', 'npc', 'select']
+export const EDITOR_TOOLS: EditorTool[] = [
+  'ground',
+  'collision',
+  'tiles',
+  'obstacle',
+  'portal',
+  'npc',
+  'mob_spot',
+  'select',
+]
 
 export const TOOL_LABELS: Record<EditorTool, string> = {
   ground: 'Paint ground',
@@ -66,5 +83,6 @@ export const TOOL_LABELS: Record<EditorTool, string> = {
   obstacle: 'Draw obstacle',
   portal: 'Draw portal',
   npc: 'Place NPC',
+  mob_spot: 'Draw mob spot',
   select: 'Select / move (Space + drag to pan)',
 }

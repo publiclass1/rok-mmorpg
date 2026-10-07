@@ -103,12 +103,15 @@ export function validateRoContent(pack: RoContentPack): void {
   }
 
   const mapIds = new Set(pack.maps.map((m) => m.id))
-  for (const [mapId, spawns] of Object.entries(pack.mobSpawns)) {
-    for (const spawn of spawns) {
-      assert(mobIds.has(spawn.defId), `spawn on ${mapId} references unknown mob ${spawn.defId}`)
+  for (const [mapId, spots] of Object.entries(pack.mobSpots)) {
+    for (const spot of spots) {
+      assert(mobIds.has(spot.defId), `mob spot on ${mapId} references unknown mob ${spot.defId}`)
+      assert(spot.count >= 1, `mob spot ${spot.id} on ${mapId} count must be >= 1`)
+      assert(spot.spawnsPerMinute > 0, `mob spot ${spot.id} on ${mapId} spawnsPerMinute must be > 0`)
+      assert(spot.width > 0 && spot.height > 0, `mob spot ${spot.id} on ${mapId} must have positive size`)
     }
     if (mapIds.size > 0 && !mapIds.has(mapId)) {
-      assert(false, `mobSpawns key ${mapId} has no matching map entry`)
+      assert(false, `mobSpots key ${mapId} has no matching map entry`)
     }
   }
 

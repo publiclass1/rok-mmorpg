@@ -15,7 +15,14 @@ import { DECOR_DRAG_MIME, type DecorAssetId } from '../../lib/mapDecor/catalog'
 import { decorFootprintRects } from '../../lib/mapDecor/decorFootprints'
 import { readDecorAssetId } from '../../lib/mapDecor/decorProps'
 import { getDecorImage, useDecorImages } from '../../lib/mapDecor/useDecorImages'
-import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../../lib/tmj/properties'
+import {
+  readMobSpotProps,
+  readNpcProps,
+  readPortalProps,
+  writeMobSpotProps,
+  writeNpcProps,
+  writePortalProps,
+} from '../../lib/tmj/properties'
 import { collisionFillColor, gidFillColor } from './tileColors'
 import { useMapEditorPan } from './MapEditorPanContext'
 import {
@@ -27,9 +34,9 @@ import {
   resolveNpcGuildFromParts,
 } from '../../game/npc/npcGuildBadge'
 
-export type EditorTool = 'ground' | 'collision' | 'tiles' | 'obstacle' | 'portal' | 'npc' | 'select'
+export type EditorTool = 'ground' | 'collision' | 'tiles' | 'obstacle' | 'portal' | 'npc' | 'mob_spot' | 'select'
 
-type ObjectGroupName = 'obstacles' | 'portals' | 'decor' | 'npcs'
+type ObjectGroupName = 'obstacles' | 'portals' | 'decor' | 'npcs' | 'mob_spots'
 
 const NPC_MARKER_W = 48
 const NPC_MARKER_H = 64
@@ -46,6 +53,7 @@ type Props = {
   showObstacles: boolean
   showPortals: boolean
   showNpcs: boolean
+  showMobSpots: boolean
   selectedObjectId: number | null
   onSelectObject: (id: number | null) => void
   onMapChange: (map: TmjMap) => void
@@ -53,7 +61,7 @@ type Props = {
 
 type DragState =
   | { kind: 'paint'; layer: 'ground' | 'collision' }
-  | { kind: 'rect'; group: 'obstacles' | 'portals'; startX: number; startY: number }
+  | { kind: 'rect'; group: 'obstacles' | 'portals' | 'mob_spots'; startX: number; startY: number }
   | { kind: 'move'; group: ObjectGroupName; objectId: number; offsetX: number; offsetY: number }
   | { kind: 'tileMarquee'; startTx: number; startTy: number }
   | { kind: 'moveTiles'; pointerStartTx: number; pointerStartTy: number }
@@ -90,6 +98,8 @@ function objectGroupForHit(map: TmjMap, objectId: number): ObjectGroupName {
   if (npcs.some((p) => p.id === objectId)) return 'npcs'
   const portals = getObjectGroup(map, 'portals')?.objects ?? []
   if (portals.some((p) => p.id === objectId)) return 'portals'
+  const mobSpots = getObjectGroup(map, 'mob_spots')?.objects ?? []
+  if (mobSpots.some((p) => p.id === objectId)) return 'mob_spots'
   const decor = getObjectGroup(map, 'decor')?.objects ?? []
   if (decor.some((d) => d.id === objectId)) return 'decor'
   return 'obstacles'
@@ -107,6 +117,7 @@ export function MapEditorCanvas({
   showObstacles,
   showPortals,
   showNpcs,
+  showMobSpots,
   selectedObjectId,
   onSelectObject,
   onMapChange,
@@ -285,6 +296,24 @@ export function MapEditorCanvas({
       }
     }
 
+    const mobSpots = getObjectGroup(map, 'mob_spots')
+    if (showMobSpots && mobSpots) {
+      for (const o of mobSpots.objects) {
+        const selected = o.id === selectedObjectId
+        ctx.fillStyle = selected ? 'rgba(244, 114, 182, 0.55)' : 'rgba(236, 72, 153, 0.35)'
+        ctx.fillRect(o.x, o.y, o.width, o.height)
+        ctx.strokeStyle = selected ? '#fbbf24' : '#db2777'
+        ctx.lineWidth = selected ? 2 : 1
+        ctx.strokeRect(o.x, o.y, o.width, o.height)
+        const spotProps = readMobSpotProps(o)
+        const label = `${spotProps.defId} ×${spotProps.count}`
+        ctx.fillStyle = '#fce7f3'
+        ctx.font = '11px system-ui'
+        ctx.fillText(label, o.x + 4, o.y + 14)
+        ctx.fillText(`${spotProps.spawnsPerMinute}/min`, o.x + 4, o.y + 28)
+      }
+    }
+
     if (previewRect) {
       ctx.strokeStyle = '#fbbf24'
       ctx.lineWidth = 2
@@ -349,6 +378,7 @@ export function MapEditorCanvas({
     showObstacles,
     showPortals,
     showNpcs,
+    showMobSpots,
     selectedObjectId,
     previewRect,
     tileSel,
@@ -431,7 +461,8 @@ export function MapEditorCanvas({
       const obstacles = getObjectGroup(map, 'obstacles')?.objects ?? []
       const portals = getObjectGroup(map, 'portals')?.objects ?? []
       const npcs = getObjectGroup(map, 'npcs')?.objects ?? []
-      const hit = hitObject([...npcs, ...portals, ...obstacles, ...decor], x, y)
+      const mobSpots = getObjectGroup(map, 'mob_spots')?.objects ?? []
+      const hit = hitObject([...mobSpots, ...npcs, ...portals, ...obstacles, ...decor], x, y)
       if (hit) {
         onSelectObject(hit.id)
         const group = objectGroupForHit(map, hit.id)
@@ -463,6 +494,13 @@ export function MapEditorCanvas({
       const sx = snapTile(x) * TILE_SIZE
       const sy = snapTile(y) * TILE_SIZE
       setDrag({ kind: 'rect', group: 'portals', startX: sx, startY: sy })
+      setPreviewRect({ x: sx, y: sy, w: TILE_SIZE, h: TILE_SIZE })
+      return
+    }
+    if (tool === 'mob_spot') {
+      const sx = snapTile(x) * TILE_SIZE
+      const sy = snapTile(y) * TILE_SIZE
+      setDrag({ kind: 'rect', group: 'mob_spots', startX: sx, startY: sy })
       setPreviewRect({ x: sx, y: sy, w: TILE_SIZE, h: TILE_SIZE })
       return
     }
@@ -529,12 +567,20 @@ export function MapEditorCanvas({
     }
   }
 
-  const finishRect = (group: 'obstacles' | 'portals', rect: { x: number; y: number; w: number; h: number }) => {
+  const finishRect = (
+    group: 'obstacles' | 'portals' | 'mob_spots',
+    rect: { x: number; y: number; w: number; h: number },
+  ) => {
     const id = map.nextobjectid
     const obj: TmjMapObject = {
       id,
-      name: group === 'obstacles' ? `obstacle_${id}` : `portal_${id}`,
-      type: group === 'obstacles' ? 'obstacle' : 'portal',
+      name:
+        group === 'obstacles'
+          ? `obstacle_${id}`
+          : group === 'portals'
+            ? `portal_${id}`
+            : `${mapId}_spot_${id}`,
+      type: group === 'obstacles' ? 'obstacle' : group === 'portals' ? 'portal' : 'mob_spot',
       x: rect.x,
       y: rect.y,
       width: rect.w,
@@ -548,6 +594,16 @@ export function MapEditorCanvas({
         targetY: 320,
         label: 'Warp',
         mode: 'both',
+      })
+    }
+    if (group === 'mob_spots') {
+      writeMobSpotProps(obj, {
+        spotId: `${mapId}_spot_${id}`,
+        defId: 'poring',
+        count: 1,
+        spawnsPerMinute: 7.5,
+        canLure: true,
+        lureRadius: 0,
       })
     }
     const next: TmjMap = {

@@ -1782,7 +1782,7 @@ export class WorldScene extends Phaser.Scene {
       if (this.killedSpawnSet.has(spawnIndex)) return
       const def = MOB_DEFS[spawn.defId]
       if (!def) return
-      const mob = this.createMobInstance(spawnIndex, spawn.x, spawn.y, def)
+      const mob = this.createMobInstance(spawnIndex, spawn.x, spawn.y, def, undefined, spawn)
       this.mobs.push(mob)
       this.mobBySpawnIndex[spawnIndex] = mob
     })
@@ -1834,6 +1834,7 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     def: (typeof MOB_DEFS)[string],
     visual?: { labelPrefix?: string; scale?: number; barWidth?: number; labelColor?: string },
+    spawnMeta?: (typeof MOB_SPAWNS_BY_MAP)[string][number],
   ): MobInstance {
     const sprite = this.physics.add.sprite(x, y + MOB_FEET_ANCHOR_ADJUST, 'mob', 0)
     sprite.setOrigin(0.5, 1)
@@ -1879,6 +1880,12 @@ export class WorldScene extends Phaser.Scene {
       lastWanderAt: 0,
       provokedByPlayer: false,
       skillCooldownUntil: {},
+      respawnMs: spawnMeta?.respawnMs ?? MOB_RESPAWN_MS,
+      canLure: spawnMeta?.canLure ?? true,
+      lureRadius: spawnMeta?.lureRadius ?? def.roamRadius * 2.5,
+      spotCenterX: spawnMeta?.spotCenterX ?? x,
+      spotCenterY: spawnMeta?.spotCenterY ?? feetY,
+      spotRect: spawnMeta?.spotRect ?? null,
     }
     initMobAiFields(mob, def)
     return mob
@@ -2181,7 +2188,7 @@ export class WorldScene extends Phaser.Scene {
       return
     }
 
-    this.time.delayedCall(MOB_RESPAWN_MS, () => {
+    this.time.delayedCall(mob.respawnMs, () => {
       if (!def) return
       this.respawnMobInstance(mob, def)
       if (broadcastRespawn) {

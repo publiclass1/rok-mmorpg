@@ -117,3 +117,12 @@ export type MapNpcDef = {
   label: string
   config: Record<string, unknown>
 }
+
+export type MobSpotObjectProps = {
+  spotId: string
+  defId: string
+  count: number
+  spawnsPerMinute: number
+  canLure: boolean
+  lureRadius: number
+}
