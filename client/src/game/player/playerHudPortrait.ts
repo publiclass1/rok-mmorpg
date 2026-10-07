@@ -4,15 +4,16 @@ import { defaultCharacterPose, type CharacterPose } from '../character/character
 import { SPRITE_FRAME_HEIGHT, SPRITE_FRAME_WIDTH } from '../character/characterSpriteRegistry'
 import { MOUNT_BODY_Y_OFFSET, WORLD_VISIBLE_EQUIP_LAYERS } from './playerDisplayLayers'
 import { syncEquipmentTransforms } from './playerEquipmentVisual'
-import type { PlayerDisplay } from './playerSprites'
+import { playerDisplayScene, type PlayerDisplay } from './playerSprites'
 
 /** Visible bust crop from the idle-down frame (top ~56% of sprite). */
 const PORTRAIT_CROP_H = 36
 
 function applyHudPortraitPose(display: PlayerDisplay) {
+  if (!playerDisplayScene(display)) return
   display.riderLayer.setY(0)
   display.body.setY(0)
-  display.body.anims.stop()
+  display.body.anims?.stop()
   display.body.clearTint()
   applyPoseToSprite(display.body, display.textureKey, display.spriteDef, display.pose)
   syncEquipmentTransforms(display)

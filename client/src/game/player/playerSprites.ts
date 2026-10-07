@@ -53,6 +53,7 @@ export type PlayerDisplay = RarityGlowHost & {
 }
 
 function syncSpritePose(display: PlayerDisplay) {
+  if (!playerDisplayScene(display)) return
   display.riderLayer.setY(display.pose.mounted ? MOUNT_BODY_Y_OFFSET : 0)
   display.body.setY(0)
   applyPoseToSprite(display.body, display.textureKey, display.spriteDef, display.pose)

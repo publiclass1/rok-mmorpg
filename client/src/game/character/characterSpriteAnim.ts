@@ -114,12 +114,15 @@ export function applyPoseToSprite(
 ) {
   if (pose.anim === 'idle' && !pose.mounted) {
     const key = animKey(textureKey, 'idle', pose.facing)
-    if (sprite.anims.currentAnim?.key !== key) {
-      sprite.play(key)
+    if (sprite.anims) {
+      sprite.play(key, true)
+    } else {
+      const frame = poseToFrameIndex(def, pose)
+      sprite.setTexture(textureKey, `${frame}`)
     }
     return
   }
-  sprite.anims.stop()
+  sprite.anims?.stop()
   const frame = poseToFrameIndex(def, pose)
   sprite.setTexture(textureKey, `${frame}`)
 }
