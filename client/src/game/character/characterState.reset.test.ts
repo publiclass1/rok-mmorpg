@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
+import { applyJobChange } from './jobChange'
 import {
   createInitialCharacterState,
   raiseStat,
+  reconcileProgressBudgetForSave,
   resetAllocatedPrimaryStats,
   resetAllocatedSkills,
 } from './characterState'
@@ -43,6 +45,34 @@ assert.equal(
   afterSkillReset.skillPointsUnspent,
   skillUnspentBefore + skillSpent,
   'refunds skill points above free levels',
+)
+
+const swordmanWithBash = {
+  ...base,
+  jobId: 'swordman',
+  progress: { ...base.progress, jobLevel: 40, baseLevel: 40 },
+  skills: { ...base.skills, bash: 5, sword_mastery: 3 },
+  skillPointsUnspent: 0,
+}
+const knightWithInherited = applyJobChange(swordmanWithBash, 'knight')
+const knightJobLevel = 15
+const knightWithKnightSkill = {
+  ...knightWithInherited,
+  progress: { ...knightWithInherited.progress, jobLevel: knightJobLevel },
+  skills: { ...knightWithInherited.skills, bowling_bash: 4 },
+  skillPointsUnspent: 0,
+}
+
+const afterKnightReset = reconcileProgressBudgetForSave(resetAllocatedSkills(knightWithKnightSkill))
+assert.equal(afterKnightReset.skills.bash ?? 0, 0, 'clears inherited 1st job skills')
+assert.equal(afterKnightReset.skills.sword_mastery ?? 0, 0, 'clears inherited passives')
+assert.equal(afterKnightReset.skills.bowling_bash ?? 0, 0, 'clears current job skills')
+assert.equal(afterKnightReset.skills.basic_attack, 1)
+assert.equal(afterKnightReset.skills.sit, 1)
+assert.equal(
+  afterKnightReset.skillPointsUnspent,
+  knightJobLevel - 1,
+  'unspent matches current job earned pool after full reset',
 )
 
 console.log('characterState.reset.test.ts: ok')

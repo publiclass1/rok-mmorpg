@@ -15,6 +15,27 @@ const JOB_IDS = new Set((jobsJson as { jobs: { id: string; maxJobLevel?: number 
 const JOB_MAX_LEVEL = new Map(
   (jobsJson as { jobs: { id: string; maxJobLevel?: number }[] }).jobs.map((j) => [j.id, j.maxJobLevel ?? 50]),
 )
+const JOB_PARENT = new Map(
+  (jobsJson as { jobs: { id: string; parentJobId?: string | null }[] }).jobs.map((j) => [
+    j.id,
+    j.parentJobId ?? null,
+  ]),
+)
+
+function jobAncestorIds(jobId: string): string[] {
+  const out: string[] = []
+  let cur: string | null = jobId
+  while (cur) {
+    out.push(cur)
+    cur = JOB_PARENT.get(cur) ?? null
+  }
+  return out
+}
+
+function jobCanUseSkillFromJob(currentJobId: string, skillJobId: string): boolean {
+  if (skillJobId === 'novice') return currentJobId === 'novice'
+  return jobAncestorIds(currentJobId).includes(skillJobId)
+}
 const SKILLS = new Map(
   (skillsJson as { skills: { id: string; maxLevel: number; jobId?: string }[] }).skills.map((s) => [s.id, s]),
 )
@@ -102,7 +123,7 @@ function validateSkillBudget(jobId: string, jobLevel: number, skills: SkillRow[]
     const def = SKILLS.get(row.skill_id)
     if (!def) return `unknown skill ${row.skill_id}`
     if (row.level < 1 || row.level > def.maxLevel) return `invalid skill level ${row.skill_id}`
-    if (def.jobId && def.jobId !== jobId && def.jobId !== 'novice') {
+    if (def.jobId && !jobCanUseSkillFromJob(jobId, def.jobId)) {
       return `skill ${row.skill_id} not allowed for job ${jobId}`
     }
     const freeLevel =

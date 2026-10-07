@@ -11,6 +11,7 @@ import {
   hasAllocatedSkillPoints,
   hasRaisedPrimaryStats,
   raiseStat,
+  reconcileProgressBudgetForSave,
   resetAllocatedPrimaryStats,
   resetAllocatedSkills,
   useConsumableFromSession,
@@ -61,7 +62,7 @@ export function applyCharacterAction(
     if (!hasAllocatedSkillPoints(state.skills)) {
       return { state, changed: false, message: 'No skills to reset.' }
     }
-    const next = syncDerivedVitals(resetAllocatedSkills(state))
+    const next = syncDerivedVitals(reconcileProgressBudgetForSave(resetAllocatedSkills(state)))
     logActivity('character', 'Reset skills and refunded skill points.')
     return { state: next, changed: true, message: 'Skills reset.' }
   }

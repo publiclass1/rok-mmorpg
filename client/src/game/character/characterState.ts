@@ -167,7 +167,10 @@ export function hasAllocatedSkillPoints(skills: Record<string, number>): boolean
 export function resetAllocatedSkills(state: CharacterSessionState): CharacterSessionState {
   if (!hasAllocatedSkillPoints(state.skills)) return state
   const refund = skillPointsSpentOnSkills(state.skills)
-  const skills = { basic_attack: 1, sit: 1, play_dead: 1 }
+  const skills: Record<string, number> = {}
+  for (const skillId of Object.keys(FREE_SKILL_LEVELS)) {
+    skills[skillId] = FREE_SKILL_LEVELS[skillId]
+  }
   const skillBar = state.skillBar.map((skillId) =>
     skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead' ? skillId : null,
   )

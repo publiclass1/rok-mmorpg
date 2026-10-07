@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { sessionFromSheetPayload } from '../game/character/characterSheet'
 import { hasAllocatedSkillPoints } from '../game/character/characterState'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
-import { getCharacterSession, setCharacterSession } from '../game/character/characterSessionBridge'
 import {
   JOB_NAMES,
   skillsForJob,
@@ -51,7 +49,6 @@ export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: 
     }
     setBusy(true)
     try {
-      setCharacterSession(sessionFromSheetPayload(sheet, getCharacterSession()))
       const resetOk = dispatchCharacterAction({ type: 'resetSkills' })
       if (!resetOk) return
 

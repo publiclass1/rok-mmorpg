@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { BASE_PRIMARY_STAT, type PrimaryStat } from '../game/character/characterState'
-import { sessionFromSheetPayload } from '../game/character/characterSheet'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
-import { getCharacterSession, setCharacterSession } from '../game/character/characterSessionBridge'
 import { STAT_RESET_ZENY_COST } from '../game/character/statFormulas'
 import { emitGameEvent, type CharacterSheetPayload } from '../game/events'
 import { spendCharacterZeny } from '../lib/zeny'
@@ -69,7 +67,6 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
     }
     setBusy(true)
     try {
-      setCharacterSession(sessionFromSheetPayload(sheet, getCharacterSession()))
       const resetOk = dispatchCharacterAction({ type: 'resetStats' })
       if (!resetOk) return
 
