@@ -59,3 +59,63 @@ export function spellChantVisibleLength(fullText: string, progress01: number): n
 export function shouldShowSpellChant(strikeDelayMs: number): boolean {
   return strikeDelayMs >= 80
 }
+
+/** Short Greek tokens for random cast incantations. */
+export const RANDOM_CHANT_WORDS = [
+  'πῦρ',
+  'ὕδωρ',
+  'ἄνεμος',
+  'γῆ',
+  'φῶς',
+  'σκότος',
+  'δύναμις',
+  'ψυχή',
+  'κρύος',
+  'κεραυνός',
+  'ἀστήρ',
+  'πνεῦμα',
+  'μῦθος',
+  'λόγος',
+  'φωνή',
+  'αἰών',
+  'χάος',
+  'νόος',
+  'θεός',
+  'μάγος',
+  'ῥέω',
+  'πέμπω',
+  'γίνου',
+  'ἄνοιξις',
+  'κλείω',
+  'σφαῖρα',
+  'κύκλος',
+  'ἱερόν',
+]
+
+function mulberry32(seed: number): () => number {
+  let t = seed >>> 0
+  return () => {
+    t += 0x6d2b79f5
+    let r = Math.imul(t ^ (t >>> 15), 1 | t)
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r)
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+function clampWordCount(strikeDelayMs: number): number {
+  const n = Math.round(strikeDelayMs / 350)
+  return Math.max(2, Math.min(6, n))
+}
+
+/** Deterministic random Greek phrase for one cast (typewriter duration = strike delay). */
+export function buildRandomCastChant(strikeDelayMs: number, seed = 1): string {
+  const count = clampWordCount(strikeDelayMs)
+  const rand = mulberry32(seed)
+  const pool = RANDOM_CHANT_WORDS
+  const words: string[] = []
+  for (let i = 0; i < count; i++) {
+    const idx = Math.floor(rand() * pool.length)
+    words.push(pool[idx]!)
+  }
+  return words.join(' ')
+}

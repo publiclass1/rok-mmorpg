@@ -2,11 +2,11 @@ import Phaser from 'phaser'
 
 export const PLAYER_NAME_OFFSET_BELOW = 10
 /** Skill name callout sits above the feet anchor (negative Y from feet). */
-export const PLAYER_SKILL_CALLOUT_OFFSET_ABOVE = 42
-/** iRO-style cast gauge (black + green fill), above skill name. */
+export const PLAYER_SKILL_CALLOUT_OFFSET_ABOVE = 70
+/** iRO-style cast gauge (unused in cast UI; chant replaces bar). */
 export const PLAYER_CAST_BAR_OFFSET_ABOVE = 56
-/** Greek spell incantation, above cast bar. */
-export const PLAYER_SPELL_CHANT_OFFSET_ABOVE = 74
+/** Random Greek chant, below skill name — typewriter = cast progress. */
+export const PLAYER_SPELL_CHANT_OFFSET_ABOVE = 54
 
 export function styleSpellChantLabel(text: Phaser.GameObjects.Text) {
   text
@@ -17,7 +17,7 @@ export function styleSpellChantLabel(text: Phaser.GameObjects.Text) {
 }
 
 export function positionPlayerSpellChant(text: Phaser.GameObjects.Text, feetX: number, feetY: number) {
-  text.setOrigin(0.5, 1)
+  text.setOrigin(0.5, 0)
   text.setPosition(feetX, feetY - PLAYER_SPELL_CHANT_OFFSET_ABOVE)
 }
 

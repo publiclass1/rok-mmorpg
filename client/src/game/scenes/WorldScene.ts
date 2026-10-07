@@ -70,7 +70,7 @@ import {
 import { playLevelUpAudio, preloadLevelUpAudio } from '../combat/levelUpAudio'
 import { playLevelUpWorldFx } from '../combat/levelUpFx'
 import { buildLevelUpSteps, type LevelUpStep } from '../combat/levelUpSteps'
-import { PlayerCastBarGfx, positionPlayerCastBar, shouldShowCastBar } from '../combat/castBarFx'
+import { PlayerCastBarGfx, positionPlayerCastBar } from '../combat/castBarFx'
 import {
   GroundAoECastMarker,
   groundAoERadiusPx,
@@ -78,7 +78,7 @@ import {
 } from '../combat/groundAoECastMarker'
 import { calcPreRenewalCastTimeMsFromSession, skillCastStrikeDelayMs } from '../combat/castTime'
 import { PlayerSpellChantGfx } from '../combat/spellChantFx'
-import { resolveSpellChant, shouldShowSpellChant } from '../combat/spellChants'
+import { buildRandomCastChant, shouldShowSpellChant } from '../combat/spellChants'
 import { playSkillCastFx, playSkillImpactFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
@@ -328,6 +328,7 @@ export class WorldScene extends Phaser.Scene {
   private playerSpellChant!: PlayerSpellChantGfx
   private groundAoEMarker!: GroundAoECastMarker
   private groundAoECastDismissTimer: Phaser.Time.TimerEvent | null = null
+  private castChantSeed = 0
   private levelUpQueue: LevelUpStep[] = []
   private levelUpDrainActive = false
   private levelUpCelebrateId = 0
@@ -1802,7 +1803,7 @@ export class WorldScene extends Phaser.Scene {
 
   private beginPlayerCastPresentation(
     def: SkillDefinition,
-    skillId: string,
+    _skillId: string,
   ): { castMs: number; strikeDelay: number } {
     const castMs = calcPreRenewalCastTimeMsFromSession(def.castTimeMs, this.session)
     const strikeDelay = skillCastStrikeDelayMs(def.castTimeMs, this.session)
@@ -1810,23 +1811,21 @@ export class WorldScene extends Phaser.Scene {
     const feetY = this.playerFeetY()
 
     if (shouldShowSpellChant(strikeDelay)) {
-      this.playerSpellChant.play(resolveSpellChant(skillId, def), strikeDelay, feetX, feetY)
+      const seed = (this.castChantSeed += 1)
+      const phrase = buildRandomCastChant(strikeDelay, seed)
+      this.playerSpellChant.play(phrase, strikeDelay, feetX, feetY)
     } else {
       this.playerSpellChant.cancel()
     }
 
-    if (shouldShowCastBar(castMs)) {
-      this.playerCastBar.play(castMs, feetX, feetY)
-    } else {
-      this.playerCastBar.cancel()
-    }
+    this.playerCastBar.cancel()
 
     return { castMs, strikeDelay }
   }
 
   private cancelPlayerCastPresentation() {
-    this.playerCastBar.cancel()
     this.playerSpellChant.cancel()
+    this.playerCastBar.cancel()
   }
 
   private showSkillCallout(name: string, durationMs = 1200) {

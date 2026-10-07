@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import { SKILLS } from '../character/skillsConfig'
 import {
+  buildRandomCastChant,
   DEFAULT_SPELL_CHANT,
   resolveSpellChant,
   spellChantVisibleLength,
@@ -29,6 +30,13 @@ function run() {
     assert.ok(len >= prev, 'visible length should be monotonic')
     prev = len
   }
+
+  const short = buildRandomCastChant(200, 42)
+  assert.ok(short.split(' ').length >= 2)
+  const long = buildRandomCastChant(2000, 42)
+  assert.ok(long.split(' ').length <= 6)
+  assert.equal(buildRandomCastChant(1000, 99), buildRandomCastChant(1000, 99))
+  assert.notEqual(buildRandomCastChant(1000, 1), buildRandomCastChant(1000, 2))
 
   console.log('spellChants.test.ts: ok')
 }
