@@ -17,8 +17,9 @@ import type { NpcObjectNpcType, NpcObjectProps } from '../lib/tmj/types'
 import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../lib/tmj/properties'
 import { getObjectGroup } from '../lib/tmj/parse'
 import { fetchMapBundle, fetchMapList, saveMapBundle, type MapMeta } from './mapAdminApi'
-import { DecorAssetPalette } from './mapEditor/DecorAssetPalette'
 import { MapEditorCanvas, type EditorTool } from './mapEditor/MapEditorCanvas'
+import { MapEditorToolbar } from './mapEditor/MapEditorToolbar'
+import type { WarpWiringPayload } from './mapAdminApi'
 import { readDecorAssetId } from '../lib/mapDecor/decorProps'
 import { GID_GRASS_A, GID_GRASS_B, GID_PATH, GID_WALL } from '../lib/tmj'
 import '../App.css'
@@ -26,7 +27,7 @@ import '../App.css'
 const defaultMeta = (): MapMeta => ({
   id: 'new_map',
   displayName: 'New Map',
-  fieldType: 'field',
+  fieldType: 'custom',
   sourceUrl: null,
 })
 
@@ -47,8 +48,17 @@ export function MapAdminPage() {
   const [jsonText, setJsonText] = useState('')
   const [jsonDirty, setJsonDirty] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
-  const [npcSql, setNpcSql] = useState('')
+  const [fullSql, setFullSql] = useState('')
+  const [migrationFileName, setMigrationFileName] = useState('')
+  const [migrationWritten, setMigrationWritten] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [addToPronteraWarp, setAddToPronteraWarp] = useState(true)
+  const [hubSpawnX, setHubSpawnX] = useState(320)
+  const [hubSpawnY, setHubSpawnY] = useState(320)
+  const [addReturnWarp, setAddReturnWarp] = useState(true)
+  const [returnPronteraX, setReturnPronteraX] = useState(640)
+  const [returnPronteraY, setReturnPronteraY] = useState(360)
+  const [writeMigrationFile, setWriteMigrationFile] = useState(true)
   const [newMapWidth, setNewMapWidth] = useState(30)
   const [newMapHeight, setNewMapHeight] = useState(20)
   const [resizeWidth, setResizeWidth] = useState(30)
@@ -135,7 +145,9 @@ export function MapAdminPage() {
       setJsonDirty(false)
       setSelectedObjectId(null)
       setEditingMapId(mapId)
-      setNpcSql('')
+      setFullSql('')
+      setMigrationFileName('')
+      setMigrationWritten(false)
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Load failed')
     } finally {
@@ -166,10 +178,24 @@ export function MapAdminPage() {
         setJsonDirty(false)
       }
       const portals = portalDefsFromMap(mapToSave, mapId)
-      const res = await saveMapBundle({ mapMeta, tmj: mapToSave, portals })
-      setMeta(mapMeta)
-      setNpcSql(res.npcSql)
-      setStatus(`Saved ${mapId}`)
+      const warpWiring: WarpWiringPayload = {
+        addToPronteraWarp,
+        spawnX: hubSpawnX,
+        spawnY: hubSpawnY,
+        addReturnWarp,
+        returnPronteraX: returnPronteraX,
+        returnPronteraY: returnPronteraY,
+        writeMigrationFile,
+      }
+      const res = await saveMapBundle({ mapMeta, tmj: mapToSave, portals, warpWiring })
+      setMeta(res.mapMeta)
+      setFullSql(res.sqlBundle.fullSql)
+      setMigrationFileName(res.sqlBundle.migrationFileName)
+      setMigrationWritten(res.sqlBundle.migrationWritten)
+      const migrationNote = res.sqlBundle.migrationWritten
+        ? ` Migration written: supabase/migrations/${res.sqlBundle.migrationFileName}`
+        : ''
+      setStatus(`Saved ${mapId}.${migrationNote} Run SQL in Supabase (or use migration).`)
       setEditingMapId(mapId)
       await refreshList()
     } catch (err) {
@@ -256,14 +282,14 @@ export function MapAdminPage() {
     setMeta({
       id: `new_map_${suffix}`,
       displayName: 'New Map',
-      fieldType: 'field',
+      fieldType: 'custom',
       sourceUrl: null,
     })
     setTmj(createEmptyMap(w, h))
     setJsonDirty(false)
     setSelectedObjectId(null)
     setEditingMapId(null)
-    setNpcSql('')
+    setFullSql('')
     setStatus(`New blank map (${w}×${h}) — set id and save`)
   }
 
@@ -410,6 +436,7 @@ export function MapAdminPage() {
             <label>
               field type
               <select value={meta.fieldType} onChange={(e) => setMeta({ ...meta, fieldType: e.target.value })}>
+                <option value="custom">custom (player maps)</option>
                 <option value="field">field</option>
                 <option value="town">town</option>
                 <option value="dungeon">dungeon</option>
@@ -417,22 +444,48 @@ export function MapAdminPage() {
             </label>
           </fieldset>
 
-          <DecorAssetPalette />
+          <fieldset className="map-admin-fieldset">
+            <legend>Warp wiring</legend>
+            <label className="map-admin-check">
+              <input type="checkbox" checked={addToPronteraWarp} onChange={(e) => setAddToPronteraWarp(e.target.checked)} />
+              Add to Prontera Warp Agent
+            </label>
+            {addToPronteraWarp && (
+              <div className="map-admin-size-row">
+                <label>
+                  Arrival X
+                  <input type="number" value={hubSpawnX} onChange={(e) => setHubSpawnX(Number(e.target.value))} />
+                </label>
+                <label>
+                  Arrival Y
+                  <input type="number" value={hubSpawnY} onChange={(e) => setHubSpawnY(Number(e.target.value))} />
+                </label>
+              </div>
+            )}
+            <label className="map-admin-check">
+              <input type="checkbox" checked={addReturnWarp} onChange={(e) => setAddReturnWarp(e.target.checked)} />
+              Return warp on this map → Prontera
+            </label>
+            {addReturnWarp && (
+              <div className="map-admin-size-row">
+                <label>
+                  Prontera X
+                  <input type="number" value={returnPronteraX} onChange={(e) => setReturnPronteraX(Number(e.target.value))} />
+                </label>
+                <label>
+                  Prontera Y
+                  <input type="number" value={returnPronteraY} onChange={(e) => setReturnPronteraY(Number(e.target.value))} />
+                </label>
+              </div>
+            )}
+            <label className="map-admin-check">
+              <input type="checkbox" checked={writeMigrationFile} onChange={(e) => setWriteMigrationFile(e.target.checked)} />
+              Write SQL migration file on save
+            </label>
+          </fieldset>
 
           <fieldset className="map-admin-fieldset">
-            <legend>Tool</legend>
-            <div className="map-admin-tool-row">
-              {(['ground', 'collision', 'tiles', 'obstacle', 'portal', 'npc', 'select'] as EditorTool[]).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className={tool === t ? 'active' : ''}
-                  onClick={() => setTool(t)}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
+            <legend>Tool options</legend>
             {tool === 'ground' && (
               <label>
                 Ground tile
@@ -499,6 +552,7 @@ export function MapAdminPage() {
         </aside>
 
         <section className="map-admin-canvas-wrap panel">
+          <MapEditorToolbar tool={tool} onToolChange={setTool} disabled={loading} />
           <MapEditorCanvas
             map={tmj}
             mapId={meta.id.trim() || 'new_map'}
@@ -529,16 +583,20 @@ export function MapAdminPage() {
           />
           <button type="button" onClick={applyJson}>Apply JSON</button>
 
-          {npcSql && (
+          {fullSql && (
             <>
-              <h2>NPC SQL</h2>
-              <textarea className="map-admin-json-editor map-admin-sql" readOnly value={npcSql} />
-              <button
-                type="button"
-                onClick={() => void navigator.clipboard.writeText(npcSql)}
-              >
-                Copy SQL
+              <h2>SQL bundle</h2>
+              {migrationFileName && (
+                <p className="muted small">
+                  {migrationWritten ? 'Written: ' : 'Suggested file: '}
+                  supabase/migrations/{migrationFileName}
+                </p>
+              )}
+              <textarea className="map-admin-json-editor map-admin-sql" readOnly value={fullSql} />
+              <button type="button" onClick={() => void navigator.clipboard.writeText(fullSql)}>
+                Copy all SQL
               </button>
+              <p className="muted small">Run in Supabase SQL Editor, then hard-refresh the game.</p>
             </>
           )}
         </aside>

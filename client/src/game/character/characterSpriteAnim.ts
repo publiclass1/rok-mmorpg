@@ -60,7 +60,7 @@ export function poseToFrameIndex(def: CharacterSpriteDef, pose: CharacterPose): 
     case 'sit':
       return stripFrameIndex(def, facing, def.strips.sit, 0)
     case 'attack':
-      return stripFrameIndex(def, facing, def.strips.attack, pose.attackPhase)
+      return stripFrameIndex(def, facing, def.strips.attack[pose.attackStyle], pose.attackPhase)
     case 'jump':
       return stripFrameIndex(def, facing, def.strips.jump, 0)
     case 'flinch':

@@ -25,7 +25,7 @@ export type NpcRow = {
   npc_type: 'teleport' | 'storage' | 'save' | 'job_master' | 'shop' | 'healer'
   label: string
   config: {
-    destinations?: Array<{ map_id: string; label: string; x: number; y: number }>
+    destinations?: Array<{ map_id: string; label: string; x: number; y: number; category?: string }>
     offers?: Array<{
       jobId: string
       fromJobId?: string

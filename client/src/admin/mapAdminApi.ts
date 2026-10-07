@@ -1,6 +1,23 @@
 import type { MapPortalDef } from '../content/ro/types'
 import type { TmjMap } from '../lib/tmj'
 
+export type WarpWiringPayload = {
+  addToPronteraWarp: boolean
+  spawnX: number
+  spawnY: number
+  addReturnWarp: boolean
+  returnPronteraX: number
+  returnPronteraY: number
+  writeMigrationFile: boolean
+}
+
+export type SqlBundleResponse = {
+  migrationFileName: string
+  fullSql: string
+  migrationWritten: boolean
+  sections: Record<string, string>
+}
+
 export type MapMeta = {
   id: string
   displayName: string
@@ -33,7 +50,8 @@ export async function saveMapBundle(payload: {
   mapMeta: MapMeta
   tmj: TmjMap
   portals: MapPortalDef[]
-}): Promise<{ ok: boolean; npcSql: string }> {
+  warpWiring?: WarpWiringPayload
+}): Promise<{ ok: boolean; npcSql: string; sqlBundle: SqlBundleResponse; mapMeta: MapMeta }> {
   const res = await fetch('/__admin/maps/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -43,5 +61,10 @@ export async function saveMapBundle(payload: {
     const err = (await res.json().catch(() => null)) as { error?: string } | null
     throw new Error(err?.error ?? res.statusText)
   }
-  return (await res.json()) as { ok: boolean; npcSql: string }
+  return (await res.json()) as {
+    ok: boolean
+    npcSql: string
+    sqlBundle: SqlBundleResponse
+    mapMeta: MapMeta
+  }
 }

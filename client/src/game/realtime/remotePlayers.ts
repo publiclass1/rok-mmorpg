@@ -10,6 +10,8 @@ import {
   updatePlayerEquipmentLayers,
   type PlayerDisplay,
 } from '../player/playerSprites'
+import { attackStyleForWeapon } from '../character/characterSpriteRegistry'
+import { getEquippedWeaponClass } from '../combat/playerAttackRange'
 import { startPlayerAttackAnim } from '../player/playerCombatAnim'
 import { positionPlayerNameLabel, styleWorldNameLabel } from '../world/worldNameLabel'
 import type { MapCombatSkillId } from './mapCombatTypes'
@@ -132,8 +134,10 @@ export function playRemotePlayerAction(
 ) {
   const cx = entity.display.container.x
   const cy = entity.display.container.y
+  const attackStyle = attackStyleForWeapon(getEquippedWeaponClass(entity.lastPayload.equipment))
   startPlayerAttackAnim(scene, entity.display, facing, {
     variant: skillId === 'bash' ? 'bash' : 'basic',
+    attackStyle,
     onComplete: () => {
       playPlayerAnim(entity.display, entity.lastPayload.anim, entity.lastPayload.facing)
     },

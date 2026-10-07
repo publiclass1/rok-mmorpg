@@ -1,3 +1,4 @@
+import type { AttackStyle } from './characterSpriteRegistry'
 import type { Facing } from '../movement/clickToMove'
 
 export type CharacterPose = {
@@ -5,6 +6,7 @@ export type CharacterPose = {
   anim: 'idle' | 'walk' | 'attack' | 'jump' | 'sit' | 'flinch' | 'dead'
   walkFrame: 0 | 1
   attackPhase: 0 | 1 | 2
+  attackStyle: AttackStyle
   bash: boolean
   hitFlash: boolean
 }
@@ -15,6 +17,7 @@ export function defaultCharacterPose(facing: Facing = 'down'): CharacterPose {
     anim: 'idle',
     walkFrame: 0,
     attackPhase: 0,
+    attackStyle: 'swing',
     bash: false,
     hitFlash: false,
   }

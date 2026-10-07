@@ -114,17 +114,81 @@ export function ensurePlayerTexture(scene: Phaser.Scene) {
   g.destroy()
 }
 
+const MOB_FRAME_W = 28
+const MOB_FRAME_H = 28
+
+function drawMobFrame(g: Phaser.GameObjects.Graphics, ox: number, oy: number, frame: number) {
+  const cx = ox + 14
+  const baseY = oy + 12
+  g.fillStyle(0x000000, 0.2)
+  g.fillEllipse(cx, oy + 26, frame >= 3 ? 22 : 20, frame >= 3 ? 4 : 6)
+
+  if (frame === 0) {
+    g.fillStyle(0xf472b6, 1)
+    g.fillCircle(cx, baseY, 12)
+    g.fillStyle(0xffffff, 0.9)
+    g.fillCircle(cx - 4, baseY - 2, 3)
+    g.fillCircle(cx + 4, baseY - 2, 3)
+  } else if (frame === 1) {
+    g.fillStyle(0xf472b6, 1)
+    g.fillEllipse(cx, baseY + 2, 16, 10)
+    g.fillStyle(0x1f2937, 1)
+    g.fillRect(cx - 5, baseY - 1, 4, 1)
+    g.fillRect(cx + 1, baseY - 1, 4, 1)
+  } else if (frame === 2) {
+    g.fillStyle(0xf472b6, 1)
+    g.fillEllipse(cx + 4, baseY + 4, 14, 9)
+    g.fillStyle(0x1f2937, 1)
+    g.lineBetween(cx + 2, baseY, cx + 6, baseY + 4)
+    g.lineBetween(cx + 8, baseY, cx + 4, baseY + 4)
+  } else if (frame === 3) {
+    g.fillStyle(0xf472b6, 1)
+    g.fillEllipse(cx, baseY + 10, 18, 6)
+    g.fillStyle(0x000000, 0.15)
+    g.fillEllipse(cx, baseY + 11, 16, 3)
+  } else {
+    g.fillStyle(0xf472b6, 0.5)
+    g.fillEllipse(cx, baseY + 12, 20, 4)
+  }
+}
+
 export function ensureMobTexture(scene: Phaser.Scene) {
   if (scene.textures.exists('mob')) return
 
+  const cols = 5
+  const w = cols * MOB_FRAME_W
+  const h = MOB_FRAME_H
   const g = scene.add.graphics()
-  g.fillStyle(0x000000, 0.2)
-  g.fillEllipse(14, 26, 20, 6)
-  g.fillStyle(0xf472b6, 1)
-  g.fillCircle(14, 12, 12)
-  g.fillStyle(0xffffff, 0.9)
-  g.fillCircle(10, 10, 3)
-  g.fillCircle(18, 10, 3)
-  g.generateTexture('mob', 28, 28)
+  for (let i = 0; i < cols; i++) {
+    drawMobFrame(g, i * MOB_FRAME_W, 0, i)
+  }
+  g.generateTexture('mob', w, h)
   g.destroy()
+
+  const tex = scene.textures.get('mob')
+  tex.setFilter(Phaser.Textures.FilterMode.NEAREST)
+  for (let i = 0; i < cols; i++) {
+    if (!tex.has(`${i}`)) {
+      tex.add(`${i}`, 0, i * MOB_FRAME_W, 0, MOB_FRAME_W, MOB_FRAME_H)
+    }
+  }
+}
+
+export function ensureMobParticleTexture(scene: Phaser.Scene) {
+  if (scene.textures.exists('mob_particle')) return
+  const g = scene.add.graphics()
+  g.fillStyle(0xffffff, 1)
+  g.fillRect(0, 0, 4, 4)
+  g.generateTexture('mob_particle', 4, 4)
+  g.destroy()
+}
+
+export function registerMobDeathAnimation(scene: Phaser.Scene) {
+  if (scene.anims.exists('mob_death')) return
+  scene.anims.create({
+    key: 'mob_death',
+    frames: scene.anims.generateFrameNumbers('mob', { start: 1, end: 4 }),
+    frameRate: 12,
+    repeat: 0,
+  })
 }

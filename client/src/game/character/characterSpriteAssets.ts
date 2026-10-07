@@ -5,6 +5,7 @@ import {
   PLAYER_SPRITE_MALE,
   SPRITE_FRAME_HEIGHT,
   SPRITE_FRAME_WIDTH,
+  type AttackStyle,
   type CharacterSpriteDef,
 } from './characterSpriteRegistry'
 import {
@@ -22,13 +23,83 @@ export const PALETTE_SOURCE = {
   eyes: 0xffff00,
 } as const
 
-type FrameMotion = {
-  kind: 'idle' | 'walk'
-  walkStep: number
-  idleBlink?: boolean
-}
+type FrameMotion =
+  | { kind: 'idle' | 'walk'; walkStep: number; idleBlink?: boolean }
+  | { kind: 'attack'; style: AttackStyle; phase: 0 | 1 | 2 }
 
 type DrawMode = { kind: 'player'; female: boolean } | { kind: 'npc'; archetype: NpcArchetype }
+
+const WEAPON_BLADE = 0xc0c8d4
+const WEAPON_HILT = 0x8b5a2b
+const WEAPON_SPEAR = 0x9ca3af
+const CAST_GLOW = 0xa78bfa
+
+function drawWeapon(
+  g: Phaser.GameObjects.Graphics,
+  style: AttackStyle,
+  phase: 0 | 1 | 2,
+  facing: 'down' | 'left' | 'right' | 'up',
+  cx: number,
+  feetY: number,
+  bodyW: number,
+) {
+  const torsoTop = feetY - 28
+  let wx = cx
+  let wy = torsoTop + 6
+  const bladeLen = style === 'swing' ? 14 : style === 'thrust' ? 18 : style === 'bow' ? 12 : 10
+
+  if (facing === 'right') {
+    wx = cx + bodyW / 2 + (phase === 0 ? -4 : phase === 1 ? 10 : 6)
+    wy = torsoTop + (phase === 0 ? 2 : phase === 1 ? 8 : 14)
+  } else if (facing === 'left') {
+    wx = cx - bodyW / 2 + (phase === 0 ? 4 : phase === 1 ? -10 : -6)
+    wy = torsoTop + (phase === 0 ? 2 : phase === 1 ? 8 : 14)
+  } else if (facing === 'down') {
+    wx = cx + (phase === 0 ? -10 : phase === 1 ? 12 : 8)
+    wy = torsoTop + (phase === 0 ? 0 : phase === 1 ? 10 : 16)
+  } else {
+    wx = cx + (phase === 0 ? 8 : phase === 1 ? -6 : -4)
+    wy = torsoTop + (phase === 0 ? 4 : phase === 1 ? -4 : 0)
+  }
+
+  g.fillStyle(WEAPON_HILT, 1)
+  g.fillRect(wx - 2, wy - 2, 4, 6)
+
+  if (style === 'swing') {
+    g.fillStyle(WEAPON_BLADE, 1)
+    if (facing === 'left' || facing === 'right') {
+      const dir = facing === 'right' ? 1 : -1
+      const angle = phase === 0 ? -0.9 : phase === 1 ? 0.2 : 0.7
+      const bx = wx + dir * Math.cos(angle) * bladeLen
+      const by = wy + Math.sin(angle) * bladeLen
+      g.fillTriangle(wx, wy, bx, by, wx + dir * 3, wy + 8)
+    } else {
+      const sign = facing === 'down' ? 1 : -1
+      g.fillRect(wx - 2, wy + sign * (phase === 1 ? 4 : 0), 4, sign * bladeLen)
+    }
+  } else if (style === 'thrust') {
+    g.fillStyle(WEAPON_SPEAR, 1)
+    const ext = phase === 1 ? bladeLen : phase === 0 ? 4 : 10
+    if (facing === 'left') g.fillRect(wx - ext, wy, ext, 3)
+    else if (facing === 'right') g.fillRect(wx, wy, ext, 3)
+    else if (facing === 'down') g.fillRect(wx, wy, 3, ext)
+    else g.fillRect(wx, wy - ext, 3, ext)
+  } else if (style === 'bow') {
+    g.lineStyle(2, WEAPON_HILT, 1)
+    g.strokeCircle(wx, wy, phase === 1 ? 10 : 8)
+    if (phase >= 1) {
+      g.lineStyle(1, 0xe2e8f0, 1)
+      g.lineBetween(wx - 8, wy, wx + 8, wy)
+    }
+  } else {
+    g.fillStyle(WEAPON_HILT, 1)
+    g.fillRect(wx - 2, wy - (phase === 1 ? 14 : 8), 4, phase === 1 ? 18 : 12)
+    if (phase >= 1) {
+      g.fillStyle(CAST_GLOW, 0.9)
+      g.fillCircle(wx, wy - (phase === 1 ? 16 : 10), phase === 2 ? 4 : 3)
+    }
+  }
+}
 
 function drawArms(
   g: Phaser.GameObjects.Graphics,
@@ -38,11 +109,31 @@ function drawArms(
   bodyW: number,
   facing: 'down' | 'left' | 'right' | 'up',
   armSwing: number,
+  attack?: { style: AttackStyle; phase: 0 | 1 | 2 },
 ) {
   g.fillStyle(skin, 1)
   const torsoTop = feetY - 28
   const armH = 10
   const armW = 4
+
+  if (attack) {
+    const p = attack.phase
+    g.fillStyle(skin, 1)
+    if (facing === 'down') {
+      g.fillRect(cx - bodyW / 2 - armW, torsoTop + (p === 0 ? 0 : 4), armW, armH)
+      g.fillRect(cx + bodyW / 2 + 1, torsoTop + (p === 1 ? -2 : 2), armW, armH)
+    } else if (facing === 'left') {
+      g.fillRect(cx - bodyW / 2 - 2, torsoTop + (p === 1 ? -2 : 3), armW, armH)
+      g.fillRect(cx + bodyW / 2 - 6, torsoTop + 5, armW, armH - 2)
+    } else if (facing === 'right') {
+      g.fillRect(cx - bodyW / 2 + 2, torsoTop + 5, armW, armH - 2)
+      g.fillRect(cx + bodyW / 2 - armW + 2, torsoTop + (p === 1 ? -2 : 3), armW, armH)
+    } else {
+      g.fillRect(cx - bodyW / 2 + 1, torsoTop + (p === 1 ? 0 : 4), armW - 1, armH - 2)
+      g.fillRect(cx + bodyW / 2 - armW, torsoTop + 4, armW - 1, armH - 2)
+    }
+    return
+  }
 
   if (facing === 'down') {
     g.fillRect(cx - bodyW / 2 - armW - 1, torsoTop + 2 + armSwing, armW, armH)
@@ -120,6 +211,7 @@ function drawChibiFrame(
       }
     : NPC_ARCHETYPE_PALETTES[mode.archetype]
 
+  const attackMotion = motion.kind === 'attack' ? motion : null
   const walkStep = motion.kind === 'walk' ? motion.walkStep : 0
   const legSpread =
     motion.kind === 'walk'
@@ -153,7 +245,18 @@ function drawChibiFrame(
     drawArchetypeOverlay(g, mode.archetype, cx, feetY)
   }
 
-  drawArms(g, pal.skin, cx, feetY, bodyW, facing, armSwing)
+  drawArms(
+    g,
+    pal.skin,
+    cx,
+    feetY,
+    bodyW,
+    facing,
+    armSwing,
+    attackMotion && isPlayer
+      ? { style: attackMotion.style, phase: attackMotion.phase }
+      : undefined,
+  )
 
   g.fillStyle(pal.skin, 1)
   g.fillCircle(cx, feetY - 34, female ? 7 : 8)
@@ -169,11 +272,15 @@ function drawChibiFrame(
   if (facing === 'left') eyeDx = -2
   if (facing === 'right') eyeDx = 2
 
-  const blink = motion.idleBlink === true
+  const blink = motion.kind === 'idle' && motion.idleBlink === true
   if (!blink) {
     g.fillStyle(pal.eyes, 1)
     g.fillRect(cx - 4 + eyeDx, feetY - 35, 2, 2)
     g.fillRect(cx + 2 + eyeDx, feetY - 35, 2, 2)
+  }
+
+  if (attackMotion && isPlayer) {
+    drawWeapon(g, attackMotion.style, attackMotion.phase, facing, cx, feetY, bodyW)
   }
 }
 
@@ -197,6 +304,14 @@ function motionForColumn(def: CharacterSpriteDef, col: number, npcSheet: boolean
   }
   if (col >= def.strips.walk.offset && col < def.strips.walk.offset + def.strips.walk.count) {
     return { kind: 'walk', walkStep: col - def.strips.walk.offset }
+  }
+  const attackStyles: AttackStyle[] = ['swing', 'thrust', 'bow', 'cast']
+  for (const style of attackStyles) {
+    const strip = def.strips.attack[style]
+    if (col >= strip.offset && col < strip.offset + strip.count) {
+      const phase = (col - strip.offset) as 0 | 1 | 2
+      return { kind: 'attack', style, phase }
+    }
   }
   return { kind: 'idle', walkStep: 0 }
 }

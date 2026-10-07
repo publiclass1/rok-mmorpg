@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { playPlayerAttackSlash } from '../combat/combatFx'
+import type { AttackStyle } from '../character/characterSpriteRegistry'
 import type { Facing } from '../movement/clickToMove'
 import {
   playPlayerAnim,
@@ -20,6 +21,7 @@ export function startPlayerAttackAnim(
   facing: Facing,
   options: {
     variant: AttackVariant
+    attackStyle: AttackStyle
     onStrike?: () => void
     onComplete?: () => void
   },
@@ -31,6 +33,7 @@ export function startPlayerAttackAnim(
     anim: 'attack',
     walkFrame: 0,
     attackPhase: 0,
+    attackStyle: options.attackStyle,
     bash,
     hitFlash: false,
   }
@@ -39,7 +42,10 @@ export function startPlayerAttackAnim(
   scene.time.delayedCall(WINDUP_MS, () => {
     if (display.pose.anim !== 'attack') return
     setPlayerAttackPhase(display, 1)
-    playPlayerAttackSlash(scene, display, facing, { variant: options.variant })
+    playPlayerAttackSlash(scene, display, facing, {
+      variant: options.variant,
+      attackStyle: options.attackStyle,
+    })
     options.onStrike?.()
   })
 

@@ -1,7 +1,23 @@
+import type { WeaponClass } from '../../content/ro/types'
 import type { NpcRow } from '../../types/database'
 import type { CharacterAppearance } from './characterAppearance'
 import type { Facing } from '../movement/clickToMove'
 import { npcArchetypeFromNpcType, type NpcArchetype } from './npcArchetypes'
+
+export type AttackStyle = 'swing' | 'thrust' | 'bow' | 'cast'
+
+export function attackStyleForWeapon(weaponClass: WeaponClass): AttackStyle {
+  switch (weaponClass) {
+    case 'spear':
+      return 'thrust'
+    case 'bow':
+      return 'bow'
+    case 'staff':
+      return 'cast'
+    default:
+      return 'swing'
+  }
+}
 
 export const SPRITE_FRAME_WIDTH = 48
 export const SPRITE_FRAME_HEIGHT = 64
@@ -20,7 +36,7 @@ export type CharacterSpriteDef = {
     idle: AnimStrip
     walk: AnimStrip
     sit: AnimStrip
-    attack: AnimStrip
+    attack: Record<AttackStyle, AnimStrip>
     jump: AnimStrip
     flinch: AnimStrip
     dead: AnimStrip
@@ -40,19 +56,31 @@ const PLAYER_STRIPS = {
   idle: { offset: 0, count: 2 },
   walk: { offset: 2, count: 4 },
   sit: { offset: 0, count: 1 },
-  attack: { offset: 2, count: 3 },
+  attack: {
+    swing: { offset: 6, count: 3 },
+    thrust: { offset: 9, count: 3 },
+    bow: { offset: 12, count: 3 },
+    cast: { offset: 15, count: 3 },
+  },
   jump: { offset: 0, count: 1 },
   flinch: { offset: 0, count: 1 },
   dead: { offset: 1, count: 1 },
 }
 
-const PLAYER_FRAMES_PER_ROW = 6
+const PLAYER_FRAMES_PER_ROW = 18
+
+const NPC_ATTACK_ONE: Record<AttackStyle, AnimStrip> = {
+  swing: { offset: 0, count: 1 },
+  thrust: { offset: 0, count: 1 },
+  bow: { offset: 0, count: 1 },
+  cast: { offset: 0, count: 1 },
+}
 
 const NPC_IDLE_STRIPS = {
   idle: { offset: 0, count: 2 },
   walk: { offset: 0, count: 1 },
   sit: { offset: 0, count: 1 },
-  attack: { offset: 0, count: 1 },
+  attack: NPC_ATTACK_ONE,
   jump: { offset: 0, count: 1 },
   flinch: { offset: 0, count: 1 },
   dead: { offset: 0, count: 1 },
@@ -72,7 +100,7 @@ function npcSpriteDef(archetype: NpcArchetype): CharacterSpriteDef {
 
 export const PLAYER_SPRITE_MALE: CharacterSpriteDef = {
   id: 'player_male',
-  masterTextureKey: 'master_player_male_v2',
+  masterTextureKey: 'master_player_male_v3',
   framesPerRow: PLAYER_FRAMES_PER_ROW,
   facingRow: FACING_ROW,
   strips: PLAYER_STRIPS,
@@ -81,7 +109,7 @@ export const PLAYER_SPRITE_MALE: CharacterSpriteDef = {
 
 export const PLAYER_SPRITE_FEMALE: CharacterSpriteDef = {
   id: 'player_female',
-  masterTextureKey: 'master_player_female_v2',
+  masterTextureKey: 'master_player_female_v3',
   framesPerRow: PLAYER_FRAMES_PER_ROW,
   facingRow: FACING_ROW,
   strips: PLAYER_STRIPS,

@@ -91,6 +91,18 @@ npm run maps:prontera
 
 Preview: `docs/maps/prontera-preview.svg`. Tile art source: `client/public/tiles/city-tileset.svg` (runtime procedural strip in `client/src/game/textures.ts`). Edit maps in [Tiled](https://www.mapeditor.org/) using exported JSON in `client/public/maps/`.
 
+### Map admin (dev only)
+
+1. Run `npm run dev` and open `http://localhost:5173/admin/maps`.
+2. **New blank map** → set a unique **id** (lowercase, underscores) and **display name**.
+3. Paint tiles, drag decor onto the canvas, place portals/NPCs. Tools are in the **icon bar above the map**.
+4. Under **Warp wiring**, enable **Add to Prontera Warp Agent** and set arrival X/Y on your map.
+5. Click **Save to disk** (writes `.tmj`, `content/ro/maps.json`, and optionally `supabase/migrations/*.sql`).
+6. **Copy all SQL** (or run the generated migration) in the Supabase SQL Editor so Warp Agent and NPCs exist in the database.
+7. **Hard-refresh** the game tab so `maps.json` reloads. Custom maps appear under **Custom maps** on Warp Agent.
+
+Walk-through portals use the `portal-warp` edge function (`supabase functions deploy portal-warp`).
+
 ## Deploy on Netlify
 
 1. Push the repo to GitHub (or GitLab/Bitbucket).

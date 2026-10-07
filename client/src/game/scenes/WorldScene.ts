@@ -20,6 +20,7 @@ import {
   missTextPosition,
   playMobAttackLunge,
   playMobDeath,
+  playMobHitImpact,
   playMobHitShake,
   showFloatingText,
 } from '../combat/combatFx'
@@ -48,6 +49,7 @@ import {
   usesTargetedAttack,
 } from '../combat/playerAttackRange'
 import { appearanceFromCharacterRow } from '../character/characterAppearance'
+import { attackStyleForWeapon } from '../character/characterSpriteRegistry'
 import { ensureMasterCharacterSheets } from '../character/characterSpriteAssets'
 import { getItemDisplayName } from '../character/itemCatalog'
 import { addItemsToSessionInventory } from '../character/sessionInventory'
@@ -110,7 +112,13 @@ import {
 } from '../world/syncWorldViewport'
 import { cameraWorldViewRect, viewBoundsWithMargin } from '../world/viewportCull'
 import { cursorCss, type GameCursor } from '../world/gameCursor'
-import { ensureMobTexture, ensureTilesTexture, TILESET_TILE_COUNT } from '../textures'
+import {
+  ensureMobParticleTexture,
+  ensureMobTexture,
+  ensureTilesTexture,
+  registerMobDeathAnimation,
+  TILESET_TILE_COUNT,
+} from '../textures'
 import { saveCharacterSession, saveCharacterWorldPosition } from '../../lib/characterProgress'
 import { createNpcWorldVisual, type NpcWorldVisual } from '../npc/npcWorldVisual'
 import type { CharacterRow, NpcRow } from '../../types/database'
@@ -203,6 +211,8 @@ export class WorldScene extends Phaser.Scene {
   create() {
     ensureTilesTexture(this)
     ensureMobTexture(this)
+    ensureMobParticleTexture(this)
+    registerMobDeathAnimation(this)
     ensureMasterCharacterSheets(this)
 
     const map = this.make.tilemap({ key: 'map' })
@@ -1080,6 +1090,7 @@ export class WorldScene extends Phaser.Scene {
     }
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'bash',
+      attackStyle: attackStyleForWeapon(weaponClass),
       onStrike: () => {
         const target = this.resolveAttackTargetMob()
         if (!target) {
@@ -1132,7 +1143,13 @@ export class WorldScene extends Phaser.Scene {
   ) {
     target.hp -= damage
     provokeMob(target)
-    playMobHitShake(this, target.sprite, def.color)
+    playMobHitImpact(
+      this,
+      target.sprite,
+      def.color,
+      this.playerDisplay.container.x,
+      this.playerDisplay.container.y,
+    )
     this.sfx.playHit()
     showFloatingText(this, target.sprite.x, target.sprite.y - 40, `-${damage}`, 'hit')
     logActivity(
@@ -1407,7 +1424,7 @@ export class WorldScene extends Phaser.Scene {
     y: number,
     def: (typeof MOB_DEFS)[string],
   ): MobInstance {
-    const sprite = this.physics.add.sprite(x, y + MOB_FEET_ANCHOR_ADJUST, 'mob')
+    const sprite = this.physics.add.sprite(x, y + MOB_FEET_ANCHOR_ADJUST, 'mob', 0)
     sprite.setOrigin(0.5, 1)
     sprite.setTint(def.color)
     sprite.setCollideWorldBounds(true)
@@ -1537,7 +1554,7 @@ export class WorldScene extends Phaser.Scene {
       // Last hpAfter from any attacker wins for this spawn (client-trusted sync).
       mob.hp = Math.max(0, payload.hpAfter)
       const def = MOB_DEFS[mob.defId]
-      if (def) playMobHitShake(this, mob.sprite, def.color)
+      if (def) playMobHitImpact(this, mob.sprite, def.color)
       this.sfx.playHitNearby(listener.x, listener.y, mob.sprite.x, mob.sprite.y)
       showFloatingText(this, mob.sprite.x, mob.sprite.y - 40, `-${payload.damage}`, 'hit')
       this.updateMobHpBar(mob)
@@ -1598,6 +1615,7 @@ export class WorldScene extends Phaser.Scene {
     }
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
+      attackStyle: attackStyleForWeapon(weaponClass),
       onStrike: () => {
         const target = this.resolveAttackTargetMob()
         if (!target) {
@@ -1730,6 +1748,9 @@ export class WorldScene extends Phaser.Scene {
     mob.sprite.setVisible(true)
     mob.sprite.body.enable = true
     mob.sprite.setTint(def.color)
+    mob.sprite.setFrame(0)
+    mob.sprite.setAlpha(1)
+    mob.sprite.setScale(1, 1)
     mob.hpBarBg.setVisible(true)
     mob.hpBarFill.setVisible(true)
     mob.label.setVisible(true)

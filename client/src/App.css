@@ -2114,6 +2114,75 @@ body.game-active .game-canvas canvas {
   border-radius: 4px;
 }
 
+.map-admin-canvas-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #374151;
+}
+
+.map-admin-tool-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.map-admin-tool-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  background: #0f172a;
+  cursor: pointer;
+}
+
+.map-admin-tool-icon.active {
+  background: #1d4ed8;
+  border-color: #3b82f6;
+}
+
+.map-admin-tool-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.map-admin-toolbar-decor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.map-admin-decor-chip {
+  padding: 2px;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: #0f172a;
+  cursor: grab;
+}
+
+.map-admin-decor-chip:active {
+  cursor: grabbing;
+}
+
+.npc-options-section {
+  list-style: none;
+  margin: 0.5rem 0 0.25rem;
+  padding: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
 .map-admin-tool-row {
   display: flex;
   flex-wrap: wrap;
