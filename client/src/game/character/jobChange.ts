@@ -1,6 +1,7 @@
 import { loadRoContent } from '../../content/ro/loadContent'
 import { createRolledGearFromBase } from '../items/rolledItem'
 import { progressFromLevels } from '../combat/exp'
+import { isSkillBarConsumable } from './skillBarEntry'
 import { SKILLS } from './skillsConfig'
 import type { CharacterSessionState, EquipSlot } from './characterState'
 import {
@@ -100,6 +101,7 @@ function skillsAfterJobChange(state: CharacterSessionState, targetJobId: string)
 function sanitizeSkillBar(state: CharacterSessionState): (string | null)[] {
   return state.skillBar.map((skillId) => {
     if (!skillId) return null
+    if (isSkillBarConsumable(skillId)) return skillId
     if (skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead') return skillId
     const def = SKILLS[skillId]
     if (!def || !jobCanUseSkillFromJob(state.jobId, def.jobId)) return null

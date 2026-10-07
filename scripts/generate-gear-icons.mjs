@@ -287,6 +287,21 @@ function drawRedPotion(id) {
   )
 }
 
+function drawBluePotion(id) {
+  return wrap(
+    `
+  <path d="M13 10 H19 V11 H13 Z" fill="#94a3b8"/>
+  <rect x="13" y="11" width="6" height="2" fill="#64748b"/>
+  <path d="M12 13 H20 L19 26 H13 L12 13 Z" fill="#1d4ed8"/>
+  <path d="M13 14 L14 25 H18 L19 14" fill="#3b82f6" opacity="0.5"/>
+  <rect x="14" y="16" width="4" height="6" fill="#fff" opacity="0.15" rx="0.5"/>
+  <ellipse cx="16" cy="26" rx="4" ry="1" fill="#1e3a8a"/>
+  `,
+    id,
+    '#3b82f6',
+  )
+}
+
 const armorBuilders = {
   cotton_shirt: (id, item) => drawCottonShirt(id, layerHex(item.layerColor)),
   adventurers_suit: (id, item) => drawAdventurersSuit(id, layerHex(item.layerColor)),
@@ -319,6 +334,7 @@ const armorBuilders = {
 
 const consumableBuilders = {
   red_potion: (id) => drawRedPotion(id),
+  blue_potion: (id) => drawBluePotion(id),
 }
 
 function loadGearItems() {

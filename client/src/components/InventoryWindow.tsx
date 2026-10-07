@@ -12,6 +12,7 @@ import { ItemIcon } from './ItemIcon'
 import { getItemRarity, rarityColor } from '../game/items/itemRarity'
 import { RolledItemDetails } from './RolledItemDetails'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
+import { writeSkillBarDrag } from '../game/character/skillBarDrag'
 import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
 import { supabase } from '../lib/supabase'
@@ -96,10 +97,15 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
     <AnimatedModal onClose={onClose} panelClassName="panel modal inventory-modal">
         <ModalHeader title="Inventory" onClose={onClose} />
         <ModalScrollBody>
-        <p className="muted small">Double-click session items to use or equip. Account storage is view-only.</p>
+        <p className="muted small">
+          Double-click session items to use or equip. Drag consumables to the skill bar. Account storage is
+          view-only.
+        </p>
         <div className="inv-grid">
           {cells.map((cell) => {
             const equippable = isEquippable(cell.itemId)
+            const consumable = isConsumable(cell.itemId)
+            const canDragToBar = consumable && cell.source === 'session'
             const hasIcon = hasItemIcon(cell.itemId)
             const color = getEquipColor(cell.itemId)
             const itemRarity = getItemRarity(cell.itemId)
@@ -108,7 +114,12 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
               <ItemHoverTooltip key={cell.key} itemId={cell.itemId} quantity={cell.quantity}>
                 <button
                   type="button"
-                  className={`inv-slot ${equippable ? 'equippable' : ''}${hasIcon ? ' inv-slot--has-icon' : ''}`}
+                  className={`inv-slot ${equippable ? 'equippable' : ''}${hasIcon ? ' inv-slot--has-icon' : ''}${canDragToBar ? ' inv-slot--draggable' : ''}`}
+                  draggable={canDragToBar}
+                  onDragStart={(e) => {
+                    if (!canDragToBar) return
+                    writeSkillBarDrag(e.dataTransfer, { source: 'inventory', itemId: cell.itemId })
+                  }}
                   onClick={() => setSelectedItemId(cell.itemId)}
                   style={
                     equippable && !hasIcon

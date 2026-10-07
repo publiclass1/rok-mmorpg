@@ -18,7 +18,14 @@ export function isAdvancedJobChange(targetJobId: string): boolean {
   return jobAncestorIds(targetJobId).length >= 3
 }
 
-export function jobCanUseSkillFromJob(currentJobId: string, skillJobId: string): boolean {
+const GENERAL_ACTION_SKILL_IDS = new Set(['basic_attack', 'sit', 'play_dead'])
+
+export function jobCanUseSkillFromJob(
+  currentJobId: string,
+  skillJobId: string,
+  skillId?: string,
+): boolean {
+  if (skillId != null && GENERAL_ACTION_SKILL_IDS.has(skillId)) return true
   if (skillJobId === 'novice') return currentJobId === 'novice'
   return jobAncestorIds(currentJobId).includes(skillJobId)
 }

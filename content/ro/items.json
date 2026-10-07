@@ -13,6 +13,18 @@
       "sourceUrl": "https://irowiki.org/wiki/Red_Potion"
     },
     {
+      "id": "blue_potion",
+      "name": "Blue Potion",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": { "healSp": 40 },
+      "sourceUrl": "https://irowiki.org/wiki/Blue_Potion"
+    },
+    {
       "id": "knife",
       "name": "Knife",
       "type": "weapon",

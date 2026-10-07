@@ -1,4 +1,5 @@
 import type { CharacterSheetPayload } from '../events'
+import { isSkillSpendingTab } from './skillPointBudget'
 import {
   canLearnSkill,
   JOB_NAMES,
@@ -33,8 +34,9 @@ export function skillRequirementDetail(
   if (skill.type === 'active' && skill.range > 0) statsLines.push(`Range ${skill.range}`)
 
   const jobName = JOB_NAMES[skill.jobId] ?? skill.jobId
-  const jobLevelMet =
-    tabJobId === sheet.jobId ? sheet.jobLevel >= skill.requiredJobLevel : null
+  const jobLevelMet = isSkillSpendingTab(sheet.jobId, tabJobId)
+    ? sheet.jobLevel >= skill.requiredJobLevel
+    : null
   const requirements: SkillRequirementRow[] = [
     {
       label: `Requires ${jobName} Job Lv ${skill.requiredJobLevel}`,
@@ -53,10 +55,9 @@ export function skillRequirementDetail(
   }
 
   const blockers: string[] = []
-  if (tabJobId === sheet.jobId) {
+  if (isSkillSpendingTab(sheet.jobId, tabJobId) && tabJobId === skill.jobId) {
     if (level >= skill.maxLevel) blockers.push('Already at max level.')
     else if (sheet.skillPointsUnspent < 1) blockers.push('No skill points available.')
-    else if (tabJobId !== skill.jobId) blockers.push('Cannot spend points on a previous job.')
     else if (sheet.jobLevel < skill.requiredJobLevel) {
       blockers.push(`Need Job Lv ${skill.requiredJobLevel}.`)
     } else if (!meetsSkillPrerequisites(skill, sheet.skills)) {
@@ -79,8 +80,9 @@ export function learnableSkillIdsForTab(
   tabJobId: string,
 ): Set<string> {
   const out = new Set<string>()
-  if (tabJobId !== sheet.jobId) return out
+  if (!isSkillSpendingTab(sheet.jobId, tabJobId)) return out
   for (const skill of skills) {
+    if (skill.jobId !== tabJobId) continue
     const level = sheet.skills[skill.id] ?? 0
     if (
       canLearnSkill(

@@ -241,6 +241,11 @@ export type GameEvents = {
   dungeonMobKilled: { instanceId: string; spawnIndex: number }
   dungeonMvpKilled: { instanceId: string }
   mapDropHover: { itemId: string; screenX: number; screenY: number } | null
+  levelUpCelebrate: {
+    id: number
+    kind: 'base' | 'job'
+    level: number
+  }
 }
 
 type Listener = (payload: unknown) => void

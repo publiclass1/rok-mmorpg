@@ -7,6 +7,7 @@ import {
   resetAllocatedPrimaryStats,
   resetAllocatedSkills,
 } from './characterState'
+import { totalSkillPointsEarned } from './skillPointBudget'
 import { statRaiseCost } from './statFormulas'
 const base = createInitialCharacterState()
 
@@ -71,8 +72,8 @@ assert.equal(afterKnightReset.skills.basic_attack, 1)
 assert.equal(afterKnightReset.skills.sit, 1)
 assert.equal(
   afterKnightReset.skillPointsUnspent,
-  knightJobLevel - 1,
-  'unspent matches current job earned pool after full reset',
+  totalSkillPointsEarned('knight', knightJobLevel),
+  'unspent matches full job-line earned pool after full reset',
 )
 
 console.log('characterState.reset.test.ts: ok')

@@ -32,13 +32,33 @@ function jobAncestorIds(jobId: string): string[] {
   return out
 }
 
-function jobCanUseSkillFromJob(currentJobId: string, skillJobId: string): boolean {
+const GENERAL_ACTION_SKILL_IDS = new Set(['basic_attack', 'sit', 'play_dead'])
+
+type SkillDef = { id: string; maxLevel: number; jobId?: string }
+
+const GENERAL_SKILL_DEFS: SkillDef[] = [
+  { id: 'basic_attack', maxLevel: 1, jobId: 'novice' },
+  { id: 'sit', maxLevel: 1, jobId: 'novice' },
+  { id: 'play_dead', maxLevel: 1, jobId: 'novice' },
+]
+
+function jobCanUseSkillFromJob(currentJobId: string, skillJobId: string, skillId: string): boolean {
+  if (GENERAL_ACTION_SKILL_IDS.has(skillId)) return true
   if (skillJobId === 'novice') return currentJobId === 'novice'
   return jobAncestorIds(currentJobId).includes(skillJobId)
 }
+
 const SKILLS = new Map(
-  (skillsJson as { skills: { id: string; maxLevel: number; jobId?: string }[] }).skills.map((s) => [s.id, s]),
+  (skillsJson as { skills: SkillDef[] }).skills.map((s) => [s.id, s]),
 )
+
+for (const def of GENERAL_SKILL_DEFS) {
+  if (!SKILLS.has(def.id)) SKILLS.set(def.id, def)
+}
+
+function skillDef(skillId: string): SkillDef | undefined {
+  return SKILLS.get(skillId)
+}
 
 const EQUIP_SLOTS = [
   'weapon',
@@ -116,14 +136,26 @@ function validateStatBudget(payload: ProgressPayload): string | null {
   return null
 }
 
+function totalSkillPointsEarned(jobId: string, jobLevel: number): number {
+  const ancestors = jobAncestorIds(jobId).filter((id) => id !== 'novice')
+  let earned = Math.max(0, (jobLevel - 1) * SKILL_POINTS_PER_JOB_LEVEL)
+  if (ancestors.length <= 1) return earned
+  for (let i = 1; i < ancestors.length; i++) {
+    const ancestorJobId = ancestors[i]
+    const maxLv = JOB_MAX_LEVEL.get(ancestorJobId) ?? 50
+    earned += Math.max(0, (maxLv - 1) * SKILL_POINTS_PER_JOB_LEVEL)
+  }
+  return earned
+}
+
 function validateSkillBudget(jobId: string, jobLevel: number, skills: SkillRow[], unspent: number): string | null {
-  const earned = Math.max(0, (jobLevel - 1) * SKILL_POINTS_PER_JOB_LEVEL)
+  const earned = totalSkillPointsEarned(jobId, jobLevel)
   let spent = 0
   for (const row of skills) {
-    const def = SKILLS.get(row.skill_id)
+    const def = skillDef(row.skill_id)
     if (!def) return `unknown skill ${row.skill_id}`
     if (row.level < 1 || row.level > def.maxLevel) return `invalid skill level ${row.skill_id}`
-    if (def.jobId && !jobCanUseSkillFromJob(jobId, def.jobId)) {
+    if (def.jobId && !jobCanUseSkillFromJob(jobId, def.jobId, row.skill_id)) {
       return `skill ${row.skill_id} not allowed for job ${jobId}`
     }
     const freeLevel =

@@ -1,8 +1,15 @@
 import { useRef, useState } from 'react'
+import { ItemIcon } from './ItemIcon'
 import { SkillIcon } from './SkillIcon'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
+import { getItemDisplayName } from '../game/character/itemCatalog'
+import {
+  canPlaceOnSkillBar,
+  isSkillBarConsumable,
+  sessionItemQuantity,
+} from '../game/character/skillBarEntry'
 import { isSkillBarDragEvent, readSkillBarDrag, writeSkillBarDrag } from '../game/character/skillBarDrag'
-import { canPlaceSkillOnBar, SKILLS, skillUsableByJob } from '../game/character/skillsConfig'
+import { SKILLS, skillUsableByJob } from '../game/character/skillsConfig'
 import { skillTooltipTitle } from '../game/character/skillIconUrl'
 import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
@@ -41,8 +48,14 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
     if (!payload) return
 
     if (payload.source === 'list') {
-      if (!canPlaceSkillOnBar(payload.skillId, sheet.jobId, sheet.skills)) return
+      if (!canPlaceOnSkillBar(payload.skillId, sheet.jobId, sheet.skills)) return
       dispatchCharacterAction({ type: 'assignSkillBar', slot, skillId: payload.skillId })
+      return
+    }
+
+    if (payload.source === 'inventory') {
+      if (!canPlaceOnSkillBar(payload.itemId, sheet.jobId, sheet.skills)) return
+      dispatchCharacterAction({ type: 'assignSkillBar', slot, skillId: payload.itemId })
       return
     }
 
@@ -109,20 +122,25 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
         onDrop={handleBarGutterDrop}
       >
         {sheet.skillBar.map((skillId, index) => {
-          const skill = skillId ? SKILLS[skillId] : null
-          const level = skillId ? sheet.skills[skillId] ?? 0 : 0
+          const consumable = skillId != null && isSkillBarConsumable(skillId)
+          const skill = skillId && !consumable ? SKILLS[skillId] : null
+          const level = skillId && !consumable ? sheet.skills[skillId] ?? 0 : 0
           const allowed =
             !skillId ||
+            consumable ||
             (skillId === 'basic_attack' && level >= 1) ||
             (skill != null && skillUsableByJob(skillId, sheet.jobId) && level >= 1)
           const inactive = skillId != null && !allowed
           const canDrag = skillId != null && !inactive
           const isDropTarget = dropTarget === index
-          const slotTitle = skill
-            ? inactive
-              ? `${skill.name} — not available`
-              : `${skillTooltipTitle(skillId!, level)} · drag to move`
-            : 'Click to open Skills · or drop a skill here'
+          const itemQty = consumable && skillId ? sessionItemQuantity(sheet, skillId) : 0
+          const slotTitle = consumable && skillId
+            ? `${getItemDisplayName(skillId)} (${itemQty}) · drag to move`
+            : skill
+              ? inactive
+                ? `${skill.name} — not available`
+                : `${skillTooltipTitle(skillId!, level)} · drag to move`
+              : 'Click to open Skills · or drop a skill or consumable here'
 
           return (
             <div
@@ -172,7 +190,12 @@ export function SkillBar({ sheet, onOpenSkills }: Props) {
               }}
             >
               <span className="skill-key">{index + 1}</span>
-              {skillId && !inactive ? (
+              {skillId && !inactive && consumable ? (
+                <>
+                  <ItemIcon itemId={skillId} size={28} alt="" />
+                  {itemQty > 1 && <span className="skill-slot-item-qty">{itemQty}</span>}
+                </>
+              ) : skillId && !inactive ? (
                 <SkillIcon skillId={skillId} level={level} size="xs" draggable={false} />
               ) : (
                 <span className="skill-slot-empty" aria-hidden>

@@ -116,7 +116,7 @@ values
     1840,
     'shop',
     'Tool Dealer',
-    '{"buys":[{"price":2,"itemId":"jellopy"},{"price":3,"itemId":"fluff"},{"price":8,"itemId":"chrysalis"},{"price":26,"itemId":"worm_peeling"},{"price":4,"itemId":"sticky_mucus"},{"price":200,"itemId":"phracon"},{"price":9,"itemId":"red_herb"},{"price":25,"itemId":"iron_ore"},{"price":39,"itemId":"rat_tail"},{"price":27,"itemId":"animal_skin"},{"price":15,"itemId":"feather"},{"price":60,"itemId":"monsters_feed"},{"price":8,"itemId":"tooth_of_bat"},{"price":200,"itemId":"grape"}],"stock":[{"price":50,"itemId":"red_potion"}],"facing":"down"}'::jsonb
+    '{"buys":[{"price":2,"itemId":"jellopy"},{"price":3,"itemId":"fluff"},{"price":8,"itemId":"chrysalis"},{"price":26,"itemId":"worm_peeling"},{"price":4,"itemId":"sticky_mucus"},{"price":200,"itemId":"phracon"},{"price":9,"itemId":"red_herb"},{"price":25,"itemId":"iron_ore"},{"price":39,"itemId":"rat_tail"},{"price":27,"itemId":"animal_skin"},{"price":15,"itemId":"feather"},{"price":60,"itemId":"monsters_feed"},{"price":8,"itemId":"tooth_of_bat"},{"price":200,"itemId":"grape"}],"stock":[{"price":50,"itemId":"red_potion"},{"price":120,"itemId":"blue_potion"}],"facing":"down"}'::jsonb
   )
 on conflict (id) do update set
   map_id = excluded.map_id,

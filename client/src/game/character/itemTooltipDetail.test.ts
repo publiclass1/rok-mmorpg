@@ -7,6 +7,10 @@ function run() {
   assert.ok(potion.subtitleLines.some((l) => l.toLowerCase().includes('consumable')))
   assert.ok(potion.effectLines.some((l) => l.includes('HP')))
 
+  const blue = buildItemTooltipDetail('blue_potion')
+  assert.equal(blue.name, 'Blue Potion')
+  assert.ok(blue.effectLines.some((l) => l.includes('SP')))
+
   const knife = buildItemTooltipDetail('knife')
   assert.ok(knife.statLines.some((l) => l.startsWith('ATK')))
   assert.ok(knife.subtitleLines.some((l) => l.includes('Lv')))

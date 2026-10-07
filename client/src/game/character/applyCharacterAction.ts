@@ -23,7 +23,8 @@ import { getEquipmentDefinition } from './equipmentConfig'
 import { isRolledGearItemId } from './itemCatalog'
 import { applyJobChange } from './jobChange'
 import { applyRental, clearActiveRental, rentalCatalogEntry } from './rental'
-import { canLearnSkill, canPlaceSkillOnBar, JOB_NAMES, SKILLS } from './skillsConfig'
+import { canPlaceOnSkillBar } from './skillBarEntry'
+import { canLearnSkill, JOB_NAMES, SKILLS } from './skillsConfig'
 import {
   addItemsToSessionInventory,
   removeItemFromSessionByItemId,
@@ -111,7 +112,7 @@ export function applyCharacterAction(
       if (state.skillBar[action.slot] == null) return { state, changed: false }
       return { state: assignSkillBarSlot(state, action.slot, null), changed: true }
     }
-    if (!canPlaceSkillOnBar(action.skillId, state.jobId, state.skills)) {
+    if (!canPlaceOnSkillBar(action.skillId, state.jobId, state.skills)) {
       return { state, changed: false, message: 'That skill cannot be placed on the bar.' }
     }
     const next = placeSkillOnBar(state, action.slot, action.skillId)

@@ -1,10 +1,16 @@
 import Phaser from 'phaser'
 import { syncDerivedVitals, toCharacterSheetPayload } from '../character/characterSheet'
+import { getItemDisplayName } from '../character/itemCatalog'
+import {
+  findSessionStackIndex,
+  isSkillBarConsumable,
+} from '../character/skillBarEntry'
 import {
   addExperience,
   createInitialCharacterState,
   grantRolledGear,
   normalizeEquipment,
+  useConsumableFromSession,
 } from '../character/characterState'
 import {
   getCharacterSession,
@@ -55,6 +61,9 @@ import {
   calcPlayerVsMobDamage,
   calcPlayerVsPlayerDamage,
 } from '../combat/damage'
+import { playLevelUpAudio, preloadLevelUpAudio } from '../combat/levelUpAudio'
+import { playLevelUpWorldFx } from '../combat/levelUpFx'
+import { buildLevelUpSteps, type LevelUpStep } from '../combat/levelUpSteps'
 import { playSkillCastFx } from '../combat/skillFx'
 import { resolveMobKillLoot } from '../combat/drops'
 import { LOOT_CONFIG } from '../combat/lootConfig'
@@ -77,7 +86,6 @@ import {
 import { appearanceFromCharacterRow } from '../character/characterAppearance'
 import { attackStyleForWeapon } from '../character/characterSpriteRegistry'
 import { ensureMasterCharacterSheets } from '../character/characterSpriteAssets'
-import { getItemDisplayName } from '../character/itemCatalog'
 import { addItemsToSessionInventory } from '../character/sessionInventory'
 import type { MobInstance } from '../combat/mobTypes'
 import { SfxPlayer } from '../combat/sfx'
@@ -285,6 +293,10 @@ export class WorldScene extends Phaser.Scene {
     remote: RemotePlayerEntity
   } | null = null
   private skillCalloutTween: Phaser.Tweens.Tween | null = null
+  private levelUpQueue: LevelUpStep[] = []
+  private levelUpDrainActive = false
+  private levelUpCelebrateId = 0
+  private static readonly LEVEL_UP_STEP_MS = 1400
   private lastAttackAt = 0
   private isAttacking = false
   private isJumping = false
@@ -356,6 +368,7 @@ export class WorldScene extends Phaser.Scene {
     ensureMobParticleTexture(this)
     registerMobDeathAnimation(this)
     ensureMasterCharacterSheets(this)
+    preloadLevelUpAudio()
 
     const map = this.make.tilemap({ key: 'map' })
     const tileset = map.addTilesetImage('tiles', 'tiles', 32, 32, 0, 0, TILESET_TILE_COUNT)
@@ -1531,6 +1544,26 @@ export class WorldScene extends Phaser.Scene {
     const skillId = this.session.skillBar[slot]
     if (!skillId) {
       emitGameEvent('status', 'Empty skill slot')
+      return
+    }
+    if (isSkillBarConsumable(skillId)) {
+      const idx = findSessionStackIndex(this.session, skillId)
+      if (idx < 0) {
+        emitGameEvent('status', `No ${getItemDisplayName(skillId)} in inventory.`)
+        return
+      }
+      const result = useConsumableFromSession(this.session, idx)
+      if (result.ok === false) {
+        emitGameEvent('status', result.reason)
+        return
+      }
+      setCharacterSession(syncDerivedVitals(result.state))
+      this.session = getCharacterSession()
+      this.emitCharacterSheet()
+      emitGameEvent('sessionSync', structuredClone(this.session))
+      this.scheduleProgressSave()
+      logActivity('character', `Used ${getItemDisplayName(skillId)}.`)
+      emitGameEvent('status', `Used ${getItemDisplayName(skillId)}.`)
       return
     }
     if (skillId === 'basic_attack') {
@@ -3682,18 +3715,63 @@ export class WorldScene extends Phaser.Scene {
           })
         })
         logActivity('exp', `Gained ${result.baseExp} Base EXP and ${result.jobExp} Job EXP.`)
-        if (result.progress.baseLevel > beforeBase) {
-          emitGameEvent('status', `Base level up! Lv ${result.progress.baseLevel}`)
-        }
-        if (result.progress.jobLevel > beforeJob) {
-          emitGameEvent('status', `Job level up! Lv ${result.progress.jobLevel}`)
-        }
+        const baseGained = result.progress.baseLevel - beforeBase
+        const jobGained = result.progress.jobLevel - beforeJob
+        this.enqueueLevelUps(baseGained, jobGained, beforeBase, beforeJob)
         this.emitCharacterSheet()
       })
       .catch((err) => {
         console.warn('combat-report failed', err)
         emitGameEvent('status', 'Could not claim mob rewards (server).')
       })
+  }
+
+  private logLevelUpStatus(kind: 'base' | 'job', level: number) {
+    if (kind === 'base') {
+      emitGameEvent('status', `Base level up! Lv ${level}`)
+      logActivity('level', `Base level up! Now Lv ${level}.`)
+    } else {
+      emitGameEvent('status', `Job level up! Job ${level}`)
+      logActivity('level', `Job level up! Now Job Lv ${level}.`)
+    }
+  }
+
+  private enqueueLevelUps(baseGained: number, jobGained: number, beforeBase: number, beforeJob: number) {
+    if (baseGained <= 0 && jobGained <= 0) return
+    this.levelUpQueue.push(...buildLevelUpSteps(baseGained, jobGained, beforeBase, beforeJob))
+    this.drainLevelUpQueue()
+  }
+
+  private drainLevelUpQueue() {
+    if (this.levelUpDrainActive || this.levelUpQueue.length === 0) return
+    this.levelUpDrainActive = true
+
+    const step = () => {
+      const next = this.levelUpQueue.shift()
+      if (!next) {
+        this.levelUpDrainActive = false
+        return
+      }
+      const x = this.playerDisplay.container.x
+      const y = this.playerDisplay.container.y
+      playLevelUpWorldFx(this, x, y, next.kind, next.level, this.playerDisplay)
+      playLevelUpAudio(next.kind)
+      this.levelUpCelebrateId += 1
+      emitGameEvent('levelUpCelebrate', {
+        id: this.levelUpCelebrateId,
+        kind: next.kind,
+        level: next.level,
+      })
+      this.logLevelUpStatus(next.kind, next.level)
+
+      if (this.levelUpQueue.length > 0) {
+        this.time.delayedCall(WorldScene.LEVEL_UP_STEP_MS, step)
+      } else {
+        this.levelUpDrainActive = false
+      }
+    }
+
+    step()
   }
 
   private grantKillExperience(baseExp: number, jobExp: number, fx: number, fy: number) {
@@ -3723,16 +3801,16 @@ export class WorldScene extends Phaser.Scene {
 
     const beforeBase = this.session.progress.baseLevel
     const beforeJob = this.session.progress.jobLevel
-    updateCharacterSession((s) => syncDerivedVitals(addExperience(s, shareBase, shareJob).state))
+    let baseGained = 0
+    let jobGained = 0
+    updateCharacterSession((s) => {
+      const r = addExperience(s, shareBase, shareJob)
+      baseGained = r.baseLeveled
+      jobGained = r.jobLeveled
+      return syncDerivedVitals(r.state)
+    })
     logActivity('exp', `Gained ${shareBase} Base EXP and ${shareJob} Job EXP.`)
-    if (this.session.progress.baseLevel > beforeBase) {
-      emitGameEvent('status', `Base level up! Lv ${this.session.progress.baseLevel}`)
-      logActivity('level', `Base level up! Now Lv ${this.session.progress.baseLevel}.`)
-    }
-    if (this.session.progress.jobLevel > beforeJob) {
-      emitGameEvent('status', `Job level up! Job ${this.session.progress.jobLevel}`)
-      logActivity('level', `Job level up! Now Job Lv ${this.session.progress.jobLevel}.`)
-    }
+    this.enqueueLevelUps(baseGained, jobGained, beforeBase, beforeJob)
     this.emitCharacterSheet()
   }
 
@@ -3749,16 +3827,16 @@ export class WorldScene extends Phaser.Scene {
 
     const beforeBase = this.session.progress.baseLevel
     const beforeJob = this.session.progress.jobLevel
-    updateCharacterSession((s) =>
-      syncDerivedVitals(addExperience(s, payload.baseExp, payload.jobExp).state),
-    )
+    let baseGained = 0
+    let jobGained = 0
+    updateCharacterSession((s) => {
+      const r = addExperience(s, payload.baseExp, payload.jobExp)
+      baseGained = r.baseLeveled
+      jobGained = r.jobLeveled
+      return syncDerivedVitals(r.state)
+    })
     logActivity('exp', `Party share: ${payload.baseExp} Base / ${payload.jobExp} Job EXP.`)
-    if (this.session.progress.baseLevel > beforeBase) {
-      emitGameEvent('status', `Base level up! Lv ${this.session.progress.baseLevel}`)
-    }
-    if (this.session.progress.jobLevel > beforeJob) {
-      emitGameEvent('status', `Job level up! Job ${this.session.progress.jobLevel}`)
-    }
+    this.enqueueLevelUps(baseGained, jobGained, beforeBase, beforeJob)
     this.emitCharacterSheet()
   }
 

@@ -86,6 +86,8 @@ import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { DeathModal } from './DeathModal'
 import { PvpDeathModal } from './PvpDeathModal'
 import { preloadKillStreakAudio } from '../game/combat/killStreakAudio'
+import { preloadLevelUpAudio } from '../game/combat/levelUpAudio'
+import { LevelUpBannerOverlay } from './LevelUpBannerOverlay'
 import { PvpKillAnnounceOverlay } from './PvpKillAnnounceOverlay'
 import { isPvpMap, PVP_ROOM_EXIT_TELEPORT, randomPvpRespawnPoint } from '../game/world/pvpConfig'
 import { SplashScreen } from './SplashScreen'
@@ -207,6 +209,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [pvpDeathModalOpen, setPvpDeathModalOpen] = useState(false)
   const [deathSaveMapId, setDeathSaveMapId] = useState('prontera')
   const [pvpAnnounce, setPvpAnnounce] = useState<GameEvents['pvpAnnounce'] | null>(null)
+  const [levelUpCelebrate, setLevelUpCelebrate] = useState<GameEvents['levelUpCelebrate'] | null>(null)
   const [pvpKillCount, setPvpKillCount] = useState(0)
   const [minimap, setMinimap] = useState<MinimapPayload | null>(null)
   const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayerPayload | null>(null)
@@ -678,6 +681,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
   useEffect(() => {
     preloadKillStreakAudio()
+    preloadLevelUpAudio()
   }, [])
 
   useEffect(() => {
@@ -817,6 +821,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         if (payload.killerCharacterId === characterRef.current.id) {
           setPvpKillCount((n) => n + 1)
         }
+      }),
+      onGameEvent('levelUpCelebrate', (payload) => {
+        setLevelUpCelebrate(payload)
       }),
       onGameEvent('duelCompleteRequest', ({ duelSessionId, winnerCharacterId }) => {
         void duelManage({
@@ -1465,6 +1472,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
         <div className="game-hud-overlay" aria-label="Game HUD">
           <PvpKillAnnounceOverlay announce={pvpAnnounce} />
+          <LevelUpBannerOverlay celebrate={levelUpCelebrate} />
           {status ? (
             <div className="game-hud-status-message" aria-live="polite">
               {status}

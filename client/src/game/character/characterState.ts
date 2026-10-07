@@ -9,6 +9,7 @@ import {
   removeFromSessionInventory,
   type SessionInventorySlot,
 } from './sessionInventory'
+import { totalSkillPointsEarned } from './skillPointBudget'
 import { derivedMaxHp, derivedMaxMp, SKILL_POINTS_PER_JOB_LEVEL, statRaiseCost } from './statFormulas'
 
 export type { SessionInventorySlot } from './sessionInventory'
@@ -148,7 +149,7 @@ export function reconcileProgressBudgetForSave(state: CharacterSessionState): Ch
   for (const stat of PRIMARY_STATS) {
     spentStat += statPointsSpentRaising(state[stat])
   }
-  const earnedSkill = Math.max(0, (state.progress.jobLevel - 1) * SKILL_POINTS_PER_JOB_LEVEL)
+  const earnedSkill = totalSkillPointsEarned(state.jobId, state.progress.jobLevel)
   let spentSkill = 0
   for (const [skillId, level] of Object.entries(state.skills)) {
     spentSkill += level - (FREE_SKILL_LEVELS[skillId] ?? 0)

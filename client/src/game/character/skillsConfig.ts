@@ -89,7 +89,7 @@ export function skillWindowTabEntries(jobId: string): SkillWindowTabEntry[] {
 export function skillUsableByJob(skillId: string, jobId: string): boolean {
   if (skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead') return true
   const skill = SKILLS[skillId]
-  return skill != null && jobCanUseSkillFromJob(jobId, skill.jobId)
+  return skill != null && jobCanUseSkillFromJob(jobId, skill.jobId, skillId)
 }
 
 export function meetsSkillPrerequisites(
@@ -151,7 +151,7 @@ export function canLearnSkill(
   skillPoints: number,
   skills: Record<string, number>,
 ): boolean {
-  if (skill.jobId !== jobId) return false
+  if (!jobCanUseSkillFromJob(jobId, skill.jobId, skill.id)) return false
   if (currentLevel >= skill.maxLevel) return false
   if (jobLevel < skill.requiredJobLevel) return false
   if (skillPoints < 1) return false

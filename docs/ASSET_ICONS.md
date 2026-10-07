@@ -31,6 +31,7 @@ Shared frame helpers live in [`scripts/lib/roItemIconFrame.mjs`](../scripts/lib/
 | `sandals`, `shoes` | Strapped sandals vs enclosed shoes |
 | `clip`, `glove`, `ring` | Hair clip, glove, gold ring |
 | `red_potion` | Red glass flask |
+| `blue_potion` | Blue glass flask |
 
 **Phase 2 (not yet):** `type: "etc"` loot icons under `client/public/items/etc/` plus a generator branch in `getItemIconUrl`.
 
