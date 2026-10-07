@@ -18,6 +18,12 @@ import {
   NPC_SPRITE_LABELS,
 } from '../game/character/characterSpriteRegistry'
 import { npcArchetypeFromNpcType } from '../game/character/npcArchetypes'
+import {
+  NPC_GUILD_ICON_IDS,
+  parseNpcConfigJson,
+  patchNpcConfigJson,
+  resolveNpcGuildFromParts,
+} from '../game/npc/npcGuildBadge'
 import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../lib/tmj/properties'
 import { getObjectGroup } from '../lib/tmj/parse'
 import { fetchMapBundle, fetchMapList, saveMapBundle, type MapMeta } from './mapAdminApi'
@@ -601,6 +607,13 @@ function NpcFields({
 }) {
   const props = readNpcProps(object as import('../lib/tmj').TmjMapObject)
   const [configError, setConfigError] = useState<string | null>(null)
+  const config = parseNpcConfigJson(props.configJson)
+  const guildPreview = resolveNpcGuildFromParts(props.npcType, config)
+  const guildNameDraft = typeof config.guildName === 'string' ? config.guildName : ''
+  const guildIconDraft =
+    typeof config.guildIcon === 'string' && NPC_GUILD_ICON_IDS.includes(config.guildIcon as typeof NPC_GUILD_ICON_IDS[number])
+      ? config.guildIcon
+      : ''
 
   const onConfigBlur = (raw: string) => {
     try {
@@ -671,6 +684,32 @@ function NpcFields({
               return auto ? `Auto uses ${NPC_SPRITE_LABELS[auto]}.` : 'Auto: no default sprite for this type.'
             })()}
       </p>
+      <label>
+        Guild name (optional)
+        <input
+          value={guildNameDraft}
+          placeholder={guildPreview.name}
+          onChange={(e) =>
+            onChange({ configJson: patchNpcConfigJson(props.configJson, { guildName: e.target.value }) })
+          }
+        />
+      </label>
+      <label>
+        Guild icon (optional)
+        <select
+          value={guildIconDraft}
+          onChange={(e) =>
+            onChange({
+              configJson: patchNpcConfigJson(props.configJson, { guildIcon: e.target.value }),
+            })
+          }
+        >
+          <option value="">Default ({guildPreview.iconId})</option>
+          {NPC_GUILD_ICON_IDS.map((id) => (
+            <option key={id} value={id}>{id}</option>
+          ))}
+        </select>
+      </label>
       <label>
         config JSON
         <textarea

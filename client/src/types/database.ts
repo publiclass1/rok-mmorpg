@@ -38,6 +38,8 @@ export type NpcRow = {
     zenyCost?: number
     spriteKey?: string
     facing?: 'up' | 'down' | 'left' | 'right'
+    guildName?: string
+    guildIcon?: string
   }
 }
 

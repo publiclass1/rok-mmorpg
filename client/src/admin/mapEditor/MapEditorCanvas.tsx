@@ -17,6 +17,14 @@ import { getDecorImage, useDecorImages } from '../../lib/mapDecor/useDecorImages
 import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../../lib/tmj/properties'
 import { collisionFillColor, gidFillColor } from './tileColors'
 import { useMapEditorPan } from './MapEditorPanContext'
+import {
+  GUILD_BADGE_GAP,
+  GUILD_BADGE_OFFSET_Y,
+  GUILD_ICON_SIZE,
+  guildIconCanvasStyle,
+  parseNpcConfigJson,
+  resolveNpcGuildFromParts,
+} from '../../game/npc/npcGuildBadge'
 
 export type EditorTool = 'ground' | 'collision' | 'tiles' | 'obstacle' | 'portal' | 'npc' | 'select'
 
@@ -239,17 +247,33 @@ export function MapEditorCanvas({
         ctx.strokeStyle = selected ? '#fbbf24' : '#7c3aed'
         ctx.lineWidth = selected ? 2 : 1
         ctx.strokeRect(o.x, o.y, o.width, o.height)
-        const label = readNpcProps(o).label
+        const npcProps = readNpcProps(o)
+        const label = npcProps.label
         ctx.fillStyle = '#e5e7eb'
         ctx.font = '11px system-ui'
         ctx.fillText(label, o.x + 4, o.y + 14)
         const cx = o.x + o.width / 2
-        const feetLineY = o.y + o.height - 4
-        ctx.strokeStyle = '#c4b5fd'
-        ctx.beginPath()
-        ctx.moveTo(cx - 12, feetLineY)
-        ctx.lineTo(cx + 12, feetLineY)
-        ctx.stroke()
+        const feetY = o.y + o.height
+        const guild = resolveNpcGuildFromParts(
+          npcProps.npcType,
+          parseNpcConfigJson(npcProps.configJson),
+        )
+        const badgeY = feetY + GUILD_BADGE_OFFSET_Y
+        ctx.font = '9px system-ui'
+        const textW = ctx.measureText(guild.name).width
+        const totalW = GUILD_ICON_SIZE + GUILD_BADGE_GAP + textW
+        const left = cx - totalW / 2
+        const iconStyle = guildIconCanvasStyle(guild.iconId)
+        ctx.fillStyle = iconStyle.fill
+        ctx.fillRect(left, badgeY - GUILD_ICON_SIZE / 2, GUILD_ICON_SIZE, GUILD_ICON_SIZE)
+        ctx.fillStyle = '#0f172a'
+        ctx.font = 'bold 8px system-ui'
+        ctx.textAlign = 'center'
+        ctx.fillText(iconStyle.letters, left + GUILD_ICON_SIZE / 2, badgeY + 3)
+        ctx.textAlign = 'left'
+        ctx.fillStyle = '#a5b4fc'
+        ctx.font = '9px system-ui'
+        ctx.fillText(guild.name, left + GUILD_ICON_SIZE + GUILD_BADGE_GAP, badgeY + 3)
       }
     }
 

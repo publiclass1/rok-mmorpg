@@ -128,7 +128,12 @@ import {
   TILESET_TILE_COUNT,
 } from '../textures'
 import { saveCharacterSession, saveCharacterWorldPosition } from '../../lib/characterProgress'
-import { createNpcWorldVisual, type NpcWorldVisual } from '../npc/npcWorldVisual'
+import { ensureNpcGuildTextures } from '../npc/npcGuildBadge'
+import {
+  createNpcWorldVisual,
+  syncNpcGuildBadgePosition,
+  type NpcWorldVisual,
+} from '../npc/npcWorldVisual'
 import type { CharacterRow, NpcRow } from '../../types/database'
 
 const INTERACT_RANGE = 64
@@ -374,6 +379,7 @@ export class WorldScene extends Phaser.Scene {
       }
     })
 
+    ensureNpcGuildTextures(this)
     for (const npc of this.npcs) {
       this.npcVisuals.push(createNpcWorldVisual(this, npc))
     }
@@ -879,10 +885,11 @@ export class WorldScene extends Phaser.Scene {
     }
 
     for (const npc of this.npcVisuals) {
+      syncNpcGuildBadgePosition(npc)
+      npc.label.setPosition(npc.sprite.x, npc.feetY - 46)
       setDepthByFeet(npc.sprite, npc.feetY)
-      if (npc.counterLine) {
-        setDepthByFeet(npc.counterLine, npc.feetY + 2, -0.02)
-      }
+      setDepthByFeet(npc.guildIcon, npc.feetY + 2, 0.02)
+      setDepthByFeet(npc.guildLabel, npc.feetY + 2, 0.03)
       setDepthByFeet(npc.label, npc.feetY, 0.05)
     }
 
