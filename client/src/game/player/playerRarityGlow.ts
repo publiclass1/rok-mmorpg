@@ -3,6 +3,7 @@ import type { EquipSlot } from '../character/characterState'
 import { highestEquippedRarity, rarityColor, rarityTier } from '../items/itemRarity'
 
 export type RarityGlowHost = {
+  container: Phaser.GameObjects.Container
   bodyRig: Phaser.GameObjects.Container
   body: Phaser.GameObjects.Sprite
   rarityGlow?: Phaser.GameObjects.Ellipse
@@ -27,7 +28,8 @@ export function syncPlayerRarityGlow(
   display: RarityGlowHost,
   equipment: Record<EquipSlot, string | null>,
 ) {
-  const scene = display.body.scene
+  const scene = display.container.scene ?? display.body.scene
+  if (!scene) return
   const rarity = highestEquippedRarity(equipment)
 
   if (!rarity) {

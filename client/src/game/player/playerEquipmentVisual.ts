@@ -7,6 +7,7 @@ import { equipmentPoseOffset } from './playerEquipmentPoseOffset'
 export type EquipmentImageLayer = Phaser.GameObjects.Image
 
 export type EquipmentDisplayHost = {
+  container: Phaser.GameObjects.Container
   body: Phaser.GameObjects.Sprite
   layers: Partial<Record<PlayerVisualLayer, Phaser.GameObjects.Image>>
   pose: CharacterPose
@@ -64,7 +65,8 @@ function bindSlotImage(
     return
   }
 
-  const scene = display.body.scene
+  const scene = display.container.scene ?? display.body.scene
+  if (!scene?.textures) return
   const applyTexture = (textureKey: string) => {
     image.setTexture(textureKey)
     applyLayoutToImage(image, slot, layout, display.pose)

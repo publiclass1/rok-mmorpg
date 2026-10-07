@@ -18,12 +18,12 @@ export function ensureEquipPlaceholderTexture(scene: Phaser.Scene): string {
 
 /** Load item SVG/PNG into the scene texture manager (cached per item id). */
 export function ensureItemEquipIconTexture(
-  scene: Phaser.Scene,
+  scene: Phaser.Scene | undefined,
   itemId: string,
   onReady: (textureKey: string) => void,
 ): void {
   const url = getItemIconUrl(itemId)
-  if (!url) return
+  if (!url || !scene?.textures) return
 
   const key = textureKeyForItem(itemId)
   if (scene.textures.exists(key)) {
@@ -33,6 +33,7 @@ export function ensureItemEquipIconTexture(
 
   if (inflight.has(key)) {
     const poll = () => {
+      if (!scene.textures) return
       if (scene.textures.exists(key)) onReady(key)
       else window.setTimeout(poll, 16)
     }
@@ -44,6 +45,7 @@ export function ensureItemEquipIconTexture(
   const img = new Image()
   img.onload = () => {
     inflight.delete(key)
+    if (!scene.textures) return
     if (!scene.textures.exists(key)) {
       scene.textures.addImage(key, img)
     }

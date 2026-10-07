@@ -27,6 +27,14 @@ export { defaultCharacterPose } from '../character/characterPose'
 export { MOUNT_BODY_Y_OFFSET } from './playerDisplayLayers'
 export type { PlayerVisualLayer } from './playerDisplayLayers'
 
+/** Scene reference for nested display parts (Phaser 4 may not set `.scene` on container children). */
+export function playerDisplayScene(display: {
+  container: Phaser.GameObjects.Container
+  body: Phaser.GameObjects.Sprite
+}): Phaser.Scene | undefined {
+  return display.container.scene ?? display.body.scene ?? undefined
+}
+
 export type PlayerDisplay = RarityGlowHost & {
   container: Phaser.GameObjects.Container
   /** Rider rig (lifted when mounted on peco). */
@@ -55,7 +63,8 @@ function syncSpritePose(display: PlayerDisplay) {
   }
   syncEquipmentTransforms(display)
   syncPlayerRarityGlow(display, display.equipment)
-  syncPlayerIdleRigMotion(display.body.scene, display)
+  const scene = playerDisplayScene(display)
+  if (scene) syncPlayerIdleRigMotion(scene, display)
 }
 
 function bindPlayerTexture(
@@ -142,13 +151,17 @@ export function createPlayerDisplay(
 }
 
 export function setPlayerAppearance(display: PlayerDisplay, appearance: CharacterAppearance) {
-  bindPlayerTexture(display.body.scene, display, appearance)
+  const scene = playerDisplayScene(display)
+  if (!scene) return
+  bindPlayerTexture(scene, display, appearance)
 }
 
 export function setPlayerJobAvatar(display: PlayerDisplay, avatarKey: PlayerAvatarKey) {
   if (display.avatarKey === avatarKey) return
   display.avatarKey = avatarKey
-  bindPlayerTexture(display.body.scene, display, display.appearance)
+  const scene = playerDisplayScene(display)
+  if (!scene) return
+  bindPlayerTexture(scene, display, display.appearance)
 }
 
 export function syncPlayerDisplayPosition(display: PlayerDisplay, x: number, y: number) {
