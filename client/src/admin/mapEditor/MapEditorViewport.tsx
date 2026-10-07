@@ -89,7 +89,10 @@ export function MapEditorViewport({ children, panResetRef }: Props) {
         onPointerUp={endPan}
         onPointerCancel={endPan}
       >
-        <div className="map-admin-viewport-inner" style={{ transform: `translate(${pan.x}px, ${pan.y}px)` }}>
+        <div
+          className="map-admin-viewport-inner"
+          style={{ transform: `translate3d(${pan.x}px, ${pan.y}px, 0)` }}
+        >
           {children}
         </div>
       </div>

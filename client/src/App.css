@@ -2000,8 +2000,19 @@ body.game-active .game-canvas canvas {
   padding: 0.2rem 0.45rem;
 }
 
+body:has(.map-admin-root),
+body:has(.map-admin-root) #root {
+  height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
 .map-admin-root {
-  min-height: 100vh;
+  box-sizing: border-box;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
   width: 100%;
   max-width: none;
   padding: 1rem;
@@ -2009,6 +2020,7 @@ body.game-active .game-canvas canvas {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  overflow: hidden;
 }
 
 .map-admin-header {
@@ -2045,15 +2057,18 @@ body.game-active .game-canvas canvas {
   display: grid;
   grid-template-columns: 260px 1fr 320px;
   gap: 0.75rem;
-  align-items: start;
+  align-items: stretch;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .map-admin-sidebar,
 .map-admin-json {
   max-width: none;
   width: 100%;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .map-admin-fieldset {
@@ -2209,16 +2224,18 @@ body.game-active .game-canvas canvas {
   width: 100%;
   padding: 0.5rem;
   min-height: 0;
+  min-width: 0;
 }
 
 .map-admin-viewport {
-  flex: 1;
-  min-height: 60vh;
+  flex: 1 1 0;
+  min-height: 12rem;
   overflow: hidden;
   position: relative;
   background: #0b1220;
   border-radius: 8px;
   border: 1px solid #374151;
+  touch-action: none;
 }
 
 .map-admin-viewport--pan {
@@ -2230,8 +2247,11 @@ body.game-active .game-canvas canvas {
 }
 
 .map-admin-viewport-inner {
-  display: inline-block;
-  min-width: min-content;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 .map-admin-pan-hint {
@@ -2283,8 +2303,9 @@ body.game-active .game-canvas canvas {
 
 .map-admin-canvas {
   display: block;
-  max-width: 100%;
+  width: auto;
   height: auto;
+  max-width: none;
   cursor: crosshair;
   image-rendering: pixelated;
 }
