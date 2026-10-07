@@ -22,7 +22,7 @@ export type NpcRow = {
   map_id: string
   x: number
   y: number
-  npc_type: 'teleport' | 'storage' | 'save' | 'job_master' | 'shop' | 'healer'
+  npc_type: 'teleport' | 'storage' | 'save' | 'job_master' | 'shop' | 'healer' | 'dungeon'
   label: string
   config: {
     destinations?: Array<{ map_id: string; label: string; x: number; y: number; category?: string }>
@@ -84,6 +84,7 @@ export type CharacterProgressRow = {
   mp: number | null
   skill_bar: unknown
   session_inventory: unknown
+  rolled_items?: unknown
   updated_at: string
 }
 
@@ -97,6 +98,20 @@ export type CharacterEquipmentRow = {
   character_id: string
   slot: string
   item_id: string
+  instance_id?: string | null
+}
+
+export type DungeonInstanceRow = {
+  id: string
+  party_id: string
+  floor_id: string
+  map_id: string
+  status: 'active' | 'mvp' | 'cleared'
+  killed_spawns: number[]
+  total_spawns: number
+  mvp_alive: boolean
+  created_at: string
+  updated_at: string
 }
 
 export type TradeSessionRow = {

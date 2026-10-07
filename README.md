@@ -40,6 +40,7 @@ supabase functions deploy trade-manage
 supabase functions deploy party-manage
 supabase functions deploy guild-manage
 supabase functions deploy vendor-manage
+supabase functions deploy dungeon-manage
 ```
 
 4. Apply migrations through `20260324100000_m6_social.sql`. Enable **Realtime** for trade/party/guild/vendor tables if not applied by migration.
@@ -82,6 +83,7 @@ npm run dev
 - `prontera` — 40×28 hub town (plaza, roads, buildings, trees, south gate warps; layout in `content/ro/maps/prontera.layout.json`)
 - `prt_fild01` — Prontera field with Kafra, return warp to Prontera south gate
 - `field_01` — dev field with return warp, rock obstacles, roaming Porings
+- `dun_f1` … `dun_f5` — party dungeons (Dungeon Guide in Prontera; regenerate with `npm run maps:dungeons`)
 
 Regenerate Prontera from the layout file:
 
@@ -97,8 +99,8 @@ Preview: `docs/maps/prontera-preview.svg`. Tile art source: `client/public/tiles
 2. **New blank map** → set a unique **id** (lowercase, underscores) and **display name**.
 3. Paint tiles, drag decor onto the canvas, place portals/NPCs. Tools are in the **icon bar above the map**.
 4. Under **Warp wiring**, enable **Add to Prontera Warp Agent** and set arrival X/Y on your map.
-5. Click **Save to disk** (writes `.tmj`, `content/ro/maps.json`, and optionally `supabase/migrations/*.sql`).
-6. **Copy all SQL** (or run the generated migration) in the Supabase SQL Editor so Warp Agent and NPCs exist in the database.
+5. Click **Save map & Supabase SQL** (writes `.tmj`, `content/ro/maps.json`, `mapPortals.json`, `supabase/migrations/*.sql`, and `supabase/seed/custom_maps/{id}.sql`).
+6. Run that SQL in the Supabase SQL Editor (or `supabase db push`), then **Copy all SQL** if you need a backup.
 7. **Hard-refresh** the game tab so `maps.json` reloads. Custom maps appear under **Custom maps** on Warp Agent.
 
 Walk-through portals use the `portal-warp` edge function (`supabase functions deploy portal-warp`).

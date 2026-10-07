@@ -27,7 +27,9 @@ export function validateRoContent(pack: RoContentPack): void {
   for (const skill of pack.skills) {
     assert(!skillIds.has(skill.id), `duplicate skill id: ${skill.id}`)
     skillIds.add(skill.id)
-    assert(jobIds.has(skill.jobId), `skill ${skill.id} references unknown job ${skill.jobId}`)
+    if (skill.jobId !== 'monster') {
+      assert(jobIds.has(skill.jobId), `skill ${skill.id} references unknown job ${skill.jobId}`)
+    }
     for (const pre of skill.prerequisites) {
       assert(allSkillIds.has(pre.skillId), `skill ${skill.id} prerequisite unknown: ${pre.skillId}`)
     }
@@ -118,6 +120,18 @@ export function validateRoContent(pack: RoContentPack): void {
       assert(itemIds.has(entry.itemId), `loot band references unknown item ${entry.itemId}`)
       assert(entry.weight > 0, `loot band item ${entry.itemId} weight must be > 0`)
     }
+  }
+
+  for (const floor of pack.dungeons.floors) {
+    assert(mapIds.has(floor.mapId), `dungeon floor ${floor.id} references unknown map ${floor.mapId}`)
+    assert(mobIds.has(floor.mvpDefId), `dungeon floor ${floor.id} mvpDefId unknown: ${floor.mvpDefId}`)
+    const mvp = pack.mobs.find((m) => m.id === floor.mvpDefId)
+    assert(mvp?.boss === true, `dungeon floor ${floor.id} mvp ${floor.mvpDefId} must have boss: true`)
+    assert(floor.minLevel <= floor.maxLevel, `dungeon floor ${floor.id} invalid level band`)
+  }
+  for (const slot of pack.dungeons.gear.dropSlots) {
+    const hasBase = pack.items.some((i) => i.equipSlot === slot)
+    assert(hasBase, `dungeon gear drop slot ${slot} has no base items in items.json`)
   }
 
   for (const [mapId, portalList] of Object.entries(pack.portals)) {

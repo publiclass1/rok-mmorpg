@@ -38,6 +38,10 @@ export function StorageModal({ character, npc, position, onClose }: Props) {
 
   async function move(direction: 'to_storage' | 'to_character', itemId: string, quantity: number) {
     setError(null)
+    if (itemId.startsWith('ri:')) {
+      setError('Dungeon gear cannot be stored in Kafra yet.')
+      return
+    }
     try {
       await transferStorage({
         characterId: character.id,

@@ -5,10 +5,11 @@ import { EDITOR_TOOLS, TOOL_LABELS, ToolIcon } from './toolIcons'
 type Props = {
   tool: EditorTool
   onToolChange: (tool: EditorTool) => void
+  onResetView?: () => void
   disabled?: boolean
 }
 
-export function MapEditorToolbar({ tool, onToolChange, disabled }: Props) {
+export function MapEditorToolbar({ tool, onToolChange, onResetView, disabled }: Props) {
   return (
     <div className="map-admin-canvas-toolbar">
       <div className="map-admin-tool-icons" role="toolbar" aria-label="Map editor tools">
@@ -27,6 +28,11 @@ export function MapEditorToolbar({ tool, onToolChange, disabled }: Props) {
           </button>
         ))}
       </div>
+      {onResetView && (
+        <button type="button" className="map-admin-reset-view secondary" disabled={disabled} onClick={onResetView}>
+          Reset view
+        </button>
+      )}
       <div className="map-admin-toolbar-decor" aria-label="Decor drag onto map">
         {DECOR_ASSETS.map((asset) => (
           <div

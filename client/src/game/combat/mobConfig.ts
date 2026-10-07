@@ -26,6 +26,7 @@ export type MobDefinition = {
   wikiJobExp: number
   drops: RoMobDrop[]
   skills: RoMobSkill[]
+  isBoss: boolean
 }
 
 function mobDefinitionFromContent(mob: RoMob): MobDefinition {
@@ -54,6 +55,7 @@ function mobDefinitionFromContent(mob: RoMob): MobDefinition {
     wikiJobExp: mob.wikiJobExp,
     drops: mob.drops,
     skills: mob.skills ?? [],
+    isBoss: mob.boss === true,
   }
 }
 

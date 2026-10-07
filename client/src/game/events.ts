@@ -30,6 +30,15 @@ export type SelectedPlayerPayload = {
   stallTitle?: string | null
 }
 
+export type DungeonSyncPayload = {
+  instanceId: string
+  floorId: string
+  mapId: string
+  killedSpawns: number[]
+  mvpAlive: boolean
+  status: 'active' | 'mvp' | 'cleared'
+}
+
 export type PartySyncPayload = {
   partyId: string | null
   leaderCharacterId: string | null
@@ -172,6 +181,9 @@ export type GameEvents = {
   zenyGain: { amount: number }
   playerDeath: Record<string, never>
   playerRevived: { x: number; y: number }
+  dungeonSync: DungeonSyncPayload
+  dungeonMobKilled: { instanceId: string; spawnIndex: number }
+  dungeonMvpKilled: { instanceId: string }
 }
 
 type Listener = (payload: unknown) => void

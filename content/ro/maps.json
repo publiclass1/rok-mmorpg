@@ -29,6 +29,36 @@
       "displayName": "Prontera Culvert 1",
       "fieldType": "dungeon",
       "sourceUrl": "https://db.irowiki.org/db/map-info/prt_sewb1/"
+    },
+    {
+      "id": "dun_f1",
+      "displayName": "Crypt",
+      "fieldType": "dungeon",
+      "sourceUrl": null
+    },
+    {
+      "id": "dun_f2",
+      "displayName": "Orc Catacombs",
+      "fieldType": "dungeon",
+      "sourceUrl": null
+    },
+    {
+      "id": "dun_f3",
+      "displayName": "Chivalry Hall",
+      "fieldType": "dungeon",
+      "sourceUrl": null
+    },
+    {
+      "id": "dun_f4",
+      "displayName": "Dark Throne",
+      "fieldType": "dungeon",
+      "sourceUrl": null
+    },
+    {
+      "id": "dun_f5",
+      "displayName": "Niflheim Depths",
+      "fieldType": "dungeon",
+      "sourceUrl": null
     }
   ],
   "mobSpawns": {
@@ -737,6 +767,916 @@
         "y": 816,
         "defId": "familiar"
       }
+    ],
+    "dun_f1": [
+      {
+        "x": 48,
+        "y": 816,
+        "defId": "zombie"
+      },
+      {
+        "x": 880,
+        "y": 368,
+        "defId": "zombie"
+      },
+      {
+        "x": 368,
+        "y": 1136,
+        "defId": "zombie"
+      },
+      {
+        "x": 816,
+        "y": 1264,
+        "defId": "zombie"
+      },
+      {
+        "x": 368,
+        "y": 1168,
+        "defId": "zombie"
+      },
+      {
+        "x": 336,
+        "y": 816,
+        "defId": "zombie"
+      },
+      {
+        "x": 560,
+        "y": 624,
+        "defId": "zombie"
+      },
+      {
+        "x": 848,
+        "y": 688,
+        "defId": "zombie"
+      },
+      {
+        "x": 272,
+        "y": 688,
+        "defId": "zombie"
+      },
+      {
+        "x": 688,
+        "y": 752,
+        "defId": "zombie"
+      },
+      {
+        "x": 112,
+        "y": 272,
+        "defId": "skeleton"
+      },
+      {
+        "x": 432,
+        "y": 1296,
+        "defId": "skeleton"
+      },
+      {
+        "x": 976,
+        "y": 592,
+        "defId": "skeleton"
+      },
+      {
+        "x": 624,
+        "y": 816,
+        "defId": "skeleton"
+      },
+      {
+        "x": 528,
+        "y": 1104,
+        "defId": "skeleton"
+      },
+      {
+        "x": 528,
+        "y": 1232,
+        "defId": "skeleton"
+      },
+      {
+        "x": 464,
+        "y": 112,
+        "defId": "skeleton"
+      },
+      {
+        "x": 976,
+        "y": 240,
+        "defId": "skeleton"
+      },
+      {
+        "x": 656,
+        "y": 1008,
+        "defId": "skeleton"
+      },
+      {
+        "x": 912,
+        "y": 912,
+        "defId": "skeleton"
+      },
+      {
+        "x": 144,
+        "y": 432,
+        "defId": "poporing"
+      },
+      {
+        "x": 976,
+        "y": 48,
+        "defId": "poporing"
+      },
+      {
+        "x": 784,
+        "y": 208,
+        "defId": "poporing"
+      },
+      {
+        "x": 176,
+        "y": 1136,
+        "defId": "poporing"
+      },
+      {
+        "x": 560,
+        "y": 592,
+        "defId": "poporing"
+      },
+      {
+        "x": 48,
+        "y": 1264,
+        "defId": "poporing"
+      },
+      {
+        "x": 528,
+        "y": 240,
+        "defId": "poporing"
+      },
+      {
+        "x": 752,
+        "y": 48,
+        "defId": "poporing"
+      },
+      {
+        "x": 944,
+        "y": 240,
+        "defId": "familiar"
+      },
+      {
+        "x": 656,
+        "y": 528,
+        "defId": "familiar"
+      },
+      {
+        "x": 80,
+        "y": 208,
+        "defId": "familiar"
+      },
+      {
+        "x": 240,
+        "y": 816,
+        "defId": "familiar"
+      },
+      {
+        "x": 304,
+        "y": 1040,
+        "defId": "familiar"
+      },
+      {
+        "x": 336,
+        "y": 1232,
+        "defId": "familiar"
+      },
+      {
+        "x": 720,
+        "y": 880,
+        "defId": "familiar"
+      },
+      {
+        "x": 976,
+        "y": 304,
+        "defId": "familiar"
+      }
+    ],
+    "dun_f2": [
+      {
+        "x": 528,
+        "y": 1040,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 560,
+        "y": 1104,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 528,
+        "y": 976,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 368,
+        "y": 1200,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 880,
+        "y": 1136,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 272,
+        "y": 816,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 880,
+        "y": 656,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 80,
+        "y": 240,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 656,
+        "y": 1200,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 240,
+        "y": 400,
+        "defId": "orc_warrior"
+      },
+      {
+        "x": 560,
+        "y": 1296,
+        "defId": "orc_lady"
+      },
+      {
+        "x": 368,
+        "y": 496,
+        "defId": "orc_lady"
+      },
+      {
+        "x": 624,
+        "y": 592,
+        "defId": "orc_lady"
+      },
+      {
+        "x": 816,
+        "y": 336,
+        "defId": "orc_lady"
+      },
+      {
+        "x": 368,
+        "y": 432,
+        "defId": "orc_lady"
+      },
+      {
+        "x": 496,
+        "y": 1040,
+        "defId": "orc_lady"
+      },
+      {
+        "x": 752,
+        "y": 656,
+        "defId": "orc_lady"
+      },
+      {
+        "x": 304,
+        "y": 48,
+        "defId": "orc_lady"
+      },
+      {
+        "x": 688,
+        "y": 80,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 912,
+        "y": 880,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 784,
+        "y": 944,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 848,
+        "y": 976,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 624,
+        "y": 336,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 624,
+        "y": 752,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 688,
+        "y": 1296,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 272,
+        "y": 1296,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 304,
+        "y": 176,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 80,
+        "y": 752,
+        "defId": "orc_zombie"
+      },
+      {
+        "x": 560,
+        "y": 592,
+        "defId": "orc_archer"
+      },
+      {
+        "x": 112,
+        "y": 272,
+        "defId": "orc_archer"
+      },
+      {
+        "x": 656,
+        "y": 80,
+        "defId": "orc_archer"
+      },
+      {
+        "x": 368,
+        "y": 560,
+        "defId": "orc_archer"
+      },
+      {
+        "x": 528,
+        "y": 720,
+        "defId": "orc_archer"
+      },
+      {
+        "x": 528,
+        "y": 656,
+        "defId": "orc_archer"
+      },
+      {
+        "x": 496,
+        "y": 1072,
+        "defId": "orc_archer"
+      },
+      {
+        "x": 112,
+        "y": 688,
+        "defId": "orc_archer"
+      }
+    ],
+    "dun_f3": [
+      {
+        "x": 784,
+        "y": 304,
+        "defId": "raydric"
+      },
+      {
+        "x": 560,
+        "y": 688,
+        "defId": "raydric"
+      },
+      {
+        "x": 336,
+        "y": 1264,
+        "defId": "raydric"
+      },
+      {
+        "x": 624,
+        "y": 688,
+        "defId": "raydric"
+      },
+      {
+        "x": 176,
+        "y": 1040,
+        "defId": "raydric"
+      },
+      {
+        "x": 304,
+        "y": 560,
+        "defId": "raydric"
+      },
+      {
+        "x": 496,
+        "y": 752,
+        "defId": "raydric"
+      },
+      {
+        "x": 752,
+        "y": 1072,
+        "defId": "raydric"
+      },
+      {
+        "x": 560,
+        "y": 1072,
+        "defId": "raydric"
+      },
+      {
+        "x": 112,
+        "y": 272,
+        "defId": "raydric_archer"
+      },
+      {
+        "x": 912,
+        "y": 176,
+        "defId": "raydric_archer"
+      },
+      {
+        "x": 912,
+        "y": 1168,
+        "defId": "raydric_archer"
+      },
+      {
+        "x": 720,
+        "y": 208,
+        "defId": "raydric_archer"
+      },
+      {
+        "x": 976,
+        "y": 304,
+        "defId": "raydric_archer"
+      },
+      {
+        "x": 720,
+        "y": 1232,
+        "defId": "raydric_archer"
+      },
+      {
+        "x": 464,
+        "y": 1072,
+        "defId": "raydric_archer"
+      },
+      {
+        "x": 240,
+        "y": 432,
+        "defId": "raydric_archer"
+      },
+      {
+        "x": 80,
+        "y": 80,
+        "defId": "raydric_archer"
+      },
+      {
+        "x": 912,
+        "y": 880,
+        "defId": "khalitzburg"
+      },
+      {
+        "x": 80,
+        "y": 1040,
+        "defId": "khalitzburg"
+      },
+      {
+        "x": 880,
+        "y": 560,
+        "defId": "khalitzburg"
+      },
+      {
+        "x": 816,
+        "y": 1040,
+        "defId": "khalitzburg"
+      },
+      {
+        "x": 976,
+        "y": 1200,
+        "defId": "khalitzburg"
+      },
+      {
+        "x": 720,
+        "y": 1040,
+        "defId": "khalitzburg"
+      },
+      {
+        "x": 624,
+        "y": 336,
+        "defId": "khalitzburg"
+      },
+      {
+        "x": 976,
+        "y": 368,
+        "defId": "khalitzburg"
+      },
+      {
+        "x": 48,
+        "y": 688,
+        "defId": "khalitzburg"
+      },
+      {
+        "x": 816,
+        "y": 688,
+        "defId": "abysmal_knight"
+      },
+      {
+        "x": 944,
+        "y": 1296,
+        "defId": "abysmal_knight"
+      },
+      {
+        "x": 752,
+        "y": 496,
+        "defId": "abysmal_knight"
+      },
+      {
+        "x": 144,
+        "y": 1136,
+        "defId": "abysmal_knight"
+      },
+      {
+        "x": 368,
+        "y": 1008,
+        "defId": "abysmal_knight"
+      },
+      {
+        "x": 176,
+        "y": 176,
+        "defId": "abysmal_knight"
+      },
+      {
+        "x": 944,
+        "y": 1008,
+        "defId": "abysmal_knight"
+      },
+      {
+        "x": 240,
+        "y": 1264,
+        "defId": "abysmal_knight"
+      },
+      {
+        "x": 432,
+        "y": 720,
+        "defId": "abysmal_knight"
+      }
+    ],
+    "dun_f4": [
+      {
+        "x": 144,
+        "y": 752,
+        "defId": "wanderer"
+      },
+      {
+        "x": 496,
+        "y": 656,
+        "defId": "wanderer"
+      },
+      {
+        "x": 528,
+        "y": 176,
+        "defId": "wanderer"
+      },
+      {
+        "x": 560,
+        "y": 208,
+        "defId": "wanderer"
+      },
+      {
+        "x": 112,
+        "y": 1136,
+        "defId": "wanderer"
+      },
+      {
+        "x": 496,
+        "y": 752,
+        "defId": "wanderer"
+      },
+      {
+        "x": 720,
+        "y": 1232,
+        "defId": "wanderer"
+      },
+      {
+        "x": 720,
+        "y": 48,
+        "defId": "wanderer"
+      },
+      {
+        "x": 496,
+        "y": 816,
+        "defId": "wanderer"
+      },
+      {
+        "x": 496,
+        "y": 1008,
+        "defId": "dark_priest"
+      },
+      {
+        "x": 592,
+        "y": 528,
+        "defId": "dark_priest"
+      },
+      {
+        "x": 976,
+        "y": 1136,
+        "defId": "dark_priest"
+      },
+      {
+        "x": 304,
+        "y": 688,
+        "defId": "dark_priest"
+      },
+      {
+        "x": 400,
+        "y": 528,
+        "defId": "dark_priest"
+      },
+      {
+        "x": 80,
+        "y": 368,
+        "defId": "dark_priest"
+      },
+      {
+        "x": 624,
+        "y": 496,
+        "defId": "dark_priest"
+      },
+      {
+        "x": 400,
+        "y": 464,
+        "defId": "dark_priest"
+      },
+      {
+        "x": 784,
+        "y": 368,
+        "defId": "dark_priest"
+      },
+      {
+        "x": 816,
+        "y": 1264,
+        "defId": "chimera"
+      },
+      {
+        "x": 304,
+        "y": 496,
+        "defId": "chimera"
+      },
+      {
+        "x": 432,
+        "y": 1296,
+        "defId": "chimera"
+      },
+      {
+        "x": 688,
+        "y": 528,
+        "defId": "chimera"
+      },
+      {
+        "x": 48,
+        "y": 48,
+        "defId": "chimera"
+      },
+      {
+        "x": 656,
+        "y": 272,
+        "defId": "chimera"
+      },
+      {
+        "x": 304,
+        "y": 720,
+        "defId": "chimera"
+      },
+      {
+        "x": 528,
+        "y": 1264,
+        "defId": "chimera"
+      },
+      {
+        "x": 176,
+        "y": 400,
+        "defId": "chimera"
+      },
+      {
+        "x": 880,
+        "y": 720,
+        "defId": "alice"
+      },
+      {
+        "x": 976,
+        "y": 1296,
+        "defId": "alice"
+      },
+      {
+        "x": 144,
+        "y": 208,
+        "defId": "alice"
+      },
+      {
+        "x": 112,
+        "y": 1296,
+        "defId": "alice"
+      },
+      {
+        "x": 48,
+        "y": 336,
+        "defId": "alice"
+      },
+      {
+        "x": 432,
+        "y": 592,
+        "defId": "alice"
+      },
+      {
+        "x": 48,
+        "y": 1200,
+        "defId": "alice"
+      },
+      {
+        "x": 240,
+        "y": 560,
+        "defId": "alice"
+      },
+      {
+        "x": 48,
+        "y": 1104,
+        "defId": "alice"
+      }
+    ],
+    "dun_f5": [
+      {
+        "x": 592,
+        "y": 656,
+        "defId": "dullahan"
+      },
+      {
+        "x": 880,
+        "y": 368,
+        "defId": "dullahan"
+      },
+      {
+        "x": 144,
+        "y": 976,
+        "defId": "dullahan"
+      },
+      {
+        "x": 272,
+        "y": 656,
+        "defId": "dullahan"
+      },
+      {
+        "x": 592,
+        "y": 272,
+        "defId": "dullahan"
+      },
+      {
+        "x": 976,
+        "y": 144,
+        "defId": "dullahan"
+      },
+      {
+        "x": 112,
+        "y": 688,
+        "defId": "dullahan"
+      },
+      {
+        "x": 80,
+        "y": 880,
+        "defId": "dullahan"
+      },
+      {
+        "x": 240,
+        "y": 432,
+        "defId": "dullahan"
+      },
+      {
+        "x": 272,
+        "y": 1136,
+        "defId": "bloody_murderer"
+      },
+      {
+        "x": 592,
+        "y": 336,
+        "defId": "bloody_murderer"
+      },
+      {
+        "x": 112,
+        "y": 400,
+        "defId": "bloody_murderer"
+      },
+      {
+        "x": 784,
+        "y": 400,
+        "defId": "bloody_murderer"
+      },
+      {
+        "x": 48,
+        "y": 1296,
+        "defId": "bloody_murderer"
+      },
+      {
+        "x": 912,
+        "y": 432,
+        "defId": "bloody_murderer"
+      },
+      {
+        "x": 48,
+        "y": 368,
+        "defId": "bloody_murderer"
+      },
+      {
+        "x": 752,
+        "y": 368,
+        "defId": "bloody_murderer"
+      },
+      {
+        "x": 272,
+        "y": 592,
+        "defId": "bloody_murderer"
+      },
+      {
+        "x": 304,
+        "y": 720,
+        "defId": "gibbet"
+      },
+      {
+        "x": 240,
+        "y": 1200,
+        "defId": "gibbet"
+      },
+      {
+        "x": 656,
+        "y": 720,
+        "defId": "gibbet"
+      },
+      {
+        "x": 80,
+        "y": 432,
+        "defId": "gibbet"
+      },
+      {
+        "x": 336,
+        "y": 592,
+        "defId": "gibbet"
+      },
+      {
+        "x": 496,
+        "y": 304,
+        "defId": "gibbet"
+      },
+      {
+        "x": 208,
+        "y": 1040,
+        "defId": "gibbet"
+      },
+      {
+        "x": 336,
+        "y": 688,
+        "defId": "gibbet"
+      },
+      {
+        "x": 880,
+        "y": 496,
+        "defId": "gibbet"
+      },
+      {
+        "x": 752,
+        "y": 560,
+        "defId": "loli_ruri"
+      },
+      {
+        "x": 400,
+        "y": 272,
+        "defId": "loli_ruri"
+      },
+      {
+        "x": 80,
+        "y": 816,
+        "defId": "loli_ruri"
+      },
+      {
+        "x": 432,
+        "y": 48,
+        "defId": "loli_ruri"
+      },
+      {
+        "x": 304,
+        "y": 48,
+        "defId": "loli_ruri"
+      },
+      {
+        "x": 528,
+        "y": 464,
+        "defId": "loli_ruri"
+      },
+      {
+        "x": 80,
+        "y": 240,
+        "defId": "loli_ruri"
+      },
+      {
+        "x": 944,
+        "y": 592,
+        "defId": "loli_ruri"
+      },
+      {
+        "x": 688,
+        "y": 656,
+        "defId": "loli_ruri"
+      }
     ]
   },
   "portals": {
@@ -746,6 +1686,76 @@
         "id": "culvert_exit_prontera",
         "x": 736,
         "y": 1264,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "dun_f1": [
+      {
+        "id": "dun_f1_exit",
+        "x": 480,
+        "y": 1200,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "dun_f2": [
+      {
+        "id": "dun_f2_exit",
+        "x": 480,
+        "y": 1200,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "dun_f3": [
+      {
+        "id": "dun_f3_exit",
+        "x": 480,
+        "y": 1200,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "dun_f4": [
+      {
+        "id": "dun_f4_exit",
+        "x": 480,
+        "y": 1200,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "dun_f5": [
+      {
+        "id": "dun_f5_exit",
+        "x": 480,
+        "y": 1200,
         "width": 96,
         "height": 64,
         "targetMapId": "prontera",

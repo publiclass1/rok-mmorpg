@@ -16,6 +16,7 @@ export type SkillDefinition = {
   prerequisites: SkillPrerequisite[]
   iconFile?: string | null
   selfBuff?: RoSkillSelfBuff
+  mobDamageMultiplier?: number
 }
 
 const ro = loadRoContent()
@@ -38,6 +39,7 @@ export const SKILLS: Record<string, SkillDefinition> = Object.fromEntries(
       prerequisites: s.prerequisites,
       iconFile: s.iconFile ?? null,
       selfBuff: s.selfBuff,
+      mobDamageMultiplier: s.mobDamageMultiplier,
     },
   ]),
 )

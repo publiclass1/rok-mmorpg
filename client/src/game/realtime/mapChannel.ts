@@ -49,7 +49,7 @@ export class MapPresenceChannel {
   private readonly remotes = new Map<string, RemoteEntry>()
   private broadcastTimer: number | null = null
   private pruneTimer: number | null = null
-  private mapId: string
+  private channelKey: string
   private local: PlayerPresencePayload
   private onUpdate: (remotes: PlayerPresencePayload[]) => void
   private onCombat: ((payload: MapCombatPayload) => void) | null = null
@@ -58,8 +58,9 @@ export class MapPresenceChannel {
     mapId: string,
     local: PlayerPresencePayload,
     onUpdate: (remotes: PlayerPresencePayload[]) => void,
+    channelKey?: string,
   ) {
-    this.mapId = mapId
+    this.channelKey = channelKey ?? `map:${mapId}`
     this.local = local
     this.onUpdate = onUpdate
   }
@@ -94,7 +95,7 @@ export class MapPresenceChannel {
   }
 
   async join() {
-    this.channel = supabase.channel(`map:${this.mapId}`, {
+    this.channel = supabase.channel(this.channelKey, {
       config: { broadcast: { self: false } },
     })
 

@@ -79,6 +79,13 @@ export function guildManage(payload: Record<string, unknown>) {
   return invoke<{ ok?: boolean; guild?: import('../types/database').GuildRow }>('guild-manage', payload)
 }
 
+export function dungeonManage(payload: Record<string, unknown>) {
+  return invoke<{
+    character?: import('../types/database').CharacterRow
+    instance?: import('../types/database').DungeonInstanceRow
+  }>('dungeon-manage', payload)
+}
+
 export function vendorManage(payload: Record<string, unknown>) {
   return invoke<{ ok?: boolean; stall?: import('../types/database').VendorStallRow; zenySpent?: number }>(
     'vendor-manage',

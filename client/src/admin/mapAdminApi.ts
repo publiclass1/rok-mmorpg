@@ -8,7 +8,6 @@ export type WarpWiringPayload = {
   addReturnWarp: boolean
   returnPronteraX: number
   returnPronteraY: number
-  writeMigrationFile: boolean
 }
 
 export type SqlBundleResponse = {
@@ -51,7 +50,13 @@ export async function saveMapBundle(payload: {
   tmj: TmjMap
   portals: MapPortalDef[]
   warpWiring?: WarpWiringPayload
-}): Promise<{ ok: boolean; npcSql: string; sqlBundle: SqlBundleResponse; mapMeta: MapMeta }> {
+}): Promise<{
+  ok: boolean
+  npcSql: string
+  sqlBundle: SqlBundleResponse
+  mapMeta: MapMeta
+  filesWritten: string[]
+}> {
   const res = await fetch('/__admin/maps/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -66,5 +71,6 @@ export async function saveMapBundle(payload: {
     npcSql: string
     sqlBundle: SqlBundleResponse
     mapMeta: MapMeta
+    filesWritten: string[]
   }
 }

@@ -41,6 +41,8 @@ export type RoSkill = {
   /** Override path under /skills/; default `{id}.svg` */
   iconFile?: string | null
   selfBuff?: RoSkillSelfBuff
+  /** Mob-only skill damage scale vs normal hit. */
+  mobDamageMultiplier?: number
 }
 
 export type StatBonusJson = {
@@ -135,6 +137,7 @@ export type RoMob = {
   drops: RoMobDrop[]
   runtime: RoMobRuntime
   skills?: RoMobSkill[]
+  boss?: boolean
 }
 
 export type RoMap = {
@@ -188,6 +191,42 @@ export type RoLootConfig = {
   levelBands: RoLootLevelBand[]
 }
 
+export type GearRarityId = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+
+export type RoGearRarity = {
+  label: string
+  color: string
+  statMin: number
+  effectMin: number
+}
+
+export type RoDungeonGearDrop = {
+  chancePerMille: number
+  mvpRolls: number
+  rarityWeights: Record<GearRarityId, number>
+}
+
+export type RoDungeonFloor = {
+  id: string
+  mapId: string
+  name: string
+  minLevel: number
+  maxLevel: number
+  entry: { x: number; y: number }
+  mvpDefId: string
+  mvpSpawn: { x: number; y: number }
+  gearDrop: RoDungeonGearDrop
+}
+
+export type RoDungeonsConfig = {
+  gear: {
+    dropSlots: string[]
+    rarities: Record<GearRarityId, RoGearRarity>
+    effectKinds: Array<'melee' | 'range' | 'magic'>
+  }
+  floors: RoDungeonFloor[]
+}
+
 export type RoContentPack = {
   manifest: RoManifest
   jobs: RoJob[]
@@ -199,4 +238,5 @@ export type RoContentPack = {
   portals: Record<string, MapPortalDef[]>
   expTables: RoExpTables
   loot: RoLootConfig
+  dungeons: RoDungeonsConfig
 }

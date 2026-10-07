@@ -16,6 +16,7 @@ import { readDecorAssetId } from '../../lib/mapDecor/decorProps'
 import { getDecorImage, useDecorImages } from '../../lib/mapDecor/useDecorImages'
 import { readNpcProps, readPortalProps, writeNpcProps, writePortalProps } from '../../lib/tmj/properties'
 import { collisionFillColor, gidFillColor } from './tileColors'
+import { useMapEditorPan } from './MapEditorPanContext'
 
 export type EditorTool = 'ground' | 'collision' | 'tiles' | 'obstacle' | 'portal' | 'npc' | 'select'
 
@@ -101,6 +102,7 @@ export function MapEditorCanvas({
   onSelectObject,
   onMapChange,
 }: Props) {
+  const { spaceDown, panning } = useMapEditorPan()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
   const [previewRect, setPreviewRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
@@ -388,6 +390,8 @@ export function MapEditorCanvas({
   }
 
   const onPointerDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (e.button === 1 || (spaceDown && e.button === 0) || panning) return
+
     const { x, y } = canvasCoords(e.clientX, e.clientY)
 
     if (tool === 'select') {

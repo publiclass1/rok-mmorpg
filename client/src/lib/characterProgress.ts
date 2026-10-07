@@ -1,5 +1,7 @@
 import { createInitialProgress, progressFromLevels, type PlayerProgressState } from '../game/combat/exp'
 import { syncDerivedVitals, toCharacterSheetPayload } from '../game/character/characterSheet'
+import { parseRolledItemsRecord } from '../game/items/rolledItem'
+import { isRolledItemId, parseRolledBaseItemId } from '../game/items/rolledItem'
 import {
   createDefaultEquipment,
   createInitialCharacterState,
@@ -43,16 +45,17 @@ type ProgressRow = {
   mp: number | null
   skill_bar: unknown
   session_inventory: unknown
+  rolled_items?: unknown
 }
 
 type SkillRow = { skill_id: string; level: number }
-type EquipRow = { slot: string; item_id: string; character_id?: string }
+type EquipRow = { slot: string; item_id: string; instance_id?: string | null; character_id?: string }
 
 function equipmentFromRows(rows: EquipRow[]): Record<EquipSlot, string | null> {
   const equipment = createDefaultEquipment()
   for (const row of rows) {
     if (EQUIP_SLOTS.includes(row.slot as EquipSlot)) {
-      equipment[row.slot as EquipSlot] = row.item_id
+      equipment[row.slot as EquipSlot] = row.instance_id ?? row.item_id
     }
   }
   return normalizeEquipment(equipment)
@@ -104,6 +107,7 @@ function rowToSession(
     equipment: normalizeEquipment(equipment),
     skillBar: parseSkillBar(progress.skill_bar),
     sessionInventory: parseSessionInventory(progress.session_inventory),
+    rolledItems: parseRolledItemsRecord(progress.rolled_items),
     hp: progress.hp ?? 0,
     mp: progress.mp ?? 0,
   }
@@ -121,7 +125,7 @@ export async function loadCharacterSession(characterId: string): Promise<Charact
   const [progressRes, skillsRes, equipRes] = await Promise.all([
     supabase.from('character_progress').select('*').eq('character_id', characterId).maybeSingle(),
     supabase.from('character_skills').select('skill_id, level').eq('character_id', characterId),
-    supabase.from('character_equipment').select('slot, item_id').eq('character_id', characterId),
+    supabase.from('character_equipment').select('slot, item_id, instance_id').eq('character_id', characterId),
   ])
 
   if (progressRes.error) {
@@ -293,6 +297,7 @@ async function writeCharacterSession(characterId: string, state: CharacterSessio
     mp: synced.mp,
     skill_bar: synced.skillBar,
     session_inventory: synced.sessionInventory,
+    rolled_items: synced.rolledItems,
     updated_at: new Date().toISOString(),
   }
 
@@ -326,11 +331,18 @@ async function writeCharacterSession(characterId: string, state: CharacterSessio
     }
   }
 
-  const equipRows = EQUIP_SLOTS.filter((slot) => synced.equipment[slot] != null).map((slot) => ({
-    character_id: characterId,
-    slot,
-    item_id: synced.equipment[slot] as string,
-  }))
+  const equipRows = EQUIP_SLOTS.filter((slot) => synced.equipment[slot] != null).map((slot) => {
+    const equippedId = synced.equipment[slot] as string
+    const baseId = isRolledItemId(equippedId)
+      ? (parseRolledBaseItemId(equippedId) ?? equippedId)
+      : equippedId
+    return {
+      character_id: characterId,
+      slot,
+      item_id: baseId,
+      instance_id: isRolledItemId(equippedId) ? equippedId : null,
+    }
+  })
 
   const { error: deleteEquipError } = await supabase
     .from('character_equipment')

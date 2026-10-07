@@ -32,7 +32,6 @@ export type WarpWiringPayload = {
   addReturnWarp: boolean
   returnPronteraX: number
   returnPronteraY: number
-  writeMigrationFile: boolean
 }
 
 type SaveBody = {
@@ -208,13 +207,18 @@ function generateMarkerNpcSql(mapId: string, npcs: TmjNpcMarker[]): string {
 
 function generateHubWarpSql(mapId: string, displayName: string, spawnX: number, spawnY: number): string {
   const label = escapeSqlString(displayName)
-  const destJson = `[{"map_id": "${escapeSqlString(mapId)}", "label": "${label}", "x": ${Math.round(spawnX)}, "y": ${Math.round(spawnY)}, "category": "custom"}]`
-  return `-- Add map to Prontera Warp Agent (Custom maps)
+  const safeMapId = escapeSqlString(mapId)
+  const destJson = `[{"map_id": "${safeMapId}", "label": "${label}", "x": ${Math.round(spawnX)}, "y": ${Math.round(spawnY)}, "category": "custom"}]`
+  return `-- Add/replace map on Prontera Warp Agent (Custom maps; idempotent by map_id)
 update public.npc_definitions
 set config = jsonb_set(
   config,
   '{destinations}',
-  coalesce(config->'destinations', '[]'::jsonb) || '${destJson}'::jsonb
+  (
+    select coalesce(jsonb_agg(elem), '[]'::jsonb)
+    from jsonb_array_elements(coalesce(config->'destinations', '[]'::jsonb)) elem
+    where elem->>'map_id' is distinct from '${safeMapId}'
+  ) || '${destJson}'::jsonb
 )
 where id = 'prontera_warp';`
 }
@@ -309,6 +313,7 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
   const mapsDir = path.join(repoRoot, 'client/public/maps')
   const sharedPortalsPath = path.join(repoRoot, 'supabase/functions/_shared/mapPortals.json')
   const migrationsDir = path.join(repoRoot, 'supabase/migrations')
+  const customMapsSeedDir = path.join(repoRoot, 'supabase/seed/custom_maps')
 
   return {
     name: 'map-admin-api',
@@ -396,25 +401,39 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
             if (!mapsJson.portals) mapsJson.portals = {}
             mapsJson.portals[mapMeta.id] = portals ?? []
 
+            if (!mapsJson.mobSpawns) mapsJson.mobSpawns = {}
+            if (!mapsJson.mobSpawns[mapMeta.id]) {
+              mapsJson.mobSpawns[mapMeta.id] = []
+            }
+
             await fs.writeFile(mapsJsonPath, `${JSON.stringify(mapsJson, null, 2)}\n`, 'utf8')
 
             const portalExport = buildMapPortalsExport(mapsJson)
             await fs.writeFile(sharedPortalsPath, `${JSON.stringify(portalExport, null, 2)}\n`, 'utf8')
 
             const sqlBundle = buildSqlBundle(entry, portals ?? [], tmj, warpWiring)
-            let migrationWritten = false
-            if (warpWiring?.writeMigrationFile) {
-              await fs.mkdir(migrationsDir, { recursive: true })
-              const migrationPath = path.join(migrationsDir, sqlBundle.migrationFileName)
-              await fs.writeFile(migrationPath, `${sqlBundle.fullSql}\n`, 'utf8')
-              migrationWritten = true
-            }
+            await fs.mkdir(migrationsDir, { recursive: true })
+            const migrationPath = path.join(migrationsDir, sqlBundle.migrationFileName)
+            await fs.writeFile(migrationPath, `${sqlBundle.fullSql}\n`, 'utf8')
+
+            await fs.mkdir(customMapsSeedDir, { recursive: true })
+            const seedPath = path.join(customMapsSeedDir, `${mapMeta.id}.sql`)
+            await fs.writeFile(seedPath, `${sqlBundle.fullSql}\n`, 'utf8')
+
+            const filesWritten = [
+              `client/public/maps/${mapMeta.id}.tmj`,
+              'content/ro/maps.json',
+              'supabase/functions/_shared/mapPortals.json',
+              `supabase/migrations/${sqlBundle.migrationFileName}`,
+              `supabase/seed/custom_maps/${mapMeta.id}.sql`,
+            ]
 
             json(res, 200, {
               ok: true,
               npcSql: sqlBundle.fullSql,
-              sqlBundle: { ...sqlBundle, migrationWritten },
+              sqlBundle: { ...sqlBundle, migrationWritten: true },
               mapMeta: entry,
+              filesWritten,
             })
             return
           }

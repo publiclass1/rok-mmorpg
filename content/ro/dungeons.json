@@ -1,0 +1,100 @@
+{
+  "gear": {
+    "dropSlots": [
+      "weapon",
+      "headTop",
+      "headMiddle",
+      "headLower",
+      "offhand",
+      "garment",
+      "boots",
+      "accLeft",
+      "accRight"
+    ],
+    "rarities": {
+      "common": { "label": "Common", "color": "#9ca3af", "statMin": 1, "effectMin": 1 },
+      "uncommon": { "label": "Uncommon", "color": "#22c55e", "statMin": 2, "effectMin": 4 },
+      "rare": { "label": "Rare", "color": "#3b82f6", "statMin": 4, "effectMin": 8 },
+      "epic": { "label": "Epic", "color": "#a855f7", "statMin": 6, "effectMin": 12 },
+      "legendary": { "label": "Legendary", "color": "#f59e0b", "statMin": 8, "effectMin": 16 }
+    },
+    "effectKinds": ["melee", "range", "magic"]
+  },
+  "floors": [
+    {
+      "id": "dun_f1",
+      "mapId": "dun_f1",
+      "name": "Crypt (Floor 1)",
+      "minLevel": 1,
+      "maxLevel": 20,
+      "entry": { "x": 512, "y": 1296 },
+      "mvpDefId": "vocal",
+      "mvpSpawn": { "x": 512, "y": 80 },
+      "gearDrop": {
+        "chancePerMille": 800,
+        "mvpRolls": 2,
+        "rarityWeights": { "common": 50, "uncommon": 30, "rare": 15, "epic": 4, "legendary": 1 }
+      }
+    },
+    {
+      "id": "dun_f2",
+      "mapId": "dun_f2",
+      "name": "Orc Catacombs (Floor 2)",
+      "minLevel": 21,
+      "maxLevel": 50,
+      "entry": { "x": 512, "y": 1296 },
+      "mvpDefId": "orc_hero",
+      "mvpSpawn": { "x": 512, "y": 80 },
+      "gearDrop": {
+        "chancePerMille": 1000,
+        "mvpRolls": 2,
+        "rarityWeights": { "common": 40, "uncommon": 32, "rare": 20, "epic": 6, "legendary": 2 }
+      }
+    },
+    {
+      "id": "dun_f3",
+      "mapId": "dun_f3",
+      "name": "Chivalry Hall (Floor 3)",
+      "minLevel": 51,
+      "maxLevel": 70,
+      "entry": { "x": 512, "y": 1296 },
+      "mvpDefId": "doppelganger",
+      "mvpSpawn": { "x": 512, "y": 80 },
+      "gearDrop": {
+        "chancePerMille": 1200,
+        "mvpRolls": 3,
+        "rarityWeights": { "common": 30, "uncommon": 30, "rare": 25, "epic": 11, "legendary": 4 }
+      }
+    },
+    {
+      "id": "dun_f4",
+      "mapId": "dun_f4",
+      "name": "Dark Throne (Floor 4)",
+      "minLevel": 71,
+      "maxLevel": 80,
+      "entry": { "x": 512, "y": 1296 },
+      "mvpDefId": "dark_lord",
+      "mvpSpawn": { "x": 512, "y": 80 },
+      "gearDrop": {
+        "chancePerMille": 1400,
+        "mvpRolls": 3,
+        "rarityWeights": { "common": 22, "uncommon": 28, "rare": 28, "epic": 16, "legendary": 6 }
+      }
+    },
+    {
+      "id": "dun_f5",
+      "mapId": "dun_f5",
+      "name": "Niflheim Depths (Floor 5)",
+      "minLevel": 81,
+      "maxLevel": 99,
+      "entry": { "x": 512, "y": 1296 },
+      "mvpDefId": "lord_of_death",
+      "mvpSpawn": { "x": 512, "y": 80 },
+      "gearDrop": {
+        "chancePerMille": 1600,
+        "mvpRolls": 4,
+        "rarityWeights": { "common": 15, "uncommon": 25, "rare": 30, "epic": 20, "legendary": 10 }
+      }
+    }
+  ]
+}

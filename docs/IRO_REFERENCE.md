@@ -40,6 +40,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Healer NPC | — | implemented | `healer` NPC restores HP/SP to max (persisted on save) |
 | Zeny economy | [Zeny](https://irowiki.org/wiki/Zeny) | partial | `characters.zeny`, trade, **auto zeny on mob kill** (`loot.json`, debounced save) |
 | Party | [Party](https://irowiki.org/wiki/Party) | partial | `party-manage`, `PartyPanel`, click-target actions |
+| Party dungeons | — | partial | `dungeon-manage`, `dun_f1`–`dun_f5`, Dungeon Guide NPC, per-party instances, MVP after clears, rolled gear drops (`content/ro/dungeons.json`) |
 | Guild | [Guild](https://irowiki.org/wiki/Guild) | partial | `guild-manage`, `GuildModal`, tag on HUD/presence |
 | Player vending | [Vending](https://irowiki.org/wiki/Vending) | partial | `vendor-manage`, `VendorSetupModal` / `VendorShopModal` |
 | Map / party chat | — | implemented | `MapChatChannel`, `ChatStrip` |

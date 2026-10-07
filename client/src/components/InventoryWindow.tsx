@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { EQUIPMENT } from '../game/character/equipmentConfig'
-import { getEquipColor, getItemDisplayName, isConsumable, isEquippable } from '../game/character/itemCatalog'
+import { getEquipmentDefinition } from '../game/character/equipmentConfig'
+import {
+  getEquipColor,
+  getItemDisplayName,
+  getRolledItemOrNull,
+  isConsumable,
+  isEquippable,
+} from '../game/character/itemCatalog'
+import { rarityColor } from '../game/items/rolledItem'
+import { RolledItemDetails } from './RolledItemDetails'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
@@ -23,6 +31,7 @@ type InvCell = {
 
 export function InventoryWindow({ characterId, sheet, onClose }: Props) {
   const [dbRows, setDbRows] = useState<Array<{ item_id: string; quantity: number }>>([])
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
 
   useEffect(() => {
     void supabase
@@ -66,7 +75,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
       })
       return
     }
-    const def = EQUIPMENT[cell.itemId]
+    const def = getEquipmentDefinition(cell.itemId)
     if (!def) {
       emitGameEvent('status', `Cannot use ${getItemDisplayName(cell.itemId)}.`)
       return
@@ -90,11 +99,14 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
           {cells.map((cell) => {
             const equippable = isEquippable(cell.itemId)
             const color = getEquipColor(cell.itemId)
+            const rolled = getRolledItemOrNull(cell.itemId)
+            const nameColor = rolled ? rarityColor(rolled.rarity) : undefined
             return (
               <button
                 key={cell.key}
                 type="button"
                 className={`inv-slot ${equippable ? 'equippable' : ''}`}
+                onClick={() => setSelectedItemId(cell.itemId)}
                 style={
                   equippable
                     ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
@@ -103,13 +115,16 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
                 title={`${getItemDisplayName(cell.itemId)}${cell.quantity > 1 ? ` ×${cell.quantity}` : ''}`}
                 onDoubleClick={() => onDoubleClick(cell)}
               >
-                <span className="inv-slot-label">{getItemDisplayName(cell.itemId).slice(0, 4)}</span>
+                <span className="inv-slot-label" style={nameColor ? { color: nameColor } : undefined}>
+                  {getItemDisplayName(cell.itemId).slice(0, 4)}
+                </span>
                 {cell.quantity > 1 && <span className="inv-slot-qty">{cell.quantity}</span>}
               </button>
             )
           })}
           {cells.length === 0 && <p className="muted">No items.</p>}
         </div>
+        {selectedItemId && <RolledItemDetails itemId={selectedItemId} />}
     </AnimatedModal>
   )
 }

@@ -6,6 +6,8 @@ import mobsJson from '../../../../content/ro/mobs.json'
 import mapsJson from '../../../../content/ro/maps.json'
 import lootJson from '../../../../content/ro/loot.json'
 import expTablesJson from '../../../../content/ro/expTables.json'
+import dungeonMobsJson from '../../../../content/ro/dungeonMobs.json'
+import dungeonsJson from '../../../../content/ro/dungeons.json'
 import type {
   RoContentPack,
   RoJob,
@@ -17,6 +19,7 @@ import type {
   MapPortalDef,
   RoExpTables,
   RoLootConfig,
+  RoDungeonsConfig,
 } from './types'
 import { validateRoContent } from './validateRoContent'
 
@@ -62,12 +65,13 @@ export function loadRoContent(): RoContentPack {
     jobs: asJobs(jobsJson as { jobs: RoJob[] }),
     skills: asSkills(skillsJson as { skills: RoSkill[] }),
     items: asItems(itemsJson as { items: RoItem[] }),
-    mobs: asMobs(mobsJson as { mobs: RoMob[] }),
+    mobs: [...asMobs(mobsJson as { mobs: RoMob[] }), ...asMobs(dungeonMobsJson as { mobs: RoMob[] })],
     maps,
     mobSpawns,
     portals,
     expTables: expTablesJson as RoExpTables,
     loot: lootJson as RoLootConfig,
+    dungeons: dungeonsJson as RoDungeonsConfig,
   }
 
   validateRoContent(pack)

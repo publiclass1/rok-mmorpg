@@ -48,6 +48,13 @@
       "maxJobLevel": 50,
       "parentJobId": "novice",
       "sourceUrl": "https://irowiki.org/wiki/Thief"
+    },
+    {
+      "id": "monster",
+      "name": "Monster",
+      "maxJobLevel": 1,
+      "parentJobId": null,
+      "sourceUrl": null
     }
   ]
 }

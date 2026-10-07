@@ -1,6 +1,7 @@
 import { addBaseExp, addJobExp, createInitialProgress, type PlayerProgressState } from '../combat/exp'
 import { statPointsForReachingBaseLevel } from '../../content/ro/expTables'
 import { equipmentBonusesFromState } from './equipmentConfig'
+import { addRolledItemToSession, type RolledItem } from '../items/rolledItem'
 import { getConsumableEffect } from './itemCatalog'
 import {
   addItemsToSessionInventory,
@@ -80,6 +81,7 @@ export type CharacterSessionState = {
   equipment: Record<EquipSlot, string | null>
   skillBar: (string | null)[]
   sessionInventory: SessionInventorySlot[]
+  rolledItems: Record<string, RolledItem>
   hp: number
   mp: number
 }
@@ -103,6 +105,7 @@ export function createInitialCharacterState(): CharacterSessionState {
     skills: { basic_attack: 1, sit: 1 },
     equipment: createDefaultEquipment(),
     skillBar: ['basic_attack', 'sit', null, null, null, null, null, null, null],
+    rolledItems: {},
     sessionInventory: parseSessionInventory([
       { itemId: 'red_potion', quantity: 2 },
       'knife',
@@ -273,6 +276,17 @@ export function useConsumableFromSession(
   return {
     ok: true,
     state: { ...state, sessionInventory: nextInv, hp, mp },
+  }
+}
+
+export function grantRolledGear(
+  state: CharacterSessionState,
+  rolled: RolledItem,
+): CharacterSessionState {
+  return {
+    ...state,
+    rolledItems: addRolledItemToSession(state.rolledItems, rolled),
+    sessionInventory: addItemsToSessionInventory(state.sessionInventory, [rolled.id]),
   }
 }
 

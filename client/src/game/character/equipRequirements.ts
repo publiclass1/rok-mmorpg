@@ -1,4 +1,4 @@
-import { getItemDefinition } from './itemCatalog'
+import { getItemEquipRequirementsFromCatalog } from './itemCatalog'
 import { JOB_NAMES } from './skillsConfig'
 
 export type ItemEquipRequirements = {
@@ -7,13 +7,7 @@ export type ItemEquipRequirements = {
 }
 
 export function getItemEquipRequirements(itemId: string): ItemEquipRequirements | null {
-  const item = getItemDefinition(itemId)
-  if (!item?.equipSlot) return null
-  const jobIds = item.requiredJobIds
-  return {
-    requiredBaseLevel: item.requiredBaseLevel ?? 1,
-    requiredJobIds: jobIds && jobIds.length > 0 ? jobIds : null,
-  }
+  return getItemEquipRequirementsFromCatalog(itemId)
 }
 
 export function checkCanEquipItem(

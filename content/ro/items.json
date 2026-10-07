@@ -717,6 +717,105 @@
       "layerColor": null,
       "bonuses": null,
       "sourceUrl": "https://irowiki.org/wiki/Grape"
+    },
+    {
+      "id": "decayed_nail",
+      "name": "Decayed Nail",
+      "type": "etc",
+      "weight": 1,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": "https://irowiki.org/wiki/Decayed_Nail"
+    },
+    {
+      "id": "skel_bone",
+      "name": "Skel-Bone",
+      "type": "etc",
+      "weight": 1,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": "https://irowiki.org/wiki/Skel-Bone"
+    },
+    {
+      "id": "orcish_voucher",
+      "name": "Orcish Voucher",
+      "type": "etc",
+      "weight": 1,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": "https://irowiki.org/wiki/Orcish_Voucher"
+    },
+    {
+      "id": "rotten_bandage",
+      "name": "Rotten Bandage",
+      "type": "etc",
+      "weight": 1,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": "https://irowiki.org/wiki/Rotten_Bandage"
+    },
+    {
+      "id": "glitter_shell",
+      "name": "Glitter Shell",
+      "type": "etc",
+      "weight": 1,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": "https://irowiki.org/wiki/Glitter_Shell"
+    },
+    {
+      "id": "heroic_emblem",
+      "name": "Heroic Emblem",
+      "type": "etc",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "sourceUrl": null
+    },
+    {
+      "id": "circlet",
+      "name": "Circlet",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headMiddle",
+      "layerColor": "0xfcd34d",
+      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 1, "dex": 0, "luk": 0 },
+      "sourceUrl": null
+    },
+    {
+      "id": "mask",
+      "name": "Mask",
+      "type": "armor",
+      "weight": 5,
+      "stackMax": 1,
+      "equipSlot": "headLower",
+      "layerColor": "0x374151",
+      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 1 },
+      "sourceUrl": null
+    },
+    {
+      "id": "ring",
+      "name": "Ring",
+      "type": "armor",
+      "weight": 5,
+      "stackMax": 1,
+      "equipSlot": "accRight",
+      "layerColor": "0xeab308",
+      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 1 },
+      "sourceUrl": null
     }
   ]
 }

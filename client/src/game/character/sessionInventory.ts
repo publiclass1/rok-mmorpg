@@ -1,4 +1,4 @@
-import { getItemDefinition } from './itemCatalog'
+import { getItemDefinition, isRolledGearItemId } from './itemCatalog'
 
 export type SessionInventorySlot = {
   itemId: string
@@ -6,6 +6,7 @@ export type SessionInventorySlot = {
 }
 
 export function getStackMax(itemId: string): number {
+  if (isRolledGearItemId(itemId)) return 1
   const def = getItemDefinition(itemId)
   return def?.stackMax ?? 1
 }

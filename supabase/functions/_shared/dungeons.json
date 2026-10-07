@@ -1,0 +1,64 @@
+{
+  "floors": [
+    {
+      "id": "dun_f1",
+      "mapId": "dun_f1",
+      "minLevel": 1,
+      "maxLevel": 20,
+      "entry": {
+        "x": 512,
+        "y": 1296
+      },
+      "mvpDefId": "vocal",
+      "totalSpawns": 36
+    },
+    {
+      "id": "dun_f2",
+      "mapId": "dun_f2",
+      "minLevel": 21,
+      "maxLevel": 50,
+      "entry": {
+        "x": 512,
+        "y": 1296
+      },
+      "mvpDefId": "orc_hero",
+      "totalSpawns": 36
+    },
+    {
+      "id": "dun_f3",
+      "mapId": "dun_f3",
+      "minLevel": 51,
+      "maxLevel": 70,
+      "entry": {
+        "x": 512,
+        "y": 1296
+      },
+      "mvpDefId": "doppelganger",
+      "totalSpawns": 36
+    },
+    {
+      "id": "dun_f4",
+      "mapId": "dun_f4",
+      "minLevel": 71,
+      "maxLevel": 80,
+      "entry": {
+        "x": 512,
+        "y": 1296
+      },
+      "mvpDefId": "dark_lord",
+      "totalSpawns": 36
+    },
+    {
+      "id": "dun_f5",
+      "mapId": "dun_f5",
+      "minLevel": 81,
+      "maxLevel": 99,
+      "entry": {
+        "x": 512,
+        "y": 1296
+      },
+      "mvpDefId": "lord_of_death",
+      "totalSpawns": 36
+    }
+  ]
+}

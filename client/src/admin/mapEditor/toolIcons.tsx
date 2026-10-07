@@ -66,5 +66,5 @@ export const TOOL_LABELS: Record<EditorTool, string> = {
   obstacle: 'Draw obstacle',
   portal: 'Draw portal',
   npc: 'Place NPC',
-  select: 'Select / move',
+  select: 'Select / move (Space + drag to pan)',
 }

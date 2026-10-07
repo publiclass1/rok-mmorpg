@@ -1,6 +1,11 @@
 import Phaser from 'phaser'
 import { syncDerivedVitals, toCharacterSheetPayload } from '../character/characterSheet'
-import { addExperience, createInitialCharacterState, normalizeEquipment } from '../character/characterState'
+import {
+  addExperience,
+  createInitialCharacterState,
+  grantRolledGear,
+  normalizeEquipment,
+} from '../character/characterState'
 import {
   getCharacterSession,
   setCharacterSession,
@@ -93,6 +98,9 @@ import {
   type RemotePlayerEntity,
 } from '../realtime/remotePlayers'
 import { clampToMap } from '../world/clampToMap'
+import { rollDungeonGear, rolledItemDisplayName } from '../items/rolledItem'
+import type { BootDungeonState } from '../world/bootDungeon'
+import { dungeonFloorByMapId, isDungeonMapId } from '../world/dungeonConfig'
 import { findPortalAtPoint } from '../world/mapPortals'
 import { preloadMapDecor, spawnMapDecor } from '../world/spawnMapDecor'
 import { setDepthByFeet } from '../world/depthSort'
@@ -193,6 +201,9 @@ export class WorldScene extends Phaser.Scene {
   private mapTileHeight = 32
   private mapTilesWide = 0
   private mapTilesHigh = 0
+  private dungeonBoot: BootDungeonState | null = null
+  private killedSpawnSet = new Set<number>()
+  private mvpMob: MobInstance | null = null
 
   constructor() {
     super('WorldScene')
@@ -269,6 +280,10 @@ export class WorldScene extends Phaser.Scene {
       setCharacterSession({ ...initial, hp: initialSheet.hpMax, mp: initialSheet.mpMax })
     } else {
       setCharacterSession(initial)
+    }
+    this.dungeonBoot = (this.registry.get('bootDungeon') as BootDungeonState | null) ?? null
+    if (this.dungeonBoot) {
+      this.killedSpawnSet = new Set(this.dungeonBoot.killedSpawns)
     }
     updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
 
@@ -364,6 +379,10 @@ export class WorldScene extends Phaser.Scene {
     }
 
     this.spawnMapMobs()
+    this.applyDungeonKillState()
+    if (this.dungeonBoot?.mvpAlive) {
+      this.spawnDungeonMvp()
+    }
 
     this.eventUnsubs.push(
       onGameEvent('useSkillSlot', ({ slot }) => this.useSkillSlot(slot)),
@@ -409,9 +428,22 @@ export class WorldScene extends Phaser.Scene {
           y: pos.y,
         })
       }),
+      onGameEvent('dungeonSync', (payload) => {
+        this.dungeonBoot = payload
+        this.killedSpawnSet = new Set(payload.killedSpawns)
+        this.applyDungeonKillState()
+        if (payload.mvpAlive) {
+          this.spawnDungeonMvp()
+        }
+      }),
     )
 
     this.partySync.myCharacterId = this.character.id
+
+    const presenceChannelKey =
+      this.dungeonBoot?.instanceId
+        ? `map:${this.character.map_id}:${this.dungeonBoot.instanceId}`
+        : undefined
 
     this.presence = new MapPresenceChannel(
       this.character.map_id,
@@ -447,6 +479,7 @@ export class WorldScene extends Phaser.Scene {
           })),
         )
       },
+      presenceChannelKey,
     )
 
     const presenceChannel = this.presence
@@ -1410,6 +1443,7 @@ export class WorldScene extends Phaser.Scene {
     const spawns = MOB_SPAWNS_BY_MAP[this.character.map_id] ?? []
     this.mobBySpawnIndex = []
     spawns.forEach((spawn, spawnIndex) => {
+      if (this.killedSpawnSet.has(spawnIndex)) return
       const def = MOB_DEFS[spawn.defId]
       if (!def) return
       const mob = this.createMobInstance(spawnIndex, spawn.x, spawn.y, def)
@@ -1418,15 +1452,57 @@ export class WorldScene extends Phaser.Scene {
     })
   }
 
+  private applyDungeonKillState() {
+    if (!isDungeonMapId(this.character.map_id)) return
+    for (const mob of this.mobs) {
+      if (this.killedSpawnSet.has(mob.spawnIndex) && mob.alive) {
+        this.killMobVisualOnly(mob, false)
+      }
+    }
+  }
+
+  private spawnDungeonMvp() {
+    if (this.mvpMob?.alive) return
+    const floor = dungeonFloorByMapId(this.character.map_id)
+    if (!floor || !this.dungeonBoot) return
+    const def = MOB_DEFS[floor.mvpDefId]
+    if (!def) return
+    const spawnIndex = (MOB_SPAWNS_BY_MAP[this.character.map_id] ?? []).length
+    const mob = this.createMobInstance(spawnIndex, floor.mvpSpawn.x, floor.mvpSpawn.y, def, {
+      labelPrefix: 'MVP',
+      scale: 1.8,
+      barWidth: 48,
+      labelColor: '#fbbf24',
+    })
+    this.mvpMob = mob
+    this.mobs.push(mob)
+    this.mobBySpawnIndex[spawnIndex] = mob
+    emitGameEvent('status', 'The MVP has appeared!')
+  }
+
+  private rollAndGrantDungeonGear(isMvp: boolean) {
+    const floor = dungeonFloorByMapId(this.character.map_id)
+    if (!floor) return
+    const rolled = rollDungeonGear(floor, isMvp)
+    if (!rolled) return
+    this.session = grantRolledGear(this.session, rolled)
+    const label = rolledItemDisplayName(rolled)
+    logActivity('combat', `Obtained ${label}.`)
+    emitGameEvent('sessionSync', structuredClone(this.session))
+    this.scheduleProgressSave()
+  }
+
   private createMobInstance(
     spawnIndex: number,
     x: number,
     y: number,
     def: (typeof MOB_DEFS)[string],
+    visual?: { labelPrefix?: string; scale?: number; barWidth?: number; labelColor?: string },
   ): MobInstance {
     const sprite = this.physics.add.sprite(x, y + MOB_FEET_ANCHOR_ADJUST, 'mob', 0)
     sprite.setOrigin(0.5, 1)
     sprite.setTint(def.color)
+    if (visual?.scale) sprite.setScale(visual.scale)
     sprite.setCollideWorldBounds(true)
     if (this.collisionLayer) {
       this.physics.add.collider(sprite, this.collisionLayer)
@@ -1434,11 +1510,15 @@ export class WorldScene extends Phaser.Scene {
     colliderWithObstacles(this, this.obstacles, sprite)
 
     const feetY = sprite.y
+    const prefix = visual?.labelPrefix ? `${visual.labelPrefix} ` : ''
     const label = this.add
-      .text(x, feetY - 38, `Lv${def.level} ${def.name}`, { fontSize: '10px', color: '#fbcfe8' })
+      .text(x, feetY - 38, `${prefix}Lv${def.level} ${def.name}`, {
+        fontSize: '10px',
+        color: visual?.labelColor ?? '#fbcfe8',
+      })
       .setOrigin(0.5)
 
-    const barW = 32
+    const barW = visual?.barWidth ?? 32
     const hpBarBg = this.add.rectangle(x, feetY - 26, barW, 4, 0x1f2937).setOrigin(0.5)
     const hpBarFill = this.add.rectangle(x - barW / 2, feetY - 26, barW, 4, 0x22c55e).setOrigin(0, 0.5)
 
@@ -1690,6 +1770,7 @@ export class WorldScene extends Phaser.Scene {
 
   private killMob(mob: MobInstance) {
     const def = MOB_DEFS[mob.defId]
+    const isMvpKill = this.mvpMob === mob
     if (def) {
       const loot = resolveMobKillLoot(def, LOOT_CONFIG)
       if (loot.zeny > 0) {
@@ -1711,8 +1792,22 @@ export class WorldScene extends Phaser.Scene {
       logActivity('combat', `Defeated Lv ${mob.level} ${mob.name}.`)
     }
 
+    if (this.dungeonBoot) {
+      if (isMvpKill) {
+        emitGameEvent('dungeonMvpKilled', { instanceId: this.dungeonBoot.instanceId })
+        this.rollAndGrantDungeonGear(true)
+        emitGameEvent('status', 'Dungeon cleared!')
+      } else {
+        emitGameEvent('dungeonMobKilled', {
+          instanceId: this.dungeonBoot.instanceId,
+          spawnIndex: mob.spawnIndex,
+        })
+        this.rollAndGrantDungeonGear(false)
+      }
+    }
+
     this.broadcastMobDie(mob.spawnIndex)
-    this.killMobVisualOnly(mob, true)
+    this.killMobVisualOnly(mob, !isDungeonMapId(this.character.map_id))
   }
 
   /** Hide mob and respawn locally; no loot/EXP (remote observers). */
@@ -1731,6 +1826,10 @@ export class WorldScene extends Phaser.Scene {
     playMobDeath(this, mob.sprite, tint, () => {
       mob.sprite.setVisible(false)
     })
+
+    if (isDungeonMapId(this.character.map_id)) {
+      return
+    }
 
     this.time.delayedCall(MOB_RESPAWN_MS, () => {
       if (!def) return

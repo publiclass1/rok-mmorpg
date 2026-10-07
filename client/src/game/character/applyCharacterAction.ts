@@ -13,7 +13,8 @@ import {
 } from './characterState'
 import { checkCanEquipItem } from './equipRequirements'
 import { getItemDisplayName } from './itemCatalog'
-import { EQUIPMENT } from './equipmentConfig'
+import { getEquipmentDefinition } from './equipmentConfig'
+import { isRolledGearItemId } from './itemCatalog'
 import { applyJobChange } from './jobChange'
 import { canLearnSkill, canPlaceSkillOnBar, JOB_NAMES, SKILLS } from './skillsConfig'
 import {
@@ -99,7 +100,7 @@ export function applyCharacterAction(
 
   if (action.type === 'equip') {
     if (action.itemId) {
-      const def = EQUIPMENT[action.itemId]
+      const def = getEquipmentDefinition(action.itemId)
       if (!def || def.slot !== action.slot) {
         return { state, changed: false, message: 'Cannot equip item in that slot.' }
       }
@@ -121,7 +122,7 @@ export function applyCharacterAction(
       return { state, changed: false }
     }
     const next = syncDerivedVitals(transfer.state)
-    const label = action.itemId ? EQUIPMENT[action.itemId]?.name ?? action.itemId : 'empty'
+    const label = action.itemId ? getItemDisplayName(action.itemId) : 'empty'
     logActivity(
       'character',
       action.itemId ? `Equipped ${label} (${action.slot}).` : `Unequipped ${action.slot}.`,
@@ -154,6 +155,9 @@ export function applyCharacterAction(
   }
 
   if (action.type === 'shopRemoveItem') {
+    if (isRolledGearItemId(action.itemId)) {
+      return { state, changed: false, message: 'Dungeon gear cannot be sold to NPCs yet.' }
+    }
     const qty = Math.floor(action.quantity)
     if (qty <= 0) return { state, changed: false, message: 'Invalid quantity.' }
     const nextInv = removeItemFromSessionByItemId(state.sessionInventory, action.itemId, qty)

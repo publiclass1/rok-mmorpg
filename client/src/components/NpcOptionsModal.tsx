@@ -1,4 +1,5 @@
 import type { NpcRow } from '../types/database'
+import { dungeonFloors } from '../game/world/dungeonConfig'
 import { isCustomWarpDestination, type WarpDestination } from '../game/world/warpDestinationCategory'
 import { AnimatedModal } from './motion/AnimatedModal'
 
@@ -9,9 +10,13 @@ export type NpcMenuChoice =
   | { kind: 'shop'; label: string }
   | { kind: 'healer'; label: string; zenyCost: number }
   | { kind: 'teleport'; label: string; destinationMapId: string }
+  | { kind: 'dungeon'; label: string; floorId: string; disabled?: boolean }
   | { kind: 'cancel'; label: string }
 
-export function npcMenuChoices(npc: NpcRow): NpcMenuChoice[] {
+export function npcMenuChoices(
+  npc: NpcRow,
+  options?: { baseLevel?: number; partyEnabled?: boolean },
+): NpcMenuChoice[] {
   const choices: NpcMenuChoice[] = []
 
   switch (npc.npc_type) {
@@ -50,6 +55,23 @@ export function npcMenuChoices(npc: NpcRow): NpcMenuChoice[] {
       }
       break
     }
+    case 'dungeon': {
+      const baseLevel = options?.baseLevel ?? 1
+      const partyOk = options?.partyEnabled ?? false
+      for (const floor of dungeonFloors()) {
+        const levelOk = baseLevel >= floor.minLevel
+        let label = `${floor.name} (Lv ${floor.minLevel}–${floor.maxLevel})`
+        if (!partyOk) label += ' — party required'
+        else if (!levelOk) label += ` — need Lv ${floor.minLevel}`
+        choices.push({
+          kind: 'dungeon',
+          floorId: floor.id,
+          label,
+          disabled: !partyOk || !levelOk,
+        })
+      }
+      break
+    }
     default:
       break
   }
@@ -76,6 +98,8 @@ function teleportSections(npc: NpcRow): { custom: NpcMenuChoice[]; standard: Npc
 
 type Props = {
   npc: NpcRow
+  baseLevel: number
+  partyEnabled: boolean
   onChoose: (choice: NpcMenuChoice) => void
   onClose: () => void
 }
@@ -89,7 +113,9 @@ function ChoiceButton({
   onChoose: (c: NpcMenuChoice) => void
   onClose: () => void
 }) {
-  const disabled = choice.kind === 'cancel' && choice.label.startsWith('No destinations')
+  const disabled =
+    (choice.kind === 'cancel' && choice.label.startsWith('No destinations')) ||
+    (choice.kind === 'dungeon' && choice.disabled)
   return (
     <li>
       <button
@@ -110,8 +136,8 @@ function ChoiceButton({
   )
 }
 
-export function NpcOptionsModal({ npc, onChoose, onClose }: Props) {
-  const choices = npcMenuChoices(npc)
+export function NpcOptionsModal({ npc, baseLevel, partyEnabled, onChoose, onClose }: Props) {
+  const choices = npcMenuChoices(npc, { baseLevel, partyEnabled })
   const isTeleport = npc.npc_type === 'teleport'
   const sections = isTeleport ? teleportSections(npc) : null
 

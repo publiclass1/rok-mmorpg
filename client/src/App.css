@@ -2202,10 +2202,83 @@ body.game-active .game-canvas canvas {
 }
 
 .map-admin-canvas-wrap {
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   max-width: none;
   width: 100%;
   padding: 0.5rem;
+  min-height: 0;
+}
+
+.map-admin-viewport {
+  flex: 1;
+  min-height: 60vh;
+  overflow: hidden;
+  position: relative;
+  background: #0b1220;
+  border-radius: 8px;
+  border: 1px solid #374151;
+}
+
+.map-admin-viewport--pan {
+  cursor: grab;
+}
+
+.map-admin-viewport--pan:active {
+  cursor: grabbing;
+}
+
+.map-admin-viewport-inner {
+  display: inline-block;
+  min-width: min-content;
+}
+
+.map-admin-pan-hint {
+  margin: 0.35rem 0 0;
+}
+
+.map-admin-reset-view {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.map-admin-json-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.map-admin-json-title {
+  font-weight: 600;
+}
+
+.map-admin-json--collapsed {
+  width: 48px !important;
+  min-width: 48px;
+  padding: 0.5rem 0.35rem;
+}
+
+.map-admin-panel-toggle {
+  padding: 0.2rem 0.45rem;
+  margin-left: auto;
+}
+
+.map-admin-collapse {
+  margin-bottom: 0.75rem;
+}
+
+.map-admin-collapse summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  user-select: none;
+}
+
+.map-admin-collapse .map-admin-json-editor {
+  max-height: 240px;
 }
 
 .map-admin-canvas {

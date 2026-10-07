@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import type { CharacterSessionState } from './character/characterState'
 import type { CharacterRow, NpcRow } from '../types/database'
 import { WorldScene } from './scenes/WorldScene'
+import type { BootDungeonState } from './world/bootDungeon'
 
 /** Initial render size; Scale.RESIZE grows/shrinks with the fullscreen host. */
 export const GAME_VIEW_WIDTH = 1280
@@ -12,6 +13,7 @@ export function createPhaserGame(
   character: CharacterRow,
   npcs: NpcRow[],
   bootSession: CharacterSessionState,
+  bootDungeon: BootDungeonState | null = null,
 ): Phaser.Game {
   return new Phaser.Game({
     type: Phaser.AUTO,
@@ -36,6 +38,7 @@ export function createPhaserGame(
         game.registry.set('bootCharacter', character)
         game.registry.set('bootNpcs', npcs)
         game.registry.set('bootSession', bootSession)
+        game.registry.set('bootDungeon', bootDungeon)
       },
     },
   })

@@ -54,6 +54,7 @@ const NPC_TYPES: NpcObjectNpcType[] = [
   'job_master',
   'shop',
   'healer',
+  'dungeon',
 ]
 
 function parseNpcType(raw: string): NpcObjectNpcType {

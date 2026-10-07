@@ -1,7 +1,10 @@
 import type { CharacterSessionState } from '../character/characterState'
 import { effectiveStats } from '../character/effectiveStats'
 import { getItemCombatStats } from '../character/itemCatalog'
+import { getItemWeaponClass } from '../character/itemCatalog'
+import { sumEquippedRolledDamagePercent } from '../items/rolledItemCombat'
 import type { MobDefinition } from './mobConfig'
+import { SKILLS } from '../character/skillsConfig'
 
 /** Pre-Renewal physical hit chance (see iRO Wiki / Damage). */
 export function calcHit(attackerLevel: number, dex: number, luk: number): number {
@@ -84,6 +87,12 @@ export function calcPlayerVsMobDamage(
   let damage = damageAfterDef(atk, mob.def, 0)
   damage = Math.floor(damage * elementMultiplier(weaponElement, mob.element))
   damage = Math.floor(damage * sizeMultiplier(weaponSize, mob.size))
+  const weaponClass = state.equipment.weapon ? getItemWeaponClass(state.equipment.weapon) : null
+  const dmgKind = weaponClass === 'bow' ? 'range' : 'melee'
+  const bonusPct = sumEquippedRolledDamagePercent(state.equipment, dmgKind)
+  if (bonusPct > 0) {
+    damage = Math.floor(damage * (1 + bonusPct / 100))
+  }
   return { damage: Math.max(1, damage), hit: true }
 }
 
@@ -116,8 +125,14 @@ export function calcMobSkillVsPlayerDamage(
   const base = calcMobVsPlayerDamage(mob, state, rng)
   if (base <= 0) return 0
 
-  if (skillId === 'bash') {
+  if (skillId === 'bash' || skillId === 'mob_bash') {
     return Math.max(1, Math.floor(base * (1 + skillLevel * 0.15)) + skillLevel * 3)
+  }
+
+  const skillDef = SKILLS[skillId]
+  const mult = skillDef?.mobDamageMultiplier
+  if (mult != null && mult > 0) {
+    return Math.max(1, Math.floor(base * mult))
   }
 
   return base

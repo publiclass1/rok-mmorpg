@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { loadRoContent } from '../content/ro/loadContent'
 import type { MapPortalDef } from '../content/ro/types'
 import {
@@ -19,6 +19,7 @@ import { getObjectGroup } from '../lib/tmj/parse'
 import { fetchMapBundle, fetchMapList, saveMapBundle, type MapMeta } from './mapAdminApi'
 import { MapEditorCanvas, type EditorTool } from './mapEditor/MapEditorCanvas'
 import { MapEditorToolbar } from './mapEditor/MapEditorToolbar'
+import { MapEditorViewport } from './mapEditor/MapEditorViewport'
 import type { WarpWiringPayload } from './mapAdminApi'
 import { readDecorAssetId } from '../lib/mapDecor/decorProps'
 import { GID_GRASS_A, GID_GRASS_B, GID_PATH, GID_WALL } from '../lib/tmj'
@@ -58,7 +59,9 @@ export function MapAdminPage() {
   const [addReturnWarp, setAddReturnWarp] = useState(true)
   const [returnPronteraX, setReturnPronteraX] = useState(640)
   const [returnPronteraY, setReturnPronteraY] = useState(360)
-  const [writeMigrationFile, setWriteMigrationFile] = useState(true)
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
+  const [sqlSectionOpen, setSqlSectionOpen] = useState(true)
+  const panResetRef = useRef<(() => void) | null>(null)
   const [newMapWidth, setNewMapWidth] = useState(30)
   const [newMapHeight, setNewMapHeight] = useState(20)
   const [resizeWidth, setResizeWidth] = useState(30)
@@ -185,17 +188,17 @@ export function MapAdminPage() {
         addReturnWarp,
         returnPronteraX: returnPronteraX,
         returnPronteraY: returnPronteraY,
-        writeMigrationFile,
       }
       const res = await saveMapBundle({ mapMeta, tmj: mapToSave, portals, warpWiring })
       setMeta(res.mapMeta)
       setFullSql(res.sqlBundle.fullSql)
       setMigrationFileName(res.sqlBundle.migrationFileName)
       setMigrationWritten(res.sqlBundle.migrationWritten)
-      const migrationNote = res.sqlBundle.migrationWritten
-        ? ` Migration written: supabase/migrations/${res.sqlBundle.migrationFileName}`
-        : ''
-      setStatus(`Saved ${mapId}.${migrationNote} Run SQL in Supabase (or use migration).`)
+      setSqlSectionOpen(true)
+      const fileList = res.filesWritten.join(', ')
+      setStatus(
+        `Saved ${mapId}. Files: ${fileList}. Apply SQL via Supabase SQL Editor or supabase db push, then hard-refresh the game.`,
+      )
       setEditingMapId(mapId)
       await refreshList()
     } catch (err) {
@@ -321,11 +324,11 @@ export function MapAdminPage() {
       <header className="map-admin-header panel">
         <div>
           <h1>Map admin</h1>
-          <p className="muted small">Dev-only editor — saves to client/public/maps and content/ro/maps.json</p>
+          <p className="muted small">Writes map files + Supabase migration SQL locally (run SQL against your project).</p>
         </div>
         <div className="map-admin-header-actions">
           <button type="button" disabled={loading} onClick={() => void handleSave()}>
-            Save to disk
+            Save map &amp; Supabase SQL
           </button>
           <a className="map-admin-link" href="/">Back to game</a>
         </div>
@@ -478,10 +481,6 @@ export function MapAdminPage() {
                 </label>
               </div>
             )}
-            <label className="map-admin-check">
-              <input type="checkbox" checked={writeMigrationFile} onChange={(e) => setWriteMigrationFile(e.target.checked)} />
-              Write SQL migration file on save
-            </label>
           </fieldset>
 
           <fieldset className="map-admin-fieldset">
@@ -552,51 +551,77 @@ export function MapAdminPage() {
         </aside>
 
         <section className="map-admin-canvas-wrap panel">
-          <MapEditorToolbar tool={tool} onToolChange={setTool} disabled={loading} />
-          <MapEditorCanvas
-            map={tmj}
-            mapId={meta.id.trim() || 'new_map'}
+          <MapEditorToolbar
             tool={tool}
-            groundGid={groundGid}
-            collisionBlocked={collisionBlocked}
-            showGround={showGround}
-            showCollision={showCollision}
-            showDecor={showDecor}
-            showObstacles={showObstacles}
-            showPortals={showPortals}
-            showNpcs={showNpcs}
-            selectedObjectId={selectedObjectId}
-            onSelectObject={setSelectedObjectId}
-            onMapChange={setTmj}
+            onToolChange={setTool}
+            disabled={loading}
+            onResetView={() => panResetRef.current?.()}
           />
+          <MapEditorViewport panResetRef={panResetRef}>
+            <MapEditorCanvas
+              map={tmj}
+              mapId={meta.id.trim() || 'new_map'}
+              tool={tool}
+              groundGid={groundGid}
+              collisionBlocked={collisionBlocked}
+              showGround={showGround}
+              showCollision={showCollision}
+              showDecor={showDecor}
+              showObstacles={showObstacles}
+              showPortals={showPortals}
+              showNpcs={showNpcs}
+              selectedObjectId={selectedObjectId}
+              onSelectObject={setSelectedObjectId}
+              onMapChange={setTmj}
+            />
+          </MapEditorViewport>
+          <p className="muted small map-admin-pan-hint">Space + drag or middle-mouse drag to pan the map view.</p>
         </section>
 
-        <aside className="map-admin-json panel">
-          <h2>TMJ JSON</h2>
-          <textarea
-            className="map-admin-json-editor"
-            value={jsonText}
-            onChange={(e) => {
-              setJsonText(e.target.value)
-              setJsonDirty(true)
-            }}
-          />
-          <button type="button" onClick={applyJson}>Apply JSON</button>
-
-          {fullSql && (
+        <aside className={`map-admin-json panel${rightPanelCollapsed ? ' map-admin-json--collapsed' : ''}`}>
+          <div className="map-admin-json-header">
+            {!rightPanelCollapsed && <span className="map-admin-json-title">Output</span>}
+            <button
+              type="button"
+              className="secondary map-admin-panel-toggle"
+              onClick={() => setRightPanelCollapsed((c) => !c)}
+              title={rightPanelCollapsed ? 'Expand panel' : 'Collapse panel'}
+            >
+              {rightPanelCollapsed ? '◀' : '▶'}
+            </button>
+          </div>
+          {!rightPanelCollapsed && (
             <>
-              <h2>SQL bundle</h2>
-              {migrationFileName && (
-                <p className="muted small">
-                  {migrationWritten ? 'Written: ' : 'Suggested file: '}
-                  supabase/migrations/{migrationFileName}
-                </p>
+              <details className="map-admin-collapse" open={jsonDirty}>
+                <summary>TMJ JSON</summary>
+                <textarea
+                  className="map-admin-json-editor"
+                  value={jsonText}
+                  onChange={(e) => {
+                    setJsonText(e.target.value)
+                    setJsonDirty(true)
+                  }}
+                />
+                <button type="button" onClick={applyJson}>Apply JSON</button>
+              </details>
+
+              {fullSql && (
+                <details className="map-admin-collapse" open={sqlSectionOpen} onToggle={(e) => setSqlSectionOpen(e.currentTarget.open)}>
+                  <summary>SQL bundle</summary>
+                  {migrationFileName && (
+                    <p className="muted small">
+                      {migrationWritten ? 'Written: ' : ''}
+                      supabase/migrations/{migrationFileName}
+                      <br />
+                      supabase/seed/custom_maps/{meta.id.trim()}.sql
+                    </p>
+                  )}
+                  <textarea className="map-admin-json-editor map-admin-sql" readOnly value={fullSql} />
+                  <button type="button" onClick={() => void navigator.clipboard.writeText(fullSql)}>
+                    Copy all SQL
+                  </button>
+                </details>
               )}
-              <textarea className="map-admin-json-editor map-admin-sql" readOnly value={fullSql} />
-              <button type="button" onClick={() => void navigator.clipboard.writeText(fullSql)}>
-                Copy all SQL
-              </button>
-              <p className="muted small">Run in Supabase SQL Editor, then hard-refresh the game.</p>
             </>
           )}
         </aside>

@@ -13,6 +13,76 @@
         "label": "Prontera",
         "mode": "walk"
       }
+    ],
+    "dun_f1": [
+      {
+        "id": "dun_f1_exit",
+        "x": 480,
+        "y": 1200,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "dun_f2": [
+      {
+        "id": "dun_f2_exit",
+        "x": 480,
+        "y": 1200,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "dun_f3": [
+      {
+        "id": "dun_f3_exit",
+        "x": 480,
+        "y": 1200,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "dun_f4": [
+      {
+        "id": "dun_f4_exit",
+        "x": 480,
+        "y": 1200,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "dun_f5": [
+      {
+        "id": "dun_f5_exit",
+        "x": 480,
+        "y": 1200,
+        "width": 96,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 640,
+        "targetY": 400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
     ]
   }
 }

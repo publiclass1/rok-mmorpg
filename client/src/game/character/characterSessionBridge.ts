@@ -1,3 +1,4 @@
+import { setRolledItemRegistry } from '../items/rolledItemRegistry'
 import { syncDerivedVitals } from './characterSheet'
 import { createInitialCharacterState, type CharacterSessionState } from './characterState'
 
@@ -23,6 +24,7 @@ export function getCharacterSession(): CharacterSessionState {
 
 export function setCharacterSession(state: CharacterSessionState): void {
   const synced = syncDerivedVitals(state)
+  setRolledItemRegistry(synced.rolledItems)
   if (bridge) {
     bridge.set(synced)
   } else {
