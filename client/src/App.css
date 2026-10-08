@@ -1744,6 +1744,33 @@ button:disabled {
   overflow: hidden;
 }
 
+.skill-bar-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.7);
+  padding-right: 0.15rem;
+}
+
+.skill-bar-panel-header .skill-bar-drag-handle {
+  flex: 0 0 auto;
+  border-bottom: none;
+}
+
+.skill-bar-panel-title {
+  flex: 1;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+.skill-bar-panel-header .modal-close-btn {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
 .skill-bar-drag-handle {
   cursor: grab;
   text-align: center;
@@ -1754,6 +1781,10 @@ button:disabled {
   padding: 0.2rem 0.35rem;
   border-bottom: 1px solid rgba(55, 65, 81, 0.7);
   user-select: none;
+}
+
+.skill-bar-panel--row .skill-bar-drag-handle {
+  border-bottom: none;
 }
 
 .skill-bar-drag-handle:active {

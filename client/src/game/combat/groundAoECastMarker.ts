@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
+import type { RoSkillMagicElement } from '../../content/ro/types'
 import type { SkillDefinition } from '../character/skillsConfig'
-import { isPlayerGroundMagicSkill } from '../character/skillsConfig'
+import { SKILLS, isPlayerGroundMagicSkill } from '../character/skillsConfig'
 import { setDepthByFeet } from '../world/depthSort'
 
 export const GROUND_AOE_DEPTH_EPSILON = -0.14
@@ -19,38 +20,21 @@ export function groundAoERadiusPx(def: SkillDefinition, _skillId?: string): numb
   return DEFAULT_STUB_AOE_RADIUS
 }
 
+const ELEMENT_GROUND_STYLES: Record<RoSkillMagicElement, GroundAoEElementStyle> = {
+  fire: { fill: 0xef4444, stroke: 0xf97316, accent: 0xfbbf24 },
+  water: { fill: 0x0ea5e9, stroke: 0x38bdf8, accent: 0x7dd3fc },
+  wind: { fill: 0xeab308, stroke: 0xfde047, accent: 0xfef08a },
+  earth: { fill: 0xa8a29e, stroke: 0x78716c, accent: 0xd6d3d1 },
+  ghost: { fill: 0xa78bfa, stroke: 0x8b5cf6, accent: 0xc4b5fd },
+  neutral: { fill: 0x94a3b8, stroke: 0x64748b, accent: 0xcbd5e1 },
+}
+
 export function groundAoEElementStyle(skillId: string): GroundAoEElementStyle {
-  if (
-    skillId.includes('fire') ||
-    skillId === 'meteor_storm' ||
-    skillId === 'lord_of_vermilion'
-  ) {
-    return { fill: 0xef4444, stroke: 0xf97316, accent: 0xfbbf24 }
-  }
-  if (
-    skillId.includes('cold') ||
-    skillId.includes('frost') ||
-    skillId.includes('water') ||
-    skillId === 'storm_gust' ||
-    skillId === 'ice_wall'
-  ) {
-    return { fill: 0x0ea5e9, stroke: 0x38bdf8, accent: 0x7dd3fc }
-  }
-  if (skillId.includes('lightning') || skillId === 'jupitel_thunder') {
-    return { fill: 0xeab308, stroke: 0xfde047, accent: 0xfef08a }
-  }
-  if (
-    skillId.includes('earth') ||
-    skillId === 'stone_curse' ||
-    skillId === 'heavens_drive' ||
-    skillId === 'quagmire'
-  ) {
-    return { fill: 0xa8a29e, stroke: 0x78716c, accent: 0xd6d3d1 }
-  }
-  if (skillId === 'safety_wall' || skillId === 'ice_wall') {
-    return { fill: 0x94a3b8, stroke: 0x64748b, accent: 0xcbd5e1 }
-  }
-  return { fill: 0xa78bfa, stroke: 0x8b5cf6, accent: 0xc4b5fd }
+  const element = SKILLS[skillId]?.magic?.element
+  if (element) return ELEMENT_GROUND_STYLES[element]
+  if (skillId === 'safety_wall' || skillId === 'ice_wall') return ELEMENT_GROUND_STYLES.neutral
+  if (skillId === 'quagmire') return ELEMENT_GROUND_STYLES.earth
+  return ELEMENT_GROUND_STYLES.ghost
 }
 
 export function usesGroundAoECastMarker(skillId: string): boolean {
@@ -80,6 +64,128 @@ export function playGroundAoEImpactBurst(
     ease: 'Sine.easeOut',
     onComplete: () => ellipse.destroy(),
   })
+}
+
+function groundAoEGroundRing(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  radiusPx: number,
+  color: number,
+  duration = 320,
+) {
+  const w = radiusPx * 2
+  const h = radiusPx * 2 * ELLIPSE_HEIGHT_RATIO
+  const ring = scene.add.ellipse(x, y, w * 0.65, h * 0.65, color, 0.2)
+  ring.setStrokeStyle(2, color, 0.85)
+  setDepthByFeet(ring, y, GROUND_AOE_DEPTH_EPSILON + 0.01)
+  scene.tweens.add({
+    targets: ring,
+    scaleX: 1.5,
+    scaleY: 1.5,
+    alpha: 0,
+    duration,
+    ease: 'Sine.easeOut',
+    onComplete: () => ring.destroy(),
+  })
+}
+
+function playGroundAoESkillExtras(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  skillId: string,
+  radiusPx: number,
+) {
+  const style = groundAoEElementStyle(skillId)
+  const depthEps = GROUND_AOE_DEPTH_EPSILON + 0.02
+
+  switch (skillId) {
+    case 'meteor_storm':
+    case 'fire_ball':
+      for (let i = 0; i < 4; i++) {
+        const ox = (i - 1.5) * (radiusPx * 0.18)
+        const dot = scene.add.circle(x + ox, y - radiusPx * 0.35 - i * 4, 3, style.accent, 0.9)
+        setDepthByFeet(dot, y, depthEps)
+        scene.tweens.add({
+          targets: dot,
+          y: y - 6,
+          alpha: 0,
+          duration: 400 + i * 80,
+          onComplete: () => dot.destroy(),
+        })
+      }
+      break
+    case 'lord_of_vermilion':
+      for (let i = 0; i < 3; i++) {
+        const ox = (i - 1) * (radiusPx * 0.35)
+        const bolt = scene.add.graphics()
+        bolt.setDepth(0)
+        setDepthByFeet(bolt, y, depthEps + i * 0.001)
+        bolt.lineStyle(3, style.accent, 0.95)
+        bolt.lineBetween(x + ox, y - radiusPx * 0.9, x + ox, y + 4)
+        scene.tweens.add({
+          targets: bolt,
+          alpha: 0,
+          duration: 220 + i * 40,
+          onComplete: () => bolt.destroy(),
+        })
+      }
+      groundAoEGroundRing(scene, x, y, radiusPx, style.stroke, 280)
+      break
+    case 'storm_gust':
+    case 'frost_nova':
+      groundAoEGroundRing(scene, x, y, radiusPx, style.accent, 360)
+      for (let i = 0; i < 8; i++) {
+        const a = (Math.PI * 2 * i) / 8
+        const dist = radiusPx * (0.35 + (i % 3) * 0.12)
+        const speck = scene.add.circle(x + Math.cos(a) * dist, y + Math.sin(a) * dist * 0.7, 2, 0xe0f2fe, 0.85)
+        setDepthByFeet(speck, y, depthEps)
+        scene.tweens.add({
+          targets: speck,
+          alpha: 0,
+          scale: 1.8,
+          duration: 340 + i * 25,
+          onComplete: () => speck.destroy(),
+        })
+      }
+      break
+    case 'heavens_drive':
+      groundAoEGroundRing(scene, x, y, radiusPx, style.stroke, 400)
+      for (let i = 0; i < 5; i++) {
+        const ox = (i - 2) * (radiusPx * 0.22)
+        const spike = scene.add.graphics()
+        setDepthByFeet(spike, y, depthEps)
+        spike.fillStyle(style.accent, 0.75)
+        spike.fillTriangle(x + ox, y + 6, x + ox - 5, y + 14, x + ox + 5, y + 14)
+        scene.tweens.add({
+          targets: spike,
+          alpha: 0,
+          duration: 280 + i * 30,
+          onComplete: () => spike.destroy(),
+        })
+      }
+      break
+    default:
+      break
+  }
+}
+
+/** Ground-target impact: marker pulse plus skill-specific landing tweens. */
+export function playGroundAoEImpact(
+  scene: Phaser.Scene,
+  marker: GroundAoECastMarker,
+  x: number,
+  y: number,
+  skillId: string,
+  radiusPx: number,
+) {
+  playGroundAoESkillExtras(scene, x, y, skillId, radiusPx)
+  if (marker.isLocked) {
+    marker.releaseImpact()
+  } else {
+    playGroundAoEImpactBurst(scene, x, y, skillId, radiusPx)
+  }
 }
 
 type MarkerMode = 'hidden' | 'preview' | 'locked'
@@ -113,6 +219,10 @@ export class GroundAoECastMarker {
 
   get isActive(): boolean {
     return this.mode !== 'hidden'
+  }
+
+  get isLocked(): boolean {
+    return this.mode === 'locked'
   }
 
   get activeFeetY(): number {

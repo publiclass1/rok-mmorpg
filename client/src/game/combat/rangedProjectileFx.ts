@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { usesGroundAoECastMarker } from './groundAoECastMarker'
 import type { Facing } from '../movement/clickToMove'
 
 export const COMBAT_AIM_Y_OFFSET = 14
@@ -341,6 +342,14 @@ export function playMagicSkillProjectileVolley(
   onHit: (hitIndex: number) => void,
   onVolleyComplete?: () => void,
 ) {
+  if (usesGroundAoECastMarker(skillId)) {
+    scene.time.delayedCall(0, () => {
+      onHit(0)
+      onVolleyComplete?.()
+    })
+    return
+  }
+
   const origin = rangedProjectileOrigin(playerX, playerY, facing)
   const count = Math.max(1, hitCount)
   const stagger = skillId.endsWith('_bolt') ? BOLT_STAGGER_MS : 0

@@ -68,7 +68,9 @@ import { PartyWindow } from './PartyWindow'
 import { VendorSetupModal } from './VendorSetupModal'
 import { VendorShopModal } from './VendorShopModal'
 import { BuffBar } from './BuffBar'
-import { SkillBar } from './SkillBar'
+import { SkillBar, useSkillBarRowsVisible } from './SkillBar'
+import { SKILL_BAR_ROW_LABELS } from '../game/character/skillBarRowVisibility'
+import { SKILL_BAR_ROW_COUNT } from '../game/character/skillBars'
 import { ExperienceHud } from './ExperienceHud'
 import { SkillsWindow } from './SkillsWindow'
 import { EquipmentWindow } from './EquipmentWindow'
@@ -205,6 +207,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [sheet, setSheet] = useState<CharacterSheetPayload>(() =>
     toCharacterSheetPayload(sessionRef.current),
   )
+  const [skillBarRowsVisible, setSkillBarRowsVisible] = useSkillBarRowsVisible()
   const [statsOpen, setStatsOpen] = useState(false)
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [inventoryOpen, setInventoryOpen] = useState(false)
@@ -1576,6 +1579,19 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     { id: 'inventory', label: 'Inventory', title: 'Inventory (Alt+I)', onClick: () => setInventoryOpen(true) },
     { id: 'equipment', label: 'Equipment', title: 'Equipment (Alt+E)', onClick: () => setEquipmentOpen(true) },
     { id: 'skills', label: 'Skills', title: 'Skills (Alt+K)', onClick: () => setSkillsOpen(true) },
+    ...Array.from({ length: SKILL_BAR_ROW_COUNT }, (_, bar) => ({
+      id: `skillbar-${bar}`,
+      label: skillBarRowsVisible[bar]
+        ? `Hide bar ${SKILL_BAR_ROW_LABELS[bar]}`
+        : `Show bar ${SKILL_BAR_ROW_LABELS[bar]}`,
+      onClick: () => {
+        setSkillBarRowsVisible((prev) => {
+          const next = [...prev]
+          next[bar] = !next[bar]
+          return next
+        })
+      },
+    })),
     { id: 'party', label: 'Party', onClick: () => setPartyOpen(true) },
     { id: 'guild', label: 'Guild', onClick: () => setGuildOpen(true) },
     { id: 'vendor', label: 'Vending', onClick: () => setVendorSetupOpen(true) },
@@ -1628,7 +1644,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               {status}
             </div>
           ) : null}
-          <SkillBar sheet={sheet} onOpenSkills={() => setSkillsOpen(true)} />
+          <SkillBar
+            sheet={sheet}
+            onOpenSkills={() => setSkillsOpen(true)}
+            rowsVisible={skillBarRowsVisible}
+            onRowsVisibleChange={setSkillBarRowsVisible}
+          />
           <AutoAttackHudButton
             active={autoAttackConfig.enabled}
             onClick={() => setAutoAttackOpen(true)}

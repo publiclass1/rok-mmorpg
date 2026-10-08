@@ -38,7 +38,7 @@ export function writeSkillBarDrag(dataTransfer: DataTransfer, payload: SkillBarD
   const json = JSON.stringify(payload)
   dataTransfer.setData(SKILL_BAR_DRAG_MIME, json)
   dataTransfer.setData('text/plain', json)
-  dataTransfer.effectAllowed = 'move'
+  dataTransfer.effectAllowed = 'copyMove'
 }
 
 export function readSkillBarDrag(dataTransfer: DataTransfer): SkillBarDragPayload | null {

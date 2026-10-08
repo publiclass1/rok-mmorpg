@@ -263,32 +263,3 @@ export function playSkillImpactFx(
   }
 }
 
-/** Ground-target AoE feedback at map coordinates. */
-export function playSkillGroundFx(
-  scene: Phaser.Scene,
-  skillId: string,
-  x: number,
-  y: number,
-  depth: number,
-) {
-  if (usesGroundAoECastMarker(skillId)) return
-  playSkillImpactFx(scene, skillId, x, y - 14, depth)
-  if (
-    skillId === 'meteor_storm' ||
-    skillId === 'lord_of_vermilion' ||
-    skillId === 'fire_ball'
-  ) {
-    for (let i = 0; i < 4; i++) {
-      const ox = (i - 1.5) * 14
-      const dot = scene.add.circle(x + ox, y - 20 - i * 4, 3, 0xf97316, 0.9)
-      dot.setDepth(depth + 0.02)
-      scene.tweens.add({
-        targets: dot,
-        y: y - 8,
-        alpha: 0,
-        duration: 400 + i * 80,
-        onComplete: () => dot.destroy(),
-      })
-    }
-  }
-}

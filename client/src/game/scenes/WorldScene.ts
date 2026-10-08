@@ -77,7 +77,7 @@ import { PlayerCastBarGfx, positionPlayerCastBar } from '../combat/castBarFx'
 import {
   GroundAoECastMarker,
   groundAoERadiusPx,
-  playGroundAoEImpactBurst,
+  playGroundAoEImpact,
 } from '../combat/groundAoECastMarker'
 import { calcPreRenewalCastTimeMsFromSession, skillCastStrikeDelayMs } from '../combat/castTime'
 import { PlayerSpellChantGfx } from '../combat/spellChantFx'
@@ -332,7 +332,6 @@ export class WorldScene extends Phaser.Scene {
   private playerCastBar!: PlayerCastBarGfx
   private playerSpellChant!: PlayerSpellChantGfx
   private groundAoEMarker!: GroundAoECastMarker
-  private groundAoECastDismissTimer: Phaser.Time.TimerEvent | null = null
   private castChantSeed = 0
   private levelUpQueue: LevelUpStep[] = []
   private levelUpDrainActive = false
@@ -932,7 +931,6 @@ export class WorldScene extends Phaser.Scene {
     this.disableAutoAttackFromManualInput()
     if (this.isPlayerDead || this.session.hp > 0) return
     this.isPlayerDead = true
-    this.clearGroundAoECastDismissTimer()
     this.cancelPlayerCastPresentation()
     this.groundAoEMarker.cancel()
     this.pendingSkill = null
@@ -1681,7 +1679,10 @@ export class WorldScene extends Phaser.Scene {
       return true
     }
     const def = SKILLS[skillId]
-    if (!def) return false
+    if (!def) {
+      if (!fromAuto) emitGameEvent('status', 'Unknown skill.')
+      return false
+    }
     const level = this.session.skills[skillId] ?? 0
     if (level < 1) {
       if (!fromAuto) emitGameEvent('status', `${def.name} not learned`)
@@ -1713,6 +1714,9 @@ export class WorldScene extends Phaser.Scene {
     }
     if (def.target === 'enemy') {
       const skillRange = this.skillRangePx(def)
+      if (!targetMob?.alive && this.chaseMob?.alive && !this.selectedMob?.alive) {
+        this.setSelectedMob(this.chaseMob)
+      }
       const mob =
         targetMob?.alive
           ? targetMob
@@ -1795,25 +1799,10 @@ export class WorldScene extends Phaser.Scene {
       clearMoveTarget(this.moveTarget)
       this.stopPlayerMotion()
     }
-    this.clearGroundAoECastDismissTimer()
     this.cancelPlayerCastPresentation()
     this.groundAoEMarker.cancel()
     emitGameEvent('status', 'Skill cancelled.')
     this.refreshCursor()
-  }
-
-  private clearGroundAoECastDismissTimer() {
-    this.groundAoECastDismissTimer?.remove()
-    this.groundAoECastDismissTimer = null
-  }
-
-  /** Hide rotating ground preview when variable cast time ends (before projectile travel). */
-  private scheduleGroundAoECastPreviewDismiss(strikeDelayMs: number) {
-    this.clearGroundAoECastDismissTimer()
-    this.groundAoECastDismissTimer = this.time.delayedCall(strikeDelayMs, () => {
-      this.groundAoECastDismissTimer = null
-      this.groundAoEMarker.cancel()
-    })
   }
 
   private tickGroundAoEPreview() {
@@ -2149,7 +2138,10 @@ export class WorldScene extends Phaser.Scene {
   ) {
     if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
-    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) {
+      emitGameEvent('status', 'Cannot cast right now.')
+      return
+    }
     if (!this.spendMp(def.mpCost)) return
     if (!primaryMob.alive) return
 
@@ -2242,7 +2234,6 @@ export class WorldScene extends Phaser.Scene {
 
     const depth = this.playerDisplay.container.depth + 0.1
     const aoeRadius = groundAoERadiusPx(def, skillId)
-    this.scheduleGroundAoECastPreviewDismiss(strikeDelay)
     const aim = toCombatAimPoint(wx, wy)
 
     if (isPlayerGroundMagicStub(skillId)) {
@@ -2263,13 +2254,12 @@ export class WorldScene extends Phaser.Scene {
         magicSkillId: skillId,
         magicHitCount: 1,
         onMagicHit: () => {
-          playGroundAoEImpactBurst(this, wx, wy, skillId, aoeRadius)
+          playGroundAoEImpact(this, this.groundAoEMarker, wx, wy, skillId, aoeRadius)
           emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — tile effect not implemented yet.`)
           logActivity('combat', `${def.name} Lv ${skillLevel} at (${Math.round(wx)}, ${Math.round(wy)}).`)
         },
         onMagicVolleyComplete: () => this.emitCharacterSheet(),
         onComplete: () => {
-          this.clearGroundAoECastDismissTimer()
           this.groundAoEMarker.cancel()
           this.cancelPlayerCastPresentation()
           this.isAttacking = false
@@ -2299,7 +2289,7 @@ export class WorldScene extends Phaser.Scene {
       magicSkillId: skillId,
       magicHitCount: 1,
       onMagicHit: () => {
-        playGroundAoEImpactBurst(this, wx, wy, skillId, aoeRadius)
+        playGroundAoEImpact(this, this.groundAoEMarker, wx, wy, skillId, aoeRadius)
       },
       onMagicVolleyComplete: () => {
         const victims = this.mobsInAoERadius(wx, wy, radius)
@@ -2315,7 +2305,6 @@ export class WorldScene extends Phaser.Scene {
         this.emitCharacterSheet()
       },
       onComplete: () => {
-        this.clearGroundAoECastDismissTimer()
         this.groundAoEMarker.cancel()
         this.cancelPlayerCastPresentation()
         this.isAttacking = false
@@ -2640,7 +2629,10 @@ export class WorldScene extends Phaser.Scene {
       this.tryPecoRideSkill(skillId, skillLevel, def)
       return
     }
-    if (this.isAttacking || this.isJumping) return
+    if (this.isAttacking || this.isJumping) {
+      emitGameEvent('status', 'Cannot cast right now.')
+      return
+    }
     if (!this.spendMp(def.mpCost)) return
 
     const wallNow = Date.now()
