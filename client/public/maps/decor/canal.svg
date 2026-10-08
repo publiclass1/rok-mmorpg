@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <rect width="128" height="128" fill="#0c4a6e"/>
-  <rect x="4" y="4" width="120" height="120" rx="8" fill="#0284c7"/>
-  <ellipse cx="40" cy="48" rx="18" ry="10" fill="#38bdf8" opacity="0.5"/>
-  <ellipse cx="88" cy="72" rx="22" ry="12" fill="#7dd3fc" opacity="0.35"/>
-  <path d="M8 64 Q64 52 120 64" stroke="#0ea5e9" stroke-width="2" fill="none" opacity="0.6"/>
+  <defs><linearGradient id="water" x2="0" y2="1"><stop stop-color="#38bdf8"/><stop offset="1" stop-color="#075985"/></linearGradient></defs>
+  <rect width="128" height="128" fill="#164e63" stroke="#0f172a" stroke-width="3"/>
+  <rect x="5" y="5" width="118" height="118" rx="8" fill="url(#water)" stroke="#7dd3fc" stroke-width="3" opacity=".95"/>
+  <path d="M10 31h108M10 67h108M10 101h108" stroke="#bae6fd" stroke-width="3" opacity=".45"/>
+  <path d="M8 64Q64 52 120 64M8 88Q64 76 120 88" stroke="#e0f2fe" stroke-width="2" fill="none" opacity=".7"/>
+  <path d="M18 18h92" stroke="#fff" stroke-width="4" opacity=".3" stroke-linecap="round"/>
 </svg>

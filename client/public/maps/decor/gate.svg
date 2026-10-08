@@ -1,8 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 224 192" width="224" height="192">
-  <rect x="0" y="112" width="56" height="80" fill="#78716c"/>
-  <rect x="168" y="112" width="56" height="80" fill="#78716c"/>
-  <path fill="#57534e" d="M28 112 56 48h112l28 64z"/>
-  <rect x="56" y="112" width="112" height="80" fill="#1c1917" opacity="0.15"/>
-  <path fill="#a8a29e" d="M56 112 Q112 80 168 112 L168 192 L56 192z" opacity="0.3"/>
-  <rect x="72" y="128" width="80" height="64" fill="#44403c" opacity="0.2"/>
+  <defs><linearGradient id="stone" x2="0" y2="1"><stop stop-color="#d6d3d1"/><stop offset="1" stop-color="#57534e"/></linearGradient></defs>
+  <ellipse cx="112" cy="188" rx="105" ry="7" fill="#172216" opacity=".28"/>
+  <path fill="url(#stone)" stroke="#292524" stroke-width="3" d="M0 112h56v80H0zM168 112h56v80h-56z"/>
+  <path fill="#57534e" stroke="#292524" stroke-width="3" d="M28 112 56 48h112l28 64z"/>
+  <path d="M53 108 65 63h94l13 45M65 88h94" fill="none" stroke="#d6d3d1" stroke-width="4" opacity=".45"/>
+  <path fill="#1c1917" stroke="#292524" stroke-width="3" d="M56 112Q112 80 168 112v80H56z"/>
+  <path fill="#a8a29e" d="M56 112Q112 80 168 112v80H56z" opacity=".22"/>
+  <path d="M72 128h80v64H72z" fill="#020617" opacity=".45"/><path d="M81 138h62M81 153h62M81 168h62" stroke="#78716c" stroke-width="3" opacity=".55"/>
 </svg>

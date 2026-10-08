@@ -1,10 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 144" width="160" height="144">
-  <rect x="0" y="120" width="160" height="24" fill="#1c1917" opacity="0.15"/>
-  <path fill="#7c2d12" d="M80 12 148 56v76H12V56z"/>
-  <path fill="#9a3412" d="M80 12 12 56h136z"/>
-  <rect x="24" y="68" width="112" height="64" fill="#e7e5e4"/>
-  <rect x="68" y="96" width="24" height="36" fill="#44403c"/>
-  <rect x="32" y="78" width="22" height="18" fill="#7dd3fc" opacity="0.9"/>
-  <rect x="106" y="78" width="22" height="18" fill="#7dd3fc" opacity="0.9"/>
-  <rect x="56" y="78" width="48" height="8" fill="#d6d3d1"/>
+  <defs><linearGradient id="wall" x2="0" y2="1"><stop stop-color="#fff7ed"/><stop offset="1" stop-color="#d6d3d1"/></linearGradient><linearGradient id="roof" x2="0" y2="1"><stop stop-color="#c2410c"/><stop offset="1" stop-color="#7c2d12"/></linearGradient></defs>
+  <path d="M3 122h154v20H3z" fill="#1c1917" opacity=".2"/>
+  <path fill="url(#roof)" stroke="#431407" stroke-width="3" d="M80 10 151 55v79H9V55z"/>
+  <path fill="#ea580c" stroke="#7c2d12" stroke-width="3" d="M80 10 9 55h142z"/>
+  <path d="M22 54 80 18l58 36M27 62h106" fill="none" stroke="#fdba74" stroke-width="3" opacity=".6"/>
+  <rect x="24" y="68" width="112" height="66" fill="url(#wall)" stroke="#78716c" stroke-width="2"/>
+  <path d="M28 72h104M28 116h104" stroke="#a8a29e" stroke-width="2" opacity=".5"/>
+  <rect x="66" y="96" width="28" height="38" rx="2" fill="#292524" stroke="#171717" stroke-width="2"/>
+  <circle cx="88" cy="116" r="2" fill="#fbbf24"/>
+  <rect x="32" y="78" width="22" height="20" fill="#38bdf8" stroke="#164e63" stroke-width="3"/><path d="M43 79v18M33 88h20" stroke="#e0f2fe" stroke-width="2" opacity=".7"/>
+  <rect x="106" y="78" width="22" height="20" fill="#38bdf8" stroke="#164e63" stroke-width="3"/><path d="M117 79v18M107 88h20" stroke="#e0f2fe" stroke-width="2" opacity=".7"/>
 </svg>

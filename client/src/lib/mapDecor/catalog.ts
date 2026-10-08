@@ -6,6 +6,7 @@ export type DecorAssetId =
   | 'canal'
   | 'stones'
   | 'tree'
+  | 'tree_small'
   | 'tree_large'
   | 'tree_oak'
   | 'tree_pine'
@@ -82,7 +83,7 @@ export const DECOR_ASSETS: DecorAssetDef[] = [
   },
   {
     id: 'tree',
-    label: 'Tree',
+    label: 'Tree (medium)',
     src: '/maps/decor/tree.svg',
     width: 128,
     height: 176,
@@ -90,8 +91,17 @@ export const DECOR_ASSETS: DecorAssetDef[] = [
     footprint: treeTrunk(128, 176),
   },
   {
+    id: 'tree_small',
+    label: 'Tree (small)',
+    src: '/maps/decor/tree_small.svg',
+    width: 96,
+    height: 144,
+    ySort: true,
+    footprint: treeTrunk(96, 144),
+  },
+  {
     id: 'tree_large',
-    label: 'Large tree',
+    label: 'Tree (large)',
     src: '/maps/decor/tree_large.svg',
     width: 160,
     height: 224,

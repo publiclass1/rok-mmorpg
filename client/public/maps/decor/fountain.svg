@@ -1,9 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <ellipse cx="96" cy="180" rx="72" ry="12" fill="#0f172a" opacity="0.15"/>
-  <ellipse cx="96" cy="148" rx="80" ry="28" fill="#94a3b8"/>
-  <ellipse cx="96" cy="140" rx="68" ry="22" fill="#38bdf8" opacity="0.85"/>
-  <rect x="80" y="72" width="32" height="76" fill="#d6d3d1"/>
-  <circle cx="96" cy="56" r="20" fill="#e7e5e4"/>
-  <path d="M96 36 L96 20 M86 40 L76 28 M106 40 L116 28" stroke="#a8a29e" stroke-width="4"/>
-  <ellipse cx="96" cy="132" rx="12" ry="6" fill="#0ea5e9" opacity="0.6"/>
+  <defs><linearGradient id="stone" x2="0" y2="1"><stop stop-color="#f5f5f4"/><stop offset="1" stop-color="#78716c"/></linearGradient></defs>
+  <ellipse cx="96" cy="180" rx="76" ry="12" fill="#172216" opacity=".28"/>
+  <ellipse cx="96" cy="148" rx="80" ry="28" fill="url(#stone)" stroke="#44403c" stroke-width="3"/>
+  <ellipse cx="96" cy="140" rx="68" ry="22" fill="#38bdf8" stroke="#075985" stroke-width="3"/>
+  <path d="M38 142q58-18 116 0M49 151q47-14 94 0" fill="none" stroke="#e0f2fe" stroke-width="3" opacity=".6"/>
+  <path d="M80 72h32v76H80z" fill="url(#stone)" stroke="#57534e" stroke-width="3"/><path d="M87 77v65M105 77v65" stroke="#fff" stroke-width="2" opacity=".35"/>
+  <circle cx="96" cy="56" r="20" fill="url(#stone)" stroke="#57534e" stroke-width="3"/>
+  <path d="M96 36V20M86 40 76 28M106 40l10-12" stroke="#a8a29e" stroke-width="4" stroke-linecap="round"/>
+  <path d="M96 20v-8M76 28l-5-5M116 28l5-5" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round"/>
 </svg>

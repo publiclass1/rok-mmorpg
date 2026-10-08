@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 128" width="192" height="128">
-  <rect y="72" width="192" height="56" fill="#0c4a6e"/>
-  <rect x="8" y="80" width="176" height="40" fill="#0284c7" opacity="0.8"/>
-  <path fill="#a8a29e" d="M0 72 Q96 40 192 72 L192 96 Q96 64 0 96z"/>
-  <rect x="0" y="72" width="12" height="56" fill="#78716c"/>
-  <rect x="180" y="72" width="12" height="56" fill="#78716c"/>
-  <path d="M24 88 Q96 72 168 88" stroke="#57534e" stroke-width="3" fill="none"/>
+  <defs><linearGradient id="water" x2="0" y2="1"><stop stop-color="#38bdf8"/><stop offset="1" stop-color="#075985"/></linearGradient><linearGradient id="stone" x2="0" y2="1"><stop stop-color="#d6d3d1"/><stop offset="1" stop-color="#57534e"/></linearGradient></defs>
+  <rect y="72" width="192" height="56" fill="#075985"/>
+  <path d="M0 78h192M0 104h192" stroke="#7dd3fc" stroke-width="3" opacity=".5"/>
+  <path fill="url(#stone)" stroke="#44403c" stroke-width="3" d="M0 72Q96 42 192 72v28Q96 70 0 100z"/>
+  <path d="M15 75Q96 54 177 75M25 89Q96 70 167 89" fill="none" stroke="#f5f5f4" stroke-width="3" opacity=".45"/>
+  <path fill="#57534e" stroke="#292524" stroke-width="2" d="M0 72h14v56H0zM178 72h14v56h-14z"/>
+  <path d="M24 88Q96 72 168 88" stroke="#292524" stroke-width="4" fill="none" opacity=".7"/>
 </svg>

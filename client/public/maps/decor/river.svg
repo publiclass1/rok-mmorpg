@@ -5,6 +5,9 @@
       <stop offset="100%" stop-color="#0369a1"/>
     </linearGradient>
   </defs>
-  <path fill="url(#w)" d="M4 20c20-8 36 8 60 4s40-16 60-4v20c-22-6-38 10-60 6S24 38 4 32z"/>
-  <path fill="none" stroke="#7dd3fc" stroke-width="2" opacity="0.5" d="M12 24c16 4 28-4 44-2s32 6 48 2"/>
+  <!-- Open vertical edges make adjacent river stamps read as one continuous channel. -->
+  <path fill="#075985" opacity=".5" d="M0 7h128v34H0z"/>
+  <path fill="url(#w)" d="M0 6h128v36H0z"/>
+  <path fill="#166534" stroke="#14532d" stroke-width="2" d="M0 0h128v8c-17 4-27 2-40 1-17-2-29 4-44 1C29 8 17 7 0 11zM0 40c16-4 27-2 42-1 16 2 28-4 44-1 14 2 27 2 42-2v12H0z"/>
+  <path fill="none" stroke="#bae6fd" stroke-width="3" opacity=".7" stroke-linecap="round" d="M8 18c16 4 28-4 44-2s32 6 48 2M28 32c13 3 24-2 36-1s22 4 35 1"/>
 </svg>

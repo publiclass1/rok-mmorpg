@@ -221,7 +221,15 @@ export function MapEditorCanvas({
         const img = assetId ? getDecorImage(assetId) : null
         const selected = o.id === selectedObjectId
         if (img) {
+          const seamless = assetId === 'river' || assetId === 'lake' || assetId === 'bush' || assetId === 'stones'
+          ctx.save()
+          if (!seamless) {
+            ctx.shadowColor = 'rgba(15, 23, 42, 0.38)'
+            ctx.shadowBlur = 5
+            ctx.shadowOffsetY = 3
+          }
           ctx.drawImage(img, o.x, o.y, o.width, o.height)
+          ctx.restore()
         } else {
           ctx.fillStyle = selected ? 'rgba(34, 197, 94, 0.7)' : 'rgba(34, 197, 94, 0.45)'
           ctx.fillRect(o.x, o.y, o.width, o.height)
