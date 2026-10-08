@@ -28,11 +28,11 @@ export function getMobDef(mobDefId: string): RoMob | undefined {
   return MOB_BY_ID.get(mobDefId)
 }
 
-function rollMobDrops(drops: RoMobDrop[], rng: () => number): string[] {
+function rollMobDrops(drops: RoMobDrop[], rng: () => number, dropRate = 1): string[] {
   const gained: string[] = []
   for (const drop of drops) {
     const roll = Math.floor(rng() * 10000)
-    if (roll < drop.rate) gained.push(drop.itemId)
+    if (roll < Math.min(10000, Math.floor(drop.rate * dropRate))) gained.push(drop.itemId)
   }
   return gained
 }
@@ -61,18 +61,18 @@ function pickWeightedItem(
   return items[items.length - 1]?.itemId ?? null
 }
 
-function rollLevelBandDrop(level: number, rng: () => number): string | null {
+function rollLevelBandDrop(level: number, rng: () => number, dropRate = 1): string | null {
   const band = LOOT.levelBands.find((b) => level >= b.minLevel && level <= b.maxLevel)
   if (!band) return null
   const chanceRoll = Math.floor(rng() * 10000)
-  if (chanceRoll >= band.chancePerMille) return null
+  if (chanceRoll >= Math.min(10000, Math.floor(band.chancePerMille * dropRate))) return null
   return pickWeightedItem(band.items, rng)
 }
 
-export function resolveMobKillLoot(mob: RoMob, rng: () => number): { zeny: number; itemIds: string[] } {
+export function resolveMobKillLoot(mob: RoMob, rng: () => number, dropRate = 1): { zeny: number; itemIds: string[] } {
   const zeny = rollMobZeny(mob.level, rng)
-  const fromMob = rollMobDrops(mob.drops, rng)
-  const bandItem = rollLevelBandDrop(mob.level, rng)
+  const fromMob = rollMobDrops(mob.drops, rng, dropRate)
+  const bandItem = rollLevelBandDrop(mob.level, rng, dropRate)
   const itemIds = bandItem ? [...fromMob, bandItem] : fromMob
   return { zeny, itemIds }
 }

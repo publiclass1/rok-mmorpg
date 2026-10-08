@@ -122,8 +122,18 @@ Deno.serve(async (req) => {
     }
 
     const rng = () => Math.random()
-    const loot = resolveMobKillLoot(mob, rng)
-    const gained = { baseExp: mob.wikiBaseExp, jobExp: mob.wikiJobExp }
+    const { data: settings } = await service
+      .from('game_settings')
+      .select('key, value')
+      .in('key', ['exp_rate', 'drop_rate'])
+    const rates = Object.fromEntries((settings ?? []).map((row) => [row.key, Number(row.value)]))
+    const expRate = Number.isFinite(rates.exp_rate) && rates.exp_rate > 0 ? rates.exp_rate : 1
+    const dropRate = Number.isFinite(rates.drop_rate) && rates.drop_rate > 0 ? rates.drop_rate : 1
+    const loot = resolveMobKillLoot(mob, rng, dropRate)
+    const gained = {
+      baseExp: Math.floor(mob.wikiBaseExp * expRate),
+      jobExp: Math.floor(mob.wikiJobExp * expRate),
+    }
 
     const { data: progress, error: progErr } = await service
       .from('character_progress')
