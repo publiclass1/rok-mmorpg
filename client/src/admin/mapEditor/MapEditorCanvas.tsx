@@ -173,7 +173,8 @@ export function MapEditorCanvas({
     if (!canvas) return
   const ctx = canvas.getContext('2d')
     if (!ctx) return
-    ctx.imageSmoothingEnabled = true
+    // Pixel-art decor should scale like RO sprites: preserve hard stepped edges.
+    ctx.imageSmoothingEnabled = false
 
     const w = map.width * TILE_SIZE
     const h = map.height * TILE_SIZE

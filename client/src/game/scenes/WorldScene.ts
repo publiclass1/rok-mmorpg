@@ -450,6 +450,14 @@ export class WorldScene extends Phaser.Scene {
 
     const ground = map.createLayer('ground', tileset, 0, 0)
     ground?.setDepth(0)
+    // Keep one tileset/data format, but give each RO environment its own palette.
+    const mapId = this.character.map_id
+    if (ground && 'setTint' in ground) {
+      if (mapId.startsWith('dun_') || mapId === 'prt_sewb1') ground.setTint(0x8fa3a8)
+      else if (mapId.startsWith('prt_fild') || mapId.startsWith('field_')) ground.setTint(0xb6d38f)
+      else if (mapId === 'pvp_room') ground.setTint(0xc7c9d9)
+      else ground.setTint(0xffe0b0)
+    }
     const decorTiles = map.createLayer('decor', tileset, 0, 0)
     decorTiles?.setDepth(2)
     const mapDecor = spawnMapDecor(this, map)
