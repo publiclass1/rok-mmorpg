@@ -207,6 +207,22 @@ Deno.serve(async (req) => {
       }
     }
 
+    const dropRows = loot.itemIds.map((itemId) => ({
+      map_id: body.mapId,
+      item_id: itemId,
+      x: body.x,
+      y: body.y,
+      owner_character_id: body.characterId,
+      available_at: new Date(now.getTime() + 30_000).toISOString(),
+      expires_at: new Date(now.getTime() + 180_000).toISOString(),
+    }))
+    const { data: drops, error: dropsErr } = dropRows.length
+      ? await service.from('field_map_drops').insert(dropRows).select('id, map_id, item_id, x, y, owner_character_id, available_at, expires_at')
+      : { data: [], error: null }
+    if (dropsErr) {
+      return new Response(JSON.stringify({ error: dropsErr.message }), { status: 400, headers: jsonCorsHeaders })
+    }
+
     await service.from('field_spawn_kill_locks').upsert(
       {
         map_id: body.mapId,
@@ -236,6 +252,7 @@ Deno.serve(async (req) => {
         jobExp: gained.jobExp,
         zeny: loot.zeny,
         itemIds: loot.itemIds,
+        drops: drops ?? [],
         progress: {
           baseLevel: baseAfter.baseLevel,
           baseExp: baseAfter.baseExp,
@@ -244,6 +261,7 @@ Deno.serve(async (req) => {
         },
         zenyTotal: nextZeny,
         sessionInventory: progress.session_inventory,
+        drops: drops ?? [],
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )

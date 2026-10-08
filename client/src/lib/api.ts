@@ -173,7 +173,32 @@ export function combatReport(payload: {
     progress: { baseLevel: number; baseExp: number; jobLevel: number; jobExp: number }
     zenyTotal: number
     sessionInventory: unknown
+    drops: Array<{
+      id: string
+      map_id: string
+      item_id: string
+      x: number
+      y: number
+      owner_character_id: string
+      available_at: string
+      expires_at: string
+    }>
   }>('combat-report', payload)
+}
+
+export type FieldMapDrop = {
+  id: string
+  map_id: string
+  item_id: string
+  x: number
+  y: number
+  owner_character_id: string
+  available_at: string
+  expires_at: string
+}
+
+export function lootManage(payload: { action: 'list' | 'pickup'; characterId: string; dropId?: string }) {
+  return invoke<{ drops?: FieldMapDrop[]; ok?: boolean; itemId?: string; sessionInventory?: unknown }>('loot-manage', payload)
 }
 
 export function characterEconomyAdjust(payload: { characterId: string; delta: number; reason?: string }) {

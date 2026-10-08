@@ -16,6 +16,9 @@ export type MapDropVisual = {
   rarityFx?: MapDropRarityFx
   x: number
   y: number
+  ownerCharacterId?: string
+  availableAt?: number
+  expiresAt?: number
 }
 
 export class MapDropManager {
@@ -39,7 +42,7 @@ export class MapDropManager {
     return best ? { dropId: best.dropId, itemId: best.itemId, x: best.x, y: best.y } : null
   }
 
-  spawnDrop(dropId: string, itemId: string, x: number, y: number) {
+  spawnDrop(dropId: string, itemId: string, x: number, y: number, metadata?: { ownerCharacterId?: string; availableAt?: string; expiresAt?: string }) {
     if (this.drops.has(dropId)) return
     const key = this.textureKey(itemId)
     const sprite = this.scene.add.image(x, y, key)
@@ -51,7 +54,16 @@ export class MapDropManager {
 
     const rarityFx = createMapDropRarityFx(this.scene, x, y, itemId, y - 2)
 
-    this.drops.set(dropId, { dropId, itemId, sprite, rarityFx, x, y })
+    const expiresAt = metadata?.expiresAt ? Date.parse(metadata.expiresAt) : undefined
+    this.drops.set(dropId, {
+      dropId, itemId, sprite, rarityFx, x, y,
+      ownerCharacterId: metadata?.ownerCharacterId,
+      availableAt: metadata?.availableAt ? Date.parse(metadata.availableAt) : undefined,
+      expiresAt,
+    })
+    if (expiresAt) {
+      this.scene.time.delayedCall(Math.max(0, expiresAt - Date.now()), () => this.removeDrop(dropId))
+    }
 
     ensureItemEquipIconTexture(this.scene, itemId, (iconKey) => {
       const d = this.drops.get(dropId)

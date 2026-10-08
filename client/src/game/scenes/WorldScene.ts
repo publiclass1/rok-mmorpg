@@ -200,6 +200,7 @@ import type { BootDungeonState } from '../world/bootDungeon'
 import { dungeonFloorByMapId, isDungeonMapId } from '../world/dungeonConfig'
 import { findPortalAtPoint, getWalkPortalsForMap } from '../world/mapPortals'
 import { applyPickupToSession, MapDropManager } from '../world/mapDrops'
+import { lootManage } from '../../lib/api'
 import { isPvpMap, PVP_KILL_STREAK_LABELS } from '../world/pvpConfig'
 import { PvpKillStreakTracker } from '../world/pvpKillStreak'
 import { decorFootprintRects } from '../../lib/mapDecor/decorFootprints'
@@ -516,20 +517,26 @@ export class WorldScene extends Phaser.Scene {
     colliderWithObstacles(this, this.obstacles, this.playerDisplay.container)
 
     this.mapDropManager = new MapDropManager(this, (dropId, itemId) => {
-      if (isRolledItemId(itemId)) {
-        const rolled = getRolledItem(itemId)
-        if (!rolled) return
-        this.session = grantRolledGear(this.session, rolled)
-      } else {
-        this.session = applyPickupToSession(this.session, itemId)
-      }
-      this.mapDropManager?.removeDrop(dropId)
-      this.presence?.sendCombat({ kind: 'map_pickup', dropId, characterId: this.character.id })
-      logActivity('combat', `Picked up ${getItemDisplayName(itemId)}.`)
-      this.emitCharacterSheet()
-      emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
-      this.scheduleProgressSave()
+      void lootManage({ action: 'pickup', characterId: this.character.id, dropId }).then((result) => {
+        if (result.sessionInventory != null) {
+          this.session = { ...this.session, sessionInventory: result.sessionInventory as typeof this.session.sessionInventory }
+        } else if (isRolledItemId(itemId)) {
+          const rolled = getRolledItem(itemId)
+          if (rolled) this.session = grantRolledGear(this.session, rolled)
+        } else this.session = applyPickupToSession(this.session, itemId)
+        this.mapDropManager?.removeDrop(dropId)
+        this.presence?.sendCombat({ kind: 'map_pickup', dropId, characterId: this.character.id })
+        logActivity('combat', `Picked up ${getItemDisplayName(itemId)}.`)
+        this.emitCharacterSheet()
+        emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
+      }).catch(() => undefined)
     })
+
+    void lootManage({ action: 'list', characterId: this.character.id }).then(({ drops = [] }) => {
+      for (const d of drops) this.mapDropManager?.spawnDrop(d.id, d.item_id, d.x, d.y, {
+        ownerCharacterId: d.owner_character_id, availableAt: d.available_at, expiresAt: d.expires_at,
+      })
+    }).catch(() => undefined)
 
     const boot = this.registry.get('bootSession') as ReturnType<typeof getCharacterSession> | undefined
     const initial = syncDerivedVitals(
@@ -3767,7 +3774,11 @@ export class WorldScene extends Phaser.Scene {
     }
 
     if (payload.kind === 'map_drop') {
-      this.mapDropManager?.spawnDrop(payload.dropId, payload.itemId, payload.x, payload.y)
+      this.mapDropManager?.spawnDrop(payload.dropId, payload.itemId, payload.x, payload.y, {
+        ownerCharacterId: payload.ownerCharacterId ?? payload.fromCharacterId,
+        availableAt: payload.availableAt,
+        expiresAt: payload.expiresAt,
+      })
       const spawnIndex = this.extractMobSpawnIndexFromDropId(payload.dropId)
       if (spawnIndex != null) this.hideComingDropsGlow(spawnIndex)
       return
@@ -4457,13 +4468,19 @@ export class WorldScene extends Phaser.Scene {
     y: number
     fromCharacterId: string
     spawnIndex: number
+    drops?: Array<{ id: string; item_id: string; x: number; y: number; owner_character_id: string; available_at: string; expires_at: string }>
   }): string[] {
-    const { dropGroupId, itemIds, x, y, fromCharacterId, spawnIndex } = params
+    const { dropGroupId, itemIds, x, y, fromCharacterId, spawnIndex, drops } = params
     const dropIds: string[] = []
     for (let i = 0; i < itemIds.length; i++) {
       const itemId = itemIds[i]
-      const dropId = `mobdrop_${fromCharacterId}_${spawnIndex}_${dropGroupId}_${i}`
-      this.mapDropManager?.spawnDrop(dropId, itemId, x, y)
+      const serverDrop = drops?.[i]
+      const dropId = serverDrop?.id ?? `mobdrop_${fromCharacterId}_${spawnIndex}_${dropGroupId}_${i}`
+      this.mapDropManager?.spawnDrop(dropId, itemId, x, y, serverDrop ? {
+        ownerCharacterId: serverDrop.owner_character_id,
+        availableAt: serverDrop.available_at,
+        expiresAt: serverDrop.expires_at,
+      } : undefined)
       if (i === 0) this.hideComingDropsGlow(spawnIndex)
       dropIds.push(dropId)
       this.presence?.sendCombat({
@@ -4473,6 +4490,9 @@ export class WorldScene extends Phaser.Scene {
         x,
         y,
         fromCharacterId,
+        ownerCharacterId: serverDrop?.owner_character_id,
+        availableAt: serverDrop?.available_at,
+        expiresAt: serverDrop?.expires_at,
       })
     }
     return dropIds
@@ -4669,14 +4689,7 @@ export class WorldScene extends Phaser.Scene {
 
         // Server is authoritative for itemIds + EXP amounts.
         if (result.itemIds.length > 0) {
-          this.spawnAndBroadcastMobItemDrops({
-            dropGroupId,
-            itemIds: result.itemIds,
-            x: px,
-            y: py,
-            fromCharacterId: this.character.id,
-            spawnIndex: mob.spawnIndex,
-          })
+          this.spawnAndBroadcastMobItemDrops({ dropGroupId, itemIds: result.itemIds, x: px, y: py, fromCharacterId: this.character.id, spawnIndex: mob.spawnIndex, drops: result.drops })
 
           for (const itemId of result.itemIds) {
             logActivity('combat', `Dropped ${getItemDisplayName(itemId)}.`, itemId)

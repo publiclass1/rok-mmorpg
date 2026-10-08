@@ -67,6 +67,9 @@ export type MapCombatPayload =
       x: number
       y: number
       fromCharacterId?: string
+      ownerCharacterId?: string
+      availableAt?: string
+      expiresAt?: string
     }
   | {
       kind: 'map_pickup'
@@ -171,6 +174,9 @@ export function normalizeMapCombatPayload(raw: unknown): MapCombatPayload | null
       x: typeof o.x === 'number' ? o.x : 0,
       y: typeof o.y === 'number' ? o.y : 0,
       fromCharacterId: typeof o.fromCharacterId === 'string' ? o.fromCharacterId : undefined,
+      ownerCharacterId: typeof o.ownerCharacterId === 'string' ? o.ownerCharacterId : undefined,
+      availableAt: typeof o.availableAt === 'string' ? o.availableAt : undefined,
+      expiresAt: typeof o.expiresAt === 'string' ? o.expiresAt : undefined,
     }
   }
   if (kind === 'map_pickup') {
