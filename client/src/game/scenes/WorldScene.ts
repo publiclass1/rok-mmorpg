@@ -4467,6 +4467,7 @@ export class WorldScene extends Phaser.Scene {
 
   private ensureAutoPatrolCircle() {
     if (this.autoPatrolCircle) return
+    if (!this.sys.isActive() || !this.add) return
     this.autoPatrolCircle = this.add
       .circle(0, 0, 100, 0x3b82f6, 0.1)
       .setStrokeStyle(2, 0x60a5fa, 0.55)

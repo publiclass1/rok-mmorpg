@@ -254,6 +254,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [autoAttackConfig, setAutoAttackConfig] = useState<AutoAttackConfig>(() =>
     loadAutoAttackConfig(character.id),
   )
+  const autoAttackConfigRef = useRef(autoAttackConfig)
+  autoAttackConfigRef.current = autoAttackConfig
 
   const applyAutoAttackConfig = useCallback(
     (next: AutoAttackConfig) => {
@@ -266,9 +268,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   )
 
   useEffect(() => {
-    const loaded = loadAutoAttackConfig(character.id)
-    setAutoAttackConfig(loaded)
-    emitGameEvent('autoAttackSync', loaded)
+    setAutoAttackConfig(loadAutoAttackConfig(character.id))
   }, [character.id])
 
   const modalOpen =
@@ -889,6 +889,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       onGameEvent('worldReady', ({ mapId }) => {
         setMapLoading((current) => (current?.mapId === mapId ? null : current))
         setLoadProgress(undefined)
+        emitGameEvent('autoAttackSync', autoAttackConfigRef.current)
       }),
       onGameEvent('autoAttackDisable', () => {
         setAutoAttackConfig((prev) => {
