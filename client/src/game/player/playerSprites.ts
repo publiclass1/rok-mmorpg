@@ -21,6 +21,7 @@ import {
 } from './playerEquipmentVisual'
 import { syncPlayerRarityGlow, type RarityGlowHost } from './playerRarityGlow'
 import type { PlayerAvatarKey } from './playerJobAvatar'
+import { playPlayerWalkStepFx } from './playerWalkStepFx'
 
 export type { CharacterPose } from '../character/characterPose'
 export { defaultCharacterPose } from '../character/characterPose'
@@ -201,7 +202,24 @@ export function setPlayerDeadFrame(display: PlayerDisplay, deadFrame: 0 | 1) {
 
 export function setPlayerWalkFrame(display: PlayerDisplay, walkFrame: 0 | 1) {
   if (display.pose.anim !== 'walk') return
+  const prev = display.pose.walkFrame
   display.pose = { ...display.pose, walkFrame }
+  if (
+    walkFrame !== prev &&
+    !display.pose.mounted &&
+    (display.avatarKey === 'mage' || display.avatarKey === 'wizard')
+  ) {
+    const scene = playerDisplayScene(display)
+    if (scene) {
+      playPlayerWalkStepFx(
+        scene,
+        display.container.x,
+        display.container.y,
+        display.pose.facing,
+        walkFrame,
+      )
+    }
+  }
   syncSpritePose(display)
 }
 

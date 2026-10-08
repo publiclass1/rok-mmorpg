@@ -5,7 +5,7 @@ import type { CharacterAppearance } from './characterAppearance'
 import type { Facing } from '../movement/clickToMove'
 import { npcArchetypeFromNpcType, type NpcArchetype } from './npcArchetypes'
 
-const PLAYER_MASTER_VERSION = 'v10'
+const PLAYER_MASTER_VERSION = 'v11'
 
 export type AttackStyle = 'swing' | 'thrust' | 'bow' | 'cast'
 

@@ -17,6 +17,7 @@ import type { CharacterRow } from '../types/database'
 import { CharacterDesigner } from './CharacterDesigner'
 import { CharacterEquipReadOnly } from './CharacterEquipReadOnly'
 import { CharacterSelectExpBars } from './CharacterSelectExpBars'
+import { PreGameBackdrop } from './PreGameBackdrop'
 
 type Props = {
   onSelect: (character: CharacterRow) => void
@@ -138,7 +139,7 @@ export function CharacterSelect({ onSelect, onLogout }: Props) {
 
   return (
     <div className="char-select-screen">
-      <div className="char-select-tiles" aria-hidden />
+      <PreGameBackdrop hero />
       <div className="char-select-inner">
         <header className="char-select-header row spread">
           <h1 className="char-select-title">Character Selection</h1>
@@ -192,6 +193,7 @@ export function CharacterSelect({ onSelect, onLogout }: Props) {
                   <CharacterEquipReadOnly
                     equipment={createDefaultEquipment()}
                     appearance={draftAppearance}
+                    jobId="novice"
                     compact
                     centerClassName="char-select-preview-bg"
                   />

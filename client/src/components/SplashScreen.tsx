@@ -1,5 +1,6 @@
 import { motion } from 'motion/react'
 import { overlayMotion } from './motion/motionPresets'
+import { PreGameBackdrop } from './PreGameBackdrop'
 
 export type SplashPhase = 'boot' | 'session' | 'world' | 'map'
 
@@ -36,10 +37,9 @@ export function SplashScreen({ phase, headline, detail, progress }: Props) {
       aria-busy="true"
       {...overlayMotion}
     >
-      <div className="splash-screen__tiles" aria-hidden />
-      <div className="splash-screen__vignette" aria-hidden />
+      <PreGameBackdrop animateTiles />
       <div className="splash-screen__content">
-        <p className="splash-screen__title">Ragnarok-like</p>
+        <p className="splash-screen__title">ROK-MMORPG</p>
         <p className="splash-screen__subtitle">{subtitle}</p>
         {phase === 'map' && detail ? <p className="splash-screen__detail muted small">{detail}</p> : null}
         {showProgress ? (

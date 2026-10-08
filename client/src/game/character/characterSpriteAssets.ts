@@ -239,6 +239,33 @@ function drawKnightCape(
   }
 }
 
+function drawMageWizardRobeFeet(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  feetY: number,
+  legSpread: number,
+  pal: ChibiPalette,
+  avatarKey: 'mage' | 'wizard',
+  walking: boolean,
+) {
+  if (!walking) {
+    if (avatarKey === 'wizard') {
+      g.fillStyle(pal.shoes, 1)
+      g.fillRect(cx - 5, feetY - 3, 10, 3)
+    } else {
+      g.fillStyle(pal.shoes, 1)
+      g.fillRect(cx - 6, feetY - 4, 12, 4)
+    }
+    return
+  }
+  g.fillStyle(pal.shoes, 1)
+  g.fillRect(cx - 10 - legSpread, feetY - 4, 8, 4)
+  g.fillRect(cx + 2 + legSpread, feetY - 4, 8, 4)
+  g.fillStyle(pal.pants, 0.9)
+  g.fillRect(cx - 9 - legSpread, feetY - 9, 6, 6)
+  g.fillRect(cx + 2 + legSpread, feetY - 9, 6, 6)
+}
+
 function drawPlayerJobBody(
   g: Phaser.GameObjects.Graphics,
   avatarKey: PlayerAvatarKey,
@@ -248,6 +275,7 @@ function drawPlayerJobBody(
   legSpread: number,
   facing: 'down' | 'left' | 'right' | 'up',
   pal: ChibiPalette,
+  walking: boolean,
 ) {
   if (avatarKey === 'knight') {
     drawKnightCape(g, cx, feetY, bodyW, facing)
@@ -256,33 +284,41 @@ function drawPlayerJobBody(
   if (avatarKey === 'mage' || avatarKey === 'wizard' || avatarKey === 'acolyte') {
     const robeH = avatarKey === 'wizard' ? 36 : 30
     const robeTop = feetY - robeH
+    const robeStride = walking && (avatarKey === 'mage' || avatarKey === 'wizard')
+    const hemLean = robeStride ? legSpread : 0
 
-    if (avatarKey === 'wizard') {
-      g.fillStyle(pal.shoes, 1)
-      g.fillRect(cx - 5, feetY - 3, 10, 3)
+    if (avatarKey === 'mage' || avatarKey === 'wizard') {
+      drawMageWizardRobeFeet(g, cx, feetY, legSpread, pal, avatarKey, robeStride)
     } else {
       g.fillStyle(pal.shoes, 1)
       g.fillRect(cx - 6, feetY - 4, 12, 4)
     }
 
     g.fillStyle(pal.shirt, 1)
-    g.fillRoundedRect(cx - bodyW / 2 - 1, robeTop, bodyW + 2, robeH, 3)
+    const robeX = cx - bodyW / 2 - 1 + (hemLean > 0 ? 1 : hemLean < 0 ? -1 : 0)
+    const robeW = bodyW + 2 + (robeStride ? 1 : 0)
+    g.fillRoundedRect(robeX, robeTop, robeW, robeH, 3)
+    if (robeStride) {
+      g.fillRect(robeX + (hemLean > 0 ? robeW - 4 : 0), feetY - 6, 4, 6)
+    }
 
     if (avatarKey === 'acolyte') {
       g.fillStyle(0xf8fafc, 1)
       g.fillRect(cx - 2, feetY - 24, 4, 4)
     } else if (avatarKey === 'mage') {
       g.fillStyle(MAGE_ROBE_EMBLEM, 1)
-      g.fillCircle(cx, feetY - 22, 2)
-      g.fillRect(cx - 1, feetY - 26, 2, 5)
-      g.fillRect(cx - 3, feetY - 24, 6, 2)
+      g.fillCircle(cx + hemLean * 0.25, feetY - 22, 2)
+      g.fillRect(cx - 1 + hemLean * 0.25, feetY - 26, 2, 5)
+      g.fillRect(cx - 3 + hemLean * 0.25, feetY - 24, 6, 2)
     } else {
       g.fillStyle(WIZARD_ROBE_TRIM, 1)
       g.fillRect(cx - bodyW / 2, robeTop + 2, bodyW + 2, 4)
       g.fillRect(cx - bodyW / 2 - 1, feetY - 8, bodyW + 4, 5)
-      g.fillStyle(CAST_GLOW, 0.85)
-      g.fillCircle(cx - bodyW / 2 + 4, feetY - 20, 2)
-      g.fillCircle(cx + bodyW / 2 - 4, feetY - 20, 2)
+      if (!robeStride) {
+        g.fillStyle(CAST_GLOW, 0.85)
+        g.fillCircle(cx - bodyW / 2 + 4, feetY - 20, 2)
+        g.fillCircle(cx + bodyW / 2 - 4, feetY - 20, 2)
+      }
     }
     return
   }
@@ -659,6 +695,13 @@ function drawChibiFrame(
             : -5
     bob = walkStep % 2 === 1 ? -1 : 0
     armSwing = walkStep === 0 || walkStep === 2 ? -2 : 2
+    if (
+      isPlayer &&
+      (mode.avatarKey === 'mage' || mode.avatarKey === 'wizard') &&
+      (walkStep === 0 || walkStep === 2)
+    ) {
+      bob -= 1
+    }
   } else if (motion.kind === 'idle' && isPlayer) {
     const idlePose = idleSpritePose(mode.avatarKey, motion.idleStep)
     legSpread = idlePose.legSpread
@@ -669,7 +712,17 @@ function drawChibiFrame(
   feetY += bob
 
   if (isPlayer) {
-    drawPlayerJobBody(g, mode.avatarKey, cx, feetY, bodyW, legSpread, facing, pal)
+    drawPlayerJobBody(
+      g,
+      mode.avatarKey,
+      cx,
+      feetY,
+      bodyW,
+      legSpread,
+      facing,
+      pal,
+      motion.kind === 'walk',
+    )
   } else {
     drawDefaultLegs(g, cx, feetY, legSpread, pal)
     g.fillStyle(pal.shirt, 1)

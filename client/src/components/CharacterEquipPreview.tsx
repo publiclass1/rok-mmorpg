@@ -3,30 +3,7 @@ import {
   DEFAULT_CHARACTER_APPEARANCE,
   type CharacterAppearance,
 } from '../game/character/characterAppearance'
-import { getEquipColor, getItemIconUrl } from '../game/character/itemCatalog'
-import { CharacterAppearancePreview } from './CharacterAppearancePreview'
-
-function colorHex(n: number): string {
-  return `#${n.toString(16).padStart(6, '0')}`
-}
-
-type PreviewLayerProps = {
-  className: string
-  itemId: string | null | undefined
-}
-
-function PreviewLayer({ className, itemId }: PreviewLayerProps) {
-  if (!itemId) return null
-  const src = getItemIconUrl(itemId)
-  if (src) {
-    return (
-      <div className={className}>
-        <img src={src} alt="" className="character-equip-preview__art" draggable={false} />
-      </div>
-    )
-  }
-  return <div className={className} style={{ backgroundColor: colorHex(getEquipColor(itemId)) }} />
-}
+import { CharacterFieldPreview } from './CharacterFieldPreview'
 
 type Props = {
   equipment: Record<EquipSlot, string | null>
@@ -47,12 +24,12 @@ export function CharacterEquipPreview({
       aria-hidden
     >
       <div className="character-equip-preview__figure">
-        <CharacterAppearancePreview appearance={appearance} jobId={jobId} size="sm" />
-        <div className="character-equip-preview__overlays">
-          <PreviewLayer className="character-equip-preview__head-top" itemId={equipment.headTop} />
-          <PreviewLayer className="character-equip-preview__head-middle" itemId={equipment.headMiddle} />
-          <PreviewLayer className="character-equip-preview__head-lower" itemId={equipment.headLower} />
-        </div>
+        <CharacterFieldPreview
+          appearance={appearance}
+          equipment={equipment}
+          jobId={jobId}
+          size={size === 'lg' ? 'lg' : 'sm'}
+        />
       </div>
     </div>
   )

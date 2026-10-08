@@ -1,8 +1,8 @@
 {
-  "name": "browser-ragnarok-like",
+  "name": "rok-mmorpg",
   "version": "0.1.0",
   "private": true,
-  "description": "Browser-based Ragnarok-like MMORPG (Vite + Phaser + Supabase)",
+  "description": "ROK-MMORPG — browser MMORPG (Vite + Phaser + Supabase)",
   "workspaces": [
     "client"
   ],

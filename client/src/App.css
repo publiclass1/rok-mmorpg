@@ -27,19 +27,16 @@
   min-height: 100dvh;
 }
 
-.splash-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-  overflow: hidden;
-  background: #0f172a;
+.app-root--auth {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-.splash-screen__tiles {
+.pregame-tiles {
   position: absolute;
   inset: -20%;
   background-color: #1a2e1a;
@@ -65,14 +62,81 @@
       #3a5c3a 8px,
       #3a5c3a 16px
     );
+  z-index: 0;
+  pointer-events: none;
+}
+
+.pregame-tiles--animate {
   animation: splash-tiles-drift 24s linear infinite;
 }
 
-.splash-screen__vignette {
+.pregame-vignette {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at center, transparent 30%, rgba(15, 23, 42, 0.85) 100%);
   pointer-events: none;
+  z-index: 0;
+}
+
+.pregame-hero {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(960px, 100vw);
+  max-height: 55vh;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.auth-screen {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+.auth-panel--glass {
+  position: relative;
+  z-index: 1;
+  background: rgba(17, 24, 39, 0.88);
+  border-color: rgba(55, 65, 81, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+.auth-screen__brand {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.auth-screen__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+}
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  overflow: hidden;
+  background: #0f172a;
 }
 
 .splash-screen__content {
@@ -176,35 +240,6 @@
   overflow: auto;
 }
 
-.char-select-tiles {
-  position: absolute;
-  inset: 0;
-  background-color: #1a1209;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 15px,
-      rgba(0, 0, 0, 0.12) 15px,
-      rgba(0, 0, 0, 0.12) 16px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 15px,
-      rgba(0, 0, 0, 0.12) 15px,
-      rgba(0, 0, 0, 0.12) 16px
-    ),
-    repeating-linear-gradient(
-      45deg,
-      #3d2e1f 0,
-      #3d2e1f 8px,
-      #4a3826 8px,
-      #4a3826 16px
-    );
-  z-index: 0;
-}
-
 .char-select-inner {
   position: relative;
   z-index: 1;
@@ -296,6 +331,24 @@
 .char-select-character-center .character-equip-preview--lg .character-equip-preview__figure {
   transform: scale(2.35);
   transform-origin: center bottom;
+}
+
+.character-field-preview {
+  display: block;
+  width: 48px;
+  height: 64px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.character-field-preview--lg {
+  width: 48px;
+  height: 64px;
+}
+
+.character-field-preview--sm {
+  width: 36px;
+  height: 48px;
 }
 
 .character-appearance-preview {
@@ -2476,68 +2529,6 @@ button:disabled {
   margin: 0.35rem 0 0;
   font-size: 0.85rem;
   color: #fecaca;
-}
-
-.level-up-banner-overlay {
-  position: absolute;
-  top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 36;
-  pointer-events: none;
-  animation: level-up-banner-pop 0.4s ease-out;
-}
-
-@keyframes level-up-banner-pop {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) scale(0.8) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) scale(1) translateY(0);
-  }
-}
-
-.level-up-banner-overlay__inner {
-  text-align: center;
-  padding: 0.65rem 1.75rem;
-  border-radius: 10px;
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
-}
-
-.level-up-banner-overlay--base .level-up-banner-overlay__inner {
-  background: linear-gradient(180deg, rgba(120, 53, 15, 0.92), rgba(69, 26, 3, 0.94));
-  border: 2px solid #fbbf24;
-}
-
-.level-up-banner-overlay--job .level-up-banner-overlay__inner {
-  background: linear-gradient(180deg, rgba(76, 29, 149, 0.92), rgba(49, 16, 99, 0.94));
-  border: 2px solid #c084fc;
-}
-
-.level-up-banner-overlay__title {
-  margin: 0;
-  font-size: 1.55rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-.level-up-banner-overlay--base .level-up-banner-overlay__title {
-  color: #fde047;
-}
-
-.level-up-banner-overlay--job .level-up-banner-overlay__title {
-  color: #f5d0fe;
-}
-
-.level-up-banner-overlay__level {
-  margin: 0.25rem 0 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #fff;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
 }
 
 .chat-strip {

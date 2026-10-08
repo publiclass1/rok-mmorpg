@@ -9,7 +9,7 @@ import { playerDisplayScene, type PlayerDisplay } from './playerSprites'
 /** Visible bust crop from the idle-down frame (top ~56% of sprite). */
 const PORTRAIT_CROP_H = 36
 
-function applyHudPortraitPose(display: PlayerDisplay) {
+function applySnapshotPose(display: PlayerDisplay) {
   if (!playerDisplayScene(display)) return
   display.riderLayer.setY(0)
   display.body.setY(0)
@@ -22,7 +22,7 @@ function applyHudPortraitPose(display: PlayerDisplay) {
 function restorePlayerPose(display: PlayerDisplay, pose: CharacterPose) {
   display.pose = pose
   display.riderLayer.setY(pose.mounted ? MOUNT_BODY_Y_OFFSET : 0)
-  applyHudPortraitPose(display)
+  applySnapshotPose(display)
 }
 
 function blitGameObject(
@@ -69,15 +69,21 @@ function blitGameObject(
   ctx.restore()
 }
 
-/** Rasterize the same rig used in-world (palette + headgear) for the HUD bust. */
-export function capturePlayerHudPortrait(
-  _scene: Phaser.Scene,
+export type SpriteSnapshotOptions = {
+  /** Output height in pixels; default full sprite frame. */
+  height?: number
+}
+
+/** Rasterize the same rig used in-world (palette + headgear). */
+export function capturePlayerSpriteSnapshot(
   display: PlayerDisplay,
+  options: SpriteSnapshotOptions = {},
 ): string | null {
+  const outHeight = options.height ?? SPRITE_FRAME_HEIGHT
   const savedPose = { ...display.pose }
 
   display.pose = { ...defaultCharacterPose('down'), anim: 'idle', mounted: false }
-  applyHudPortraitPose(display)
+  applySnapshotPose(display)
 
   const w = SPRITE_FRAME_WIDTH
   const fullH = SPRITE_FRAME_HEIGHT
@@ -101,18 +107,27 @@ export function capturePlayerHudPortrait(
     if (layer) blitGameObject(ctx, feetX, feetY, layer)
   }
 
+  const cropH = Math.min(outHeight, fullH)
   const out = document.createElement('canvas')
   out.width = w
-  out.height = PORTRAIT_CROP_H
+  out.height = cropH
   const outCtx = out.getContext('2d')
   if (!outCtx) {
     restorePlayerPose(display, savedPose)
     return null
   }
   outCtx.imageSmoothingEnabled = false
-  outCtx.drawImage(full, 0, 0, w, PORTRAIT_CROP_H, 0, 0, w, PORTRAIT_CROP_H)
+  outCtx.drawImage(full, 0, 0, w, cropH, 0, 0, w, cropH)
 
   const url = out.toDataURL('image/png')
   restorePlayerPose(display, savedPose)
   return url
+}
+
+/** Rasterize the same rig used in-world (palette + headgear) for the HUD bust. */
+export function capturePlayerHudPortrait(
+  _scene: Phaser.Scene,
+  display: PlayerDisplay,
+): string | null {
+  return capturePlayerSpriteSnapshot(display, { height: PORTRAIT_CROP_H })
 }

@@ -1,4 +1,4 @@
--- Browser Ragnarok-like: core schema, RLS, seeds
+-- ROK-MMORPG: core schema, RLS, seeds
 
 create extension if not exists "pgcrypto";
 

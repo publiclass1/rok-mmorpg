@@ -1,4 +1,4 @@
-# Browser Ragnarok-like
+# ROK-MMORPG
 
 A simple browser MMORPG inspired by Ragnarok Online — for fun and game-dev learning. Shared 2D tile maps, account/characters, Kafra-style storage, NPC warps, and player trading.
 

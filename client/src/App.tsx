@@ -42,7 +42,7 @@ function App() {
 
   return (
     <main
-      className={`app-root${screen === 'game' ? ' app-root--game' : ''}${screen === 'characters' ? ' app-root--char-select' : ''}`}
+      className={`app-root${screen === 'game' ? ' app-root--game' : ''}${screen === 'characters' ? ' app-root--char-select' : ''}${screen === 'auth' ? ' app-root--auth' : ''}`}
     >
       {screen === 'auth' && (
         <AuthScreen

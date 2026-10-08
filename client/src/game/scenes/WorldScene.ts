@@ -332,7 +332,6 @@ export class WorldScene extends Phaser.Scene {
   private castChantSeed = 0
   private levelUpQueue: LevelUpStep[] = []
   private levelUpDrainActive = false
-  private levelUpCelebrateId = 0
   private static readonly LEVEL_UP_STEP_MS = 1400
   private lastAttackAt = 0
   private isAttacking = false
@@ -4267,12 +4266,6 @@ export class WorldScene extends Phaser.Scene {
       const y = this.playerDisplay.container.y
       playLevelUpWorldFx(this, x, y, next.kind, next.level, this.playerDisplay)
       playLevelUpAudio(next.kind)
-      this.levelUpCelebrateId += 1
-      emitGameEvent('levelUpCelebrate', {
-        id: this.levelUpCelebrateId,
-        kind: next.kind,
-        level: next.level,
-      })
       this.logLevelUpStatus(next.kind, next.level)
 
       if (this.levelUpQueue.length > 0) {

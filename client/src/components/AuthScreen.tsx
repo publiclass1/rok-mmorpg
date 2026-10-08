@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { motion } from 'motion/react'
 import { panelMotion } from './motion/motionPresets'
+import { PreGameBackdrop } from './PreGameBackdrop'
 import { supabase } from '../lib/supabase'
 import {
   friendlyAuthError,
@@ -67,44 +68,48 @@ export function AuthScreen({ onAuthed }: Props) {
   }
 
   return (
-    <motion.div className="panel auth-panel" {...panelMotion}>
-      <h1>Browser Ragnarok-like</h1>
-      <p className="muted">Sign in to create up to 3 characters and enter the world.</p>
-      <p className="muted small">Username and password only — no email. Password at least 6 characters.</p>
-      <form onSubmit={handleSubmit} className="stack">
-        <label>
-          Username
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            minLength={3}
-            maxLength={20}
-            autoComplete="username"
-            autoCapitalize="off"
-            spellCheck={false}
-          />
-        </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-          />
-        </label>
-        {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
+    <div className="auth-screen">
+      <PreGameBackdrop hero />
+      <motion.div className="panel auth-panel auth-panel--glass" {...panelMotion}>
+        <p className="auth-screen__brand">ROK-MMORPG</p>
+        <h1 className="auth-screen__title">Sign in</h1>
+        <p className="muted">Create up to 3 characters and enter the world.</p>
+        <p className="muted small">Username and password only — no email. Password at least 6 characters.</p>
+        <form onSubmit={handleSubmit} className="stack">
+          <label>
+            Username
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              minLength={3}
+              maxLength={20}
+              autoComplete="username"
+              autoCapitalize="off"
+              spellCheck={false}
+            />
+          </label>
+          <label>
+            Password
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            />
+          </label>
+          {error && <p className="error">{error}</p>}
+          <button type="submit" disabled={loading}>
+            {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
+          </button>
+        </form>
+        <button type="button" className="linkish" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
+          {mode === 'login' ? 'Need an account? Sign up' : 'Already have an account? Log in'}
         </button>
-      </form>
-      <button type="button" className="linkish" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
-        {mode === 'login' ? 'Need an account? Sign up' : 'Already have an account? Log in'}
-      </button>
-    </motion.div>
+      </motion.div>
+    </div>
   )
 }
