@@ -572,9 +572,23 @@ export class WorldScene extends Phaser.Scene {
         this.cancelSkillTargeting()
         return
       }
-      if (!pointer.leftButtonDown()) return
       const wx = pointer.worldX
       const wy = pointer.worldY
+
+      // Right-click context menu (players only). Do not trigger movement/attack flows.
+      if (pointer.rightButtonDown()) {
+        const remote = this.findRemotePlayerAt(wx, wy)
+        if (remote) {
+          this.breakRestState()
+          this.setSelectedMob(null)
+          this.setSelectedPlayer(remote, 'right')
+        } else {
+          this.setSelectedPlayer(null)
+        }
+        return
+      }
+
+      if (!pointer.leftButtonDown()) return
       if (this.pendingSkill) {
         this.confirmSkillTargeting(wx, wy)
         return
@@ -585,8 +599,6 @@ export class WorldScene extends Phaser.Scene {
           this.breakRestState()
           return
         }
-        const px = this.playerDisplay.container.x
-        const py = this.playerDisplay.container.y
         this.chaseMob = null
         this.setSelectedMob(null)
         clearMoveTarget(this.moveTarget)
@@ -714,6 +726,9 @@ export class WorldScene extends Phaser.Scene {
         if (!kb) return
         kb.enabled = !locked
         kb.resetKeys()
+      }),
+      onGameEvent('clearSelectedPlayer', () => {
+        this.setSelectedPlayer(null)
       }),
       onGameEvent('chatBubble', ({ characterId, text }) => {
         this.showChatBubbleForCharacter(characterId, text)
@@ -3130,7 +3145,7 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  private setSelectedPlayer(entity: RemotePlayerEntity | null) {
+  private setSelectedPlayer(entity: RemotePlayerEntity | null, menuMode: 'left' | 'right' = 'left') {
     if (!entity) {
       this.selectedRemoteId = null
       this.playerSelectionRing?.destroy()
@@ -3151,6 +3166,7 @@ export class WorldScene extends Phaser.Scene {
       name: p.name,
       isVending: p.isVending,
       stallTitle: p.stallTitle,
+      menuMode,
     })
     emitGameEvent('status', `Target: ${p.name}`)
   }

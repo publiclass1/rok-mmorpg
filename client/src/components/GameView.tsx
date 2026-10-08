@@ -60,6 +60,7 @@ import type { BootDungeonState } from '../game/world/bootDungeon'
 import { dungeonFloorByMapId, dungeonFloors, isDungeonMapId } from '../game/world/dungeonConfig'
 import { ChatStrip, type ChatStripHandle } from './ChatStrip'
 import { PlayerTargetPopup } from './PlayerTargetPopup'
+import { PlayerRightClickPopup } from './PlayerRightClickPopup'
 import { GuildModal } from './GuildModal'
 import { DuelCountdownOverlay } from './DuelCountdownOverlay'
 import { DuelInviteModal } from './DuelInviteModal'
@@ -132,6 +133,7 @@ function dungeonInstanceToSync(row: DungeonInstanceRow): DungeonSyncPayload {
 export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const shellRef = useRef<HTMLDivElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
+  const playerMenuPopupRef = useRef<HTMLDivElement | null>(null)
   const gameRef = useRef<Phaser.Game | null>(null)
   const [npcs, setNpcs] = useState<NpcRow[]>([])
   const [npcsReady, setNpcsReady] = useState(false)
@@ -229,6 +231,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [selectedPlayerAnchor, setSelectedPlayerAnchor] = useState<{ x: number; y: number } | null>(null)
   const [mapDropHover, setMapDropHover] = useState<GameEvents['mapDropHover']>(null)
   const [partySnapshot, setPartySnapshot] = useState<PartySnapshot>(null)
+  const [targetPartySnapshot, setTargetPartySnapshot] = useState<PartySnapshot>(null)
+  const [targetPartyLoadState, setTargetPartyLoadState] = useState<'idle' | 'loading' | 'ready'>('idle')
   const [partyLoadState, setPartyLoadState] = useState<'loading' | 'ready'>('loading')
   const dungeonValidatedKeyRef = useRef<string | null>(null)
   const bootDungeonRef = useRef<BootDungeonState | null>(null)
@@ -582,6 +586,33 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         }
       })
   }, [character.id])
+
+  useEffect(() => {
+    if (!selectedPlayer || selectedPlayer.menuMode !== 'right') {
+      setTargetPartySnapshot(null)
+      setTargetPartyLoadState('idle')
+      return
+    }
+    const targetCharacterId = selectedPlayer.characterId
+    let cancelled = false
+    setTargetPartyLoadState('loading')
+    void loadPartyForCharacter(targetCharacterId)
+      .then((snapshot) => {
+        if (cancelled) return
+        setTargetPartySnapshot(snapshot)
+        setTargetPartyLoadState('ready')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setTargetPartySnapshot(null)
+        setTargetPartyLoadState('ready')
+        setMessage(err instanceof Error ? err.message : 'Could not load party')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedPlayer?.characterId, selectedPlayer?.menuMode])
 
   useEffect(() => {
     emitGameEvent('socialPresence', {
@@ -1147,6 +1178,36 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [])
 
   useEffect(() => {
+    const open =
+      selectedPlayer?.menuMode === 'right' && Boolean(selectedPlayerAnchor) && !mapLoading && sessionReady
+    if (!open) return
+
+    function close() {
+      emitGameEvent('clearSelectedPlayer', {})
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      close()
+    }
+
+    function onPointerDown(e: PointerEvent) {
+      const popup = playerMenuPopupRef.current
+      if (!popup) return
+      const target = e.target
+      if (target instanceof Node && popup.contains(target)) return
+      close()
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [selectedPlayer?.menuMode, selectedPlayer?.characterId, selectedPlayerAnchor, mapLoading, sessionReady])
+
+  useEffect(() => {
     const host = hostRef.current
     if (!host || !npcsReady || !sessionReady || !dungeonReady) return
 
@@ -1632,25 +1693,87 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         <LowHpVignette hp={sheet.hp} hpMax={sheet.hpMax} />
         {duelSync && <DuelCountdownOverlay duel={duelSync} />}
         {selectedPlayer && selectedPlayerAnchor && (
-          <PlayerTargetPopup
-            player={selectedPlayer}
-            anchor={selectedPlayerAnchor}
-            pvpMap={isPvpMap(character.map_id)}
-            onAttack={() => {
-              emitGameEvent('pvpAttackRequest', { characterId: selectedPlayer.characterId })
-              setSelectedPlayer(null)
-            }}
-            onTrade={() =>
-              setTradePartner({
-                characterId: selectedPlayer.characterId,
-                name: selectedPlayer.name,
-              })
-            }
-            onDuel={() => void runDuelInvite(selectedPlayer.characterId)}
-            onInvite={() => void runPartyAction('invite', selectedPlayer.characterId)}
-            onApply={() => void runPartyAction('apply', selectedPlayer.characterId)}
-            onBrowseShop={() => setVendorShopTarget(selectedPlayer)}
-          />
+          selectedPlayer.menuMode === 'right' ? (
+            <div ref={playerMenuPopupRef}>
+              {(() => {
+                const hasMyParty = Boolean(partySnapshot)
+                const targetInParty = Boolean(targetPartySnapshot?.party)
+                const partyButtonLabel =
+                  targetPartyLoadState === 'loading'
+                    ? 'Party'
+                    : hasMyParty
+                      ? targetInParty
+                        ? 'Ask to join party'
+                        : 'Invite to join my party'
+                      : targetInParty
+                        ? 'Ask to join party'
+                        : 'Create Party'
+
+                const partyButtonDisabled = targetPartyLoadState === 'loading' || (hasMyParty && targetInParty)
+                return (
+                  <PlayerRightClickPopup
+                    player={selectedPlayer}
+                    anchor={selectedPlayerAnchor}
+                    onDeal={() =>
+                      setTradePartner({
+                        characterId: selectedPlayer.characterId,
+                        name: selectedPlayer.name,
+                      })
+                    }
+                    partyButton={{
+                      label: partyButtonLabel,
+                      disabled: partyButtonDisabled,
+                      onClick: () => {
+                        if (partyButtonDisabled) return
+                        void (async () => {
+                          if (hasMyParty) {
+                            // My party exists, target is not in a party: invite them to my party.
+                            await runPartyAction('invite', selectedPlayer.characterId)
+                          } else {
+                            // I have no party:
+                            // - target is in a party: apply (ask to join)
+                            // - target is not in a party: invite (creates party via backend)
+                            const action = targetInParty ? 'apply' : 'invite'
+                            await runPartyAction(action, selectedPlayer.characterId)
+                          }
+                        })()
+                      },
+                    }}
+                    onInviteDuel={() => void runDuelInvite(selectedPlayer.characterId)}
+                    onInviteGuild={
+                      guildSnapshot?.guild
+                        ? {
+                            label: 'Invite to guild',
+                            disabled: true,
+                            onClick: undefined,
+                          }
+                        : undefined
+                    }
+                  />
+                )
+              })()}
+            </div>
+          ) : (
+            <PlayerTargetPopup
+              player={selectedPlayer}
+              anchor={selectedPlayerAnchor}
+              pvpMap={isPvpMap(character.map_id)}
+              onAttack={() => {
+                emitGameEvent('pvpAttackRequest', { characterId: selectedPlayer.characterId })
+                setSelectedPlayer(null)
+              }}
+              onTrade={() =>
+                setTradePartner({
+                  characterId: selectedPlayer.characterId,
+                  name: selectedPlayer.name,
+                })
+              }
+              onDuel={() => void runDuelInvite(selectedPlayer.characterId)}
+              onInvite={() => void runPartyAction('invite', selectedPlayer.characterId)}
+              onApply={() => void runPartyAction('apply', selectedPlayer.characterId)}
+              onBrowseShop={() => setVendorShopTarget(selectedPlayer)}
+            />
+          )
         )}
 
         <div className="game-hud-overlay" aria-label="Game HUD">

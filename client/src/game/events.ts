@@ -51,6 +51,7 @@ export type SelectedPlayerPayload = {
   name: string
   isVending?: boolean
   stallTitle?: string | null
+  menuMode?: 'left' | 'right'
 }
 
 export type DungeonSyncPayload = {
@@ -203,6 +204,7 @@ export type GameEvents = {
   }>
   selectedPlayer: SelectedPlayerPayload | null
   selectedPlayerAnchor: { x: number; y: number } | null
+  clearSelectedPlayer: Record<string, never>
   partySync: PartySyncPayload
   duelSync: DuelSyncPayload | null
   duelCompleteRequest: { duelSessionId: string; winnerCharacterId: string }
