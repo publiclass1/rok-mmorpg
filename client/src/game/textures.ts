@@ -5,12 +5,18 @@ import Phaser from 'phaser'
 function drawGrassTile(g: Phaser.GameObjects.Graphics, x: number, base: number, accent: number) {
   g.fillStyle(base, 1)
   g.fillRect(x, 0, 32, 32)
+  g.lineStyle(1, 0x174b27, 0.5)
+  g.strokeRect(x + 0.5, 0.5, 31, 31)
   g.fillStyle(accent, 1)
   g.fillRect(x + 2, 2, 14, 14)
   g.fillRect(x + 16, 16, 14, 14)
   g.fillStyle(0xffffff, 0.06)
   g.fillRect(x + 4, 4, 6, 6)
   g.fillRect(x + 18, 18, 6, 6)
+  g.fillStyle(0xb7e4a8, 0.3)
+  g.fillRect(x + 6, 22, 1, 4)
+  g.fillRect(x + 25, 5, 1, 4)
+  g.fillRect(x + 11, 11, 1, 3)
 }
 
 function drawPathTile(g: Phaser.GameObjects.Graphics, x: number) {
@@ -31,6 +37,11 @@ function drawPathTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillRect(x, 7, 32, 1)
   g.fillRect(x, 15, 32, 1)
   g.fillRect(x, 23, 32, 1)
+  g.lineStyle(1, 0x5c452f, 0.7)
+  g.strokeRect(x + 0.5, 0.5, 31, 31)
+  g.fillStyle(0xd6b486, 0.55)
+  g.fillCircle(x + 5, 5, 1)
+  g.fillCircle(x + 26, 20, 1)
 }
 
 function drawWallTile(g: Phaser.GameObjects.Graphics, x: number) {
@@ -45,6 +56,8 @@ function drawWallTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillStyle(0x4b5563, 1)
   g.fillRect(x, 0, 32, 2)
   g.fillRect(x, 30, 32, 2)
+  g.lineStyle(1, 0x374151, 0.9)
+  g.strokeRect(x + 0.5, 0.5, 31, 31)
 }
 
 function drawBuildingTile(g: Phaser.GameObjects.Graphics, x: number) {
@@ -56,6 +69,11 @@ function drawBuildingTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillRect(x + 4, 14, 24, 18)
   g.fillStyle(0x44403c, 1)
   g.fillRect(x + 12, 20, 8, 12)
+  g.lineStyle(1, 0x431407, 0.8)
+  g.strokeRect(x + 0.5, 0.5, 31, 31)
+  g.fillStyle(0x7dd3fc, 0.9)
+  g.fillRect(x + 6, 18, 4, 4)
+  g.fillRect(x + 22, 18, 4, 4)
 }
 
 function drawTreeTile(g: Phaser.GameObjects.Graphics, x: number) {
@@ -69,6 +87,10 @@ function drawTreeTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillCircle(x + 12, x + 10, 6)
   g.fillStyle(0x16a34a, 1)
   g.fillCircle(x + 20, x + 11, 5)
+  g.lineStyle(1, 0x14532d, 0.9)
+  g.strokeCircle(x + 16, 12, 11)
+  g.fillStyle(0xbbf7d0, 0.6)
+  g.fillCircle(x + 10, 8, 2)
 }
 
 function drawFountainTile(g: Phaser.GameObjects.Graphics, x: number) {
@@ -80,6 +102,10 @@ function drawFountainTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillCircle(x + 16, x + 16, 9)
   g.fillStyle(0x0ea5e9, 1)
   g.fillCircle(x + 16, x + 16, 4)
+  g.lineStyle(1, 0x475569, 0.9)
+  g.strokeRect(x + 0.5, 0.5, 31, 31)
+  g.lineStyle(1, 0xe0f2fe, 0.6)
+  g.lineBetween(x + 9, 10, x + 23, 10)
 }
 
 function drawPortalTile(g: Phaser.GameObjects.Graphics, x: number) {
@@ -135,34 +161,58 @@ const MOB_FRAME_H = 28
 function drawMobFrame(g: Phaser.GameObjects.Graphics, ox: number, oy: number, frame: number) {
   const cx = ox + 14
   const baseY = oy + 12
-  g.fillStyle(0x000000, 0.2)
+  g.fillStyle(0x111827, 0.28)
   g.fillEllipse(cx, oy + 26, frame >= 3 ? 22 : 20, frame >= 3 ? 4 : 6)
 
   if (frame === 0) {
+    // Readable classic-RPG silhouette: rim, volume highlight, eyes and feet.
+    g.fillStyle(0x831843, 1)
+    g.fillCircle(cx, baseY + 1, 13)
     g.fillStyle(0xf472b6, 1)
-    g.fillCircle(cx, baseY, 12)
+    g.fillCircle(cx, baseY - 1, 11)
+    g.fillStyle(0xfbcfe8, 0.8)
+    g.fillEllipse(cx - 4, baseY - 5, 8, 5)
+    g.fillStyle(0x1f2937, 1)
+    g.fillCircle(cx - 4, baseY - 1, 2)
+    g.fillCircle(cx + 4, baseY - 1, 2)
     g.fillStyle(0xffffff, 0.9)
-    g.fillCircle(cx - 4, baseY - 2, 3)
-    g.fillCircle(cx + 4, baseY - 2, 3)
+    g.fillCircle(cx - 3.5, baseY - 1.5, 0.8)
+    g.fillCircle(cx + 4.5, baseY - 1.5, 0.8)
+    g.lineStyle(1, 0x9d174d, 0.9)
+    g.strokeCircle(cx, baseY - 1, 11)
   } else if (frame === 1) {
+    g.fillStyle(0x831843, 1)
+    g.fillEllipse(cx, baseY + 3, 18, 12)
     g.fillStyle(0xf472b6, 1)
-    g.fillEllipse(cx, baseY + 2, 16, 10)
+    g.fillEllipse(cx, baseY + 1, 16, 10)
+    g.fillStyle(0xfbcfe8, 0.75)
+    g.fillEllipse(cx - 4, baseY - 1, 7, 3)
     g.fillStyle(0x1f2937, 1)
-    g.fillRect(cx - 5, baseY - 1, 4, 1)
-    g.fillRect(cx + 1, baseY - 1, 4, 1)
+    g.fillRect(cx - 5, baseY - 1, 3, 2)
+    g.fillRect(cx + 2, baseY - 1, 3, 2)
+    g.lineStyle(1, 0x9d174d, 0.9)
+    g.strokeEllipse(cx, baseY + 1, 16, 10)
   } else if (frame === 2) {
+    g.fillStyle(0x831843, 1)
+    g.fillEllipse(cx + 4, baseY + 5, 16, 11)
     g.fillStyle(0xf472b6, 1)
-    g.fillEllipse(cx + 4, baseY + 4, 14, 9)
+    g.fillEllipse(cx + 4, baseY + 3, 14, 9)
+    g.fillStyle(0xfbcfe8, 0.72)
+    g.fillEllipse(cx + 1, baseY + 1, 6, 3)
     g.fillStyle(0x1f2937, 1)
-    g.lineBetween(cx + 2, baseY, cx + 6, baseY + 4)
+    g.lineBetween(cx + 1, baseY, cx + 5, baseY + 4)
     g.lineBetween(cx + 8, baseY, cx + 4, baseY + 4)
+    g.lineStyle(1, 0x9d174d, 0.9)
+    g.strokeEllipse(cx + 4, baseY + 3, 14, 9)
   } else if (frame === 3) {
+    g.fillStyle(0x831843, 1)
+    g.fillEllipse(cx, baseY + 10, 20, 7)
     g.fillStyle(0xf472b6, 1)
-    g.fillEllipse(cx, baseY + 10, 18, 6)
-    g.fillStyle(0x000000, 0.15)
-    g.fillEllipse(cx, baseY + 11, 16, 3)
+    g.fillEllipse(cx, baseY + 8, 18, 6)
+    g.fillStyle(0x500724, 0.3)
+    g.fillEllipse(cx, baseY + 10, 16, 3)
   } else {
-    g.fillStyle(0xf472b6, 0.5)
+    g.fillStyle(0x9d174d, 0.55)
     g.fillEllipse(cx, baseY + 12, 20, 4)
   }
 }
