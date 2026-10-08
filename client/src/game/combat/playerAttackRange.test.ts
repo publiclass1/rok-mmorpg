@@ -6,6 +6,7 @@ import {
   getEquippedWeaponClass,
   getPlayerAttackRangePx,
   MAP_TILE_SIZE,
+  resolveEnemySkillTarget,
   resolvePlayerAttackTarget,
   usesTargetedAttack,
 } from './playerAttackRange'
@@ -101,6 +102,53 @@ function run() {
     selectedMob: selected11,
   })
   assert.equal(bowMiss, null)
+
+  const skillRange240 = 240
+  const farSelected: MockMob = { id: 'mage_far', alive: true, x: 5 * MAP_TILE_SIZE, y: 0 }
+  const unarmedMelee = resolvePlayerAttackTarget({
+    playerX: px,
+    playerY: py,
+    facing: 'right',
+    rangeCells: 1,
+    weaponClass: 'unarmed',
+    mobs: [farSelected],
+    chaseMob: null,
+    selectedMob: farSelected,
+  })
+  assert.equal(unarmedMelee, null)
+
+  const skillHit = resolveEnemySkillTarget({
+    playerX: px,
+    playerY: py,
+    skillRangePx: skillRange240,
+    mobs: [farSelected],
+    chaseMob: null,
+    selectedMob: farSelected,
+  })
+  assert.equal(skillHit?.id, 'mage_far')
+
+  const nearest: MockMob = { id: 'near', alive: true, x: 100, y: 0 }
+  const farther: MockMob = { id: 'far', alive: true, x: 200, y: 0 }
+  const nearestPick = resolveEnemySkillTarget({
+    playerX: px,
+    playerY: py,
+    skillRangePx: skillRange240,
+    mobs: [farther, nearest],
+    chaseMob: null,
+    selectedMob: null,
+  })
+  assert.equal(nearestPick?.id, 'near')
+
+  const outOfSkill: MockMob = { id: 'too_far', alive: true, x: 300, y: 0 }
+  const skillMiss = resolveEnemySkillTarget({
+    playerX: px,
+    playerY: py,
+    skillRangePx: skillRange240,
+    mobs: [outOfSkill],
+    chaseMob: null,
+    selectedMob: null,
+  })
+  assert.equal(skillMiss, null)
 
   console.log('playerAttackRange.test.ts: ok')
 }

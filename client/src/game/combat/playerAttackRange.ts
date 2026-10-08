@@ -170,3 +170,49 @@ export function resolvePlayerAttackTarget<T extends AttackTargetCandidate>(ctx: 
 
   return findMobInAttackCone(playerX, playerY, facing, rangeCells, mobs)
 }
+
+function euclideanDistance(px: number, py: number, tx: number, ty: number): number {
+  return Math.hypot(tx - px, ty - py)
+}
+
+function mobWithinSkillRangePx<T extends AttackTargetCandidate>(
+  mob: T | null | undefined,
+  playerX: number,
+  playerY: number,
+  skillRangePx: number,
+): T | null {
+  if (!mob?.alive) return null
+  if (euclideanDistance(playerX, playerY, mob.x, mob.y) > skillRangePx) return null
+  return mob
+}
+
+/** Enemy skill targeting: chase → selected → nearest alive mob within skill range (Euclidean px). */
+export function resolveEnemySkillTarget<T extends AttackTargetCandidate>(ctx: {
+  playerX: number
+  playerY: number
+  skillRangePx: number
+  mobs: T[]
+  chaseMob: T | null | undefined
+  selectedMob: T | null | undefined
+}): T | null {
+  const { playerX, playerY, skillRangePx, mobs, chaseMob, selectedMob } = ctx
+  if (skillRangePx <= 0) return null
+
+  const fromChase = mobWithinSkillRangePx(chaseMob, playerX, playerY, skillRangePx)
+  if (fromChase) return fromChase
+  const fromSelected = mobWithinSkillRangePx(selectedMob, playerX, playerY, skillRangePx)
+  if (fromSelected) return fromSelected
+
+  let best: T | null = null
+  let bestDist = Infinity
+  for (const mob of mobs) {
+    if (!mob.alive) continue
+    const dist = euclideanDistance(playerX, playerY, mob.x, mob.y)
+    if (dist > skillRangePx) continue
+    if (dist < bestDist) {
+      bestDist = dist
+      best = mob
+    }
+  }
+  return best
+}

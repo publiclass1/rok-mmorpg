@@ -104,6 +104,7 @@ import {
   getPlayerAttackRangePx,
   isInFacingCone,
   isWithinPlayerAttackRange,
+  resolveEnemySkillTarget,
   resolvePlayerAttackTarget,
   usesTargetedAttack,
 } from '../combat/playerAttackRange'
@@ -1701,12 +1702,18 @@ export class WorldScene extends Phaser.Scene {
       return false
     }
     if (def.target === 'enemy') {
-      const mob = targetMob?.alive ? targetMob : this.resolveAttackTargetMob()
-      if (!mob) return false
+      const skillRange = this.skillRangePx(def)
+      const mob =
+        targetMob?.alive
+          ? targetMob
+          : this.resolveSkillTargetMob(skillRange)
+      if (!mob) {
+        if (!fromAuto) emitGameEvent('status', 'No target in range.')
+        return false
+      }
       const px = this.playerDisplay.container.x
       const py = this.playerDisplay.container.y
       const dist = Phaser.Math.Distance.Between(px, py, mob.sprite.x, mob.sprite.y)
-      const skillRange = this.skillRangePx(def)
       if (dist <= skillRange) {
         this.executePlayerSkill(skillId, level, def, mob)
         return true
@@ -4016,6 +4023,45 @@ export class WorldScene extends Phaser.Scene {
 
   private hasFocusedMobTarget(): boolean {
     return Boolean(this.chaseMob?.alive || this.selectedMob?.alive)
+  }
+
+  private resolveSkillTargetMob(skillRangePx: number): MobInstance | null {
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    const mobs = this.mobs.map((mob) => ({
+      mob,
+      alive: mob.alive,
+      x: mob.sprite.x,
+      y: mob.sprite.y,
+    }))
+    const chase = this.chaseMob
+      ? {
+          mob: this.chaseMob,
+          alive: this.chaseMob.alive,
+          x: this.chaseMob.sprite.x,
+          y: this.chaseMob.sprite.y,
+        }
+      : null
+    const selected = this.selectedMob
+      ? {
+          mob: this.selectedMob,
+          alive: this.selectedMob.alive,
+          x: this.selectedMob.sprite.x,
+          y: this.selectedMob.sprite.y,
+        }
+      : null
+    const hit = resolveEnemySkillTarget({
+      playerX: px,
+      playerY: py,
+      skillRangePx,
+      mobs,
+      chaseMob: chase,
+      selectedMob: selected,
+    })
+    if (hit) return hit.mob
+    if (this.chaseMob?.alive) return this.chaseMob
+    if (this.selectedMob?.alive) return this.selectedMob
+    return null
   }
 
   private resolveAttackTargetMob(): MobInstance | null {
