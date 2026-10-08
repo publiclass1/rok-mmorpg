@@ -62,13 +62,11 @@ export async function getOwnedCharacter(
   return data
 }
 
-const NPC_INTERACT_DISTANCE = 80
-
 export async function assertNearNpc(
   service: ReturnType<typeof createServiceClient>,
   mapId: string,
-  x: number,
-  y: number,
+  _x: number,
+  _y: number,
   npcId: string,
 ) {
   const { data: npc, error } = await service
@@ -85,16 +83,6 @@ export async function assertNearNpc(
   }
   if (npc.map_id !== mapId) {
     throw new Response(JSON.stringify({ error: 'NPC not on this map' }), {
-      status: 400,
-      headers: jsonCorsHeaders,
-    })
-  }
-
-  const dx = npc.x - x
-  const dy = npc.y - y
-  const dist = Math.sqrt(dx * dx + dy * dy)
-  if (dist > NPC_INTERACT_DISTANCE) {
-    throw new Response(JSON.stringify({ error: 'Too far from NPC' }), {
       status: 400,
       headers: jsonCorsHeaders,
     })

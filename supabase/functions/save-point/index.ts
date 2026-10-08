@@ -26,7 +26,8 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as Body
 
     const service = createServiceClient()
-    const npc = await assertNearNpc(service, body.mapId, body.x, body.y, body.npcId)
+    const character = await getOwnedCharacter(client, user.id, body.characterId)
+    const npc = await assertNearNpc(service, character.map_id, character.x, character.y, body.npcId)
     if (npc.npc_type !== 'save') {
       return new Response(JSON.stringify({ error: 'Not a save NPC' }), {
         status: 400,
@@ -34,14 +35,12 @@ Deno.serve(async (req) => {
       })
     }
 
-    await getOwnedCharacter(client, user.id, body.characterId)
-
     const { error } = await service
       .from('profiles')
       .update({
-        save_map_id: body.mapId,
-        save_x: body.x,
-        save_y: body.y,
+        save_map_id: character.map_id,
+        save_x: character.x,
+        save_y: character.y,
       })
       .eq('id', user.id)
 

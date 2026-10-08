@@ -37,9 +37,8 @@ Deno.serve(async (req) => {
     }
 
     const service = createServiceClient()
-    await assertNearNpc(service, body.mapId, body.x, body.y, body.npcId)
-
     const character = await getOwnedCharacter(client, user.id, body.characterId)
+    await assertNearNpc(service, character.map_id, character.x, character.y, body.npcId)
 
     if (body.direction === 'to_storage') {
       const { data: inv } = await service

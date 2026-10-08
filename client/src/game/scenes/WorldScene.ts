@@ -587,10 +587,6 @@ export class WorldScene extends Phaser.Scene {
         }
         const px = this.playerDisplay.container.x
         const py = this.playerDisplay.container.y
-        if (Phaser.Math.Distance.Between(px, py, npc.x, npc.y) > INTERACT_RANGE) {
-          emitGameEvent('status', 'Too far from NPC — move closer.')
-          return
-        }
         this.chaseMob = null
         this.setSelectedMob(null)
         clearMoveTarget(this.moveTarget)

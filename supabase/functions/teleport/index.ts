@@ -27,7 +27,8 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as Body
 
     const service = createServiceClient()
-    const npc = await assertNearNpc(service, body.mapId, body.x, body.y, body.npcId)
+    const character = await getOwnedCharacter(client, user.id, body.characterId)
+    const npc = await assertNearNpc(service, character.map_id, character.x, character.y, body.npcId)
     if (npc.npc_type !== 'teleport') {
       return new Response(JSON.stringify({ error: 'Not a teleport NPC' }), {
         status: 400,
@@ -49,8 +50,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-
-    const character = await getOwnedCharacter(client, user.id, body.characterId)
 
     const { data: updated, error } = await service
       .from('characters')

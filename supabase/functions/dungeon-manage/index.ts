@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
         })
       }
 
-      const npc = await assertNearNpc(service, body.mapId, body.x, body.y, body.npcId)
+      const npc = await assertNearNpc(service, character.map_id, character.x, character.y, body.npcId)
       if (npc.npc_type !== 'dungeon') {
         return new Response(JSON.stringify({ error: 'Not a dungeon NPC' }), {
           status: 400,
