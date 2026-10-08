@@ -157,6 +157,7 @@ import {
 import {
   createPlayerDisplay,
   playPlayerAnim,
+  setPlayerToIdle,
   setPlayerDeadFrame,
   setPlayerJobAvatar,
   setPlayerMounted,
@@ -578,7 +579,7 @@ export class WorldScene extends Phaser.Scene {
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (this.uiPointerLocked || this.isPlayerDead) return
       if (this.pendingSkill && pointer.rightButtonDown()) {
-        this.cancelSkillTargeting()
+        this.cancelMobTargetLockOnRightClick()
         return
       }
       const wx = pointer.worldX
@@ -586,6 +587,7 @@ export class WorldScene extends Phaser.Scene {
 
       // Right-click context menu (players only). Do not trigger movement/attack flows.
       if (pointer.rightButtonDown()) {
+        this.cancelMobTargetLockOnRightClick()
         const remote = this.findRemotePlayerAt(wx, wy)
         if (remote) {
           this.breakRestState()
@@ -690,7 +692,6 @@ export class WorldScene extends Phaser.Scene {
         this.queuedSkillCast = null
         this.clearGroundSkillChase()
         this.stopPvpChase()
-        this.setSelectedMob(null)
         this.setSelectedPlayer(null)
         this.groundAoEMarker.cancel()
         this.playWalkClickMarker(wx, wy)
@@ -1954,6 +1955,30 @@ export class WorldScene extends Phaser.Scene {
     this.groundAoEMarker.cancel()
     emitGameEvent('status', 'Skill cancelled.')
     this.refreshCursor()
+  }
+
+  private cancelMobTargetLockOnRightClick() {
+    // Ensure RIGHT-click immediately stops any skill previews/chases,
+    // even if the pending skill has already been cleared.
+    this.cancelSkillTargeting()
+
+    // Stop mob-skill chase (where `pendingSkill` may already be null).
+    if (this.chaseMobForSkillOnly || this.chaseMob) {
+      this.chaseMob = null
+      this.chaseMobForSkillOnly = false
+    }
+    this.queuedSkillCast = null
+
+    // Stop any auto-attack chase (and prevent continued attacking due to lock-on).
+    this.disableAutoAttackFromManualInput()
+
+    clearMoveTarget(this.moveTarget)
+    this.stopPlayerMotion()
+
+    // Prevent already-scheduled attack strike callbacks from firing.
+    if (this.playerDisplay) setPlayerToIdle(this.playerDisplay, this.facing)
+
+    this.setSelectedMob(null)
   }
 
   private tickGroundAoEPreview() {

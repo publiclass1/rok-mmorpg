@@ -940,6 +940,899 @@
       "rarity": "artifact",
       "dungeonRollable": false,
       "sourceUrl": null
+    },
+    {
+      "id": "rarity_cos_cotton_shirt",
+      "name": "Cotton Shirt",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0xf5f5dc",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cotton_shirt.svg",
+      "sourceUrl": "https://irowiki.org/wiki/Cotton_Shirt"
+    },
+    {
+      "id": "rarity_cos_hooded_mantle",
+      "name": "Hooded Mantle",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "garment",
+      "layerColor": "0x4c1d95",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/hooded_mantle.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_cos_sandals",
+      "name": "Sandals",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "boots",
+      "layerColor": "0x92400e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/sandals.svg",
+      "sourceUrl": "https://irowiki.org/wiki/Sandals"
+    },
+    {
+      "id": "rarity_cos_wooden_shield",
+      "name": "Wooden Shield",
+      "type": "armor",
+      "weight": 50,
+      "stackMax": 1,
+      "equipSlot": "offhand",
+      "layerColor": "0xa16207",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/wooden_shield.svg",
+      "offhandKind": "shield",
+      "sourceUrl": "https://irowiki.org/wiki/Wooden_Shield"
+    },
+    {
+      "id": "rarity_cos_clip",
+      "name": "Clip",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accLeft",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/clip.svg",
+      "sourceUrl": "https://irowiki.org/wiki/Clip"
+    },
+    {
+      "id": "rarity_cos_glove",
+      "name": "Glove",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accRight",
+      "layerColor": "0x78716c",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/glove.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_cos_adventurers_suit",
+      "name": "Adventurer's Suit",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0x65a30d",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/adventurers_suit.svg",
+      "requiredBaseLevel": 4,
+      "sourceUrl": "https://irowiki.org/wiki/Adventurer's_Suit"
+    },
+    {
+      "id": "rarity_cos_silk_robe",
+      "name": "Silk Robe",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0xddd6fe",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/silk_robe.svg",
+      "requiredBaseLevel": 4,
+      "requiredJobIds": [
+        "mage"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Silk_Robe"
+    },
+    {
+      "id": "rarity_cos_buckler",
+      "name": "Buckler",
+      "type": "armor",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "offhand",
+      "layerColor": "0x6b7280",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/buckler.svg",
+      "offhandKind": "shield",
+      "requiredBaseLevel": 4,
+      "sourceUrl": "https://irowiki.org/wiki/Buckler"
+    },
+    {
+      "id": "rarity_cos_shoes",
+      "name": "Shoes",
+      "type": "armor",
+      "weight": 20,
+      "stackMax": 1,
+      "equipSlot": "boots",
+      "layerColor": "0x1f2937",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/shoes.svg",
+      "requiredBaseLevel": 4,
+      "sourceUrl": "https://irowiki.org/wiki/Shoes"
+    },
+    {
+      "id": "rarity_cos_wooden_mail",
+      "name": "Wooden Mail",
+      "type": "armor",
+      "weight": 50,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0x92400e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "mythic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/wooden_mail.svg",
+      "requiredBaseLevel": 5,
+      "requiredJobIds": [
+        "swordman"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Wooden_Mail"
+    },
+    {
+      "id": "rarity_cos_mantle",
+      "name": "Mantle",
+      "type": "armor",
+      "weight": 20,
+      "stackMax": 1,
+      "equipSlot": "garment",
+      "layerColor": "0x1e3a8a",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "mythic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/mantle.svg",
+      "requiredBaseLevel": 10,
+      "sourceUrl": "https://irowiki.org/wiki/Mantle"
+    },
+    {
+      "id": "rarity_cos_coat",
+      "name": "Coat",
+      "type": "armor",
+      "weight": 30,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0x374151",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "artifact",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/coat.svg",
+      "requiredBaseLevel": 15,
+      "sourceUrl": "https://irowiki.org/wiki/Coat"
+    },
+    {
+      "id": "rarity_cos_knife",
+      "name": "Knife",
+      "type": "weapon",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0xc0c0c0",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/knife.svg",
+      "weaponAtk": 17,
+      "weaponSize": "small",
+      "weaponClass": "knife",
+      "attackElement": "neutral",
+      "sourceUrl": "https://irowiki.org/wiki/Knife"
+    },
+    {
+      "id": "rarity_cos_sword",
+      "name": "Sword",
+      "type": "weapon",
+      "weight": 50,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/sword.svg",
+      "weaponAtk": 25,
+      "weaponSize": "small",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 2,
+      "requiredJobIds": [
+        "swordman"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Sword"
+    },
+    {
+      "id": "rarity_cos_falchion",
+      "name": "Falchion",
+      "type": "weapon",
+      "weight": 60,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x6b7280",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/falchion.svg",
+      "weaponAtk": 39,
+      "weaponSize": "small",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 2,
+      "requiredJobIds": [
+        "swordman"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Falchion"
+    },
+    {
+      "id": "rarity_cos_blade",
+      "name": "Blade",
+      "type": "weapon",
+      "weight": 60,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x4b5563",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/blade.svg",
+      "weaponAtk": 44,
+      "weaponSize": "small",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 3,
+      "requiredJobIds": [
+        "swordman"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Blade"
+    },
+    {
+      "id": "rarity_cos_rapier",
+      "name": "Rapier",
+      "type": "weapon",
+      "weight": 55,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0xd1d5db",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/rapier.svg",
+      "weaponAtk": 47,
+      "weaponSize": "small",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 4,
+      "requiredJobIds": [
+        "swordman"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Rapier"
+    },
+    {
+      "id": "rarity_cos_saber",
+      "name": "Saber",
+      "type": "weapon",
+      "weight": 90,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0xb45309",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/saber.svg",
+      "weaponAtk": 48,
+      "weaponSize": "medium",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 4,
+      "requiredJobIds": [
+        "swordman"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Saber"
+    },
+    {
+      "id": "rarity_cos_spear",
+      "name": "Spear",
+      "type": "weapon",
+      "weight": 70,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x78716c",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/spear.svg",
+      "weaponAtk": 28,
+      "weaponSize": "medium",
+      "weaponClass": "spear",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 2,
+      "requiredJobIds": [
+        "swordman"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Spear"
+    },
+    {
+      "id": "rarity_cos_rod",
+      "name": "Rod",
+      "type": "weapon",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x78350f",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/rod.svg",
+      "weaponAtk": 15,
+      "weaponSize": "small",
+      "weaponClass": "staff",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 2,
+      "requiredJobIds": [
+        "mage"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Rod"
+    },
+    {
+      "id": "rarity_cos_wand",
+      "name": "Wand",
+      "type": "weapon",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x7c3aed",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/wand.svg",
+      "weaponAtk": 25,
+      "weaponSize": "small",
+      "weaponClass": "staff",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 4,
+      "requiredJobIds": [
+        "mage"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Wand"
+    },
+    {
+      "id": "rarity_cos_staff",
+      "name": "Staff",
+      "type": "weapon",
+      "weight": 90,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x57534e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "artifact",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/staff.svg",
+      "weaponAtk": 35,
+      "weaponSize": "medium",
+      "weaponClass": "staff",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 10,
+      "requiredJobIds": [
+        "mage"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Staff"
+    },
+    {
+      "id": "rarity_cos_bow",
+      "name": "Bow",
+      "type": "weapon",
+      "weight": 50,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0xa16207",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/bow.svg",
+      "weaponAtk": 29,
+      "weaponSize": "large",
+      "weaponClass": "bow",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 4,
+      "requiredJobIds": [
+        "archer"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Bow"
+    },
+    {
+      "id": "rarity_cos_great_bow",
+      "name": "Great Bow",
+      "type": "weapon",
+      "weight": 70,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x854d0e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "artifact",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/great_bow.svg",
+      "weaponAtk": 49,
+      "weaponSize": "large",
+      "weaponClass": "bow",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 14,
+      "requiredJobIds": [
+        "archer"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Great_Bow"
+    },
+    {
+      "id": "rarity_cos_composite_bow",
+      "name": "Composite Bow",
+      "type": "weapon",
+      "weight": 80,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x713f12",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "artifact",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/composite_bow.svg",
+      "weaponAtk": 58,
+      "weaponSize": "large",
+      "weaponClass": "bow",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 25,
+      "requiredJobIds": [
+        "archer"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Composite_Bow"
+    },
+    {
+      "id": "rarity_cos_mace",
+      "name": "Mace",
+      "type": "weapon",
+      "weight": 80,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x78716c",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/mace.svg",
+      "weaponAtk": 37,
+      "weaponSize": "small",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 2,
+      "requiredJobIds": [
+        "acolyte"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Mace"
+    },
+    {
+      "id": "rarity_cos_club",
+      "name": "Club",
+      "type": "weapon",
+      "weight": 70,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x44403c",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/club.svg",
+      "weaponAtk": 44,
+      "weaponSize": "small",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 4,
+      "requiredJobIds": [
+        "acolyte"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Club"
+    },
+    {
+      "id": "rarity_cos_smasher",
+      "name": "Smasher",
+      "type": "weapon",
+      "weight": 90,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x292524",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "mythic",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/smasher.svg",
+      "weaponAtk": 54,
+      "weaponSize": "medium",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 6,
+      "requiredJobIds": [
+        "acolyte"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Smasher"
+    },
+    {
+      "id": "rarity_cos_axe",
+      "name": "Axe",
+      "type": "weapon",
+      "weight": 90,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x57534e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/axe.svg",
+      "weaponAtk": 38,
+      "weaponSize": "medium",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 3,
+      "requiredJobIds": [
+        "merchant"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Axe"
+    },
+    {
+      "id": "rarity_cos_battle_axe",
+      "name": "Battle Axe",
+      "type": "weapon",
+      "weight": 120,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0x1c1917",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "mythic",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/battle_axe.svg",
+      "weaponAtk": 55,
+      "weaponSize": "medium",
+      "weaponClass": "sword",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 6,
+      "requiredJobIds": [
+        "merchant"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Battle_Axe"
+    },
+    {
+      "id": "rarity_cos_main_gauche",
+      "name": "Main Gauche",
+      "type": "weapon",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0xe5e7eb",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/main_gauche.svg",
+      "weaponAtk": 30,
+      "weaponSize": "small",
+      "weaponClass": "knife",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 2,
+      "requiredJobIds": [
+        "thief"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Main_Gauche"
+    },
+    {
+      "id": "rarity_cos_dagger",
+      "name": "Dagger",
+      "type": "weapon",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0xd1d5db",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/dagger.svg",
+      "weaponAtk": 33,
+      "weaponSize": "small",
+      "weaponClass": "knife",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 3,
+      "requiredJobIds": [
+        "thief"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Dagger"
+    },
+    {
+      "id": "rarity_cos_stiletto",
+      "name": "Stiletto",
+      "type": "weapon",
+      "weight": 45,
+      "stackMax": 1,
+      "equipSlot": "weapon",
+      "layerColor": "0xf3f4f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "rarity": "mythic",
+      "dungeonRollable": false,
+      "iconFile": "/items/weapons/stiletto.svg",
+      "weaponAtk": 37,
+      "weaponSize": "small",
+      "weaponClass": "knife",
+      "attackElement": "neutral",
+      "requiredBaseLevel": 4,
+      "requiredJobIds": [
+        "thief"
+      ],
+      "sourceUrl": "https://irowiki.org/wiki/Stiletto"
     }
   ]
 }

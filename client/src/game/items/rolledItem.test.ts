@@ -20,6 +20,14 @@ function run() {
   assert.ok(isRolledItemId(item!.id))
   assert.ok(parseRolledBaseItemId(item!.id))
 
+  const critItem = rollDungeonGear(floor, true, () => 0.999)
+  assert.ok(critItem, 'mvp roll should produce gear (critChance case)')
+  assert.equal(critItem!.effect.kind, 'critChance')
+
+  const nonMvpItem = rollDungeonGear(floor, false, () => 0)
+  assert.ok(nonMvpItem, 'non-mvp roll should produce gear')
+  assert.notEqual(nonMvpItem!.effect.kind, 'critChance')
+
   const mvpDrops = rollDungeonMvpGearDrops(floor, () => 0.1)
   assert.equal(mvpDrops.length, floor.gearDrop.mvpRolls)
   for (const drop of mvpDrops) {

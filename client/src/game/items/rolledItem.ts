@@ -80,10 +80,14 @@ function rollStats(rarity: GearRarityId, rng: () => number): Partial<Record<Prim
   return out
 }
 
-function rollEffect(rarity: GearRarityId, rng: () => number): RolledItem['effect'] {
+function rollEffect(
+  rarity: GearRarityId,
+  rng: () => number,
+  options?: { allowCritChance: boolean },
+): RolledItem['effect'] {
   const { dungeons } = loadRoContent()
   const effectMin = dungeons.gear.rarities[rarity].effectMin
-  const kinds = dungeons.gear.effectKinds
+  const kinds = dungeons.gear.effectKinds.filter((k) => (options?.allowCritChance ? true : k !== 'critChance'))
   const kind = kinds[Math.floor(rng() * kinds.length)] ?? 'melee'
   const percent = effectMin + Math.floor(rng() * (25 - effectMin + 1))
   return { kind, percent }
@@ -118,13 +122,17 @@ export function createRolledGearFromBase(
     rarity,
     requiredBaseLevel: options.requiredBaseLevel,
     stats: rollStats(rarity, rng),
-    effect: rollEffect(rarity, rng),
+    effect: rollEffect(rarity, rng, { allowCritChance: false }),
     slots: 2,
     cards: [null, null],
   }
 }
 
-function rollOneDungeonGear(floor: RoDungeonFloor, rng: () => number): RolledItem | null {
+function rollOneDungeonGear(
+  floor: RoDungeonFloor,
+  rng: () => number,
+  options?: { allowCritChance: boolean },
+): RolledItem | null {
   const { dungeons } = loadRoContent()
   const slots = dungeons.gear.dropSlots
   const slot = slots[Math.floor(rng() * slots.length)]
@@ -139,7 +147,7 @@ function rollOneDungeonGear(floor: RoDungeonFloor, rng: () => number): RolledIte
     rarity,
     requiredBaseLevel: rollLevelInBand(floor.minLevel, floor.maxLevel, rng),
     stats: rollStats(rarity, rng),
-    effect: rollEffect(rarity, rng),
+    effect: rollEffect(rarity, rng, { allowCritChance: options?.allowCritChance ?? false }),
     slots: 2,
     cards: [null, null],
   }
@@ -148,7 +156,7 @@ function rollOneDungeonGear(floor: RoDungeonFloor, rng: () => number): RolledIte
 export function rollDungeonMvpGearDrops(floor: RoDungeonFloor, rng = Math.random): RolledItem[] {
   const drops: RolledItem[] = []
   for (let r = 0; r < floor.gearDrop.mvpRolls; r++) {
-    const rolled = rollOneDungeonGear(floor, rng)
+    const rolled = rollOneDungeonGear(floor, rng, { allowCritChance: true })
     if (rolled) drops.push(rolled)
   }
   return drops
@@ -161,7 +169,7 @@ export function rollDungeonGear(floor: RoDungeonFloor, isMvp: boolean, rng = Mat
   }
   const chanceRoll = Math.floor(rng() * 10000)
   if (chanceRoll >= floor.gearDrop.chancePerMille) return null
-  return rollOneDungeonGear(floor, rng)
+  return rollOneDungeonGear(floor, rng, { allowCritChance: false })
 }
 
 export function rolledItemDisplayName(rolled: RolledItem): string {

@@ -116,7 +116,7 @@ export function RarityTabShopModal({
         <div>
           <h2 className="modal-title">{npc.label}</h2>
           <p className="muted small" style={{ margin: '0.15rem 0 0' }}>
-            Zeny: {character.zeny} · Cosmetic armor (no stat bonuses)
+            Zeny: {character.zeny} · Cosmetic gear (no stat bonuses)
           </p>
         </div>
         <ModalCloseButton onClose={onClose} label="Cancel" />
@@ -148,7 +148,7 @@ export function RarityTabShopModal({
 
       <div className="shop-modal__grid two-col">
         <section className="shop-pane shop-pane--catalog">
-          <h3 className="shop-pane__title">{rarityLabel(activeRarity)} armor</h3>
+          <h3 className="shop-pane__title">{rarityLabel(activeRarity)} gear</h3>
           <div className="shop-pane__list">
             {catalogRows.length === 0 ? (
               <p className="muted small shop-pane__empty">Nothing in this tier.</p>
