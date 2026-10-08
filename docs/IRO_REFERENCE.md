@@ -55,7 +55,7 @@ This project uses [iRO Wiki](https://irowiki.org/) as the **canonical design ref
 | Field | Source | Notes |
 |-------|--------|--------|
 | Mob HP / ATK / DEF / MDEF / element / size | `content/ro/mobs.json` wiki-oriented columns + `runtime.maxHp` / `runtime.attackDamage` | Used in `mobConfig` + `combat/damage.ts` |
-| Mob EXP on kill | `wikiBaseExp` / `wikiJobExp` | Scaled by `VITE_MOB_EXP_MULTIPLIER` (`gameConfig.ts`) |
+| Mob EXP on kill | `wikiBaseExp` / `wikiJobExp` | Granted as-is (no client-side multiplier) |
 | Mob movement / aggro / respawn | `mobs.json` → `runtime.*` | Gameplay tuning until a balance pass |
 | Mob spawn spots (count, rate, lure) | `content/ro/maps.json` → `mobSpots` | Edited in `/admin/maps` (TMJ `mob_spots` layer) |
 | Player EXP curves | `content/ro/expTables.json` | rAthena Pre-Renewal tables (see file `sourceUrl`) |

@@ -14,7 +14,7 @@ import {
   reconcileProgressBudgetForSave,
   resetAllocatedPrimaryStats,
   resetAllocatedSkills,
-  useConsumableFromSession,
+  consumeConsumableFromSession,
   type CharacterSessionState,
 } from './characterState'
 import { checkCanEquipItem } from './equipRequirements'
@@ -177,7 +177,7 @@ export function applyCharacterAction(
       return { state, changed: false, message: 'You cannot use items while defeated.' }
     }
     const itemId = state.sessionInventory[action.sessionInventoryIndex]?.itemId
-    const result = useConsumableFromSession(state, action.sessionInventoryIndex)
+    const result = consumeConsumableFromSession(state, action.sessionInventoryIndex)
     if (result.ok === false) {
       return { state, changed: false, message: result.reason }
     }

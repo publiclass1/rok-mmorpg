@@ -360,7 +360,7 @@ export function equipItemWithInventoryTransfer(
   }
 }
 
-export function useConsumableFromSession(
+export function consumeConsumableFromSession(
   state: CharacterSessionState,
   sessionInventoryIndex: number,
 ): { ok: true; state: CharacterSessionState } | { ok: false; reason: string } {

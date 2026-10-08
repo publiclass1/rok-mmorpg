@@ -9,9 +9,9 @@ import {
   createInitialCharacterState,
   grantRolledGear,
   normalizeEquipment,
-  useConsumableFromSession,
+  consumeConsumableFromSession,
 } from '../character/characterState'
-import { applyProgressAfterExp, applyServerProgressUpdate } from '../character/progressApply'
+import { applyProgressAfterExp } from '../character/progressApply'
 import {
   getCharacterSession,
   setCharacterSession,
@@ -86,9 +86,6 @@ import { calcPreRenewalCastTimeMsFromSession, skillCastStrikeDelayMs } from '../
 import { PlayerSpellChantGfx } from '../combat/spellChantFx'
 import { buildRandomCastChant, shouldShowSpellChant } from '../combat/spellChants'
 import { playSkillCastFx, playSkillImpactFx } from '../combat/skillFx'
-import { resolveMobKillLoot } from '../combat/drops'
-import { LOOT_CONFIG } from '../combat/lootConfig'
-import { scaleMobExp } from '../combat/gameConfig'
 import { MOB_DEFS, MOB_RESPAWN_MS, MOB_SPAWNS_BY_MAP } from '../combat/mobConfig'
 import {
   autoAttackRotationHasSit,
@@ -131,7 +128,6 @@ import {
 import { isDuelCombatPhase } from '../duel/duelSync'
 import { combatSnapshotFromSession, type DuelCombatSnapshot } from '../duel/duelCombatSnapshot'
 import { combatReport, duelAttack, vendorManage } from '../../lib/api'
-import { progressFromLevels } from '../combat/exp'
 import {
   CLICK_MOVE_ARRIVAL_THRESHOLD,
   clearMoveTarget,
@@ -1870,7 +1866,7 @@ export class WorldScene extends Phaser.Scene {
   private tryUseConsumableItemId(itemId: string): boolean {
     const idx = findSessionStackIndex(this.session, itemId)
     if (idx < 0) return false
-    const result = useConsumableFromSession(this.session, idx)
+    const result = consumeConsumableFromSession(this.session, idx)
     if (result.ok === false) return false
     setCharacterSession(syncDerivedVitals(result.state))
     this.session = getCharacterSession()
@@ -4397,33 +4393,8 @@ export class WorldScene extends Phaser.Scene {
   private killMob(mob: MobInstance) {
     const def = MOB_DEFS[mob.defId]
     const isMvpKill = this.mvpMob === mob
-    const useServerFieldRewards = def && !this.dungeonBoot && !isDungeonMapId(this.character.map_id)
-    if (useServerFieldRewards) {
+    if (def) {
       void this.grantFieldMobKillFromServer(mob, def)
-      logActivity('combat', `Defeated Lv ${mob.level} ${mob.name}.`)
-    } else if (def) {
-      const loot = resolveMobKillLoot(def, LOOT_CONFIG)
-      if (loot.zeny > 0) {
-        logActivity('combat', `Obtained ${loot.zeny.toLocaleString()} zeny.`)
-        emitGameEvent('zenyGain', { amount: loot.zeny })
-      }
-      if (loot.itemIds.length > 0) {
-        const dropGroupId = Date.now()
-        this.spawnAndBroadcastMobItemDrops({
-          dropGroupId,
-          itemIds: loot.itemIds,
-          x: mob.sprite.x,
-          y: mob.sprite.y,
-          fromCharacterId: this.character.id,
-          spawnIndex: mob.spawnIndex,
-        })
-        for (const itemId of loot.itemIds) {
-          logActivity('combat', `Dropped ${getItemDisplayName(itemId)}.`, itemId)
-        }
-      }
-
-      const gained = scaleMobExp(def.wikiBaseExp, def.wikiJobExp)
-      this.grantKillExperience(gained.baseExp, gained.jobExp, mob.sprite.x, mob.sprite.y)
       logActivity('combat', `Defeated Lv ${mob.level} ${mob.name}.`)
     }
 
@@ -4536,18 +4507,6 @@ export class WorldScene extends Phaser.Scene {
     const px = mob.sprite.x
     const py = mob.sprite.y
     const dropGroupId = Date.now()
-    const predictedLoot = resolveMobKillLoot(_def, LOOT_CONFIG)
-    const predictedDropIds =
-      predictedLoot.itemIds.length > 0
-        ? this.spawnAndBroadcastMobItemDrops({
-            dropGroupId,
-            itemIds: predictedLoot.itemIds,
-            x: px,
-            y: py,
-            fromCharacterId: this.character.id,
-            spawnIndex: mob.spawnIndex,
-          })
-        : []
 
     combatReport({
       characterId: this.character.id,
@@ -4562,42 +4521,27 @@ export class WorldScene extends Phaser.Scene {
           logActivity('combat', `Obtained ${result.zeny.toLocaleString()} zeny.`)
           emitGameEvent('characterZenySync', { zeny: result.zenyTotal })
         }
-        // Items were spawned optimistically on the client; server response is used only for EXP/Zenny.
-        const beforeBase = this.session.progress.baseLevel
-        const beforeJob = this.session.progress.jobLevel
-        let baseGained = 0
-        let jobGained = 0
-        updateCharacterSession((s) => {
-          const progress = progressFromLevels(
-            result.progress.baseLevel,
-            result.progress.baseExp,
-            result.progress.jobLevel,
-            result.progress.jobExp,
-            s.jobId,
-          )
-          const applied = applyServerProgressUpdate(
-            {
-              ...s,
-              // Server no longer grants item drops into session inventory.
-              sessionInventory: s.sessionInventory,
-            },
-            progress,
-          )
-          baseGained = applied.baseGained
-          jobGained = applied.jobGained
-          return applied.state
-        })
-        logActivity('exp', `Gained ${result.baseExp} Base EXP and ${result.jobExp} Job EXP.`)
-        this.enqueueLevelUps(baseGained, jobGained, beforeBase, beforeJob)
-        this.emitCharacterSheet()
+
+        // Server is authoritative for itemIds + EXP amounts.
+        if (result.itemIds.length > 0) {
+          this.spawnAndBroadcastMobItemDrops({
+            dropGroupId,
+            itemIds: result.itemIds,
+            x: px,
+            y: py,
+            fromCharacterId: this.character.id,
+            spawnIndex: mob.spawnIndex,
+          })
+
+          for (const itemId of result.itemIds) {
+            logActivity('combat', `Dropped ${getItemDisplayName(itemId)}.`, itemId)
+          }
+        }
+
+        this.grantKillExperience(result.baseExp, result.jobExp, px, py)
       })
       .catch((err) => {
         console.warn('combat-report failed', err)
-        for (const dropId of predictedDropIds) {
-          // Remove drops from all clients (treat like an unclaimed pickup).
-          this.presence?.sendCombat({ kind: 'map_pickup', dropId, characterId: this.character.id })
-          this.mapDropManager?.removeDrop(dropId)
-        }
         emitGameEvent('status', 'Could not claim mob rewards (server).')
       })
   }

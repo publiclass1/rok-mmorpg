@@ -52,7 +52,6 @@ npm install
 cd client
 cp .env.example .env
 # Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-# Optional: VITE_MOB_EXP_MULTIPLIER=100 (mob base/job EXP × multiplier on kill)
 cd ..
 npm run dev
 ```

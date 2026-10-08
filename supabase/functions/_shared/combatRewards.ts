@@ -28,20 +28,6 @@ export function getMobDef(mobDefId: string): RoMob | undefined {
   return MOB_BY_ID.get(mobDefId)
 }
 
-export function mobExpMultiplier(): number {
-  const raw = Deno.env.get('MOB_EXP_MULTIPLIER')
-  if (!raw) return 100
-  const n = Number(raw)
-  if (!Number.isFinite(n) || n < 0) return 100
-  return n
-}
-
-export function scaleMobExp(baseExp: number, jobExp: number): { baseExp: number; jobExp: number } {
-  const m = mobExpMultiplier()
-  if (m === 1) return { baseExp, jobExp }
-  return { baseExp: Math.floor(baseExp * m), jobExp: Math.floor(jobExp * m) }
-}
-
 function rollMobDrops(drops: RoMobDrop[], rng: () => number): string[] {
   const gained: string[] = []
   for (const drop of drops) {

@@ -29,7 +29,7 @@ values
     'prt_fild01_warp',
     'prt_fild01',
     480,
-    880,
+    1536,
     'teleport',
     'Return Warp',
     '{"destinations":[{"map_id":"prontera","label":"Prontera","x":640,"y":360}]}'::jsonb

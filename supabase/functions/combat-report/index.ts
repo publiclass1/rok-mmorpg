@@ -5,7 +5,6 @@ import {
   addJobExp,
   getMobDef,
   resolveMobKillLoot,
-  scaleMobExp,
 } from '../_shared/combatRewards.ts'
 import { mobSpawnsByMap, respawnMsForMapSpot } from '../_shared/expandMobSpots.ts'
 import mobSpotsJson from '../_shared/ro/mobSpots.json' with { type: 'json' }
@@ -124,7 +123,7 @@ Deno.serve(async (req) => {
 
     const rng = () => Math.random()
     const loot = resolveMobKillLoot(mob, rng)
-    const gained = scaleMobExp(mob.wikiBaseExp, mob.wikiJobExp)
+    const gained = { baseExp: mob.wikiBaseExp, jobExp: mob.wikiJobExp }
 
     const { data: progress, error: progErr } = await service
       .from('character_progress')

@@ -14,14 +14,14 @@ const MAPS_JSON_PATH = path.join(ROOT, 'content/ro/maps.json')
 const SEED_SQL_PATH = path.join(ROOT, 'supabase/seed/custom_maps/prt_fild01.sql')
 
 const MAP_ID = 'prt_fild01'
-const W = 40
-const H = 30
+const W = 60
+const H = 50
 const TILE = 32
 
 /** Where Prontera Warp Agent sends players (pixels, feet). */
 const ENTRY = { x: 480, y: 320 }
 /** Return warp NPC anchor (south path). */
-const RETURN_WARP = { x: 480, y: 880 }
+const RETURN_WARP = { x: 480, y: (H - 2) * TILE }
 const KAFRA = { x: 400, y: 400 }
 
 /** @returns {string[][]} */
@@ -103,9 +103,9 @@ function buildMobSpotDefs(walkable) {
   )
 
   const mobPlan = [
-    { defId: 'small_poring', n: 8 },
-    { defId: 'poring', n: 4 },
-    { defId: 'small_poring', n: 2 },
+    { defId: 'small_poring', n: 24 },
+    { defId: 'poring', n: 12 },
+    { defId: 'small_poring', n: 6 },
   ]
 
   const spots = []
