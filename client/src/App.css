@@ -4029,6 +4029,15 @@ button.danger {
   margin-top: 1rem;
 }
 
+.admin-tabs { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+.admin-tabs button { background: transparent; border-color: transparent; color: #9ca3af; }
+.admin-tabs button.active { background: #1d4ed8; border-color: #3b82f6; color: #fff; }
+.admin-settings-card { max-width: 760px; }
+.admin-rate-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
+.admin-rate-grid label { display: flex; flex-direction: column; gap: 0.35rem; }
+.admin-rate-grid input { width: 100%; }
+@media (max-width: 700px) { .admin-rate-grid { grid-template-columns: 1fr; } .map-admin-header { flex-direction: column; } }
+
 .chat-line--system {
   color: #a5b4fc;
 }

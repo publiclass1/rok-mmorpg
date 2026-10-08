@@ -27,6 +27,8 @@ export type AdminCharacterRow = {
   is_gm: boolean
 }
 
+export type GameSettings = { expRate: number; dropRate: number }
+
 async function formatInvokeError(name: string, error: unknown): Promise<string> {
   if (error instanceof FunctionsHttpError) {
     try {
@@ -95,4 +97,12 @@ export function grantZenyByName(
   amount: number,
 ): Promise<{ ok: boolean; message: string; character: { id: string; name: string; zeny: number } }> {
   return invokeAdmin({ action: 'grant_zeny', name: name.trim(), amount })
+}
+
+export function fetchGameSettings(): Promise<GameSettings> {
+  return invokeAdmin({ action: 'get_settings' })
+}
+
+export function updateGameSettings(settings: GameSettings): Promise<GameSettings> {
+  return invokeAdmin({ action: 'update_settings', settings })
 }

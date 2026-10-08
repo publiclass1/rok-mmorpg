@@ -5,7 +5,7 @@ import { createServiceClient } from '../_shared/supabase.ts'
 const ONLINE_WINDOW_SECONDS = 45
 const MAX_ZENY_GRANT = 1_000_000_000
 
-type Action = 'stats' | 'search_characters' | 'set_gm' | 'unset_gm' | 'grant_zeny' | 'audit_summary'
+type Action = 'stats' | 'search_characters' | 'set_gm' | 'unset_gm' | 'grant_zeny' | 'audit_summary' | 'get_settings' | 'update_settings'
 
 type Body = {
   action: Action
@@ -15,6 +15,7 @@ type Body = {
   characterId?: string
   name?: string
   amount?: number
+  settings?: { expRate?: number; dropRate?: number }
 }
 
 function escapeIlikePattern(q: string): string {
@@ -60,6 +61,27 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as Body
     assertAdminPassword(adminPasswordFromRequest(req, body))
     const service = createServiceClient()
+
+    if (body.action === 'get_settings') {
+      const { data, error } = await service.from('game_settings').select('key, value').in('key', ['exp_rate', 'drop_rate'])
+      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+      const values = Object.fromEntries((data ?? []).map((row) => [row.key, Number(row.value)]))
+      return new Response(JSON.stringify({ expRate: values.exp_rate ?? 1, dropRate: values.drop_rate ?? 1 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    if (body.action === 'update_settings') {
+      const expRate = body.settings?.expRate
+      const dropRate = body.settings?.dropRate
+      if (![expRate, dropRate].every((value) => typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 1000)) {
+        return new Response(JSON.stringify({ error: 'Rates must be between 0.01 and 1000.' }), { status: 400 })
+      }
+      const { error } = await service.from('game_settings').upsert([
+        { key: 'exp_rate', value: expRate },
+        { key: 'drop_rate', value: dropRate },
+      ], { onConflict: 'key' })
+      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+      return new Response(JSON.stringify({ ok: true, expRate, dropRate }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
 
     if (body.action === 'stats') {
       const cutoff = new Date(Date.now() - ONLINE_WINDOW_SECONDS * 1000).toISOString()
