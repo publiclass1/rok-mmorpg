@@ -19,6 +19,8 @@ import {
 const MOB_SPAWNS = mobSpawnsByMap(mobSpotsJson as Record<string, unknown[]>)
 const KILL_RANGE_PX = 320
 const MAX_KILLS_PER_MINUTE = 120
+const SETTINGS_CACHE_TTL_MS = 5_000
+let cachedRates: { expRate: number; dropRate: number; expiresAt: number } | null = null
 
 type Body = {
   characterId: string
@@ -32,6 +34,21 @@ type Body = {
 function jobCap(jobId: string): number {
   const job = (jobsJson as { jobs: { id: string; maxJobLevel?: number }[] }).jobs.find((j) => j.id === jobId)
   return job?.maxJobLevel ?? 50
+}
+
+async function loadRewardRates(service: ReturnType<typeof createServiceClient>) {
+  if (cachedRates && cachedRates.expiresAt > Date.now()) return cachedRates
+  const { data } = await service
+    .from('game_settings')
+    .select('key, value')
+    .in('key', ['exp_rate', 'drop_rate'])
+  const values = Object.fromEntries((data ?? []).map((row) => [row.key, Number(row.value)]))
+  cachedRates = {
+    expRate: Number.isFinite(values.exp_rate) && values.exp_rate > 0 ? values.exp_rate : 1,
+    dropRate: Number.isFinite(values.drop_rate) && values.drop_rate > 0 ? values.drop_rate : 1,
+    expiresAt: Date.now() + SETTINGS_CACHE_TTL_MS,
+  }
+  return cachedRates
 }
 
 Deno.serve(async (req) => {
@@ -121,31 +138,27 @@ Deno.serve(async (req) => {
       })
     }
 
-    const rng = () => Math.random()
-    const { data: settings } = await service
-      .from('game_settings')
-      .select('key, value')
-      .in('key', ['exp_rate', 'drop_rate'])
-    const rates = Object.fromEntries((settings ?? []).map((row) => [row.key, Number(row.value)]))
-    const expRate = Number.isFinite(rates.exp_rate) && rates.exp_rate > 0 ? rates.exp_rate : 1
-    const dropRate = Number.isFinite(rates.drop_rate) && rates.drop_rate > 0 ? rates.drop_rate : 1
-    const loot = resolveMobKillLoot(mob, rng, dropRate)
-    const gained = {
-      baseExp: Math.floor(mob.wikiBaseExp * expRate),
-      jobExp: Math.floor(mob.wikiJobExp * expRate),
-    }
-
-    const { data: progress, error: progErr } = await service
-      .from('character_progress')
-      .select('*')
-      .eq('character_id', body.characterId)
-      .maybeSingle()
+    const [{ data: progress, error: progErr }, rates] = await Promise.all([
+      service
+        .from('character_progress')
+        .select('*')
+        .eq('character_id', body.characterId)
+        .maybeSingle(),
+      loadRewardRates(service),
+    ])
 
     if (progErr || !progress) {
       return new Response(JSON.stringify({ error: 'Progress not found' }), {
         status: 404,
         headers: jsonCorsHeaders,
       })
+    }
+
+    const rng = () => Math.random()
+    const loot = resolveMobKillLoot(mob, rng, rates.dropRate)
+    const gained = {
+      baseExp: Math.floor(mob.wikiBaseExp * rates.expRate),
+      jobExp: Math.floor(mob.wikiJobExp * rates.expRate),
     }
 
     const baseAfter = addBaseExp(progress.base_level, progress.base_exp, gained.baseExp)
