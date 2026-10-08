@@ -1,6 +1,6 @@
 import { logActivity } from '../activityLog'
 import type { CharacterSheetPayload } from '../events'
-import { emitGameEvent, type CharacterActionPayload } from '../events'
+import { emitGameEvent, sessionSyncPayload, type CharacterActionPayload } from '../events'
 import { applyCharacterAction, publishSessionState } from './applyCharacterAction'
 import { getCharacterSession, setCharacterSession } from './characterSessionBridge'
 import type { CharacterSessionState } from './characterState'
@@ -47,7 +47,7 @@ export function dispatchCharacterAction(action: CharacterActionPayload): boolean
   const synced = getCharacterSession()
   const { sheet } = publishSessionState(synced)
   context.setSheet(sheet)
-  emitGameEvent('sessionSync', structuredClone(synced))
+  emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(synced)))
   emitGameEvent('characterSheet', sheet)
   if (
     action.type === 'changeJob' ||

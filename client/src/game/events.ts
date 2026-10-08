@@ -8,6 +8,19 @@ import type { NpcRow } from '../types/database'
 import type { MinimapPayload } from './world/minimapTypes'
 import type { AutoAttackConfig } from './combat/autoAttackConfig'
 
+/** Phaser ↔ React session handoff; set `persist: false` when hydrating from DB (avoid overwriting server). */
+export type SessionSyncPayload = {
+  state: CharacterSessionState
+  persist?: boolean
+}
+
+export function sessionSyncPayload(
+  state: CharacterSessionState,
+  options?: { persist?: boolean },
+): SessionSyncPayload {
+  return { state, persist: options?.persist ?? true }
+}
+
 export type PositionPayload = {
   characterId: string
   name: string
@@ -205,7 +218,7 @@ export type GameEvents = {
   chatBubble: { characterId: string; text: string }
   selectedMob: SelectedMobPayload | null
   activityLog: ActivityLogEntry
-  sessionSync: CharacterSessionState
+  sessionSync: SessionSyncPayload
   worldReady: { mapId: string }
   worldLoadProgress: { mapId: string; progress: number }
   minimapUi: { expanded: boolean }

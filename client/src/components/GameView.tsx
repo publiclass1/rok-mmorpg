@@ -36,6 +36,7 @@ import { createPhaserGame } from '../game/createGame'
 import {
   emitGameEvent,
   onGameEvent,
+  sessionSyncPayload,
   type CharacterSheetPayload,
   type ActivityLogEntry,
   type SelectedMobPayload,
@@ -309,12 +310,21 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     setSessionReady(false)
     let cancelled = false
-    void loadCharacterSession(character.id).then((loaded) => {
-      if (cancelled) return
-      setCharacterSession(loaded)
-      setSheet(toCharacterSheetPayload(getCharacterSession()))
-      setSessionReady(true)
-    })
+    void loadCharacterSession(character.id)
+      .then((loaded) => {
+        if (cancelled) return
+        sessionRef.current = loaded
+        setCharacterSession(loaded)
+        setSheet(toCharacterSheetPayload(getCharacterSession()))
+        setSessionReady(true)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        const msg = err instanceof Error ? err.message : 'Could not load character progress'
+        setMessage(msg)
+        setSessionReady(false)
+        console.warn('loadCharacterSession', err)
+      })
     return () => {
       cancelled = true
     }
@@ -621,7 +631,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     const next = { ...session, hp: payload.hpMax, mp: payload.mpMax }
     sessionRef.current = next
     setSheet(toCharacterSheetPayload(next))
-    emitGameEvent('sessionSync', structuredClone(next))
+    emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(next)))
   }, [])
 
   const applyDuelSessionRow = useCallback(
@@ -850,7 +860,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           merged.jobId = ref.jobId
           setCharacterSession(merged)
           setSheet(toCharacterSheetPayload(getCharacterSession()))
-          emitGameEvent('sessionSync', structuredClone(getCharacterSession()))
+          emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(getCharacterSession())))
           return
         }
         setCharacterSession(mergeSheetIntoSession(payload, ref))
@@ -1123,7 +1133,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       })
       queueMicrotask(() => {
         if (!cancelled) {
-          emitGameEvent('sessionSync', structuredClone(sessionRef.current))
+          emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(sessionRef.current), { persist: false }))
         }
       })
     }
@@ -1176,8 +1186,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     if (!sessionReady) return
 
-    function flushOnHide() {
-      if (document.visibilityState !== 'hidden') return
+    function flushProgress() {
       void flushZenyToDb()
       const ch = characterRef.current
       void persistCharacterWorld(
@@ -1190,8 +1199,21 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       })
     }
 
+    function flushOnHide() {
+      if (document.visibilityState !== 'hidden') return
+      flushProgress()
+    }
+
+    function flushOnPageHide() {
+      flushProgress()
+    }
+
     document.addEventListener('visibilitychange', flushOnHide)
-    return () => document.removeEventListener('visibilitychange', flushOnHide)
+    window.addEventListener('pagehide', flushOnPageHide)
+    return () => {
+      document.removeEventListener('visibilitychange', flushOnHide)
+      window.removeEventListener('pagehide', flushOnPageHide)
+    }
   }, [sessionReady, character.id, flushZenyToDb])
 
   useEffect(() => {
@@ -1917,7 +1939,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               void loadCharacterSession(character.id).then((loaded) => {
                 sessionRef.current = loaded
                 setSheet(toCharacterSheetPayload(loaded))
-                emitGameEvent('sessionSync', loaded)
+                emitGameEvent('sessionSync', sessionSyncPayload(loaded, { persist: false }))
               })
             }}
             onMessage={setMessage}

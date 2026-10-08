@@ -5,7 +5,7 @@ import { loadCharacterSession } from '../lib/characterProgress'
 import { supabase } from '../lib/supabase'
 import type { CharacterRow, VendorListingRow } from '../types/database'
 import { toCharacterSheetPayload } from '../game/character/characterSheet'
-import { emitGameEvent } from '../game/events'
+import { emitGameEvent, sessionSyncPayload } from '../game/events'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
 import { ModalScrollBody } from './motion/ModalScrollBody'
@@ -74,7 +74,7 @@ export function VendorShopModal({
       const { data } = await supabase.from('characters').select('*').eq('id', buyer.id).single()
       if (data) onCharacterUpdated(data as CharacterRow)
       const loaded = await loadCharacterSession(buyer.id)
-      emitGameEvent('sessionSync', loaded)
+      emitGameEvent('sessionSync', sessionSyncPayload(loaded, { persist: false }))
       emitGameEvent('characterSheet', toCharacterSheetPayload(loaded))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Purchase failed')

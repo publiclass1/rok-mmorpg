@@ -116,6 +116,7 @@ import { SfxPlayer } from '../combat/sfx'
 import {
   emitGameEvent,
   onGameEvent,
+  sessionSyncPayload,
   type DuelSyncPayload,
   type PartySyncPayload,
   type PlayerPresencePayload,
@@ -656,7 +657,7 @@ export class WorldScene extends Phaser.Scene {
       onGameEvent('useSkillSlot', ({ slot }) => this.useSkillSlot(slot)),
       onGameEvent('sessionSync', (payload) => {
         const prevJobId = this.session.jobId
-        setCharacterSession(structuredClone(payload))
+        setCharacterSession(structuredClone(payload.state))
         this.session = getCharacterSession()
         if (this.playerDisplay) {
           updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
@@ -665,7 +666,9 @@ export class WorldScene extends Phaser.Scene {
             setPlayerJobAvatar(this.playerDisplay, nextAvatar)
           }
         }
-        this.scheduleProgressSave()
+        if (payload.persist !== false) {
+          this.scheduleProgressSave()
+        }
       }),
       onGameEvent('uiPointerLock', (locked) => {
         this.uiPointerLocked = locked
@@ -1732,7 +1735,7 @@ export class WorldScene extends Phaser.Scene {
     setCharacterSession(syncDerivedVitals(result.state))
     this.session = getCharacterSession()
     this.emitCharacterSheet()
-    emitGameEvent('sessionSync', structuredClone(this.session))
+    emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
     this.scheduleProgressSave()
     logActivity('character', `Used ${getItemDisplayName(itemId)}.`)
     return true
@@ -2519,7 +2522,7 @@ export class WorldScene extends Phaser.Scene {
     if (!this.session.activeRental) return
     if (activeRentalAt(this.session, wallNow)) return
     this.session = clearActiveRental(this.session)
-    emitGameEvent('sessionSync', structuredClone(this.session))
+    emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
     this.scheduleProgressSave()
     this.emitPlayerBuffs()
     logActivity('character', 'Equipment rental expired.')
@@ -3137,7 +3140,7 @@ export class WorldScene extends Phaser.Scene {
     this.session = grantRolledGear(this.session, rolled)
     const label = rolledItemDisplayName(rolled)
     logActivity('combat', `Obtained ${label}.`, rolled.id)
-    emitGameEvent('sessionSync', structuredClone(this.session))
+    emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
     this.scheduleProgressSave()
   }
 

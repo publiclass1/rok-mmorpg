@@ -137,14 +137,10 @@ export async function loadCharacterSession(characterId: string): Promise<Charact
     supabase.from('character_equipment').select('slot, item_id, instance_id').eq('character_id', characterId),
   ])
 
-  if (progressRes.error) {
-    console.warn('loadCharacterSession progress', progressRes.error.message)
-  }
-  if (skillsRes.error) {
-    console.warn('loadCharacterSession skills', skillsRes.error.message)
-  }
-  if (equipRes.error) {
-    console.warn('loadCharacterSession equipment', equipRes.error.message)
+  const loadError =
+    progressRes.error?.message ?? skillsRes.error?.message ?? equipRes.error?.message ?? null
+  if (loadError) {
+    throw new Error(`Failed to load character progress: ${loadError}`)
   }
 
   const progress = progressRes.data as ProgressRow | null
