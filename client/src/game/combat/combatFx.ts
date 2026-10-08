@@ -5,7 +5,14 @@ import type { PlayerDisplay } from '../player/playerSprites'
 import { setPlayerHitFlash } from '../player/playerSprites'
 import type { AttackVariant } from '../player/playerCombatAnim'
 
-export type FloatStyle = 'hit' | 'crit' | 'critMagic' | 'miss' | 'mobHitPlayer'
+export type FloatStyle =
+  | 'hit'
+  | 'crit'
+  | 'critMagic'
+  | 'miss'
+  | 'mobHitPlayer'
+  | 'recoverHp'
+  | 'recoverSp'
 
 export type DamageFloatVariant = 'hit' | 'critPhysical' | 'critMagic' | 'miss' | 'blood' | 'bloodCrit'
 
@@ -13,6 +20,8 @@ const STYLE_COLORS: Record<Exclude<FloatStyle, 'crit' | 'critMagic'>, string> = 
   hit: '#fef08a',
   miss: '#9ca3af',
   mobHitPlayer: '#ef4444',
+  recoverHp: '#4ade80',
+  recoverSp: '#60a5fa',
 }
 
 /** RO physical crit: yellow digits on thick black stroke over brown-red jagged burst. */
@@ -213,6 +222,25 @@ export function showFloatingText(
     duration: 550,
     onComplete: () => label.destroy(),
   })
+}
+
+/** Green HP / blue SP floats above the player during sit or passive regen. */
+export function showRecoveryFloats(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  gained: { hp: number; sp: number },
+) {
+  const { hp, sp } = gained
+  if (hp <= 0 && sp <= 0) return
+
+  const both = hp > 0 && sp > 0
+  if (hp > 0) {
+    showFloatingText(scene, x, y - (both ? 48 : 36), `+${hp}`, 'recoverHp')
+  }
+  if (sp > 0) {
+    showFloatingText(scene, x, y - (both ? 32 : 36), `+${sp}`, 'recoverSp')
+  }
 }
 
 export function playMobHitShake(scene: Phaser.Scene, sprite: Phaser.GameObjects.Sprite, tintColor: number) {

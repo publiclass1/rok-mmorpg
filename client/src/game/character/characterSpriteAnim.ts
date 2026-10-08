@@ -76,7 +76,8 @@ export function registerNpcIdleAnimations(scene: Phaser.Scene, textureKey: strin
 }
 
 function mountedRiderFrame(def: CharacterSpriteDef, facing: Facing): number {
-  return stripFrameIndex(def, facing, def.strips.sit, 0)
+  const mountIndex = Math.min(1, def.strips.sit.count - 1)
+  return stripFrameIndex(def, facing, def.strips.sit, mountIndex)
 }
 
 export function poseToFrameIndex(def: CharacterSpriteDef, pose: CharacterPose): number {

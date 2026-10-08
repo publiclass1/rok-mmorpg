@@ -6,7 +6,7 @@ import { resolvePlayerSpriteDef } from './characterSpriteRegistry'
 
 const def = resolvePlayerSpriteDef(DEFAULT_CHARACTER_APPEARANCE, 'novice')
 
-const sitFrame = poseToFrameIndex(def, { ...defaultCharacterPose('down'), anim: 'sit' })
+const groundSitFrame = poseToFrameIndex(def, { ...defaultCharacterPose('down'), anim: 'sit' })
 
 const walkFrame0 = poseToFrameIndex(def, {
   ...defaultCharacterPose('down'),
@@ -37,7 +37,7 @@ const mountedIdle = poseToFrameIndex(def, {
   mounted: true,
 })
 
-assert.equal(mountedIdle, sitFrame, 'mounted idle should use sit frame')
-assert.equal(mountedWalk1, sitFrame, 'mounted walk should use sit frame (no leg cycle)')
+assert.notEqual(mountedIdle, groundSitFrame, 'mounted idle should use saddle sit frame')
+assert.equal(mountedIdle, mountedWalk1, 'mounted walk should use same saddle sit frame')
 
 console.log('characterSpriteAnim.test.ts: ok')

@@ -50,6 +50,22 @@ function deadOffset(slot: PlayerVisualLayer, pose: CharacterPose): EquipPoseOffs
   }
 }
 
+/** Head center while seated (ground sit frame), relative to feet. */
+function sitHeadAnchor(): { x: number; y: number } {
+  const groundY = -2
+  const torsoTop = groundY - 22
+  return { x: 0, y: torsoTop - 6 }
+}
+
+function sitOffset(slot: PlayerVisualLayer, pose: CharacterPose): EquipPoseOffset {
+  const { x, y } = sitHeadAnchor()
+  const layerDy = slot === 'headTop' ? -2 : slot === 'headLower' ? 2 : 0
+  return {
+    dx: x,
+    dy: y - STAND_HEAD_Y + layerDy,
+  }
+}
+
 function flinchOffset(pose: CharacterPose): EquipPoseOffset {
   switch (pose.facing) {
     case 'left':
@@ -78,6 +94,9 @@ export function equipmentPoseOffset(slot: PlayerVisualLayer, pose: CharacterPose
   }
   if (pose.anim === 'dead') {
     return deadOffset(slot, pose)
+  }
+  if (pose.anim === 'sit' && !pose.mounted) {
+    return sitOffset(slot, pose)
   }
   return ZERO
 }

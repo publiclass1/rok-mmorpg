@@ -47,6 +47,7 @@ import {
   playMobHitShake,
   showDamageFloat,
   showFloatingText,
+  showRecoveryFloats,
   type DamageFloatVariant,
 } from '../combat/combatFx'
 import {
@@ -2753,6 +2754,15 @@ export class WorldScene extends Phaser.Scene {
     const nextHp = Math.min(sheet.hpMax, this.session.hp + hp)
     const nextMp = Math.min(sheet.mpMax, this.session.mp + mp)
     if (nextHp === this.session.hp && nextMp === this.session.mp) return false
+
+    const hpGained = nextHp - this.session.hp
+    const spGained = nextMp - this.session.mp
+    showRecoveryFloats(
+      this,
+      this.playerDisplay.container.x,
+      this.playerDisplay.container.y,
+      { hp: hpGained, sp: spGained },
+    )
 
     this.session = { ...this.session, hp: nextHp, mp: nextMp }
     this.emitCharacterSheet()

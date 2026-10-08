@@ -28,7 +28,7 @@ export const PALETTE_SOURCE = {
 type FrameMotion =
   | { kind: 'idle'; walkStep: number; idleStep: 0 | 1; idleBlink: boolean }
   | { kind: 'walk'; walkStep: number }
-  | { kind: 'sit' }
+  | { kind: 'sit'; variant: 'ground' | 'mounted' }
   | { kind: 'attack'; style: AttackStyle; phase: 0 | 1 | 2 }
   | { kind: 'flinch' }
   | { kind: 'dead'; frame: 0 | 1 }
@@ -637,6 +637,84 @@ function drawChibiMountedSit(
   g.fillRect(cx + 2 + eyeDx, torsoTop - 7, 2, 2)
 }
 
+/** Feet on the ground; legs forward/side instead of dangling like on a mount. */
+function drawChibiGroundSit(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  feetY: number,
+  facing: 'down' | 'left' | 'right' | 'up',
+  pal: ChibiPalette,
+  bodyW: number,
+  female: boolean,
+  mode: DrawMode,
+) {
+  const groundY = feetY - 2
+  const torsoTop = groundY - 22
+  const armH = 8
+  const armW = 4
+
+  g.fillStyle(pal.shoes, 1)
+  if (facing === 'down') {
+    g.fillRect(cx - 12, groundY - 4, 8, 4)
+    g.fillRect(cx + 4, groundY - 4, 8, 4)
+    g.fillStyle(pal.pants, 1)
+    g.fillRect(cx - 10, groundY - 10, 7, 6)
+    g.fillRect(cx + 3, groundY - 9, 7, 5)
+    g.fillRect(cx - bodyW / 2 + 1, groundY - 16, bodyW - 2, 7)
+  } else if (facing === 'up') {
+    g.fillRect(cx - 8, groundY - 20, 6, 4)
+    g.fillRect(cx + 2, groundY - 20, 6, 4)
+    g.fillStyle(pal.pants, 1)
+    g.fillRect(cx - 9, groundY - 26, 7, 6)
+    g.fillRect(cx + 2, groundY - 25, 7, 5)
+    g.fillRect(cx - bodyW / 2 + 1, groundY - 18, bodyW - 2, 6)
+  } else {
+    const side = facing === 'left' ? -1 : 1
+    g.fillRect(cx + side * 8, groundY - 4, 7, 4)
+    g.fillRect(cx - side * 2, groundY - 6, 6, 4)
+    g.fillStyle(pal.pants, 1)
+    g.fillRect(cx + side * 4, groundY - 11, 10, 6)
+    g.fillRect(cx - side * 6, groundY - 14, 8, 8)
+  }
+
+  g.fillStyle(pal.shirt, 1)
+  g.fillRoundedRect(cx - bodyW / 2, torsoTop, bodyW, 12, 3)
+  if (mode.kind === 'npc') {
+    drawArchetypeOverlay(g, mode.archetype, cx, groundY - 4)
+  }
+
+  g.fillStyle(pal.skin, 1)
+  if (facing === 'down') {
+    g.fillRect(cx - bodyW / 2 - armW, torsoTop + 3, armW, armH)
+    g.fillRect(cx + bodyW / 2, torsoTop + 3, armW, armH)
+  } else if (facing === 'left') {
+    g.fillRect(cx - bodyW / 2 + 1, torsoTop + 4, armW, armH)
+    g.fillRect(cx + bodyW / 2 - 5, torsoTop + 2, armW, armH - 1)
+  } else if (facing === 'right') {
+    g.fillRect(cx - bodyW / 2 + 1, torsoTop + 2, armW, armH - 1)
+    g.fillRect(cx + bodyW / 2 - armW, torsoTop + 4, armW, armH)
+  } else {
+    g.fillRect(cx - bodyW / 2 + 2, torsoTop + 4, armW - 1, armH - 2)
+    g.fillRect(cx + bodyW / 2 - armW, torsoTop + 4, armW - 1, armH - 2)
+  }
+
+  g.fillCircle(cx, torsoTop - 6, female ? 7 : 8)
+
+  g.fillStyle(pal.hair, 1)
+  if (female) {
+    g.fillEllipse(cx, torsoTop - 10, femaleHairWidth(mode), 10)
+  } else {
+    g.fillEllipse(cx, torsoTop - 11, 14, 8)
+  }
+
+  let eyeDx = 0
+  if (facing === 'left') eyeDx = -2
+  if (facing === 'right') eyeDx = 2
+  g.fillStyle(pal.eyes, 1)
+  g.fillRect(cx - 4 + eyeDx, torsoTop - 7, 2, 2)
+  g.fillRect(cx + 2 + eyeDx, torsoTop - 7, 2, 2)
+}
+
 function drawChibiFrame(
   g: Phaser.GameObjects.Graphics,
   ox: number,
@@ -664,7 +742,11 @@ function drawChibiFrame(
   let feetY = oy + SPRITE_FRAME_HEIGHT
 
   if (motion.kind === 'sit') {
-    drawChibiMountedSit(g, cx, feetY, facing, pal, bodyW, female, mode)
+    if (motion.variant === 'ground') {
+      drawChibiGroundSit(g, cx, feetY, facing, pal, bodyW, female, mode)
+    } else {
+      drawChibiMountedSit(g, cx, feetY, facing, pal, bodyW, female, mode)
+    }
     return
   }
 
@@ -797,7 +879,9 @@ function motionForColumn(def: CharacterSpriteDef, col: number): FrameMotion {
     return { kind: 'walk', walkStep: col - def.strips.walk.offset }
   }
   if (col >= def.strips.sit.offset && col < def.strips.sit.offset + def.strips.sit.count) {
-    return { kind: 'sit' }
+    const sitIndex = col - def.strips.sit.offset
+    const variant = sitIndex === 0 ? 'ground' : 'mounted'
+    return { kind: 'sit', variant }
   }
   const attackStyles: AttackStyle[] = ['swing', 'thrust', 'bow', 'cast']
   for (const style of attackStyles) {
