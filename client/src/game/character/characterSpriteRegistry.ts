@@ -116,6 +116,10 @@ const NPC_SPRITES: Record<string, CharacterSpriteDef> = {
   healer: npcSpriteDef('healer'),
   dungeon_guide: npcSpriteDef('dungeon_guide'),
   rental_clerk: npcSpriteDef('rental_clerk'),
+  merchant_female: npcSpriteDef('merchant_female'),
+  guard: npcSpriteDef('guard'),
+  citizen: npcSpriteDef('citizen'),
+  blacksmith: npcSpriteDef('blacksmith'),
 }
 
 export const NPC_SPRITE_LABELS: Record<NpcArchetype, string> = {
@@ -127,6 +131,10 @@ export const NPC_SPRITE_LABELS: Record<NpcArchetype, string> = {
   healer: 'Healer',
   dungeon_guide: 'Dungeon Guide',
   rental_clerk: 'Rental Clerk',
+  merchant_female: 'Merchant (Female)',
+  guard: 'City Guard',
+  citizen: 'Citizen',
+  blacksmith: 'Blacksmith',
 }
 
 export function listNpcSpriteKeys(): NpcArchetype[] {

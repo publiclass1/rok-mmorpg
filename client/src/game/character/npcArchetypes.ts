@@ -8,6 +8,10 @@ export type NpcArchetype =
   | 'healer'
   | 'dungeon_guide'
   | 'rental_clerk'
+  | 'merchant_female'
+  | 'guard'
+  | 'citizen'
+  | 'blacksmith'
 
 export type NpcArchetypePalette = {
   skin: number
@@ -92,6 +96,10 @@ export const NPC_ARCHETYPE_PALETTES: Record<NpcArchetype, NpcArchetypePalette> =
     eyes: 0x111827,
     female: false,
   },
+  merchant_female: { skin: 0xffdbac, hair: 0x7c3aed, shirt: 0xf59e0b, pants: 0x92400e, shoes: 0x111827, eyes: 0x111827, female: true },
+  guard: { skin: 0xffdbac, hair: 0x1e293b, shirt: 0x64748b, pants: 0x334155, shoes: 0x111827, eyes: 0x111827, female: false },
+  citizen: { skin: 0xffdbac, hair: 0x92400e, shirt: 0x16a34a, pants: 0x854d0e, shoes: 0x292524, eyes: 0x111827, female: false },
+  blacksmith: { skin: 0xffdbac, hair: 0x292524, shirt: 0xb45309, pants: 0x44403c, shoes: 0x1c1917, eyes: 0x111827, female: false },
 }
 
 export function npcArchetypeFromNpcType(

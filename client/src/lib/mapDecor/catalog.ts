@@ -27,6 +27,9 @@ export type DecorAssetId =
   | 'bridge_v'
   | 'lamp_post'
   | 'bush'
+  | 'merchant_cart'
+  | 'market_stall'
+  | 'market_awning'
 
 export type DecorAssetDef = {
   id: DecorAssetId
@@ -284,6 +287,9 @@ export const DECOR_ASSETS: DecorAssetDef[] = [
     ySort: true,
     footprint: { x: 8, y: 28, width: 48, height: 20 },
   },
+  { id: 'merchant_cart', label: 'Merchant cart', src: '/maps/decor/merchant_cart.svg', width: 128, height: 112, ySort: true, footprint: { x: 12, y: 72, width: 104, height: 40 } },
+  { id: 'market_stall', label: 'Market stall', src: '/maps/decor/market_stall.svg', width: 192, height: 160, ySort: true, footprint: { x: 16, y: 104, width: 160, height: 56 } },
+  { id: 'market_awning', label: 'Market awning', src: '/maps/decor/market_awning.svg', width: 160, height: 96, ySort: true, footprint: { x: 12, y: 68, width: 136, height: 28 } },
 ]
 
 export const DECOR_DRAG_MIME = 'application/x-map-decor-asset'
