@@ -12,7 +12,8 @@ function run() {
   assert.ok(leveled.baseLeveled >= 1, 'should gain base levels from exp')
   const afterSheet = toCharacterSheetPayload(leveled.state)
   assert.ok(afterSheet.hpMax > beforeSheet.hpMax, 'base level up should raise max HP')
-  assert.ok(afterSheet.hp > session.hp, 'base level up should add current HP by max delta')
+  assert.equal(afterSheet.hp, afterSheet.hpMax, 'base level up should restore HP to full')
+  assert.equal(afterSheet.mp, afterSheet.mpMax, 'base level up should restore SP to full')
   assert.ok(leveled.state.statPointsUnspent > 0, 'base level up should grant stat points')
 
   let jobSession = {
