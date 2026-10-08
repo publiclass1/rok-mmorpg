@@ -219,6 +219,7 @@ export type GameEvents = {
   selectedMob: SelectedMobPayload | null
   activityLog: ActivityLogEntry
   sessionSync: SessionSyncPayload
+  progressSaveError: { message: string }
   worldReady: { mapId: string }
   worldLoadProgress: { mapId: string; progress: number }
   minimapUi: { expanded: boolean }

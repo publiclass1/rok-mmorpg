@@ -197,6 +197,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     initialTrade?: TradeSessionRow | null
   } | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [progressSaveError, setProgressSaveError] = useState<string | null>(null)
   const sessionRef = useRef(createInitialCharacterState())
   const [sessionReady, setSessionReady] = useState(false)
   const [sheet, setSheet] = useState<CharacterSheetPayload>(() =>
@@ -802,18 +803,34 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       getSession: () => sessionRef.current,
       setSession,
       setSheet,
-      persistSession: (state) => {
-        void saveCharacterSession(character.id, state).catch((err) => {
-          console.warn('Progress save failed', err)
-          emitGameEvent('status', 'Could not save progress — skill bar and stats may not persist.')
-        })
-      },
+      persistSession: (state) => saveCharacterSession(character.id, state),
     })
     return () => {
       registerCharacterSessionBridge(null)
       registerCharacterActionContext(null)
     }
   }, [character.id])
+
+  useEffect(() => {
+    const unsub = onGameEvent('progressSaveError', ({ message: errMsg }) => {
+      setProgressSaveError(errMsg)
+      setMessage(`Progress not saved: ${errMsg}`)
+      console.warn('Progress save failed', errMsg)
+    })
+    return () => {
+      unsub()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!sessionReady) return
+    const id = window.setInterval(() => {
+      void saveCharacterSession(character.id, sessionRef.current)
+        .then(() => setProgressSaveError(null))
+        .catch(() => {})
+    }, 45_000)
+    return () => window.clearInterval(id)
+  }, [sessionReady, character.id])
 
   useEffect(() => {
     const unsubGain = onGameEvent('zenyGain', ({ amount }) => {
@@ -1145,6 +1162,13 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       cancelAnimationFrame(rafId)
       ro.disconnect()
       window.removeEventListener('resize', refreshScale)
+      const ch = characterRef.current
+      void persistCharacterWorld(
+        character.id,
+        positionRef.current,
+        sessionRef.current,
+        { x: ch.x, y: ch.y, mapId: ch.map_id },
+      ).catch((err) => console.warn('Unmount progress save failed', err))
       game?.destroy(true)
       host.replaceChildren()
       gameRef.current = null
@@ -1722,6 +1746,13 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               </p>
             )}
             {message && <p className="small">{message}</p>}
+            {progressSaveError && (
+              <p className="small progress-save-error" role="alert">
+                Character progress is not saving ({progressSaveError}). Job and skills will reset on relog until
+                this is fixed — try Leave world, check the browser console, and redeploy{' '}
+                <code>progress-save</code> on Supabase.
+              </p>
+            )}
           </motion.div>
 
           <ChatStrip

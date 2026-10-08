@@ -13,6 +13,7 @@ import {
 } from '../game/character/characterState'
 import { parseActiveRental } from '../game/character/rental'
 import type { CharacterRow } from '../types/database'
+import { emitGameEvent } from '../game/events'
 import { progressSave } from './api'
 import { supabase } from './supabase'
 
@@ -310,6 +311,11 @@ export async function saveCharacterSession(characterId: string, state: Character
   return task
 }
 
+function formatProgressSaveError(err: unknown): string {
+  if (err instanceof Error) return err.message
+  return String(err)
+}
+
 async function writeCharacterSession(characterId: string, state: CharacterSessionState): Promise<void> {
   const synced = syncDerivedVitals(reconcileProgressBudgetForSave(state))
   const progressPayload = {
@@ -353,10 +359,16 @@ async function writeCharacterSession(characterId: string, state: CharacterSessio
     }
   })
 
-  await progressSave({
-    characterId,
-    progress: progressPayload,
-    skills: skillRows,
-    equipment: equipRows,
-  })
+  try {
+    await progressSave({
+      characterId,
+      progress: progressPayload,
+      skills: skillRows,
+      equipment: equipRows,
+    })
+  } catch (err) {
+    const message = formatProgressSaveError(err)
+    emitGameEvent('progressSaveError', { message })
+    throw new Error(message)
+  }
 }

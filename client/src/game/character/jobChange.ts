@@ -6,6 +6,7 @@ import { SKILLS } from './skillsConfig'
 import type { CharacterSessionState, EquipSlot } from './characterState'
 import {
   grantAndEquipRolledGear,
+  reconcileProgressBudgetForSave,
   stashAllEquipment,
 } from './characterState'
 import { isAdvancedJobChange, jobCanUseSkillFromJob } from './jobLineage'
@@ -162,5 +163,5 @@ export function applyJobChange(state: CharacterSessionState, targetJobId: string
     }),
   }
   next = applyStarterGear(next, targetJobId)
-  return next
+  return reconcileProgressBudgetForSave(next)
 }

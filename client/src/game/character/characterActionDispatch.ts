@@ -9,7 +9,7 @@ type DispatchContext = {
   getSession: () => CharacterSessionState
   setSession: (state: CharacterSessionState) => void
   setSheet: (sheet: CharacterSheetPayload) => void
-  persistSession?: (state: CharacterSessionState) => void
+  persistSession?: (state: CharacterSessionState) => void | Promise<void>
 }
 
 let context: DispatchContext | null = null
@@ -25,7 +25,8 @@ export function dispatchCharacterAction(action: CharacterActionPayload): boolean
     return false
   }
 
-  const result = applyCharacterAction(getCharacterSession(), action)
+  const beforeSession = getCharacterSession()
+  const result = applyCharacterAction(beforeSession, action)
   if (!result.changed) {
     if (result.message) {
       emitGameEvent('status', result.message)
@@ -58,7 +59,22 @@ export function dispatchCharacterAction(action: CharacterActionPayload): boolean
     action.type === 'learnSkill' ||
     action.type === 'raiseStat'
   ) {
-    context.persistSession?.(synced)
+    const persist = context.persistSession?.(synced)
+    if (action.type === 'changeJob' && persist != null) {
+      void Promise.resolve(persist).catch(() => {
+        setCharacterSession(beforeSession)
+        const reverted = getCharacterSession()
+        const { sheet } = publishSessionState(reverted)
+        context!.setSheet(sheet)
+        emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(reverted), { persist: false }))
+        emitGameEvent('characterSheet', sheet)
+        emitGameEvent(
+          'status',
+          'Job change was not saved to the server — reverted. Check console or deploy progress-save.',
+        )
+        logActivity('character', 'Job change reverted (save failed).')
+      })
+    }
   }
   if (
     result.message &&
