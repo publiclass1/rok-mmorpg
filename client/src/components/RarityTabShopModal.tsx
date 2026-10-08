@@ -32,6 +32,7 @@ type Props = {
   character: CharacterRow
   npc: NpcRow
   sheet: CharacterSheetPayload
+  initialTab?: 'buy' | 'sell'
   onClose: () => void
   onCharacterUpdated: (character: CharacterRow) => void
 }
