@@ -4,7 +4,9 @@ import type { CharacterSessionState } from '../character/characterState'
 import { ensureItemEquipIconTexture } from '../player/itemEquipIconTexture'
 import { createMapDropRarityFx, destroyMapDropRarityFx, type MapDropRarityFx } from './mapDropRarityFx'
 
-const PICKUP_RANGE = 48
+// Pickup range is measured in pixels; maps use 32px tiles (e.g. prontera.tmj).
+// Keep this tight so pickup only happens when you're close to the drop.
+const PICKUP_RANGE = 16
 const HOVER_RADIUS = 18
 
 export type MapDropVisual = {

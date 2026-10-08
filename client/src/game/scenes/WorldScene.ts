@@ -4307,12 +4307,14 @@ export class WorldScene extends Phaser.Scene {
     y: number
     fromCharacterId: string
     spawnIndex: number
-  }) {
+  }): string[] {
     const { dropGroupId, itemIds, x, y, fromCharacterId, spawnIndex } = params
+    const dropIds: string[] = []
     for (let i = 0; i < itemIds.length; i++) {
       const itemId = itemIds[i]
       const dropId = `mobdrop_${fromCharacterId}_${spawnIndex}_${dropGroupId}_${i}`
       this.mapDropManager?.spawnDrop(dropId, itemId, x, y)
+      dropIds.push(dropId)
       this.presence?.sendCombat({
         kind: 'map_drop',
         dropId,
@@ -4322,6 +4324,7 @@ export class WorldScene extends Phaser.Scene {
         fromCharacterId,
       })
     }
+    return dropIds
   }
 
   private killMob(mob: MobInstance) {
@@ -4464,6 +4467,19 @@ export class WorldScene extends Phaser.Scene {
     const px = mob.sprite.x
     const py = mob.sprite.y
     const dropGroupId = Date.now()
+    const predictedLoot = resolveMobKillLoot(_def, LOOT_CONFIG)
+    const predictedDropIds =
+      predictedLoot.itemIds.length > 0
+        ? this.spawnAndBroadcastMobItemDrops({
+            dropGroupId,
+            itemIds: predictedLoot.itemIds,
+            x: px,
+            y: py,
+            fromCharacterId: this.character.id,
+            spawnIndex: mob.spawnIndex,
+          })
+        : []
+
     combatReport({
       characterId: this.character.id,
       mapId: this.character.map_id,
@@ -4477,19 +4493,7 @@ export class WorldScene extends Phaser.Scene {
           logActivity('combat', `Obtained ${result.zeny.toLocaleString()} zeny.`)
           emitGameEvent('characterZenySync', { zeny: result.zenyTotal })
         }
-        if (result.itemIds.length > 0) {
-          for (const itemId of result.itemIds) {
-            logActivity('combat', `Dropped ${getItemDisplayName(itemId)}.`, itemId)
-          }
-          this.spawnAndBroadcastMobItemDrops({
-            dropGroupId,
-            itemIds: result.itemIds,
-            x: px,
-            y: py,
-            fromCharacterId: this.character.id,
-            spawnIndex: mob.spawnIndex,
-          })
-        }
+        // Items were spawned optimistically on the client; server response is used only for EXP/Zenny.
         const beforeBase = this.session.progress.baseLevel
         const beforeJob = this.session.progress.jobLevel
         let baseGained = 0
@@ -4520,6 +4524,11 @@ export class WorldScene extends Phaser.Scene {
       })
       .catch((err) => {
         console.warn('combat-report failed', err)
+        for (const dropId of predictedDropIds) {
+          // Remove drops from all clients (treat like an unclaimed pickup).
+          this.presence?.sendCombat({ kind: 'map_pickup', dropId, characterId: this.character.id })
+          this.mapDropManager?.removeDrop(dropId)
+        }
         emitGameEvent('status', 'Could not claim mob rewards (server).')
       })
   }
