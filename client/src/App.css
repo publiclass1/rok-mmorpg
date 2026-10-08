@@ -1417,7 +1417,9 @@ button:disabled {
 
 .game-hud-nearby {
   right: 0.65rem;
-  bottom: 9.5rem;
+  /* Anchor below the default (compact) minimap top-right panel. */
+  top: calc(10px + 136px + 2.5rem);
+  bottom: auto;
 }
 
 .game-hud-nearby .progress-save-error {

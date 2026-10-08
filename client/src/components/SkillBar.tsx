@@ -38,12 +38,42 @@ type BarSlotRef = { bar: number; slot: number }
 function skillBarRowInitialPosition(panel: HTMLElement, barIndex: number) {
   const w = panel.offsetWidth
   const h = panel.offsetHeight
-  return {
+
+  // Default dock: bottom-right, stacked above the bottom "Experience" dock.
+  const defaultPos = {
     x: Math.max(SKILL_BAR_MARGIN, window.innerWidth - w - SKILL_BAR_MARGIN),
     y: Math.max(
       SKILL_BAR_MARGIN,
       window.innerHeight - h - SKILL_BAR_ABOVE_EXP - barIndex * ROW_PANEL_STACK_OFFSET,
     ),
+  }
+
+  // Preferred dock: next to the floating chat/message window, below it.
+  try {
+    const overlay = panel.closest('.game-hud-overlay') as HTMLElement | null
+    const chatStrip = overlay?.querySelector('.chat-strip--floating') as HTMLElement | null
+    if (!chatStrip) return defaultPos
+
+    const rect = chatStrip.getBoundingClientRect()
+    if (rect.width < 1 || rect.height < 1) return defaultPos
+
+    const fitsRight = rect.right + w + SKILL_BAR_MARGIN <= window.innerWidth
+    const maxX = window.innerWidth - w - SKILL_BAR_MARGIN
+
+    // Prefer right-of-chat. If it would collide with the right HUD edge, dock left-of-chat instead.
+    const desiredX = fitsRight ? rect.right + SKILL_BAR_MARGIN : rect.left - w - SKILL_BAR_MARGIN
+    const x = Math.max(SKILL_BAR_MARGIN, Math.min(maxX, desiredX))
+
+    const desiredY0 = rect.bottom + SKILL_BAR_MARGIN
+    const dock = overlay?.querySelector('.game-bottom-dock') as HTMLElement | null
+    const dockH = dock?.offsetHeight ?? 48
+    const maxY0 = window.innerHeight - h - dockH - SKILL_BAR_MARGIN
+    const y0 = Math.max(SKILL_BAR_MARGIN, Math.min(maxY0, desiredY0))
+    const y = Math.max(SKILL_BAR_MARGIN, y0 - barIndex * ROW_PANEL_STACK_OFFSET)
+
+    return { x, y }
+  } catch {
+    return defaultPos
   }
 }
 

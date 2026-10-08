@@ -15,8 +15,8 @@ export function AutoAttackHudButton({ active, onClick }: Props) {
     >
       <span className="hud-menu-btn__icon">
         <svg
-          width={20}
-          height={20}
+          width={26}
+          height={26}
           viewBox="0 0 20 20"
           fill="none"
           stroke="currentColor"

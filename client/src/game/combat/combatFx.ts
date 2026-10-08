@@ -116,7 +116,7 @@ export function showDamageFloat(
           ? { fill: '#ef4444', stroke: '#450a0a' }
           : { fill: STYLE_COLORS.hit, stroke: '#1f2937' }
 
-  const duration = isCrit ? 2000 : 550
+  const duration = isCrit ? 2000 : 1500
   const rise = isCrit ? -42 : -28
 
   if (isCrit) {
@@ -219,7 +219,7 @@ export function showFloatingText(
     targets: label,
     y: y - 28,
     alpha: 0,
-    duration: 550,
+    duration: style === 'mobHitPlayer' ? 1500 : 550,
     onComplete: () => label.destroy(),
   })
 }
