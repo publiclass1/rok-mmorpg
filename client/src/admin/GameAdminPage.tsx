@@ -1,296 +1,39 @@
 import { useCallback, useEffect, useState } from 'react'
-import {
-  fetchAdminStats,
-  grantZenyByName,
-  searchAdminCharacters,
-  setCharacterGm,
-  type AdminCharacterRow,
-  type AdminStats,
-  fetchGameSettings,
-  updateGameSettings,
-} from './adminPanelApi'
+import { fetchAdminStats, fetchGameSettings, grantZenyByName, searchAdminCharacters, setCharacterGm, updateGameSettings, type AdminCharacterRow, type AdminStats } from './adminPanelApi'
 import { mapDisplayName } from '../game/world/mapDisplayName'
 
+type AdminTab = 'dashboard' | 'settings'
+
+function MetricCard({ label, value, tone = '' }: { label: string; value: string | number; tone?: string }) {
+  return <div className={`admin-metric-card ${tone ? `admin-metric-card--${tone}` : ''}`}><span className="admin-eyebrow">{label}</span><strong>{value}</strong></div>
+}
+
+function AdminRail({ tab, setTab }: { tab: AdminTab; setTab: (tab: AdminTab) => void }) {
+  return <aside className="admin-rail"><div className="admin-brand"><div className="admin-brand-mark">RO</div><div><strong>Ragnarok</strong><span>Operations</span></div></div><div className="admin-rail-label">Control center</div><nav className="admin-rail-nav" aria-label="Admin sections"><button type="button" className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}><span>⌂</span>Dashboard</button><button type="button" className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}><span>⚙</span>Game settings</button><a href="/admin/maps"><span>▦</span>Map editor</a></nav><div className="admin-rail-footer"><span className="admin-live-dot" /> Server console online<a href="/">← Back to game</a></div></aside>
+}
+
+function AdminHeader({ tab, loading, refresh }: { tab: AdminTab; loading: boolean; refresh: () => void }) {
+  return <header className="admin-console-header"><div><div className="admin-breadcrumb">Control center <span>/</span> {tab === 'dashboard' ? 'Dashboard' : 'Game settings'}</div><h1>{tab === 'dashboard' ? 'Server overview' : 'Game settings'}</h1><p className="admin-muted">{tab === 'dashboard' ? 'A live readout of your world, players, and economy.' : 'Tune the live progression and reward economy.'}</p></div><div className="admin-header-actions"><div className="admin-server-status"><span className="admin-live-dot" /><div><strong>World online</strong><small>Presence window active</small></div></div>{tab === 'dashboard' && <button type="button" className="admin-button admin-button--quiet" disabled={loading} onClick={refresh}>↻ Refresh</button>}</div></header>
+}
+
+type DashboardProps = { stats: AdminStats | null; characters: AdminCharacterRow[]; searchQ: string; setSearchQ: (value: string) => void; gmOnly: boolean; setGmOnly: (value: boolean) => void; refreshSearch: () => void; toggleGm: (row: AdminCharacterRow) => void; zenyName: string; setZenyName: (value: string) => void; zenyAmount: string; setZenyAmount: (value: string) => void; sendZeny: () => void; loading: boolean }
+
+function Dashboard({ stats, characters, searchQ, setSearchQ, gmOnly, setGmOnly, refreshSearch, toggleGm, zenyName, setZenyName, zenyAmount, setZenyAmount, sendZeny, loading }: DashboardProps) {
+  if (!stats) return <div className="admin-empty-state"><div className="admin-spinner" /><strong>Loading world data</strong><span className="admin-muted">Connecting to the server console…</span></div>
+  return <div className="admin-dashboard"><section className="admin-hero-card"><div><span className="admin-eyebrow">Live population</span><strong>{stats.totalOnline}</strong><p>players currently visible across the world</p></div><div className="admin-hero-pulse"><span className="admin-pulse-ring" /><span className="admin-live-dot" /><small>Updated within<br />{stats.onlineWindowSeconds}s</small></div></section><section className="admin-metric-grid"><MetricCard label="Characters" value={stats.totalCharacters.toLocaleString()} /><MetricCard label="Accounts" value={stats.totalAccounts.toLocaleString()} /><MetricCard label="Parties" value={stats.totalParties.toLocaleString()} /><MetricCard label="Guilds" value={stats.totalGuilds.toLocaleString()} /><MetricCard label="Vendor stalls" value={stats.totalVendorStalls.toLocaleString()} /><MetricCard label="Total zeny" value={stats.totalZeny.toLocaleString()} tone="gold" /></section><div className="admin-content-grid"><section className="admin-card admin-map-activity"><div className="admin-card-heading"><div><span className="admin-eyebrow">World activity</span><h2>Players by map</h2></div><span className="admin-card-badge">LIVE</span></div>{stats.onlinePerMap.length === 0 ? <div className="admin-card-empty">No players online in the presence window.</div> : <div className="admin-map-list">{stats.onlinePerMap.map((row, index) => { const max = stats.onlinePerMap[0]?.count || 1; return <div className="admin-map-row" key={row.mapId}><span className="admin-map-rank">{String(index + 1).padStart(2, '0')}</span><div className="admin-map-name"><strong>{mapDisplayName(row.mapId)}</strong><div className="admin-bar"><span style={{ width: `${Math.max(5, (row.count / max) * 100)}%` }} /></div></div><strong>{row.count}</strong></div> })}</div>}</section><section className="admin-card admin-quick-action"><div className="admin-card-heading"><div><span className="admin-eyebrow">Economy tool</span><h2>Grant zeny</h2></div><span className="admin-action-icon">◈</span></div><p className="admin-muted">Send currency directly to a character.</p><label>Character name<input placeholder="e.g. NoviceKnight" value={zenyName} onChange={(e) => setZenyName(e.target.value)} /></label><label>Amount<input type="number" min={1} placeholder="Amount" value={zenyAmount} onChange={(e) => setZenyAmount(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendZeny() }} /></label><button type="button" className="admin-button admin-button--gold" disabled={loading} onClick={sendZeny}>Grant currency <span>→</span></button></section></div><section className="admin-card admin-player-card"><div className="admin-card-heading"><div><span className="admin-eyebrow">Moderation</span><h2>Player directory</h2></div><span className="admin-muted">{characters.length} shown</span></div><div className="admin-player-toolbar"><div className="admin-search-wrap"><span>⌕</span><input placeholder="Search character name…" value={searchQ} onChange={(e) => setSearchQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') refreshSearch() }} /></div><label className="admin-check"><input type="checkbox" checked={gmOnly} onChange={(e) => setGmOnly(e.target.checked)} /> GMs only</label><button type="button" className="admin-button admin-button--quiet" disabled={loading} onClick={refreshSearch}>Search</button></div><div className="admin-table-wrap"><table className="admin-console-table"><thead><tr><th>Character</th><th>Location</th><th>Zeny</th><th>Role</th></tr></thead><tbody>{characters.length === 0 ? <tr><td colSpan={4} className="admin-table-empty">No characters match this search.</td></tr> : characters.map((c) => <tr key={c.id}><td><span className="admin-avatar">{c.name.slice(0, 1).toUpperCase()}</span><strong>{c.name}</strong></td><td><span className="admin-location-dot" />{mapDisplayName(c.map_id)}</td><td>{c.zeny.toLocaleString()}</td><td><label className="admin-check admin-role-check"><input type="checkbox" checked={Boolean(c.is_gm)} onChange={() => toggleGm(c)} /> <span className={c.is_gm ? 'admin-role admin-role--gm' : 'admin-role'}>{c.is_gm ? 'GM' : 'Player'}</span></label></td></tr>)}</tbody></table></div></section></div>
+}
+
+function Settings({ expRate, setExpRate, dropRate, setDropRate, saveSettings }: { expRate: string; setExpRate: (value: string) => void; dropRate: string; setDropRate: (value: string) => void; saveSettings: () => void }) {
+  return <div className="admin-settings-page"><section className="admin-settings-intro"><span className="admin-eyebrow">World configuration</span><h2>Shape the pace of your world</h2><p className="admin-muted">These multipliers affect rewards generated by the game. Keep the default at 1.00x, or accelerate progression for special events.</p></section><div className="admin-rate-cards"><label className="admin-rate-card admin-rate-card--exp"><span className="admin-rate-symbol">✦</span><span className="admin-eyebrow">Experience</span><strong>{Number(expRate || 0).toFixed(2)}<small>x</small></strong><span className="admin-muted">Base and job EXP multiplier</span><input type="number" min="0.01" max="1000" step="0.01" value={expRate} onChange={(e) => setExpRate(e.target.value)} /></label><label className="admin-rate-card admin-rate-card--drop"><span className="admin-rate-symbol">◇</span><span className="admin-eyebrow">Drop rate</span><strong>{Number(dropRate || 0).toFixed(2)}<small>x</small></strong><span className="admin-muted">Item reward multiplier</span><input type="number" min="0.01" max="1000" step="0.01" value={dropRate} onChange={(e) => setDropRate(e.target.value)} /></label></div><div className="admin-settings-footer"><span className="admin-muted">Changes are stored server-side and apply to new rewards.</span><button type="button" className="admin-button admin-button--gold" onClick={saveSettings}>Save configuration <span>→</span></button></div></div>
+}
+
 export function GameAdminPage() {
-  const [stats, setStats] = useState<AdminStats | null>(null)
-  const [status, setStatus] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [searchQ, setSearchQ] = useState('')
-  const [gmOnly, setGmOnly] = useState(false)
-  const [characters, setCharacters] = useState<AdminCharacterRow[]>([])
-  const [zenyName, setZenyName] = useState('')
-  const [zenyAmount, setZenyAmount] = useState('')
-  const [tab, setTab] = useState<'dashboard' | 'settings'>('dashboard')
-  const [expRate, setExpRate] = useState('1')
-  const [dropRate, setDropRate] = useState('1')
-
-  const refreshStats = useCallback(async () => {
-    setLoading(true)
-    setStatus(null)
-    try {
-      const data = await fetchAdminStats()
-      setStats(data)
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Failed to load stats')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const refreshSearch = useCallback(async () => {
-    setLoading(true)
-    setStatus(null)
-    try {
-      const data = await searchAdminCharacters(searchQ, gmOnly)
-      setCharacters(data.characters)
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Search failed')
-    } finally {
-      setLoading(false)
-    }
-  }, [searchQ, gmOnly])
-
-  useEffect(() => {
-    void refreshStats()
-    void fetchGameSettings().then((settings) => {
-      setExpRate(String(settings.expRate))
-      setDropRate(String(settings.dropRate))
-    }).catch((err) => setStatus(err instanceof Error ? err.message : 'Failed to load settings'))
-    const t = window.setInterval(() => void refreshStats(), 30_000)
-    return () => window.clearInterval(t)
-  }, [refreshStats])
-
-  async function saveSettings() {
-    const next = { expRate: Number(expRate), dropRate: Number(dropRate) }
-    if (![next.expRate, next.dropRate].every((value) => Number.isFinite(value) && value > 0 && value <= 1000)) {
-      setStatus('Rates must be greater than 0 and no more than 1000.')
-      return
-    }
-    try {
-      const saved = await updateGameSettings(next)
-      setExpRate(String(saved.expRate)); setDropRate(String(saved.dropRate))
-      setStatus('Game rates saved.')
-    } catch (err) { setStatus(err instanceof Error ? err.message : 'Failed to save settings') }
-  }
-
-  useEffect(() => {
-    void refreshSearch()
-  }, [refreshSearch])
-
-  async function sendZeny() {
-    const name = zenyName.trim()
-    const amount = Number.parseInt(zenyAmount, 10)
-    if (!name) {
-      setStatus('Enter a character name.')
-      return
-    }
-    if (!Number.isFinite(amount) || amount <= 0) {
-      setStatus('Enter a positive zeny amount.')
-      return
-    }
-    setStatus(null)
-    try {
-      const result = await grantZenyByName(name, amount)
-      setStatus(result.message)
-      setZenyAmount('')
-      setCharacters((prev) =>
-        prev.map((c) => (c.id === result.character.id ? { ...c, zeny: result.character.zeny } : c)),
-      )
-      void refreshStats()
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Grant zeny failed')
-    }
-  }
-
-  async function toggleGm(row: AdminCharacterRow) {
-    setStatus(null)
-    try {
-      const { character } = await setCharacterGm(row.id, !row.is_gm)
-      setCharacters((prev) => prev.map((c) => (c.id === character.id ? { ...c, is_gm: character.is_gm } : c)))
-      setStatus(`${character.name} GM: ${character.is_gm ? 'on' : 'off'}`)
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'GM update failed')
-    }
-  }
-
-  return (
-    <main className="map-admin-root game-admin-root">
-      <header className="map-admin-header panel">
-        <div>
-          <h1>Game admin</h1>
-          <p className="muted small">Server stats, online players, and GM flags.</p>
-        </div>
-          <nav className="admin-tabs" aria-label="Admin sections">
-            <button type="button" className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>Dashboard</button>
-            <button type="button" className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}>Settings</button>
-            <a className="map-admin-link" href="/admin/maps">Map editor</a>
-          </nav>
-          <div className="map-admin-header-actions">
-          <button type="button" className="secondary" disabled={loading} onClick={() => void refreshStats()}>
-            Refresh stats
-          </button>
-          <a className="map-admin-link" href="/">Back to game</a>
-        </div>
-      </header>
-
-      {status && <p className="map-admin-status">{status}</p>}
-
-      {tab === 'settings' && <section className="panel game-admin-section admin-settings-card">
-        <h2>Game rates</h2>
-        <p className="muted small">Changes apply to new EXP and drop rewards after the server picks up the saved configuration.</p>
-        <div className="admin-rate-grid">
-          <label>EXP rate<input type="number" min="0.01" max="1000" step="0.01" value={expRate} onChange={(e) => setExpRate(e.target.value)} /><span className="muted small">1.00x is the default</span></label>
-          <label>DROP rate<input type="number" min="0.01" max="1000" step="0.01" value={dropRate} onChange={(e) => setDropRate(e.target.value)} /><span className="muted small">1.00x is the default</span></label>
-        </div>
-        <button type="button" onClick={() => void saveSettings()}>Save rates</button>
-      </section>}
-
-      {tab === 'dashboard' && stats && (
-        <section className="game-admin-stats panel">
-          <h2>Overview</h2>
-          <div className="game-admin-stat-grid">
-            <div className="game-admin-stat">
-              <span className="muted small">Online</span>
-              <strong>{stats.totalOnline}</strong>
-              <span className="muted small">last {stats.onlineWindowSeconds}s</span>
-            </div>
-            <div className="game-admin-stat">
-              <span className="muted small">Characters</span>
-              <strong>{stats.totalCharacters}</strong>
-            </div>
-            <div className="game-admin-stat">
-              <span className="muted small">Accounts</span>
-              <strong>{stats.totalAccounts}</strong>
-            </div>
-            <div className="game-admin-stat">
-              <span className="muted small">Parties</span>
-              <strong>{stats.totalParties}</strong>
-            </div>
-            <div className="game-admin-stat">
-              <span className="muted small">Guilds</span>
-              <strong>{stats.totalGuilds}</strong>
-            </div>
-            <div className="game-admin-stat">
-              <span className="muted small">Vendor stalls</span>
-              <strong>{stats.totalVendorStalls}</strong>
-            </div>
-            <div className="game-admin-stat">
-              <span className="muted small">Total zeny</span>
-              <strong>{stats.totalZeny.toLocaleString()}</strong>
-            </div>
-            <div className="game-admin-stat">
-              <span className="muted small">Avg zeny / char</span>
-              <strong>{stats.averageZeny.toLocaleString()}</strong>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {tab === 'dashboard' && stats && (
-        <section className="panel game-admin-section">
-          <h2>Players online per map</h2>
-          {stats.onlinePerMap.length === 0 ? (
-            <p className="muted small">No players online in the presence window.</p>
-          ) : (
-            <table className="game-admin-table">
-              <thead>
-                <tr>
-                  <th>Map</th>
-                  <th>Players</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.onlinePerMap.map((row) => (
-                  <tr key={row.mapId}>
-                    <td>{mapDisplayName(row.mapId)}</td>
-                    <td>{row.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-      )}
-
-      {tab === 'dashboard' && <section className="panel game-admin-section">
-        <h2>Send zeny</h2>
-        <p className="muted small">Grant zeny by exact character name (server-side).</p>
-        <div className="row gap game-admin-search">
-          <input
-            placeholder="Character name"
-            value={zenyName}
-            onChange={(e) => setZenyName(e.target.value)}
-          />
-          <input
-            type="number"
-            min={1}
-            placeholder="Amount"
-            value={zenyAmount}
-            onChange={(e) => setZenyAmount(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') void sendZeny()
-            }}
-          />
-          <button type="button" disabled={loading} onClick={() => void sendZeny()}>
-            Send zeny
-          </button>
-        </div>
-      </section>}
-
-      {tab === 'dashboard' && <section className="panel game-admin-section">
-        <h2>Grandmaster (GM)</h2>
-        <p className="muted small">GMs can use in-game chat: /zeny &lt;player&gt; &lt;amount&gt;</p>
-        <div className="row gap game-admin-search">
-          <input
-            placeholder="Search character name…"
-            value={searchQ}
-            onChange={(e) => setSearchQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') void refreshSearch()
-            }}
-          />
-          <label className="map-admin-check">
-            <input type="checkbox" checked={gmOnly} onChange={(e) => setGmOnly(e.target.checked)} />
-            GMs only
-          </label>
-          <button type="button" className="secondary" disabled={loading} onClick={() => void refreshSearch()}>
-            Search
-          </button>
-        </div>
-        <table className="game-admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Map</th>
-              <th>Zeny</th>
-              <th>GM</th>
-            </tr>
-          </thead>
-          <tbody>
-            {characters.map((c) => (
-              <tr key={c.id}>
-                <td>{c.name}</td>
-                <td>{mapDisplayName(c.map_id)}</td>
-                <td>{c.zeny.toLocaleString()}</td>
-                <td>
-                  <label className="map-admin-check">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(c.is_gm)}
-                      onChange={() => void toggleGm(c)}
-                    />
-                    GM
-                  </label>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>}
-
-      <p className="muted small game-admin-footer">
-        Map file editing works only in local dev (<code>npm run dev</code>); hosted builds can still use this dashboard.
-      </p>
-    </main>
-  )
+  const [stats, setStats] = useState<AdminStats | null>(null); const [status, setStatus] = useState<string | null>(null); const [loading, setLoading] = useState(false); const [searchQ, setSearchQ] = useState(''); const [gmOnly, setGmOnly] = useState(false); const [characters, setCharacters] = useState<AdminCharacterRow[]>([]); const [zenyName, setZenyName] = useState(''); const [zenyAmount, setZenyAmount] = useState(''); const [tab, setTab] = useState<AdminTab>('dashboard'); const [expRate, setExpRate] = useState('1'); const [dropRate, setDropRate] = useState('1')
+  const refreshStats = useCallback(async () => { setLoading(true); try { setStats(await fetchAdminStats()) } catch (err) { setStatus(err instanceof Error ? err.message : 'Failed to load stats') } finally { setLoading(false) } }, [])
+  const refreshSearch = useCallback(async () => { setLoading(true); try { setCharacters((await searchAdminCharacters(searchQ, gmOnly)).characters) } catch (err) { setStatus(err instanceof Error ? err.message : 'Search failed') } finally { setLoading(false) } }, [searchQ, gmOnly])
+  useEffect(() => { void refreshStats(); void fetchGameSettings().then((s) => { setExpRate(String(s.expRate)); setDropRate(String(s.dropRate)) }).catch((err) => setStatus(err instanceof Error ? err.message : 'Failed to load settings')); const timer = window.setInterval(() => void refreshStats(), 30_000); return () => window.clearInterval(timer) }, [refreshStats]); useEffect(() => { void refreshSearch() }, [refreshSearch])
+  async function saveSettings() { const next = { expRate: Number(expRate), dropRate: Number(dropRate) }; if (![next.expRate, next.dropRate].every((value) => Number.isFinite(value) && value > 0 && value <= 1000)) { setStatus('Rates must be greater than 0 and no more than 1000.'); return } try { const saved = await updateGameSettings(next); setExpRate(String(saved.expRate)); setDropRate(String(saved.dropRate)); setStatus('Game rates saved.') } catch (err) { setStatus(err instanceof Error ? err.message : 'Failed to save settings') } }
+  async function sendZeny() { const name = zenyName.trim(); const amount = Number.parseInt(zenyAmount, 10); if (!name || !Number.isFinite(amount) || amount <= 0) { setStatus(!name ? 'Enter a character name.' : 'Enter a positive zeny amount.'); return } try { const result = await grantZenyByName(name, amount); setStatus(result.message); setZenyAmount(''); setCharacters((prev) => prev.map((c) => c.id === result.character.id ? { ...c, zeny: result.character.zeny } : c)); void refreshStats() } catch (err) { setStatus(err instanceof Error ? err.message : 'Grant zeny failed') } }
+  async function toggleGm(row: AdminCharacterRow) { try { const { character } = await setCharacterGm(row.id, !row.is_gm); setCharacters((prev) => prev.map((c) => c.id === character.id ? { ...c, is_gm: character.is_gm } : c)); setStatus(`${character.name} GM: ${character.is_gm ? 'on' : 'off'}`) } catch (err) { setStatus(err instanceof Error ? err.message : 'GM update failed') } }
+  return <main className="admin-console-root"><AdminRail tab={tab} setTab={setTab} /><div className="admin-console-main"><AdminHeader tab={tab} loading={loading} refresh={() => void refreshStats()} />{status && <div className="admin-toast">{status}<button type="button" onClick={() => setStatus(null)}>×</button></div>}{tab === 'dashboard' ? <Dashboard stats={stats} characters={characters} searchQ={searchQ} setSearchQ={setSearchQ} gmOnly={gmOnly} setGmOnly={setGmOnly} refreshSearch={() => void refreshSearch()} toggleGm={(row) => void toggleGm(row)} zenyName={zenyName} setZenyName={setZenyName} zenyAmount={zenyAmount} setZenyAmount={setZenyAmount} sendZeny={() => void sendZeny()} loading={loading} /> : <Settings expRate={expRate} setExpRate={setExpRate} dropRate={dropRate} setDropRate={setDropRate} saveSettings={() => void saveSettings()} />}</div></main>
 }
