@@ -3,6 +3,12 @@ import { loadRoContent } from '../../content/ro/loadContent'
 
 export const SKILL_POINTS_PER_JOB_LEVEL = 1
 
+/** Extra max HP per base level above 1 (not scaled by VIT). */
+export const FLAT_MAX_HP_PER_BASE_LEVEL = 200
+
+/** Extra max SP per base level above 1 (not scaled by INT). */
+export const FLAT_MAX_SP_PER_BASE_LEVEL = 50
+
 const DEFAULT_HP_JOB_A = 0
 const DEFAULT_HP_JOB_B = 5
 const DEFAULT_SP_JOB = 1
@@ -54,20 +60,30 @@ export function calcBaseSp(jobId: string, baseLevel: number): number {
   return 10 + level * spJob
 }
 
-/** Pre-Renewal max HP: floor(baseHp × (1 + VIT × 0.01) × TRANS_MOD). */
+export function flatMaxHpBonus(baseLevel: number): number {
+  const level = Math.max(1, Math.floor(baseLevel))
+  return Math.max(0, level - 1) * FLAT_MAX_HP_PER_BASE_LEVEL
+}
+
+export function flatMaxSpBonus(baseLevel: number): number {
+  const level = Math.max(1, Math.floor(baseLevel))
+  return Math.max(0, level - 1) * FLAT_MAX_SP_PER_BASE_LEVEL
+}
+
+/** Pre-Renewal max HP: floor(baseHp × (1 + VIT × 0.01) × TRANS_MOD) + flat per base level. */
 export function derivedMaxHp(jobId: string, baseLevel: number, vit: number): number {
   const { transMod } = jobVitalCoeffs(jobId)
   const baseHp = calcBaseHp(jobId, baseLevel)
-  return Math.floor(baseHp * (1 + vit * 0.01) * transMod)
+  return Math.floor(baseHp * (1 + vit * 0.01) * transMod) + flatMaxHpBonus(baseLevel)
 }
 
-/** Pre-Renewal max SP: INT mult then TRANS_MOD (classic order). */
+/** Pre-Renewal max SP: INT mult then TRANS_MOD (classic order) + flat per base level. */
 export function derivedMaxMp(jobId: string, baseLevel: number, int: number): number {
   const { transMod } = jobVitalCoeffs(jobId)
   const baseSp = calcBaseSp(jobId, baseLevel)
   let maxSp = Math.floor(baseSp * (1 + int * 0.01))
   maxSp = Math.floor(maxSp * transMod)
-  return maxSp
+  return maxSp + flatMaxSpBonus(baseLevel)
 }
 
 export function moveSpeedFromAgi(agi: number): number {

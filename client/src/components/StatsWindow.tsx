@@ -108,7 +108,7 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
           <span className="stats-window__meta-sep">· level up for more</span>
         )}
         <span className="stats-window__meta-sep">·</span>
-        Reset clears base stats; eff and combat stats include gear
+        Reset clears base stats; gear and buffs show as +amount on stats; combat uses total
       </p>
 
       <div className="stats-window__body two-col">
@@ -181,13 +181,16 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
           <ul className="stat-list stats-window__stat-list">
             {(Object.keys(STAT_LABELS) as PrimaryStat[]).map((stat) => {
               const effKey = EFF_BY_STAT[stat]
-              const eff = sheet[effKey] as number
+              const base = sheet[stat]
+              const bonus = (sheet[effKey] as number) - base
               const cost = sheet.statRaiseCosts[stat]
               return (
                 <li key={stat} className="stats-window__stat-row">
                   <span className="stats-window__stat-label">
-                    {STAT_LABELS[stat]} {sheet[stat]}
-                    <span className="muted"> (eff {eff})</span>
+                    {STAT_LABELS[stat]} {base}
+                    {bonus > 0 && (
+                      <span className="stats-window__stat-bonus">+{bonus}</span>
+                    )}
                   </span>
                   <button
                     type="button"
