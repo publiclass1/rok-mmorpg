@@ -185,6 +185,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [storageNpc, setStorageNpc] = useState<NpcRow | null>(null)
   const [jobMasterNpc, setJobMasterNpc] = useState<NpcRow | null>(null)
   const [shopNpc, setShopNpc] = useState<NpcRow | null>(null)
+  const [shopInitialTab, setShopInitialTab] = useState<'buy' | 'sell'>('buy')
   const [rentalNpc, setRentalNpc] = useState<NpcRow | null>(null)
   const [npcMenu, setNpcMenu] = useState<NpcRow | null>(null)
   const [remotePlayers, setRemotePlayers] = useState<
@@ -1421,6 +1422,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     }
     if (choice.kind === 'shop') {
       setShopNpc(npc)
+      setShopInitialTab(choice.tab ?? 'buy')
       return
     }
     if (choice.kind === 'rental') {
@@ -2026,10 +2028,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         {shopNpc &&
           (isRarityTabShop(shopNpc.config) ? (
             <RarityTabShopModal
-              key={`shop-${shopNpc.id}`}
+              key={`shop-${shopNpc.id}-${shopInitialTab}`}
               character={character}
               npc={shopNpc}
               sheet={sheet}
+              initialTab={shopInitialTab}
               onClose={() => setShopNpc(null)}
               onCharacterUpdated={onCharacterUpdated}
             />

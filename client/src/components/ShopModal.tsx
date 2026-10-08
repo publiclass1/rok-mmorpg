@@ -27,20 +27,20 @@ type Props = {
   character: CharacterRow
   npc: NpcRow
   sheet: CharacterSheetPayload
+  initialTab?: 'buy' | 'sell'
   onClose: () => void
   onCharacterUpdated: (character: CharacterRow) => void
 }
 
 type ShopTab = 'buy' | 'sell'
 
-function countItemInSession(sheet: CharacterSheetPayload, itemId: string): number {
-  return sheet.sessionInventory
-    .filter((s) => s.itemId === itemId)
-    .reduce((sum, s) => sum + s.quantity, 0)
-}
-
 function formatRowLabel(name: string, qtyLabel: string, price: number): string {
   return `${name} (${qtyLabel}) — ${price} z`
+}
+
+function formatSellInventoryRowLabel(name: string, ownedQty: number, unitPrice: number | undefined): string {
+  if (unitPrice == null) return `${name} (${ownedQty}) — Not bought by this dealer`
+  return `${name} (${ownedQty}) — ${unitPrice} z`
 }
 
 type CatalogRow = {
@@ -145,7 +145,14 @@ function ShopCartPane({
   )
 }
 
-export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }: Props) {
+export function ShopModal({
+  character,
+  npc,
+  sheet,
+  initialTab,
+  onClose,
+  onCharacterUpdated,
+}: Props) {
   const stock = shopStockFromNpcConfig(npc.config)
   const buys = shopBuysFromNpcConfig(npc.config)
   const buyPrices = useMemo(() => pricesFromStock(stock), [stock])
@@ -153,7 +160,12 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
 
   const hasBuy = stock.length > 0
   const hasSell = buys.length > 0
-  const [activeTab, setActiveTab] = useState<ShopTab>(() => (hasBuy ? 'buy' : 'sell'))
+  const [activeTab, setActiveTab] = useState<ShopTab>(() => {
+    const desired = initialTab ?? (hasBuy ? 'buy' : 'sell')
+    if (desired === 'buy' && !hasBuy) return 'sell'
+    if (desired === 'sell' && !hasSell) return 'buy'
+    return desired
+  })
   const [buyCart, setBuyCart] = useState<ShopCart>({})
   const [sellCart, setSellCart] = useState<ShopCart>({})
   const [busy, setBusy] = useState(false)
@@ -180,19 +192,32 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
     }
   })
 
-  const sellCatalogRows: CatalogRow[] = buys.map((row) => {
-    const owned = countItemInSession(sheet, row.itemId)
-    const inCart = sellCart[row.itemId] ?? 0
-    return {
-      itemId: row.itemId,
-      price: row.price,
-      qtyLabel: String(owned),
-      maxAdd: owned - inCart,
+  const ownedByItemId = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const slot of sheet.sessionInventory) {
+      if (!slot.itemId || slot.quantity <= 0) continue
+      map[slot.itemId] = (map[slot.itemId] ?? 0) + slot.quantity
     }
-  })
+    return map
+  }, [sheet.sessionInventory])
+
+  const sellInventoryRows = Object.entries(ownedByItemId)
+    .filter(([, ownedQty]) => ownedQty > 0)
+    .map(([itemId, ownedQty]) => {
+      const unitPrice = sellPrices[itemId]
+      const inCartQty = sellCart[itemId] ?? 0
+      return {
+        itemId,
+        ownedQty,
+        unitPrice,
+        inCartQty,
+        maxAdd: ownedQty - inCartQty,
+      }
+    })
+    .sort((a, b) => a.itemId.localeCompare(b.itemId))
 
   const sellCartValid = cartEntries(sellCart).every(
-    ({ itemId, quantity }) => quantity <= countItemInSession(sheet, itemId),
+    ({ itemId, quantity }) => quantity <= (ownedByItemId[itemId] ?? 0),
   )
 
   async function adjustZeny(delta: number): Promise<boolean> {
@@ -252,9 +277,84 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
     setBuyCart((c) => addToCart(c, itemId))
   }
 
-  function handleAddSell(itemId: string) {
-    const owned = countItemInSession(sheet, itemId)
-    setSellCart((c) => addToCart(c, itemId, owned))
+  type SellDragPrompt = { mode: 'add' | 'putBack'; itemId: string; maxQty: number }
+  const [sellDragPrompt, setSellDragPrompt] = useState<SellDragPrompt | null>(null)
+  const [sellDragQty, setSellDragQty] = useState<number>(1)
+
+  function confirmSellDragPrompt() {
+    if (!sellDragPrompt) return
+    const qty = Math.floor(sellDragQty)
+    if (!Number.isFinite(qty) || qty < 1) return
+
+    setSellCart((cart) => {
+      const current = cart[sellDragPrompt.itemId] ?? 0
+      const ownedQty = ownedByItemId[sellDragPrompt.itemId] ?? 0
+      if (sellDragPrompt.mode === 'add') {
+        const max = Math.max(0, ownedQty - current)
+        const toAdd = Math.min(qty, max)
+        if (toAdd <= 0) return cart
+        return { ...cart, [sellDragPrompt.itemId]: current + toAdd }
+      } else {
+        const toRemove = Math.min(qty, current)
+        if (toRemove <= 0) return cart
+        const nextQty = current - toRemove
+        if (nextQty <= 0) {
+          const next = { ...cart }
+          delete next[sellDragPrompt.itemId]
+          return next
+        }
+        return { ...cart, [sellDragPrompt.itemId]: nextQty }
+      }
+    })
+
+    setSellDragPrompt(null)
+  }
+
+  function handleSellAddSingle(itemId: string) {
+    const unitPrice = sellPrices[itemId]
+    if (unitPrice == null) return
+    const ownedQty = ownedByItemId[itemId] ?? 0
+    if (ownedQty <= 0) return
+    const inCartQty = sellCart[itemId] ?? 0
+    const maxAdd = ownedQty - inCartQty
+    if (maxAdd <= 0) return
+    setSellCart((c) => addToCart(c, itemId, ownedQty))
+  }
+
+  function handleSellAddAll(itemId: string) {
+    const unitPrice = sellPrices[itemId]
+    if (unitPrice == null) return
+    const ownedQty = ownedByItemId[itemId] ?? 0
+    if (ownedQty <= 0) return
+    setSellCart((c) => ({ ...c, [itemId]: ownedQty }))
+  }
+
+  const SELL_DRAG_MIME = 'application/x-browser-ro-shop-sell'
+
+  type SellDragPayload =
+    | { source: 'inventory'; itemId: string }
+    | { source: 'cart'; itemId: string }
+
+  function writeSellDragPayload(dataTransfer: DataTransfer, payload: SellDragPayload) {
+    const json = JSON.stringify(payload)
+    dataTransfer.setData(SELL_DRAG_MIME, json)
+    dataTransfer.setData('text/plain', json)
+    dataTransfer.effectAllowed = 'copyMove'
+  }
+
+  function readSellDragPayload(dataTransfer: DataTransfer): SellDragPayload | null {
+    const custom = dataTransfer.getData(SELL_DRAG_MIME)
+    const raw = custom || dataTransfer.getData('text/plain')
+    if (!raw) return null
+    try {
+      const parsed = JSON.parse(raw) as SellDragPayload
+      if (parsed && (parsed.source === 'inventory' || parsed.source === 'cart') && typeof parsed.itemId === 'string') {
+        return parsed
+      }
+    } catch {
+      // ignore
+    }
+    return null
   }
 
   if (!hasBuy && !hasSell) {
@@ -272,7 +372,8 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
   const cart = isBuy ? buyCart : sellCart
 
   return (
-    <AnimatedModal onClose={onClose} panelClassName="panel modal wide shop-modal">
+    <>
+      <AnimatedModal onClose={onClose} panelClassName="panel modal wide shop-modal">
       <div className="shop-modal__header row spread modal-drag-handle modal-header">
         <div>
           <h2 className="modal-title">{npc.label}</h2>
@@ -326,25 +427,111 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
           </>
         ) : (
           <>
-            <ShopCatalogPane
-              title="Sell list"
-              rows={sellCatalogRows}
-              emptyMessage="Nothing this shop buys."
-              onAdd={handleAddSell}
-            />
-            <ShopCartPane
-              title="Cart"
-              cart={sellCart}
-              priceByItemId={sellPrices}
-              onRemove={(id) => setSellCart((c) => removeFromCart(c, id))}
-            />
+            <section className="shop-pane shop-pane--catalog">
+              <h3 className="shop-pane__title">Inventory</h3>
+              <div
+                className="shop-pane__list"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (sellDragPrompt) return
+                  const payload = readSellDragPayload(e.dataTransfer)
+                  if (!payload || payload.source !== 'cart') return
+                  const cartQty = sellCart[payload.itemId] ?? 0
+                  if (cartQty <= 0) return
+                  setSellDragQty(1)
+                  setSellDragPrompt({ mode: 'putBack', itemId: payload.itemId, maxQty: cartQty })
+                }}
+              >
+                {sellInventoryRows.length === 0 ? (
+                  <p className="muted small shop-pane__empty">Nothing to sell.</p>
+                ) : (
+                  sellInventoryRows.map(({ itemId, ownedQty, unitPrice, maxAdd }) => {
+                    const disabled = unitPrice == null || maxAdd <= 0
+                    return (
+                      <ItemHoverTooltip key={itemId} itemId={itemId} quantity={ownedQty}>
+                        <button
+                          type="button"
+                          className="shop-row"
+                          disabled={disabled}
+                          draggable={!disabled}
+                          onDragStart={(e) => {
+                            if (disabled) return
+                            writeSellDragPayload(e.dataTransfer, { source: 'inventory', itemId })
+                          }}
+                          onClick={() => handleSellAddSingle(itemId)}
+                          onDoubleClick={() => handleSellAddAll(itemId)}
+                        >
+                          <ItemIcon itemId={itemId} size={28} className="shop-row__icon" alt="" />
+                          <span className="shop-row__name">
+                            {formatSellInventoryRowLabel(getItemDisplayName(itemId), ownedQty, unitPrice)}
+                          </span>
+                        </button>
+                      </ItemHoverTooltip>
+                    )
+                  })
+                )}
+              </div>
+            </section>
+
+            <section className="shop-pane shop-pane--cart">
+              <h3 className="shop-pane__title">Cart</h3>
+              <div
+                className="shop-pane__list"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (sellDragPrompt) return
+                  const payload = readSellDragPayload(e.dataTransfer)
+                  if (!payload || payload.source !== 'inventory') return
+                  const ownedQty = ownedByItemId[payload.itemId] ?? 0
+                  const inCartQty = sellCart[payload.itemId] ?? 0
+                  const maxAdd = ownedQty - inCartQty
+                  if (maxAdd <= 0) return
+                  setSellDragQty(1)
+                  setSellDragPrompt({ mode: 'add', itemId: payload.itemId, maxQty: maxAdd })
+                }}
+              >
+                {cartEntries(sellCart).length === 0 ? (
+                  <p className="muted small shop-pane__empty">Drag items here or click inventory items to add.</p>
+                ) : (
+                  cartEntries(sellCart).map(({ itemId, quantity }) => {
+                    const unit = sellPrices[itemId] ?? 0
+                    return (
+                      <ItemHoverTooltip key={itemId} itemId={itemId} quantity={quantity}>
+                        <button
+                          type="button"
+                          className="shop-row shop-row--cart"
+                          onClick={() => setSellCart((c) => removeFromCart(c, itemId))}
+                          draggable
+                          onDragStart={(e) => {
+                            writeSellDragPayload(e.dataTransfer, { source: 'cart', itemId })
+                          }}
+                          aria-label="Click to remove one"
+                        >
+                          <ItemIcon itemId={itemId} size={28} className="shop-row__icon" alt="" />
+                          <span className="shop-row__name">{getItemDisplayName(itemId)}</span>
+                          <span className="shop-row__qty">×{quantity}</span>
+                          <span className="shop-row__price">{unit * quantity} z</span>
+                        </button>
+                      </ItemHoverTooltip>
+                    )
+                  })
+                )}
+              </div>
+              <div className="shop-pane__total">
+                Total: <strong>{sellTotal}</strong> z
+              </div>
+            </section>
           </>
         )}
       </div>
 
       <div className="shop-modal__actions row spread">
         <p className="muted small shop-modal__hint">
-          {isBuy ? 'Click an item to add to cart.' : 'Click your item to add; click cart line to remove one.'}
+          {isBuy
+            ? 'Click an item to add to cart.'
+            : 'Click to add 1. Double-click to add all. Drag for quantity. Cart: click to remove 1, drag back to choose quantity.'}
         </p>
         <div className="row" style={{ gap: '0.5rem' }}>
           {isBuy ? (
@@ -366,7 +553,44 @@ export function ShopModal({ character, npc, sheet, onClose, onCharacterUpdated }
           )}
         </div>
       </div>
-      </ModalScrollBody>
-    </AnimatedModal>
+        </ModalScrollBody>
+      </AnimatedModal>
+
+      {sellDragPrompt && (
+        <AnimatedModal onClose={() => setSellDragPrompt(null)} panelClassName="panel modal">
+          <ModalHeader
+            title={sellDragPrompt.mode === 'add' ? 'Add quantity' : 'Put back quantity'}
+            onClose={() => setSellDragPrompt(null)}
+            closeLabel="Cancel"
+          />
+          <ModalScrollBody>
+            <p className="muted small" style={{ margin: '0 0 0.75rem' }}>
+              {sellDragPrompt.mode === 'add' ? 'How many to add to the cart?' : 'How many to put back into inventory?'}
+            </p>
+            <div className="row" style={{ alignItems: 'center', gap: '0.75rem' }}>
+              <label className="row" style={{ margin: 0, gap: '0.5rem' }}>
+                Quantity
+                <input
+                  type="number"
+                  value={sellDragQty}
+                  min={1}
+                  max={sellDragPrompt.maxQty}
+                  onChange={(e) => setSellDragQty(Number(e.target.value))}
+                />
+              </label>
+              <span className="muted small">max {sellDragPrompt.maxQty}</span>
+            </div>
+            <div className="row" style={{ marginTop: '1rem', justifyContent: 'flex-end', gap: '0.5rem' }}>
+              <button type="button" className="secondary" onClick={() => setSellDragPrompt(null)}>
+                Cancel
+              </button>
+              <button type="button" onClick={() => confirmSellDragPrompt()}>
+                Set
+              </button>
+            </div>
+          </ModalScrollBody>
+        </AnimatedModal>
+      )}
+    </>
   )
 }

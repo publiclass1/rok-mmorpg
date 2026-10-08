@@ -9,7 +9,7 @@ export type NpcMenuChoice =
   | { kind: 'storage'; label: string }
   | { kind: 'save'; label: string }
   | { kind: 'job_master'; label: string }
-  | { kind: 'shop'; label: string }
+  | { kind: 'shop'; label: string; tab?: 'buy' | 'sell' }
   | { kind: 'healer'; label: string; zenyCost: number }
   | { kind: 'rental'; label: string }
   | { kind: 'teleport'; label: string; destinationMapId: string }
@@ -143,6 +143,51 @@ function ChoiceButton({
 }
 
 export function NpcOptionsModal({ npc, baseLevel, partyEnabled, onChoose, onClose }: Props) {
+  if (npc.npc_type === 'shop') {
+    const config = npc.config as { buys?: unknown }
+    const canSell = Array.isArray(config?.buys) && config.buys.length > 0
+
+    return (
+      <AnimatedModal onClose={onClose} panelClassName="panel modal npc-options-modal">
+        <ModalHeader title={npc.label} onClose={onClose} />
+        <ModalScrollBody>
+          <p className="muted small">What would you like to do?</p>
+          <div className="row spread" style={{ gap: '0.5rem', marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={() =>
+                onChoose({
+                  kind: 'shop',
+                  label: npc.label,
+                  tab: 'buy',
+                })
+              }
+            >
+              Buy
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              disabled={!canSell}
+              onClick={() =>
+                onChoose({
+                  kind: 'shop',
+                  label: npc.label,
+                  tab: 'sell',
+                })
+              }
+            >
+              Sell
+            </button>
+            <button type="button" className="secondary" onClick={onClose}>
+              Close
+            </button>
+          </div>
+        </ModalScrollBody>
+      </AnimatedModal>
+    )
+  }
+
   const choices = npcMenuChoices(npc, { baseLevel, partyEnabled })
   const isTeleport = npc.npc_type === 'teleport'
   const sections = isTeleport ? teleportSections(npc) : null

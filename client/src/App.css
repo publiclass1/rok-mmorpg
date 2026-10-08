@@ -3210,6 +3210,14 @@ body.chat-strip-resizing {
   cursor: not-allowed;
 }
 
+.shop-row[draggable='true'] {
+  cursor: grab;
+}
+
+.shop-row[draggable='true']:active {
+  cursor: grabbing;
+}
+
 .shop-row--cart .shop-row__name {
   grid-column: 1;
 }
