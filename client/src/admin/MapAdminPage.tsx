@@ -57,6 +57,8 @@ export function MapAdminPage() {
   const [meta, setMeta] = useState<MapMeta>(defaultMeta())
   const [tmj, setTmj] = useState<TmjMap>(() => createEmptyMap())
   const [tool, setTool] = useState<EditorTool>('ground')
+  const [obstacleMode, setObstacleMode] = useState<'tile' | 'rect' | 'line' | 'erase'>('rect')
+  const [showGrid, setShowGrid] = useState(true)
   const [groundGid, setGroundGid] = useState(GID_GRASS_A)
   const [collisionBlocked, setCollisionBlocked] = useState(true)
   const [showGround, setShowGround] = useState(true)
@@ -515,6 +517,7 @@ export function MapAdminPage() {
             <label className="map-admin-check"><input type="checkbox" checked={showPortals} onChange={(e) => setShowPortals(e.target.checked)} /> Portals</label>
             <label className="map-admin-check"><input type="checkbox" checked={showNpcs} onChange={(e) => setShowNpcs(e.target.checked)} /> NPCs</label>
             <label className="map-admin-check"><input type="checkbox" checked={showMobSpots} onChange={(e) => setShowMobSpots(e.target.checked)} /> Mob spots</label>
+            <label className="map-admin-check"><input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} /> Editor grid</label>
           </CollapsibleSection>
 
           <p className="muted small">Walk portals: {portalsForSave.filter((p) => p.mode === 'walk' || p.mode === 'both').length}</p>
@@ -526,6 +529,8 @@ export function MapAdminPage() {
           <MapEditorToolbar
             tool={tool}
             onToolChange={setTool}
+            obstacleMode={obstacleMode}
+            onObstacleModeChange={setObstacleMode}
             disabled={loading}
             onResetView={() => panResetRef.current?.()}
           />
@@ -536,6 +541,8 @@ export function MapAdminPage() {
               tool={tool}
               groundGid={groundGid}
               collisionBlocked={collisionBlocked}
+              obstacleMode={obstacleMode}
+              showGrid={showGrid}
               showGround={showGround}
               showCollision={showCollision}
               showDecor={showDecor}
@@ -624,7 +631,7 @@ export function MapAdminPage() {
                     </p>
                   )}
                   {tool === 'obstacle' && (
-                    <p className="muted small">Drag to draw a rectangular obstacle. Use Select to move or resize.</p>
+                    <p className="muted small">{obstacleMode === 'rect' ? 'Drag to draw a rectangular obstacle.' : obstacleMode === 'line' ? 'Drag to draw a wall.' : obstacleMode === 'erase' ? 'Drag over obstacles to erase them.' : 'Click or drag to place blocked tiles.'}</p>
                   )}
                   {tool === 'portal' && (
                     <p className="muted small">Drag to draw a portal zone, then edit targets here after placing.</p>

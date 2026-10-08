@@ -47,6 +47,8 @@ type Props = {
   tool: EditorTool
   groundGid: number
   collisionBlocked: boolean
+  obstacleMode: 'tile' | 'rect' | 'line' | 'erase'
+  showGrid: boolean
   showGround: boolean
   showCollision: boolean
   showDecor: boolean
@@ -111,6 +113,8 @@ export function MapEditorCanvas({
   tool,
   groundGid,
   collisionBlocked,
+  obstacleMode,
+  showGrid,
   showGround,
   showCollision,
   showDecor,
@@ -167,8 +171,9 @@ export function MapEditorCanvas({
   const draw = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')
     if (!ctx) return
+    ctx.imageSmoothingEnabled = true
 
     const w = map.width * TILE_SIZE
     const h = map.height * TILE_SIZE
@@ -202,6 +207,13 @@ export function MapEditorCanvas({
       }
     }
 
+    if (showGrid) {
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.16)'
+      ctx.lineWidth = 1
+      for (let tx = 0; tx <= map.width; tx++) { ctx.beginPath(); ctx.moveTo(tx * TILE_SIZE + 0.5, 0); ctx.lineTo(tx * TILE_SIZE + 0.5, h); ctx.stroke() }
+      for (let ty = 0; ty <= map.height; ty++) { ctx.beginPath(); ctx.moveTo(0, ty * TILE_SIZE + 0.5); ctx.lineTo(w, ty * TILE_SIZE + 0.5); ctx.stroke() }
+    }
+
     const decor = getObjectGroup(map, 'decor')
     if (showDecor && decor) {
       for (const o of decor.objects) {
@@ -233,9 +245,9 @@ export function MapEditorCanvas({
     if (showObstacles && obstacles) {
       for (const o of obstacles.objects) {
         const selected = o.id === selectedObjectId
-        ctx.fillStyle = selected ? 'rgba(120, 113, 108, 0.85)' : 'rgba(120, 113, 108, 0.65)'
+        ctx.fillStyle = selected ? 'rgba(127, 29, 29, 0.82)' : 'rgba(185, 28, 28, 0.58)'
         ctx.fillRect(o.x, o.y, o.width, o.height)
-        ctx.strokeStyle = selected ? '#fbbf24' : '#44403c'
+        ctx.strokeStyle = selected ? '#fde047' : '#991b1b'
         ctx.lineWidth = selected ? 2 : 1
         ctx.strokeRect(o.x, o.y, o.width, o.height)
       }
@@ -379,6 +391,7 @@ export function MapEditorCanvas({
     showPortals,
     showNpcs,
     showMobSpots,
+    showGrid,
     selectedObjectId,
     previewRect,
     tileSel,
@@ -486,6 +499,12 @@ export function MapEditorCanvas({
     if (tool === 'obstacle') {
       const sx = snapTile(x) * TILE_SIZE
       const sy = snapTile(y) * TILE_SIZE
+      if (obstacleMode === 'erase') {
+        const hit = hitObject(getObjectGroup(map, 'obstacles')?.objects ?? [], x, y)
+        if (hit) removeObject(hit.id)
+        setDrag({ kind: 'paint', layer: 'collision' })
+        return
+      }
       setDrag({ kind: 'rect', group: 'obstacles', startX: sx, startY: sy })
       setPreviewRect({ x: sx, y: sy, w: TILE_SIZE, h: TILE_SIZE })
       return
@@ -527,14 +546,19 @@ export function MapEditorCanvas({
     const { x, y } = canvasCoords(e.clientX, e.clientY)
 
     if (drag.kind === 'paint') {
+      if (tool === 'obstacle' && obstacleMode === 'erase') {
+        const hit = hitObject(getObjectGroup(map, 'obstacles')?.objects ?? [], ...(() => { const p = canvasCoords(e.clientX, e.clientY); return [p.x, p.y] as [number, number] })())
+        if (hit) removeObject(hit.id)
+        return
+      }
       paintTile(snapTile(x), snapTile(y), drag.layer)
       return
     }
 
     if (drag.kind === 'move') {
       updateObjectInGroup(drag.group, drag.objectId, {
-        x: Math.round(x - drag.offsetX),
-        y: Math.round(y - drag.offsetY),
+        x: snapTile(x - drag.offsetX) * TILE_SIZE,
+        y: snapTile(y - drag.offsetY) * TILE_SIZE,
       })
       return
     }
@@ -565,6 +589,10 @@ export function MapEditorCanvas({
         dty: pty - drag.pointerStartTy,
       })
     }
+  }
+
+  const removeObject = (objectId: number) => {
+    onMapChange({ ...map, layers: map.layers.map((layer) => layer.type === 'objectgroup' ? { ...layer, objects: layer.objects.filter((o) => o.id !== objectId) } : layer) })
   }
 
   const finishRect = (
