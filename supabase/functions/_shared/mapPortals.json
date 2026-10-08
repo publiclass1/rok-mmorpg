@@ -97,6 +97,98 @@
         "label": "Prontera",
         "mode": "walk"
       }
+    ],
+    "new_map_rfpp": [
+      {
+        "id": "rfpp_exit_prontera",
+        "x": 736,
+        "y": 928,
+        "width": 128,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 1600,
+        "targetY": 1400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "prontera": [
+      {
+        "id": "prontera_portal_top",
+        "x": 1472,
+        "y": 32,
+        "width": 128,
+        "height": 64,
+        "targetMapId": "prt_sewb1",
+        "targetX": 768,
+        "targetY": 112,
+        "label": "Prontera Culvert",
+        "mode": "walk"
+      },
+      {
+        "id": "prontera_portal_bottom",
+        "x": 1472,
+        "y": 2464,
+        "width": 128,
+        "height": 64,
+        "targetMapId": "new_map_rfpp",
+        "targetX": 800,
+        "targetY": 960,
+        "label": "Gold Room",
+        "mode": "walk"
+      },
+      {
+        "id": "prontera_portal_left",
+        "x": 0,
+        "y": 928,
+        "width": 128,
+        "height": 64,
+        "targetMapId": "field_01",
+        "targetX": 160,
+        "targetY": 160,
+        "label": "Field (dev)",
+        "mode": "walk"
+      },
+      {
+        "id": "prontera_portal_right",
+        "x": 3072,
+        "y": 928,
+        "width": 128,
+        "height": 64,
+        "targetMapId": "prt_fild01",
+        "targetX": 480,
+        "targetY": 320,
+        "label": "Prontera Field 01",
+        "mode": "walk"
+      }
+    ],
+    "prt_fild01": [
+      {
+        "id": "prt_fild01_exit_prontera",
+        "x": 416,
+        "y": 288,
+        "width": 128,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 1600,
+        "targetY": 1400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
+    ],
+    "field_01": [
+      {
+        "id": "field_01_exit_prontera",
+        "x": 96,
+        "y": 128,
+        "width": 128,
+        "height": 64,
+        "targetMapId": "prontera",
+        "targetX": 1600,
+        "targetY": 1400,
+        "label": "Prontera",
+        "mode": "walk"
+      }
     ]
   }
 }

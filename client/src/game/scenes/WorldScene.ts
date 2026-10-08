@@ -393,6 +393,7 @@ export class WorldScene extends Phaser.Scene {
   private killedSpawnSet = new Set<number>()
   private mvpMob: MobInstance | null = null
   private dungeonExitPortalVisual: Phaser.GameObjects.Image | null = null
+  private pronteraWalkPortalVisuals: Phaser.GameObjects.Image[] = []
   private autoAttackConfig: AutoAttackConfig = defaultAutoAttackConfig()
   private autoAttackAnchorX = 0
   private autoAttackAnchorY = 0
@@ -916,6 +917,9 @@ export class WorldScene extends Phaser.Scene {
 
     this.emitCharacterSheet()
     this.emitPlayerBuffs()
+    if (this.character.map_id === 'prontera') {
+      this.showPronteraWalkPortals()
+    }
     logActivity('system', `Entered ${this.character.map_id}.`)
     emitGameEvent(
       'status',
@@ -3432,6 +3436,30 @@ export class WorldScene extends Phaser.Scene {
     emitGameEvent('status', 'Exit portal opened!')
   }
 
+  private showPronteraWalkPortals() {
+    if (this.pronteraWalkPortalVisuals.length > 0) return
+    ensureTilesTexture(this)
+
+    const portals = getWalkPortalsForMap(this.character.map_id)
+    for (const portal of portals) {
+      const cx = portal.x + portal.width / 2
+      const cy = portal.y + portal.height / 2
+      const img = this.add.image(cx, cy, 'tiles', 7)
+      img.setDisplaySize(48, 48)
+      img.setDepth(cy + 1)
+      this.tweens.add({
+        targets: img,
+        scaleX: 1.15,
+        scaleY: 1.15,
+        duration: 900,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      })
+      this.pronteraWalkPortalVisuals.push(img)
+    }
+  }
+
   private createMobInstance(
     spawnIndex: number,
     x: number,
@@ -4967,6 +4995,8 @@ export class WorldScene extends Phaser.Scene {
     this.eventUnsubs = []
     if (this.persistTimer) window.clearInterval(this.persistTimer)
     if (this.progressSaveTimer) window.clearTimeout(this.progressSaveTimer)
+    for (const v of this.pronteraWalkPortalVisuals) v.destroy()
+    this.pronteraWalkPortalVisuals = []
     const presence = this.presence
     this.presence = null
     presence?.setCombatHandler(null)

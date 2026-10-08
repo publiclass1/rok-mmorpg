@@ -13,6 +13,16 @@ function run() {
     )
     assert.equal(findPortalAtPoint(mapId, 512, 1248), null)
   }
+
+  const pronteraWalk = getWalkPortalsForMap('prontera')
+  assert.equal(pronteraWalk.length, 4, 'prontera should have 4 walk portals (top/bottom/left/right)')
+  for (const portal of pronteraWalk) {
+    assert.deepEqual(
+      findPortalAtPoint('prontera', portal.x + portal.width / 2, portal.y + portal.height / 2),
+      portal,
+    )
+  }
+  assert.equal(findPortalAtPoint('prontera', 512, 1248), null)
   console.log('mapPortals.test.ts: ok')
 }
 
