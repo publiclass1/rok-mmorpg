@@ -261,6 +261,14 @@ const MOB_CLICK_RADIUS = 24
 const PARTY_EXP_RANGE = 120
 const PLAYER_FEET_OFFSET = 2
 const MOB_FEET_ANCHOR_ADJUST = 14
+const COMING_DROPS_GLOW_HIDE_MS = 3500
+const COMING_DROPS_GLOW_COLOR = 0xfbbf24
+
+type ComingDropsGlowFx = {
+  container: Phaser.GameObjects.Container
+  tween: Phaser.Tweens.Tween
+  hideTimer: Phaser.Time.TimerEvent
+}
 
 export class WorldScene extends Phaser.Scene {
   private character!: CharacterRow
@@ -302,6 +310,7 @@ export class WorldScene extends Phaser.Scene {
   private chasePvpForSkillOnly = false
   private duelSync: DuelSyncPayload | null = null
   private mapDropManager: MapDropManager | null = null
+  private comingDropsGlowBySpawnIndex = new Map<number, ComingDropsGlowFx>()
   private pvpKillStreak = new PvpKillStreakTracker()
   private pvpDeadRemoteIds = new Set<string>()
   private chasePathGoalX = 0
@@ -3734,6 +3743,8 @@ export class WorldScene extends Phaser.Scene {
 
     if (payload.kind === 'map_drop') {
       this.mapDropManager?.spawnDrop(payload.dropId, payload.itemId, payload.x, payload.y)
+      const spawnIndex = this.extractMobSpawnIndexFromDropId(payload.dropId)
+      if (spawnIndex != null) this.hideComingDropsGlow(spawnIndex)
       return
     }
 
@@ -4428,6 +4439,7 @@ export class WorldScene extends Phaser.Scene {
       const itemId = itemIds[i]
       const dropId = `mobdrop_${fromCharacterId}_${spawnIndex}_${dropGroupId}_${i}`
       this.mapDropManager?.spawnDrop(dropId, itemId, x, y)
+      if (i === 0) this.hideComingDropsGlow(spawnIndex)
       dropIds.push(dropId)
       this.presence?.sendCombat({
         kind: 'map_drop',
@@ -4439,6 +4451,59 @@ export class WorldScene extends Phaser.Scene {
       })
     }
     return dropIds
+  }
+
+  private showComingDropsGlow(spawnIndex: number, x: number, y: number, depth: number) {
+    if (this.comingDropsGlowBySpawnIndex.has(spawnIndex)) {
+      this.hideComingDropsGlow(spawnIndex)
+    }
+
+    // Visual “thinking” indicator while we wait for the server-driven drops to appear.
+    const container = this.add.container(x, y)
+    container.setDepth(depth)
+
+    const ring = this.add.ellipse(0, 0, 34, 14, COMING_DROPS_GLOW_COLOR, 0.08)
+    ring.setStrokeStyle(3, COMING_DROPS_GLOW_COLOR, 0.9)
+
+    // Inner fill makes the ring read better on bright floors/tiles.
+    const inner = this.add.ellipse(0, 1, 20, 8, COMING_DROPS_GLOW_COLOR, 0.13)
+    inner.setStrokeStyle(0)
+
+    container.add([ring, inner])
+
+    const tween = this.tweens.add({
+      targets: container,
+      scaleX: { from: 0.92, to: 1.12 },
+      scaleY: { from: 0.92, to: 1.18 },
+      alpha: { from: 0.7, to: 1 },
+      duration: 900,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    })
+
+    const hideTimer = this.time.delayedCall(
+      COMING_DROPS_GLOW_HIDE_MS,
+      () => this.hideComingDropsGlow(spawnIndex),
+    )
+
+    this.comingDropsGlowBySpawnIndex.set(spawnIndex, { container, tween, hideTimer })
+  }
+
+  private hideComingDropsGlow(spawnIndex: number) {
+    const fx = this.comingDropsGlowBySpawnIndex.get(spawnIndex)
+    if (!fx) return
+    fx.hideTimer.remove()
+    fx.tween.stop()
+    fx.container.destroy(true)
+    this.comingDropsGlowBySpawnIndex.delete(spawnIndex)
+  }
+
+  private extractMobSpawnIndexFromDropId(dropId: string): number | null {
+    const m = /^mobdrop_.+?_(\d+)_/.exec(dropId)
+    if (!m) return null
+    const n = Number(m[1])
+    return Number.isFinite(n) ? n : null
   }
 
   private killMob(mob: MobInstance) {
@@ -4506,6 +4571,10 @@ export class WorldScene extends Phaser.Scene {
     playMobDeath(this, mob.sprite, tint, () => {
       mob.sprite.setVisible(false)
     })
+
+    if (!isDungeonMapId(this.character.map_id)) {
+      this.showComingDropsGlow(mob.spawnIndex, mob.sprite.x, mob.sprite.y, mob.sprite.depth + 0.01)
+    }
 
     if (isDungeonMapId(this.character.map_id)) {
       return
@@ -4587,6 +4656,8 @@ export class WorldScene extends Phaser.Scene {
           for (const itemId of result.itemIds) {
             logActivity('combat', `Dropped ${getItemDisplayName(itemId)}.`, itemId)
           }
+        } else {
+          this.hideComingDropsGlow(mob.spawnIndex)
         }
 
         this.grantKillExperience(result.baseExp, result.jobExp, px, py)
