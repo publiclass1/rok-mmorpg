@@ -31,6 +31,7 @@
       "maxLevel": 20,
       "entry": { "x": 512, "y": 1296 },
       "mvpDefId": "vocal",
+      "completionReward": { "zeny": 1000000, "baseExp": 100000, "jobExp": 50000 },
       "mvpSpawn": { "x": 512, "y": 80 },
       "gearDrop": {
         "chancePerMille": 800,
@@ -54,6 +55,7 @@
       "maxLevel": 50,
       "entry": { "x": 512, "y": 1296 },
       "mvpDefId": "orc_hero",
+      "completionReward": { "zeny": 2000000, "baseExp": 250000, "jobExp": 100000 },
       "mvpSpawn": { "x": 512, "y": 80 },
       "gearDrop": {
         "chancePerMille": 1000,
@@ -77,6 +79,7 @@
       "maxLevel": 70,
       "entry": { "x": 512, "y": 1296 },
       "mvpDefId": "doppelganger",
+      "completionReward": { "zeny": 5000000, "baseExp": 750000, "jobExp": 300000 },
       "mvpSpawn": { "x": 512, "y": 80 },
       "gearDrop": {
         "chancePerMille": 1200,
@@ -100,6 +103,7 @@
       "maxLevel": 80,
       "entry": { "x": 512, "y": 1296 },
       "mvpDefId": "dark_lord",
+      "completionReward": { "zeny": 10000000, "baseExp": 2000000, "jobExp": 750000 },
       "mvpSpawn": { "x": 512, "y": 80 },
       "gearDrop": {
         "chancePerMille": 1400,
@@ -123,6 +127,7 @@
       "maxLevel": 99,
       "entry": { "x": 512, "y": 1296 },
       "mvpDefId": "lord_of_death",
+      "completionReward": { "zeny": 25000000, "baseExp": 5000000, "jobExp": 2000000 },
       "mvpSpawn": { "x": 512, "y": 80 },
       "gearDrop": {
         "chancePerMille": 1600,

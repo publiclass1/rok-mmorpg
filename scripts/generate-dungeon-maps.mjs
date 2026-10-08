@@ -195,6 +195,7 @@ function writeSharedDungeons(floorSpawns) {
       maxLevel: f.maxLevel,
       entry: f.entry,
       mvpDefId: f.mvpDefId,
+      completionReward: f.completionReward,
       totalSpawns: (floorSpawns[f.mapId] ?? []).length,
     })),
   }

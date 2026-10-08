@@ -7,6 +7,12 @@ import {
   requireUser,
 } from '../_shared/supabase.ts'
 import dungeonsShared from '../_shared/dungeons.json' with { type: 'json' }
+import { addBaseExp, addJobExp } from '../_shared/combatRewards.ts'
+import jobsJson from '../_shared/ro/jobs.json' with { type: 'json' }
+function jobCap(jobId: string): number {
+  const job = (jobsJson as { jobs: { id: string; maxJobLevel?: number }[] }).jobs.find((j) => j.id === jobId)
+  return job?.maxJobLevel ?? 50
+}
 
 type FloorMeta = {
   id: string
@@ -16,11 +22,12 @@ type FloorMeta = {
   entry: { x: number; y: number }
   mvpDefId: string
   totalSpawns: number
+  completionReward: { zeny: number; baseExp: number; jobExp: number }
 }
 
 const FLOORS: FloorMeta[] = (dungeonsShared as { floors: FloorMeta[] }).floors
 
-type Action = 'enter' | 'report_kill' | 'report_mvp_kill'
+type Action = 'enter' | 'recover' | 'report_kill' | 'report_mvp_kill'
 
 type Body = {
   action: Action
@@ -58,6 +65,17 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as Body
     const service = createServiceClient()
     const character = await getOwnedCharacter(client, user.id, body.characterId)
+
+    if (body.action === 'recover') {
+      const dungeonMaps = new Set(FLOORS.map((f) => f.mapId))
+      if (!dungeonMaps.has(character.map_id)) {
+        return new Response(JSON.stringify({ character }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+      const { data: recovered, error } = await service.from('characters').update({ map_id: 'prontera', x: 800, y: 360 })
+        .eq('id', character.id).select('*').single()
+      if (error || !recovered) throw new Error(error?.message ?? 'Dungeon recovery failed')
+      return new Response(JSON.stringify({ character: recovered, recovered: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
 
     if (body.action === 'enter') {
       if (!body.mapId || body.x == null || body.y == null || !body.npcId || !body.floorId) {
@@ -234,7 +252,27 @@ Deno.serve(async (req) => {
         })
       }
 
-      return new Response(JSON.stringify({ instance: cleared }), {
+      const floor = floorById(inst.floor_id)
+      if (!floor) throw new Error('Invalid dungeon floor')
+      const { data: members, error: membersErr } = await service.from('party_members')
+        .select('character_id').eq('party_id', inst.party_id)
+      if (membersErr) throw new Error(membersErr.message)
+      const ids = (members ?? []).map((m) => m.character_id as string)
+      const { data: progress, error: progressErr } = await service.from('character_progress')
+        .select('character_id, base_level, base_exp, job_id, job_level, job_exp').in('character_id', ids)
+      if (progressErr) throw new Error(progressErr.message)
+      const reward = floor.completionReward
+      const updates = (progress ?? []).map((p) => {
+        const base = addBaseExp(p.base_level, p.base_exp, reward.baseExp)
+        const job = addJobExp(p.job_level, p.job_exp, reward.jobExp, jobCap(p.job_id))
+        return { characterId: p.character_id, baseLevel: base.baseLevel, baseExp: base.baseExp, jobLevel: job.jobLevel, jobExp: job.jobExp }
+      })
+      const { data: claims, error: claimErr } = await service.rpc('dungeon_complete', {
+        p_instance_id: body.instanceId, p_rewards: reward, p_updates: updates,
+      })
+      if (claimErr) throw new Error(claimErr.message)
+
+      return new Response(JSON.stringify({ instance: cleared, reward, claims }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }

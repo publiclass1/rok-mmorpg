@@ -31,6 +31,7 @@ import {
 import { mergeSheetIntoSession, toCharacterSheetPayload } from '../game/character/characterSheet'
 import { setCharacterSession } from '../game/character/characterSessionBridge'
 import { createInitialCharacterState } from '../game/character/characterState'
+import { addExperience } from '../game/character/characterState'
 import { skillBarSlotFromKey } from '../game/character/skillBars'
 import { isChatStripInputFocused } from '../game/chatInputFocus'
 import { createPhaserGame } from '../game/createGame'
@@ -144,6 +145,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const characterRef = useRef(character)
   characterRef.current = character
 
+  function reconnectSafePosition(world: { x: number; y: number; mapId: string }) {
+    return isDungeonMapId(world.mapId) ? { x: 800, y: 360, mapId: 'prontera' } : world
+  }
+
   useEffect(() => {
     setPosition((prev) =>
       prev.mapId === character.map_id ? prev : { ...prev, mapId: character.map_id },
@@ -236,6 +241,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [targetPartyLoadState, setTargetPartyLoadState] = useState<'idle' | 'loading' | 'ready'>('idle')
   const [partyLoadState, setPartyLoadState] = useState<'loading' | 'ready'>('loading')
   const dungeonValidatedKeyRef = useRef<string | null>(null)
+  const dungeonRecoveryKeyRef = useRef<string | null>(null)
   const bootDungeonRef = useRef<BootDungeonState | null>(null)
   const [guildSnapshot, setGuildSnapshot] = useState<GuildSnapshot>(null)
   const [partyRequest, setPartyRequest] = useState<{ request: PartyRequestRow; fromName: string } | null>(
@@ -341,10 +347,24 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
   useEffect(() => {
     if (!isDungeonMapId(character.map_id)) {
+      dungeonRecoveryKeyRef.current = null
       dungeonValidatedKeyRef.current = null
       setBootDungeon(null)
       setDungeonReady(true)
       return
+    }
+
+    const recoveryKey = `${character.id}:${character.map_id}`
+    if (dungeonRecoveryKeyRef.current !== recoveryKey) {
+      dungeonRecoveryKeyRef.current = recoveryKey
+      setDungeonReady(false)
+      void dungeonManage({ action: 'recover', characterId: character.id }).then((res) => {
+        if (res.recovered && res.character) {
+          onCharacterUpdated(res.character)
+          setMessage('Disconnected from the dungeon and returned to the Dungeon Guide.')
+        }
+      }).catch((err) => setMessage(err instanceof Error ? err.message : 'Dungeon recovery failed'))
+      return () => undefined
     }
 
     if (partyLoadState !== 'ready') {
@@ -512,6 +532,20 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           if (sync.status === 'cleared') {
             setMessage('Dungeon cleared! Take the exit portal.')
             emitGameEvent('status', 'Dungeon cleared! Take the exit portal.')
+            if (res.reward && res.claims?.some((claim) => claim.characterId === character.id)) {
+              const reward = res.reward
+              const gained = addExperience(getCharacterSession(), reward.baseExp, reward.jobExp)
+              sessionRef.current = gained.state
+              setCharacterSession(gained.state)
+              setSheet(toCharacterSheetPayload(gained.state))
+              const claim = res.claims.find((entry) => entry.characterId === character.id)
+              if (claim) {
+                onCharacterUpdated({ ...characterRef.current, zeny: characterRef.current.zeny + claim.zeny })
+                const text = `Dungeon reward: ${claim.zeny.toLocaleString()} zeny, ${claim.baseExp.toLocaleString()} Base EXP, ${claim.jobExp.toLocaleString()} Job EXP.`
+                setMessage(text)
+                emitGameEvent('status', text)
+              }
+            }
           }
         }
       })
@@ -1251,9 +1285,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       const ch = characterRef.current
       void persistCharacterWorld(
         character.id,
-        positionRef.current,
+        reconnectSafePosition(positionRef.current),
         sessionRef.current,
-        { x: ch.x, y: ch.y, mapId: ch.map_id },
+        reconnectSafePosition({ x: ch.x, y: ch.y, mapId: ch.map_id }),
       ).catch((err) => console.warn('Unmount progress save failed', err))
       game?.destroy(true)
       host.replaceChildren()
@@ -1279,9 +1313,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       const ch = characterRef.current
       await persistCharacterWorld(
         character.id,
-        positionRef.current,
+        reconnectSafePosition(positionRef.current),
         sessionRef.current,
-        { x: ch.x, y: ch.y, mapId: ch.map_id },
+        reconnectSafePosition({ x: ch.x, y: ch.y, mapId: ch.map_id }),
       )
     } catch (err) {
       console.warn('Failed to save character progress', err)
@@ -1297,9 +1331,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       const ch = characterRef.current
       void persistCharacterWorld(
         character.id,
-        positionRef.current,
+        reconnectSafePosition(positionRef.current),
         sessionRef.current,
-        { x: ch.x, y: ch.y, mapId: ch.map_id },
+        reconnectSafePosition({ x: ch.x, y: ch.y, mapId: ch.map_id }),
       ).catch((err) => {
         console.warn('Background save failed', err)
       })

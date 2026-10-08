@@ -124,6 +124,9 @@ export function dungeonManage(payload: Record<string, unknown>) {
   return invoke<{
     character?: import('../types/database').CharacterRow
     instance?: import('../types/database').DungeonInstanceRow
+    recovered?: boolean
+    reward?: { zeny: number; baseExp: number; jobExp: number }
+    claims?: Array<{ characterId: string; zeny: number; baseExp: number; jobExp: number }>
   }>('dungeon-manage', payload)
 }
 
