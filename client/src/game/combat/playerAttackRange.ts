@@ -186,33 +186,18 @@ function mobWithinSkillRangePx<T extends AttackTargetCandidate>(
   return mob
 }
 
-/** Enemy skill targeting: chase → selected → nearest alive mob within skill range (Euclidean px). */
+/** Enemy skill targeting: chase → selected within skill range (Euclidean px); no auto-pick. */
 export function resolveEnemySkillTarget<T extends AttackTargetCandidate>(ctx: {
   playerX: number
   playerY: number
   skillRangePx: number
-  mobs: T[]
   chaseMob: T | null | undefined
   selectedMob: T | null | undefined
 }): T | null {
-  const { playerX, playerY, skillRangePx, mobs, chaseMob, selectedMob } = ctx
+  const { playerX, playerY, skillRangePx, chaseMob, selectedMob } = ctx
   if (skillRangePx <= 0) return null
 
   const fromChase = mobWithinSkillRangePx(chaseMob, playerX, playerY, skillRangePx)
   if (fromChase) return fromChase
-  const fromSelected = mobWithinSkillRangePx(selectedMob, playerX, playerY, skillRangePx)
-  if (fromSelected) return fromSelected
-
-  let best: T | null = null
-  let bestDist = Infinity
-  for (const mob of mobs) {
-    if (!mob.alive) continue
-    const dist = euclideanDistance(playerX, playerY, mob.x, mob.y)
-    if (dist > skillRangePx) continue
-    if (dist < bestDist) {
-      bestDist = dist
-      best = mob
-    }
-  }
-  return best
+  return mobWithinSkillRangePx(selectedMob, playerX, playerY, skillRangePx)
 }

@@ -121,32 +121,27 @@ function run() {
     playerX: px,
     playerY: py,
     skillRangePx: skillRange240,
-    mobs: [farSelected],
     chaseMob: null,
     selectedMob: farSelected,
   })
   assert.equal(skillHit?.id, 'mage_far')
 
-  const nearest: MockMob = { id: 'near', alive: true, x: 100, y: 0 }
-  const farther: MockMob = { id: 'far', alive: true, x: 200, y: 0 }
-  const nearestPick = resolveEnemySkillTarget({
+  const noAutopick = resolveEnemySkillTarget({
     playerX: px,
     playerY: py,
     skillRangePx: skillRange240,
-    mobs: [farther, nearest],
     chaseMob: null,
     selectedMob: null,
   })
-  assert.equal(nearestPick?.id, 'near')
+  assert.equal(noAutopick, null)
 
   const outOfSkill: MockMob = { id: 'too_far', alive: true, x: 300, y: 0 }
   const skillMiss = resolveEnemySkillTarget({
     playerX: px,
     playerY: py,
     skillRangePx: skillRange240,
-    mobs: [outOfSkill],
     chaseMob: null,
-    selectedMob: null,
+    selectedMob: outOfSkill,
   })
   assert.equal(skillMiss, null)
 

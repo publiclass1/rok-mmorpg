@@ -1708,7 +1708,13 @@ export class WorldScene extends Phaser.Scene {
           ? targetMob
           : this.resolveSkillTargetMob(skillRange)
       if (!mob) {
-        if (!fromAuto) emitGameEvent('status', 'No target in range.')
+        if (!fromAuto) {
+          const msg =
+            this.chaseMob?.alive || this.selectedMob?.alive
+              ? 'No target in range.'
+              : 'No target — select a monster first.'
+          emitGameEvent('status', msg)
+        }
         return false
       }
       const px = this.playerDisplay.container.x
@@ -4028,12 +4034,6 @@ export class WorldScene extends Phaser.Scene {
   private resolveSkillTargetMob(skillRangePx: number): MobInstance | null {
     const px = this.playerDisplay.container.x
     const py = this.playerDisplay.container.y
-    const mobs = this.mobs.map((mob) => ({
-      mob,
-      alive: mob.alive,
-      x: mob.sprite.x,
-      y: mob.sprite.y,
-    }))
     const chase = this.chaseMob
       ? {
           mob: this.chaseMob,
@@ -4054,7 +4054,6 @@ export class WorldScene extends Phaser.Scene {
       playerX: px,
       playerY: py,
       skillRangePx,
-      mobs,
       chaseMob: chase,
       selectedMob: selected,
     })
