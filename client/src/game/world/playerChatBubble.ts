@@ -1,5 +1,4 @@
 import Phaser from 'phaser'
-import { attachToWorldRoot } from './worldViewRootAttach'
 
 const PAD_X = 10
 const PAD_Y = 6
@@ -101,8 +100,6 @@ export function createPlayerChatBubble(scene: Phaser.Scene): PlayerChatBubble {
       onComplete: () => hide(),
     })
   }
-
-  attachToWorldRoot(scene, container)
 
   return {
     container,

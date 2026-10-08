@@ -220,13 +220,6 @@ import {
   setRemoteViewportVisible,
 } from '../world/syncWorldViewport'
 import { cameraWorldViewRect, viewBoundsWithMargin } from '../world/viewportCull'
-import {
-  applyWorldYScale,
-  attachToWorldRoot,
-  loadWorldYScale,
-  registerWorldRoot,
-  worldCoordsToScreen,
-} from '../world/worldViewPerspective'
 import { applyGameCursorToDom, cursorCss, type GameCursor } from '../world/gameCursor'
 import {
   ensureMobParticleTexture,
@@ -372,7 +365,6 @@ export class WorldScene extends Phaser.Scene {
   private worldWidth = 0
   private worldHeight = 0
   private mapDecorSprites: Phaser.GameObjects.Image[] = []
-  private worldRoot!: Phaser.GameObjects.Container
   private lastMinimapEmitAt = 0
   private minimapExpanded = false
   private minimapObstacleRects: MinimapWorldRect[] = []
@@ -427,10 +419,6 @@ export class WorldScene extends Phaser.Scene {
     const tileset = map.addTilesetImage('tiles', 'tiles', 32, 32, 0, 0, TILESET_TILE_COUNT)
     if (!tileset) throw new Error('Failed to load tileset')
 
-    this.worldRoot = this.add.container(0, 0)
-    registerWorldRoot(this, this.worldRoot)
-    this.setWorldYScale(loadWorldYScale())
-
     const ground = map.createLayer('ground', tileset, 0, 0)
     ground?.setDepth(0)
     const decorTiles = map.createLayer('decor', tileset, 0, 0)
@@ -441,9 +429,6 @@ export class WorldScene extends Phaser.Scene {
     collision?.setVisible(false)
     collision?.setCollisionByExclusion([-1, 0])
     this.collisionLayer = collision
-    if (ground) this.worldRoot.add(ground)
-    if (decorTiles) this.worldRoot.add(decorTiles)
-    if (collision) this.worldRoot.add(collision)
 
     const worldW = map.widthInPixels
     const worldH = map.heightInPixels
@@ -544,16 +529,6 @@ export class WorldScene extends Phaser.Scene {
     this.groundAoEMarker = new GroundAoECastMarker(this)
 
     this.playerChatBubble = createPlayerChatBubble(this)
-
-    attachToWorldRoot(
-      this,
-      this.playerShadow,
-      this.rentalCartGfx,
-      this.rentalFalconGfx,
-      this.playerLabel,
-      this.playerSkillCallout,
-      this.playerSpellChant.text,
-    )
 
     this.cameras.main.centerOn(spawn.x, spawn.y)
     this.cameras.main.startFollow(this.playerDisplay.container, true, 0.12, 0.12)
@@ -833,9 +808,6 @@ export class WorldScene extends Phaser.Scene {
       onGameEvent('autoAttackSync', (payload) => {
         this.applyAutoAttackSync(payload)
       }),
-      onGameEvent('worldViewPerspective', ({ yScale }) => {
-        this.setWorldYScale(yScale)
-      }),
     )
 
     this.partySync.myCharacterId = this.character.id
@@ -924,10 +896,6 @@ export class WorldScene extends Phaser.Scene {
   private playerLabel!: Phaser.GameObjects.Text
   private playerSkillCallout!: Phaser.GameObjects.Text
   private playerChatBubble!: PlayerChatBubble
-
-  private setWorldYScale(yScale: number) {
-    applyWorldYScale(this.worldRoot, yScale)
-  }
 
   private showChatBubbleForCharacter(characterId: string, text: string) {
     const duration = chatBubbleDurationMs(text)
@@ -1149,7 +1117,11 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private worldToCanvasScreen(worldX: number, worldY: number): { x: number; y: number } {
-    return worldCoordsToScreen(this.cameras.main, worldX, worldY, this.worldRoot)
+    const cam = this.cameras.main
+    return {
+      x: (worldX - cam.scrollX) * cam.zoom + cam.width * 0.5,
+      y: (worldY - cam.scrollY) * cam.zoom + cam.height * 0.5,
+    }
   }
 
   private refreshMapDropHover() {
@@ -2891,7 +2863,6 @@ export class WorldScene extends Phaser.Scene {
     }
     if (!this.selectionRing) {
       this.selectionRing = this.add.ellipse(0, 0, 40, 28, 0xfbbf24, 0)
-      attachToWorldRoot(this, this.selectionRing)
       this.selectionRing.setStrokeStyle(2, 0xfbbf24, 0.9)
       this.selectionRing.setDepth(5)
     }
@@ -2935,7 +2906,6 @@ export class WorldScene extends Phaser.Scene {
     this.selectedRemoteId = entity.lastPayload.characterId
     if (!this.playerSelectionRing) {
       this.playerSelectionRing = this.add.ellipse(0, 0, 40, 28, 0x60a5fa, 0)
-      attachToWorldRoot(this, this.playerSelectionRing)
       this.playerSelectionRing.setStrokeStyle(2, 0x60a5fa, 0.9)
       this.playerSelectionRing.setDepth(5)
     }
@@ -2964,15 +2934,12 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private emitSelectedPlayerAnchor(entity: RemotePlayerEntity) {
+    const cam = this.cameras.main
     const c = entity.display.container
     const worldX = c.x
     const worldY = c.y - 56
-    const { x: sx, y: sy } = worldCoordsToScreen(
-      this.cameras.main,
-      worldX,
-      worldY,
-      this.worldRoot,
-    )
+    const sx = (worldX - cam.scrollX) * cam.zoom + cam.width * 0.5
+    const sy = (worldY - cam.scrollY) * cam.zoom + cam.height * 0.5
     emitGameEvent('selectedPlayerAnchor', { x: sx, y: sy })
   }
 
@@ -3216,8 +3183,6 @@ export class WorldScene extends Phaser.Scene {
     const barW = visual?.barWidth ?? 32
     const hpBarBg = this.add.rectangle(x, feetY - 26, barW, 4, 0x1f2937).setOrigin(0.5)
     const hpBarFill = this.add.rectangle(x - barW / 2, feetY - 26, barW, 4, 0x22c55e).setOrigin(0, 0.5)
-
-    attachToWorldRoot(this, sprite, label, hpBarBg, hpBarFill)
 
     const mob: MobInstance = {
       spawnIndex,
@@ -4511,7 +4476,6 @@ export class WorldScene extends Phaser.Scene {
       .setStrokeStyle(2, 0x60a5fa, 0.55)
       .setDepth(0.5)
       .setVisible(false)
-    attachToWorldRoot(this, this.autoPatrolCircle)
   }
 
   private refreshAutoPatrolCircle() {

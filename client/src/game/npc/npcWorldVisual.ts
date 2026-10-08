@@ -4,7 +4,6 @@ import type { Facing } from '../movement/clickToMove'
 import { registerNpcIdleAnimations, animKey } from '../character/characterSpriteAnim'
 import { npcTextureKey, resolveNpcSpriteDef } from '../character/characterSpriteRegistry'
 import { styleWorldNameLabel } from '../world/worldNameLabel'
-import { attachToWorldRoot } from '../world/worldViewRootAttach'
 import {
   GUILD_BADGE_OFFSET_Y,
   GUILD_ICON_SIZE,
@@ -67,9 +66,7 @@ export function createNpcWorldVisual(scene: Phaser.Scene, npc: NpcRow): NpcWorld
     rect.setStrokeStyle(2, 0xffffff)
     const label = scene.add.text(npc.x, feetY - 46, npc.label).setOrigin(0.5)
     styleWorldNameLabel(label)
-    const visual = { sprite: rect, label, ...guildParts, feetY, fallback: true }
-    attachToWorldRoot(scene, visual.sprite, visual.label, visual.guildIcon, visual.guildLabel)
-    return visual
+    return { sprite: rect, label, ...guildParts, feetY, fallback: true }
   }
 
   const textureKey = npcTextureKey(def)
@@ -90,7 +87,5 @@ export function createNpcWorldVisual(scene: Phaser.Scene, npc: NpcRow): NpcWorld
   const label = scene.add.text(npc.x, feetY - 46, npc.label).setOrigin(0.5)
   styleWorldNameLabel(label)
 
-  const visual = { sprite, label, ...guildParts, feetY, fallback: false }
-  attachToWorldRoot(scene, visual.sprite, visual.label, visual.guildIcon, visual.guildLabel)
-  return visual
+  return { sprite, label, ...guildParts, feetY, fallback: false }
 }

@@ -101,8 +101,6 @@ import { floatingTooltipPositionFromPoint } from './tooltip/floatingTooltipPosit
 import { GameHudMenu, type GameHudMenuItem } from './GameHudMenu'
 import { AutoAttackHudButton } from './AutoAttackHudButton'
 import { AutoAttackWindow } from './AutoAttackWindow'
-import { DisplaySettingsWindow } from './DisplaySettingsWindow'
-import { loadWorldYScale } from '../game/world/worldViewPerspective'
 import {
   loadAutoAttackConfig,
   normalizeAutoAttackConfig,
@@ -251,7 +249,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   bootDungeonRef.current = bootDungeon
   const [dungeonReady, setDungeonReady] = useState(true)
   const [autoAttackOpen, setAutoAttackOpen] = useState(false)
-  const [displaySettingsOpen, setDisplaySettingsOpen] = useState(false)
   const [autoAttackConfig, setAutoAttackConfig] = useState<AutoAttackConfig>(() =>
     loadAutoAttackConfig(character.id),
   )
@@ -286,7 +283,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     !!npcMenu ||
     !!tradePartner ||
     autoAttackOpen ||
-    displaySettingsOpen ||
     !!partyRequest ||
     !!duelInvite ||
     partyOpen ||
@@ -1134,7 +1130,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       queueMicrotask(() => {
         if (!cancelled) {
           emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(sessionRef.current), { persist: false }))
-          emitGameEvent('worldViewPerspective', { yScale: loadWorldYScale() })
         }
       })
     }
@@ -1551,7 +1546,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     { id: 'party', label: 'Party', onClick: () => setPartyOpen(true) },
     { id: 'guild', label: 'Guild', onClick: () => setGuildOpen(true) },
     { id: 'vendor', label: 'Vending', onClick: () => setVendorSetupOpen(true) },
-    { id: 'display', label: 'Display', title: 'View tilt & display', onClick: () => setDisplaySettingsOpen(true) },
     { id: 'leave', label: 'Leave world', variant: 'leave', onClick: () => void leaveWorld() },
   ]
 
@@ -1799,9 +1793,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             onChange={applyAutoAttackConfig}
             onClose={() => setAutoAttackOpen(false)}
           />
-        )}
-        {displaySettingsOpen && (
-          <DisplaySettingsWindow key="display-settings" onClose={() => setDisplaySettingsOpen(false)} />
         )}
         {npcMenu && (
           <NpcOptionsModal

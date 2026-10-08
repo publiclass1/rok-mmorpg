@@ -1,5 +1,4 @@
 import Phaser from 'phaser'
-import { attachToWorldRoot } from '../world/worldViewRootAttach'
 import type { MinimapWorldRect } from '../world/minimapTypes'
 
 export type ObstacleDef = { x: number; y: number; width: number; height: number }
@@ -57,7 +56,6 @@ export function spawnObstaclesFromTilemap(
     const rect = scene.add.rectangle(cx, cy, w, h, 0x78716c, 0.95)
     rect.setStrokeStyle(2, 0x44403c)
     scene.physics.add.existing(rect, true)
-    attachToWorldRoot(scene, rect)
     bodies.push(rect)
   }
   return bodies
@@ -70,7 +68,6 @@ export function spawnObstacles(scene: Phaser.Scene, mapId: string): Phaser.GameO
     const rect = scene.add.rectangle(d.x, d.y, d.width, d.height, 0x78716c, 0.95)
     rect.setStrokeStyle(2, 0x44403c)
     scene.physics.add.existing(rect, true)
-    attachToWorldRoot(scene, rect)
     bodies.push(rect)
   }
   return bodies

@@ -3,7 +3,6 @@ import { DECOR_ASSETS } from '../../lib/mapDecor/catalog'
 import { decorFootprintRects } from '../../lib/mapDecor/decorFootprints'
 import { readDecorAssetId } from '../../lib/mapDecor/decorProps'
 import { setDepthByFeet } from './depthSort'
-import { attachToWorldRoot } from './worldViewRootAttach'
 
 export function preloadMapDecor(scene: Phaser.Scene): void {
   for (const asset of DECOR_ASSETS) {
@@ -32,7 +31,6 @@ export function spawnMapDecor(scene: Phaser.Scene, tilemap: Phaser.Tilemaps.Tile
     const body = scene.add.rectangle(cx, cy, rect.width, rect.height, 0x000000, 0)
     body.setVisible(false)
     scene.physics.add.existing(body, true)
-    attachToWorldRoot(scene, body)
     blockers.push(body)
   }
 
@@ -59,7 +57,6 @@ export function spawnMapDecor(scene: Phaser.Scene, tilemap: Phaser.Tilemaps.Tile
     } else {
       img.setDepth(1)
     }
-    attachToWorldRoot(scene, img)
     sprites.push(img)
   }
   return { sprites, blockers }

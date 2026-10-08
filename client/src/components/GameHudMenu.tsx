@@ -74,13 +74,6 @@ function HudMenuIcon({ id }: { id: string }) {
         <circle cx="10" cy="12" r="1.25" fill="currentColor" stroke="none" />
       </svg>
     ),
-    display: (
-      <svg {...common}>
-        <path d="M3 6h14v8H3z" />
-        <path d="M7 14v2h6v-2" />
-        <path d="M8 4h4l1 2H7z" />
-      </svg>
-    ),
     leave: (
       <svg {...common}>
         <path d="M8 4H4v12h4" />

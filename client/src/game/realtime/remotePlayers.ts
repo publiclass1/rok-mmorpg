@@ -9,7 +9,6 @@ import {
   type PecoMountGfx,
 } from '../player/pecoMountVisual'
 import { resolveJobAvatarKey, type PlayerAvatarKey } from '../player/playerJobAvatar'
-import { attachToWorldRoot } from '../world/worldViewRootAttach'
 import {
   createPlayerDisplay,
   playPlayerAnim,
@@ -112,7 +111,6 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
   label.setVisible(false)
 
   const chatBubble = createPlayerChatBubble(scene)
-  attachToWorldRoot(scene, label, chatBubble.container)
 
   const entity: RemotePlayerEntity = {
     display,
