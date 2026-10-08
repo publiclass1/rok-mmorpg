@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { writeSkillBarDrag } from '../game/character/skillBarDrag'
+import { writeSkillBarDrag, type SkillBarDragPayload } from '../game/character/skillBarDrag'
 import {
   skillFallbackColor,
   skillIconAbbrev,
@@ -8,9 +8,7 @@ import {
 } from '../game/character/skillIconUrl'
 import { SKILLS } from '../game/character/skillsConfig'
 
-type DragConfig =
-  | { source: 'list'; skillId: string }
-  | { source: 'bar'; skillId: string; slot: number }
+type DragConfig = Extract<SkillBarDragPayload, { source: 'list' } | { source: 'bar' }>
 
 type Props = {
   skillId: string
