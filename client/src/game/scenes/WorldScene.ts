@@ -192,10 +192,16 @@ import {
   type RemotePlayerEntity,
 } from '../realtime/remotePlayers'
 import { clampToMap } from '../world/clampToMap'
-import { rollDungeonGear, rolledItemDisplayName } from '../items/rolledItem'
+import {
+  isRolledItemId,
+  rollDungeonGear,
+  rollDungeonMvpGearDrops,
+  rolledItemDisplayName,
+} from '../items/rolledItem'
+import { getRolledItem, registerRolledItem } from '../items/rolledItemRegistry'
 import type { BootDungeonState } from '../world/bootDungeon'
 import { dungeonFloorByMapId, isDungeonMapId } from '../world/dungeonConfig'
-import { findPortalAtPoint } from '../world/mapPortals'
+import { findPortalAtPoint, getWalkPortalsForMap } from '../world/mapPortals'
 import { applyPickupToSession, MapDropManager } from '../world/mapDrops'
 import { isPvpMap, PVP_KILL_STREAK_LABELS } from '../world/pvpConfig'
 import { PvpKillStreakTracker } from '../world/pvpKillStreak'
@@ -390,6 +396,7 @@ export class WorldScene extends Phaser.Scene {
   private dungeonBoot: BootDungeonState | null = null
   private killedSpawnSet = new Set<number>()
   private mvpMob: MobInstance | null = null
+  private dungeonExitPortalVisual: Phaser.GameObjects.Image | null = null
   private autoAttackConfig: AutoAttackConfig = defaultAutoAttackConfig()
   private autoAttackAnchorX = 0
   private autoAttackAnchorY = 0
@@ -502,11 +509,19 @@ export class WorldScene extends Phaser.Scene {
     colliderWithObstacles(this, this.obstacles, this.playerDisplay.container)
 
     this.mapDropManager = new MapDropManager(this, (dropId, itemId) => {
-      this.session = applyPickupToSession(this.session, itemId)
+      if (isRolledItemId(itemId)) {
+        const rolled = getRolledItem(itemId)
+        if (!rolled) return
+        this.session = grantRolledGear(this.session, rolled)
+      } else {
+        this.session = applyPickupToSession(this.session, itemId)
+      }
       this.mapDropManager?.removeDrop(dropId)
       this.presence?.sendCombat({ kind: 'map_pickup', dropId, characterId: this.character.id })
       logActivity('combat', `Picked up ${getItemDisplayName(itemId)}.`)
       this.emitCharacterSheet()
+      emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
+      this.scheduleProgressSave()
     })
 
     const boot = this.registry.get('bootSession') as ReturnType<typeof getCharacterSession> | undefined
@@ -668,6 +683,9 @@ export class WorldScene extends Phaser.Scene {
     if (this.dungeonBoot?.mvpAlive) {
       this.spawnDungeonMvp()
     }
+    if (this.dungeonBoot?.status === 'cleared') {
+      this.showDungeonExitPortal()
+    }
 
     this.eventUnsubs.push(
       onGameEvent('useSkillSlot', ({ bar, slot }) => this.useSkillSlot(bar, slot)),
@@ -826,6 +844,9 @@ export class WorldScene extends Phaser.Scene {
         this.applyDungeonKillState()
         if (payload.mvpAlive) {
           this.spawnDungeonMvp()
+        }
+        if (payload.status === 'cleared') {
+          this.showDungeonExitPortal()
         }
       }),
       onGameEvent('autoAttackSync', (payload) => {
@@ -1103,7 +1124,10 @@ export class WorldScene extends Phaser.Scene {
       const py = this.playerDisplay.container.y
       const portal = findPortalAtPoint(this.character.map_id, px, py)
       const skipDungeonWalkPortal =
-        portal != null && isDungeonMapId(this.character.map_id) && this.dungeonBoot != null
+        portal != null &&
+        isDungeonMapId(this.character.map_id) &&
+        this.dungeonBoot != null &&
+        this.dungeonBoot.status !== 'cleared'
       if (portal && !skipDungeonWalkPortal) {
         this.portalWarpCooldownUntil = now + 1500
         emitGameEvent('portalWarpRequest', {
@@ -3369,6 +3393,49 @@ export class WorldScene extends Phaser.Scene {
     this.scheduleProgressSave()
   }
 
+  private dropDungeonMvpGear(mob: MobInstance) {
+    const floor = dungeonFloorByMapId(this.character.map_id)
+    if (!floor) return
+    const drops = rollDungeonMvpGearDrops(floor)
+    if (drops.length === 0) return
+    const dropGroupId = Date.now()
+    for (let i = 0; i < drops.length; i++) {
+      const rolled = drops[i]
+      registerRolledItem(rolled)
+      const spread = (i - (drops.length - 1) / 2) * 28
+      const dropId = `mvpdrop_${this.character.id}_${dropGroupId}_${i}`
+      const x = mob.sprite.x + spread
+      const y = mob.sprite.y + (i % 2 === 0 ? 0 : 12)
+      this.mapDropManager?.spawnDrop(dropId, rolled.id, x, y)
+      const label = rolledItemDisplayName(rolled)
+      logActivity('combat', `Dropped ${label}.`, rolled.id)
+    }
+  }
+
+  private showDungeonExitPortal() {
+    if (this.dungeonExitPortalVisual?.scene) return
+    const portals = getWalkPortalsForMap(this.character.map_id)
+    const portal = portals[0]
+    if (!portal) return
+    ensureTilesTexture(this)
+    const cx = portal.x + portal.width / 2
+    const cy = portal.y + portal.height / 2
+    const img = this.add.image(cx, cy, 'tiles', 7)
+    img.setDisplaySize(48, 48)
+    img.setDepth(cy + 1)
+    this.tweens.add({
+      targets: img,
+      scaleX: 1.15,
+      scaleY: 1.15,
+      duration: 900,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    })
+    this.dungeonExitPortalVisual = img
+    emitGameEvent('status', 'Exit portal opened!')
+  }
+
   private createMobInstance(
     spawnIndex: number,
     x: number,
@@ -4363,7 +4430,9 @@ export class WorldScene extends Phaser.Scene {
     if (this.dungeonBoot) {
       if (isMvpKill) {
         emitGameEvent('dungeonMvpKilled', { instanceId: this.dungeonBoot.instanceId })
-        this.rollAndGrantDungeonGear(true)
+        this.dropDungeonMvpGear(mob)
+        this.dungeonBoot = { ...this.dungeonBoot, status: 'cleared', mvpAlive: false }
+        this.showDungeonExitPortal()
         emitGameEvent('status', 'Dungeon cleared!')
       } else {
         emitGameEvent('dungeonMobKilled', {

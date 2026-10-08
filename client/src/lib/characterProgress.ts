@@ -12,7 +12,7 @@ import {
   type EquipSlot,
 } from '../game/character/characterState'
 import { parseActiveRental } from '../game/character/rental'
-import { parseSkillBars, serializeSkillBars } from '../game/character/skillBars'
+import { isValidSkillBarPayload, parseSkillBars, serializeSkillBars } from '../game/character/skillBars'
 import type { CharacterRow } from '../types/database'
 import { emitGameEvent } from '../game/events'
 import { progressSave } from './api'
@@ -307,12 +307,24 @@ export async function saveCharacterSession(characterId: string, state: Character
 }
 
 function formatProgressSaveError(err: unknown): string {
-  if (err instanceof Error) return err.message
-  return String(err)
+  const base = err instanceof Error ? err.message : String(err)
+  if (base === 'invalid skill_bar') {
+    return (
+      'invalid skill_bar (progress-save rejected the skill bar JSON). ' +
+      'If you use extra skill bar rows (Q/W/E…), deploy the updated progress-save Edge Function. ' +
+      'Otherwise restart the dev server so the latest client build is loaded.'
+    )
+  }
+  return base
 }
 
 async function writeCharacterSession(characterId: string, state: CharacterSessionState): Promise<void> {
   const synced = syncDerivedVitals(reconcileProgressBudgetForSave(state))
+  const skillBar = serializeSkillBars(synced.skillBars)
+  if (!isValidSkillBarPayload(skillBar)) {
+    throw new Error('invalid skill_bar (client could not normalize skill bar before save)')
+  }
+
   const progressPayload = {
     character_id: characterId,
     job_id: synced.jobId,
@@ -330,7 +342,7 @@ async function writeCharacterSession(characterId: string, state: CharacterSessio
     skill_points_unspent: synced.skillPointsUnspent,
     hp: synced.hp,
     mp: synced.mp,
-    skill_bar: serializeSkillBars(synced.skillBars),
+    skill_bar: skillBar,
     session_inventory: synced.sessionInventory,
     rolled_items: synced.rolledItems,
     active_rental: synced.activeRental,

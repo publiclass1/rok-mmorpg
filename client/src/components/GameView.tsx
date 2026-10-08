@@ -231,7 +231,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [partySnapshot, setPartySnapshot] = useState<PartySnapshot>(null)
   const [partyLoadState, setPartyLoadState] = useState<'loading' | 'ready'>('loading')
   const dungeonValidatedKeyRef = useRef<string | null>(null)
-  const dungeonClearedWarpRef = useRef(false)
   const bootDungeonRef = useRef<BootDungeonState | null>(null)
   const [guildSnapshot, setGuildSnapshot] = useState<GuildSnapshot>(null)
   const [partyRequest, setPartyRequest] = useState<{ request: PartyRequestRow; fromName: string } | null>(
@@ -338,7 +337,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     if (!isDungeonMapId(character.map_id)) {
       dungeonValidatedKeyRef.current = null
-      dungeonClearedWarpRef.current = false
       setBootDungeon(null)
       setDungeonReady(true)
       return
@@ -379,7 +377,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             setMessage(message)
           }
           dungeonValidatedKeyRef.current = null
-          dungeonClearedWarpRef.current = false
           setBootDungeon(null)
           finishReady()
         })
@@ -397,8 +394,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     const gateBaseKey = `${character.id}:${character.map_id}:${partyId}`
     if (
       dungeonValidatedKeyRef.current?.startsWith(`${gateBaseKey}:`) &&
-      bootDungeonRef.current?.mapId === character.map_id &&
-      bootDungeonRef.current?.status !== 'cleared'
+      bootDungeonRef.current?.mapId === character.map_id
     ) {
       finishReady()
       return () => {
@@ -414,7 +410,6 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         .select('*')
         .eq('party_id', partyId)
         .eq('floor_id', floor.id)
-        .neq('status', 'cleared')
         .maybeSingle()
         .then(({ data, error }) => {
           if (cancelled) return
@@ -425,12 +420,17 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             }
             setMessage('Could not verify dungeon instance. Check your connection.')
             const cached = bootDungeonRef.current
-            if (cached?.mapId === character.map_id && cached.status !== 'cleared') {
+            if (cached?.mapId === character.map_id) {
               finishReady()
             }
             return
           }
           if (!data) {
+            const cached = bootDungeonRef.current
+            if (cached?.mapId === character.map_id && cached.status === 'cleared') {
+              finishReady()
+              return
+            }
             warpToProntera('No active dungeon instance for your party.')
             return
           }
@@ -467,25 +467,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           const sync = dungeonInstanceToSync(row)
           setBootDungeon(sync)
           emitGameEvent('dungeonSync', sync)
-          if (sync.status === 'cleared' && !dungeonClearedWarpRef.current) {
-            dungeonClearedWarpRef.current = true
-            void supabase
-              .from('characters')
-              .update({
-                map_id: 'prontera',
-                x: PRONTERA_TOWN_SPAWN.x,
-                y: PRONTERA_TOWN_SPAWN.y,
-              })
-              .eq('id', characterRef.current.id)
-              .select('*')
-              .single()
-              .then(({ data }) => {
-                if (!data) return
-                onCharacterUpdated(data as CharacterRow)
-                setMessage('Dungeon cleared — returned to Prontera.')
-                dungeonValidatedKeyRef.current = null
-                setBootDungeon(null)
-              })
+          if (sync.status === 'cleared') {
+            setMessage('Dungeon cleared! Take the exit portal.')
+            emitGameEvent('status', 'Dungeon cleared! Take the exit portal.')
           }
         },
       )
@@ -520,25 +504,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           const sync = dungeonInstanceToSync(res.instance)
           setBootDungeon(sync)
           emitGameEvent('dungeonSync', sync)
-          if (sync.status === 'cleared' && !dungeonClearedWarpRef.current) {
-            dungeonClearedWarpRef.current = true
-            void supabase
-              .from('characters')
-              .update({
-                map_id: 'prontera',
-                x: PRONTERA_TOWN_SPAWN.x,
-                y: PRONTERA_TOWN_SPAWN.y,
-              })
-              .eq('id', characterRef.current.id)
-              .select('*')
-              .single()
-              .then(({ data }) => {
-                if (!data) return
-                onCharacterUpdated(data as CharacterRow)
-                setMessage('Dungeon cleared — returned to Prontera.')
-                dungeonValidatedKeyRef.current = null
-                setBootDungeon(null)
-              })
+          if (sync.status === 'cleared') {
+            setMessage('Dungeon cleared! Take the exit portal.')
+            emitGameEvent('status', 'Dungeon cleared! Take the exit portal.')
           }
         }
       })

@@ -9,3 +9,7 @@ export function setRolledItemRegistry(rolledItems: Record<string, RolledItem>) {
 export function getRolledItem(itemId: string): RolledItem | null {
   return registry[itemId] ?? null
 }
+
+export function registerRolledItem(rolled: RolledItem) {
+  registry = { ...registry, [rolled.id]: rolled }
+}

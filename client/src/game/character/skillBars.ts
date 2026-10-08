@@ -71,9 +71,29 @@ export function parseSkillBars(raw: unknown): (string | null)[][] {
   return fallback.map((row) => [...row])
 }
 
-export function serializeSkillBars(bars: (string | null)[][]): (string | null)[][] {
+function normalizedSkillBarRows(bars: unknown): (string | null)[][] {
   const parsed = parseSkillBars(bars)
-  return parsed.map((row) => [...row])
+  return parsed.map((row) =>
+    Array.from({ length: SKILL_BAR_SLOTS_PER_ROW }, (_, i) => {
+      const v = row[i]
+      return typeof v === 'string' ? v : null
+    }),
+  )
+}
+
+function skillBarUsesRowsBeyondFirst(rows: (string | null)[][]): boolean {
+  return rows.slice(1).some((row) => row.some((id) => id != null))
+}
+
+/** Persisted shape: legacy 9-slot row when only bar 0 is used; full 4×9 when other rows have skills. */
+export function serializeSkillBars(
+  bars: (string | null)[][],
+): (string | null)[] | (string | null)[][] {
+  const normalized = normalizedSkillBarRows(bars)
+  if (!skillBarUsesRowsBeyondFirst(normalized)) {
+    return normalized[0]
+  }
+  return normalized
 }
 
 export function isValidSkillBarPayload(raw: unknown): boolean {

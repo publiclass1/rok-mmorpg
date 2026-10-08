@@ -1,6 +1,11 @@
 import assert from 'node:assert'
 import { dungeonFloors } from '../world/dungeonConfig'
-import { isRolledItemId, parseRolledBaseItemId, rollDungeonGear } from './rolledItem'
+import {
+  isRolledItemId,
+  parseRolledBaseItemId,
+  rollDungeonGear,
+  rollDungeonMvpGearDrops,
+} from './rolledItem'
 
 function run() {
   const floor = dungeonFloors()[0]
@@ -14,6 +19,13 @@ function run() {
   assert.ok(item!.requiredBaseLevel <= floor.maxLevel)
   assert.ok(isRolledItemId(item!.id))
   assert.ok(parseRolledBaseItemId(item!.id))
+
+  const mvpDrops = rollDungeonMvpGearDrops(floor, () => 0.1)
+  assert.equal(mvpDrops.length, floor.gearDrop.mvpRolls)
+  for (const drop of mvpDrops) {
+    assert.ok(isRolledItemId(drop.id))
+  }
+
   console.log('rolledItem.test.ts: ok')
 }
 

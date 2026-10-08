@@ -4,6 +4,7 @@ import {
   reconcileProgressBudgetForSave,
 } from '../client/src/game/character/characterState.ts'
 import { syncDerivedVitals } from '../client/src/game/character/characterSheet.ts'
+import { serializeSkillBars } from '../client/src/game/character/skillBars.ts'
 import { validateCharacterProgress } from '../supabase/functions/_shared/validateProgress.ts'
 
 const mage = {
@@ -43,7 +44,7 @@ const progress = {
   skill_points_unspent: wizard.skillPointsUnspent,
   hp: wizard.hp,
   mp: wizard.mp,
-  skill_bar: wizard.skillBars,
+  skill_bar: serializeSkillBars(wizard.skillBars),
   session_inventory: wizard.sessionInventory,
   rolled_items: wizard.rolledItems,
   active_rental: wizard.activeRental,

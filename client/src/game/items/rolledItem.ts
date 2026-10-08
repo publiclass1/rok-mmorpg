@@ -124,33 +124,44 @@ export function createRolledGearFromBase(
   }
 }
 
-export function rollDungeonGear(floor: RoDungeonFloor, isMvp: boolean, rng = Math.random): RolledItem | null {
-  const rolls = isMvp ? floor.gearDrop.mvpRolls : 1
-  let result: RolledItem | null = null
-  for (let r = 0; r < rolls; r++) {
-    const chanceRoll = Math.floor(rng() * 10000)
-    if (!isMvp && chanceRoll >= floor.gearDrop.chancePerMille) continue
-    const { dungeons } = loadRoContent()
-    const slots = dungeons.gear.dropSlots
-    const slot = slots[Math.floor(rng() * slots.length)]
-    const bases = baseItemsForSlot(slot)
-    if (bases.length === 0) continue
-    const base = bases[Math.floor(rng() * bases.length)]
-    const rarity = pickWeightedRarity(floor.gearDrop.rarityWeights, rng)
-    const id = `${ROLLED_PREFIX}${base.id}:${randomId8(rng)}`
-    result = {
-      id,
-      baseItemId: base.id,
-      rarity,
-      requiredBaseLevel: rollLevelInBand(floor.minLevel, floor.maxLevel, rng),
-      stats: rollStats(rarity, rng),
-      effect: rollEffect(rarity, rng),
-      slots: 2,
-      cards: [null, null],
-    }
-    if (!isMvp) break
+function rollOneDungeonGear(floor: RoDungeonFloor, rng: () => number): RolledItem | null {
+  const { dungeons } = loadRoContent()
+  const slots = dungeons.gear.dropSlots
+  const slot = slots[Math.floor(rng() * slots.length)]
+  const bases = baseItemsForSlot(slot)
+  if (bases.length === 0) return null
+  const base = bases[Math.floor(rng() * bases.length)]
+  const rarity = pickWeightedRarity(floor.gearDrop.rarityWeights, rng)
+  const id = `${ROLLED_PREFIX}${base.id}:${randomId8(rng)}`
+  return {
+    id,
+    baseItemId: base.id,
+    rarity,
+    requiredBaseLevel: rollLevelInBand(floor.minLevel, floor.maxLevel, rng),
+    stats: rollStats(rarity, rng),
+    effect: rollEffect(rarity, rng),
+    slots: 2,
+    cards: [null, null],
   }
-  return result
+}
+
+export function rollDungeonMvpGearDrops(floor: RoDungeonFloor, rng = Math.random): RolledItem[] {
+  const drops: RolledItem[] = []
+  for (let r = 0; r < floor.gearDrop.mvpRolls; r++) {
+    const rolled = rollOneDungeonGear(floor, rng)
+    if (rolled) drops.push(rolled)
+  }
+  return drops
+}
+
+export function rollDungeonGear(floor: RoDungeonFloor, isMvp: boolean, rng = Math.random): RolledItem | null {
+  if (isMvp) {
+    const drops = rollDungeonMvpGearDrops(floor, rng)
+    return drops[drops.length - 1] ?? null
+  }
+  const chanceRoll = Math.floor(rng() * 10000)
+  if (chanceRoll >= floor.gearDrop.chancePerMille) return null
+  return rollOneDungeonGear(floor, rng)
 }
 
 export function rolledItemDisplayName(rolled: RolledItem): string {
