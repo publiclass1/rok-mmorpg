@@ -63,6 +63,7 @@ import {
   calcMobSkillVsPlayerDamage,
   calcMobVsPlayerDamage,
   calcPlayerMagicSkillSingleHit,
+  calcPlayerMagicSkillVsPlayerSnapshot,
   magicSkillHitCount,
   calcPlayerSkillVsMobDamage,
   calcPlayerVsMobDamage,
@@ -75,7 +76,9 @@ import { playLevelUpWorldFx } from '../combat/levelUpFx'
 import { buildLevelUpSteps, type LevelUpStep } from '../combat/levelUpSteps'
 import { PlayerCastBarGfx, positionPlayerCastBar } from '../combat/castBarFx'
 import {
+  GROUND_AOE_DAMAGE_TICK_MS,
   GroundAoECastMarker,
+  groundAoEDamageTickCount,
   groundAoERadiusPx,
   playGroundAoEImpact,
 } from '../combat/groundAoECastMarker'
@@ -328,10 +331,19 @@ export class WorldScene extends Phaser.Scene {
     def: SkillDefinition
     remote: RemotePlayerEntity
   } | null = null
+  private queuedGroundSkillCast: {
+    skillId: string
+    level: number
+    def: SkillDefinition
+    wx: number
+    wy: number
+  } | null = null
+  private chaseGroundForSkillOnly = false
   private skillCalloutTween: Phaser.Tweens.Tween | null = null
   private playerCastBar!: PlayerCastBarGfx
   private playerSpellChant!: PlayerSpellChantGfx
   private groundAoEMarker!: GroundAoECastMarker
+  private groundAoEDamageTimers: Phaser.Time.TimerEvent[] = []
   private castChantSeed = 0
   private levelUpQueue: LevelUpStep[] = []
   private levelUpDrainActive = false
@@ -637,9 +649,11 @@ export class WorldScene extends Phaser.Scene {
         this.chaseMob = null
         this.chaseMobForSkillOnly = false
         this.queuedSkillCast = null
+        this.clearGroundSkillChase()
         this.stopPvpChase()
         this.setSelectedMob(null)
         this.setSelectedPlayer(null)
+        this.groundAoEMarker.cancel()
         this.playWalkClickMarker(wx, wy)
         this.requestWalkTo(wx, wy)
       }
@@ -931,10 +945,12 @@ export class WorldScene extends Phaser.Scene {
     this.disableAutoAttackFromManualInput()
     if (this.isPlayerDead || this.session.hp > 0) return
     this.isPlayerDead = true
+    this.clearGroundAoEDamageTicks()
     this.cancelPlayerCastPresentation()
     this.groundAoEMarker.cancel()
     this.pendingSkill = null
     this.queuedSkillCast = null
+    this.clearGroundSkillChase()
     this.chaseMobForSkillOnly = false
     this.isPlayingDead = false
     if (this.isSitting) this.standUp()
@@ -1013,7 +1029,9 @@ export class WorldScene extends Phaser.Scene {
       if (this.autoAttackConfig.enabled && !this.pendingSkill) {
         this.tickAutoAttack(now, sheet)
       }
-      if (this.chaseMob?.alive) {
+      if (this.chaseGroundForSkillOnly) {
+        this.tickChaseGroundSkill(now)
+      } else if (this.chaseMob?.alive) {
         this.tickChaseMob(now)
       } else if (this.chaseDuelOpponent) {
         this.tickChaseDuelOpponent(now)
@@ -1286,6 +1304,76 @@ export class WorldScene extends Phaser.Scene {
     this.chasePathGoalX = mob.sprite.x
     this.chasePathGoalY = mob.sprite.y
     this.requestWalkTo(mob.sprite.x, mob.sprite.y)
+  }
+
+  private clearGroundSkillChase() {
+    const wasChasing = this.chaseGroundForSkillOnly || this.queuedGroundSkillCast != null
+    this.queuedGroundSkillCast = null
+    this.chaseGroundForSkillOnly = false
+    if (wasChasing) this.groundAoEMarker.cancel()
+  }
+
+  private beginChaseGroundSkill(
+    skillId: string,
+    level: number,
+    def: SkillDefinition,
+    wx: number,
+    wy: number,
+  ) {
+    this.disableAutoAttackFromManualInput()
+    this.clearGroundSkillChase()
+    this.queuedGroundSkillCast = { skillId, level, def, wx, wy }
+    this.chaseGroundForSkillOnly = true
+    this.chaseMob = null
+    this.chaseMobForSkillOnly = false
+    this.queuedSkillCast = null
+    this.chaseDuelOpponent = null
+    this.queuedDuelSkillCast = null
+    this.stopPvpChase()
+    this.setSelectedMob(null)
+    this.setSelectedPlayer(null)
+    this.groundAoEMarker.lockCast(wx, wy)
+    this.lastChaseRepathAt = 0
+    this.chasePathGoalX = wx
+    this.chasePathGoalY = wy
+    this.requestWalkTo(wx, wy)
+    this.faceToward(wx, wy)
+  }
+
+  private tickChaseGroundSkill(now: number) {
+    const queued = this.queuedGroundSkillCast
+    if (!queued || !this.playerDisplay) return
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    const gx = queued.wx
+    const gy = queued.wy
+    const dist = Phaser.Math.Distance.Between(px, py, gx, gy)
+    const skillRange = this.skillRangePx(queued.def)
+
+    if (dist <= skillRange) {
+      clearMoveTarget(this.moveTarget)
+      this.stopPlayerMotion()
+      this.faceToward(gx, gy)
+      const cast = this.queuedGroundSkillCast
+      this.clearGroundSkillChase()
+      if (cast) {
+        this.executePlayerGroundSkill(cast.skillId, cast.level, cast.def, cast.wx, cast.wy)
+      }
+      this.refreshCursor()
+      return
+    }
+
+    const needRepath =
+      now - this.lastChaseRepathAt >= 350 ||
+      (!this.moveTarget.active && dist > skillRange)
+    if (needRepath) {
+      this.chasePathGoalX = gx
+      this.chasePathGoalY = gy
+      this.requestWalkTo(gx, gy)
+      this.lastChaseRepathAt = now
+      this.faceToward(gx, gy)
+    }
   }
 
   private tickChaseMob(now: number) {
@@ -1782,10 +1870,16 @@ export class WorldScene extends Phaser.Scene {
   private cancelSkillTargeting() {
     const hadPending = Boolean(this.pendingSkill)
     const hadGroundMarker = this.groundAoEMarker.isActive
-    if (!hadPending && !hadGroundMarker) return
+    const hadGroundChase = this.chaseGroundForSkillOnly
+    if (!hadPending && !hadGroundMarker && !hadGroundChase) return
 
     this.pendingSkill = null
     this.queuedSkillCast = null
+    if (this.chaseGroundForSkillOnly) {
+      this.clearGroundSkillChase()
+      clearMoveTarget(this.moveTarget)
+      this.stopPlayerMotion()
+    }
     if (this.chaseMobForSkillOnly) {
       this.chaseMob = null
       this.chaseMobForSkillOnly = false
@@ -1799,6 +1893,7 @@ export class WorldScene extends Phaser.Scene {
       clearMoveTarget(this.moveTarget)
       this.stopPlayerMotion()
     }
+    this.clearGroundAoEDamageTicks()
     this.cancelPlayerCastPresentation()
     this.groundAoEMarker.cancel()
     emitGameEvent('status', 'Skill cancelled.')
@@ -1876,13 +1971,14 @@ export class WorldScene extends Phaser.Scene {
       if (isPlayerGroundMagicSkill(skillId) || isPlayerGroundMagicStub(skillId)) {
         const px = this.playerDisplay.container.x
         const py = this.playerDisplay.container.y
-        if (Phaser.Math.Distance.Between(px, py, wx, wy) > this.skillRangePx(def)) {
-          emitGameEvent('status', 'Target out of range.')
-          this.refreshCursor()
-          return
-        }
+        const skillRange = this.skillRangePx(def)
         this.pendingSkill = null
-        this.executePlayerGroundSkill(skillId, level, def, wx, wy)
+        if (Phaser.Math.Distance.Between(px, py, wx, wy) > skillRange) {
+          this.breakRestState()
+          this.beginChaseGroundSkill(skillId, level, def, wx, wy)
+        } else {
+          this.executePlayerGroundSkill(skillId, level, def, wx, wy)
+        }
       } else {
         this.pendingSkill = null
         emitGameEvent(
@@ -2005,6 +2101,121 @@ export class WorldScene extends Phaser.Scene {
       }
     }
     return hits
+  }
+
+  private remotesInAoERadius(cx: number, cy: number, radius: number): RemotePlayerEntity[] {
+    const hits: RemotePlayerEntity[] = []
+    for (const entity of this.remotePlayers.values()) {
+      if (!this.resolveRemoteCombatSnapshot(entity)) continue
+      const x = entity.display.container.x
+      const y = entity.display.container.y
+      if (Phaser.Math.Distance.Between(cx, cy, x, y) <= radius) {
+        hits.push(entity)
+      }
+    }
+    return hits
+  }
+
+  private clearGroundAoEDamageTicks() {
+    for (const timer of this.groundAoEDamageTimers) timer.remove()
+    this.groundAoEDamageTimers = []
+  }
+
+  private runGroundMagicAoEDamageTicks(
+    wx: number,
+    wy: number,
+    radius: number,
+    skillId: string,
+    skillLevel: number,
+    skillLabel: string,
+  ) {
+    this.clearGroundAoEDamageTicks()
+    const tickCount = groundAoEDamageTickCount()
+    const hitState = { any: false }
+
+    for (let i = 0; i < tickCount; i++) {
+      const timer = this.time.delayedCall(i * GROUND_AOE_DAMAGE_TICK_MS, () => {
+        if (this.isPlayerDead) return
+
+        for (const mob of this.mobsInAoERadius(wx, wy, radius)) {
+          const mobDef = MOB_DEFS[mob.defId]
+          if (!mobDef || !mob.alive) continue
+          this.applyMagicSingleHitToMob(mob, skillId, skillLevel, skillLabel, mobDef)
+          hitState.any = true
+        }
+
+        for (const remote of this.remotesInAoERadius(wx, wy, radius)) {
+          this.applyGroundAoEMagicTickToRemote(remote, skillId, skillLevel, skillLabel, hitState)
+        }
+
+        this.emitCharacterSheet()
+
+        if (i === tickCount - 1 && !hitState.any) {
+          emitGameEvent('status', `${skillLabel} — no targets in area.`)
+        }
+      })
+      this.groundAoEDamageTimers.push(timer)
+    }
+  }
+
+  private applyGroundAoEMagicTickToRemote(
+    remote: RemotePlayerEntity,
+    skillId: string,
+    skillLevel: number,
+    skillLabel: string,
+    hitState: { any: boolean },
+  ) {
+    const snapshot = this.resolveRemoteCombatSnapshot(remote)
+    if (!snapshot) return
+
+    const tx = remote.display.container.x
+    const ty = remote.display.container.y - 40
+    const { damage, critical } = calcPlayerMagicSkillVsPlayerSnapshot(
+      this.session,
+      snapshot,
+      skillId,
+      skillLevel,
+    )
+    if (damage <= 0) return
+
+    hitState.any = true
+
+    if (this.isPvpActive() && this.canAttackPlayer(remote.lastPayload.characterId)) {
+      showDamageFloat(this, tx, ty, damage, this.pvpDamageFloatVariant(critical))
+      this.sfx.playHit()
+      this.broadcastPlayerHit(remote.lastPayload.characterId, damage, skillLabel, critical)
+      logActivity('combat', `${skillLabel} hit ${remote.lastPayload.name} for ${damage} in PVP.`)
+      return
+    }
+
+    if (
+      this.isDuelCombatAllowed() &&
+      this.duelSync &&
+      remote.lastPayload.characterId === this.duelSync.opponentCharacterId
+    ) {
+      void duelAttack({
+        action: 'attack',
+        characterId: this.character.id,
+        duelSessionId: this.duelSync.duelSessionId,
+        targetCharacterId: remote.lastPayload.characterId,
+        skillId,
+        skillLevel,
+      })
+        .then((res) => {
+          if (!res.hit || res.damage <= 0) return
+          const crit = res.critical === true
+          showDamageFloat(this, tx, ty, res.damage, crit ? 'critPhysical' : 'hit')
+          this.sfx.playHit()
+          this.broadcastPlayerHit(remote.lastPayload.characterId, res.damage, skillLabel, crit)
+          logActivity(
+            'combat',
+            `${skillLabel} hit ${remote.lastPayload.name} for ${res.damage} in a duel.`,
+          )
+        })
+        .catch(() => {
+          /* ignore tick failures */
+        })
+    }
   }
 
   private executePlayerSkill(
@@ -2260,7 +2471,6 @@ export class WorldScene extends Phaser.Scene {
         },
         onMagicVolleyComplete: () => this.emitCharacterSheet(),
         onComplete: () => {
-          this.groundAoEMarker.cancel()
           this.cancelPlayerCastPresentation()
           this.isAttacking = false
         },
@@ -2290,22 +2500,12 @@ export class WorldScene extends Phaser.Scene {
       magicHitCount: 1,
       onMagicHit: () => {
         playGroundAoEImpact(this, this.groundAoEMarker, wx, wy, skillId, aoeRadius)
+        this.runGroundMagicAoEDamageTicks(wx, wy, radius, skillId, skillLevel, skillLabel)
       },
       onMagicVolleyComplete: () => {
-        const victims = this.mobsInAoERadius(wx, wy, radius)
-        if (victims.length === 0) {
-          emitGameEvent('status', `${skillLabel} — no targets in area.`)
-        } else {
-          for (const mob of victims) {
-            const mobDef = MOB_DEFS[mob.defId]
-            if (!mobDef || !mob.alive) continue
-            this.applyMagicSingleHitToMob(mob, skillId, skillLevel, skillLabel, mobDef)
-          }
-        }
         this.emitCharacterSheet()
       },
       onComplete: () => {
-        this.groundAoEMarker.cancel()
         this.cancelPlayerCastPresentation()
         this.isAttacking = false
       },

@@ -333,12 +333,52 @@ export function magicSkillHitCount(def: SkillDefinition | undefined, skillLevel:
 }
 
 /** One projectile / one damage roll (used when damage syncs to projectile arrival). */
+/** Magic skill hit vs another player (PVP snapshot as MDEF / LUK stand-in). */
+export function calcPlayerMagicSkillVsPlayerSnapshot(
+  state: CharacterSessionState,
+  defender: DuelCombatSnapshot,
+  skillId: string,
+  skillLevel: number,
+  options?: { rng?: () => number },
+): { damage: number; critical: boolean } {
+  const defStats = defenderEffectiveStats(defender)
+  const mob = {
+    id: 'player',
+    name: 'Player',
+    level: defender.baseLevel,
+    maxHp: 1,
+    atk: 0,
+    def: 0,
+    mdef: defStats.int,
+    element: 'neutral',
+    size: 'medium',
+    hit: 0,
+    flee: 0,
+    color: 0,
+    aggroRange: 0,
+    attackRange: 0,
+    attackCooldownMs: 0,
+    roamRadius: 0,
+    moveSpeed: 0,
+    wanderPauseMs: 0,
+    wikiBaseExp: 0,
+    wikiJobExp: 0,
+    drops: [],
+    skills: [],
+    isBoss: false,
+  } satisfies MobDefinition
+  return calcPlayerMagicSkillSingleHit(state, mob, skillId, skillLevel, {
+    ...options,
+    defenderLuk: defStats.luk,
+  })
+}
+
 export function calcPlayerMagicSkillSingleHit(
   state: CharacterSessionState,
   mob: MobDefinition,
   skillId: string,
   skillLevel: number,
-  options?: { rng?: () => number },
+  options?: { rng?: () => number; defenderLuk?: number },
 ): { damage: number; critical: boolean } {
   const def = SKILLS[skillId]
   const rng = options?.rng ?? Math.random
@@ -347,6 +387,7 @@ export function calcPlayerMagicSkillSingleHit(
     skillModifier: modifier,
     attackElement: element,
     rng,
+    defenderLuk: options?.defenderLuk,
   })
 }
 

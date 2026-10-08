@@ -5,6 +5,14 @@ import { SKILLS, isPlayerGroundMagicSkill } from '../character/skillsConfig'
 import { setDepthByFeet } from '../world/depthSort'
 
 export const GROUND_AOE_DEPTH_EPSILON = -0.14
+/** Visible ground impact fade (marker pulse + fallback burst). */
+export const GROUND_AOE_IMPACT_DURATION_MS = 3000
+/** Damage ticks while the ground AoE is active (matches impact duration). */
+export const GROUND_AOE_DAMAGE_TICK_MS = 300
+
+export function groundAoEDamageTickCount(): number {
+  return Math.max(1, Math.round(GROUND_AOE_IMPACT_DURATION_MS / GROUND_AOE_DAMAGE_TICK_MS))
+}
 const DEFAULT_STUB_AOE_RADIUS = 48
 const ELLIPSE_HEIGHT_RATIO = 0.7
 
@@ -60,8 +68,8 @@ export function playGroundAoEImpactBurst(
     scaleX: 1.35,
     scaleY: 1.35,
     alpha: 0,
-    duration: 300,
-    ease: 'Sine.easeOut',
+    duration: GROUND_AOE_IMPACT_DURATION_MS,
+    ease: 'Sine.easeIn',
     onComplete: () => ellipse.destroy(),
   })
 }
@@ -72,7 +80,7 @@ function groundAoEGroundRing(
   y: number,
   radiusPx: number,
   color: number,
-  duration = 320,
+  duration = GROUND_AOE_IMPACT_DURATION_MS,
 ) {
   const w = radiusPx * 2
   const h = radiusPx * 2 * ELLIPSE_HEIGHT_RATIO
@@ -102,67 +110,95 @@ function playGroundAoESkillExtras(
 
   switch (skillId) {
     case 'meteor_storm':
-    case 'fire_ball':
-      for (let i = 0; i < 4; i++) {
-        const ox = (i - 1.5) * (radiusPx * 0.18)
-        const dot = scene.add.circle(x + ox, y - radiusPx * 0.35 - i * 4, 3, style.accent, 0.9)
-        setDepthByFeet(dot, y, depthEps)
-        scene.tweens.add({
-          targets: dot,
-          y: y - 6,
-          alpha: 0,
-          duration: 400 + i * 80,
-          onComplete: () => dot.destroy(),
+    case 'fire_ball': {
+      const meteorHits = 7
+      const meteorStagger = GROUND_AOE_IMPACT_DURATION_MS / meteorHits
+      for (let i = 0; i < meteorHits; i++) {
+        scene.time.delayedCall(i * meteorStagger, () => {
+          const ox = (Math.random() - 0.5) * radiusPx * 0.7
+          const dot = scene.add.circle(
+            x + ox,
+            y - radiusPx * 0.45,
+            3 + (i % 2),
+            style.accent,
+            0.9,
+          )
+          setDepthByFeet(dot, y, depthEps)
+          scene.tweens.add({
+            targets: dot,
+            y: y - 4,
+            alpha: 0,
+            duration: Math.min(900, GROUND_AOE_IMPACT_DURATION_MS - i * meteorStagger),
+            onComplete: () => dot.destroy(),
+          })
         })
       }
       break
-    case 'lord_of_vermilion':
-      for (let i = 0; i < 3; i++) {
-        const ox = (i - 1) * (radiusPx * 0.35)
-        const bolt = scene.add.graphics()
-        bolt.setDepth(0)
-        setDepthByFeet(bolt, y, depthEps + i * 0.001)
-        bolt.lineStyle(3, style.accent, 0.95)
-        bolt.lineBetween(x + ox, y - radiusPx * 0.9, x + ox, y + 4)
-        scene.tweens.add({
-          targets: bolt,
-          alpha: 0,
-          duration: 220 + i * 40,
-          onComplete: () => bolt.destroy(),
+    }
+    case 'lord_of_vermilion': {
+      const lovWaves = 3
+      const lovWaveGap = GROUND_AOE_IMPACT_DURATION_MS / lovWaves
+      for (let wave = 0; wave < lovWaves; wave++) {
+        scene.time.delayedCall(wave * lovWaveGap, () => {
+          for (let i = 0; i < 3; i++) {
+            const ox = (i - 1) * (radiusPx * 0.35)
+            const bolt = scene.add.graphics()
+            setDepthByFeet(bolt, y, depthEps + i * 0.001)
+            bolt.lineStyle(3, style.accent, 0.95)
+            bolt.lineBetween(x + ox, y - radiusPx * 0.9, x + ox, y + 4)
+            scene.tweens.add({
+              targets: bolt,
+              alpha: 0,
+              duration: Math.min(1100, lovWaveGap * 0.9),
+              onComplete: () => bolt.destroy(),
+            })
+          }
         })
       }
-      groundAoEGroundRing(scene, x, y, radiusPx, style.stroke, 280)
+      groundAoEGroundRing(scene, x, y, radiusPx, style.stroke)
       break
+    }
     case 'storm_gust':
     case 'frost_nova':
-      groundAoEGroundRing(scene, x, y, radiusPx, style.accent, 360)
-      for (let i = 0; i < 8; i++) {
-        const a = (Math.PI * 2 * i) / 8
-        const dist = radiusPx * (0.35 + (i % 3) * 0.12)
-        const speck = scene.add.circle(x + Math.cos(a) * dist, y + Math.sin(a) * dist * 0.7, 2, 0xe0f2fe, 0.85)
-        setDepthByFeet(speck, y, depthEps)
-        scene.tweens.add({
-          targets: speck,
-          alpha: 0,
-          scale: 1.8,
-          duration: 340 + i * 25,
-          onComplete: () => speck.destroy(),
+      groundAoEGroundRing(scene, x, y, radiusPx, style.accent)
+      for (let i = 0; i < 12; i++) {
+        const a = (Math.PI * 2 * i) / 12
+        const dist = radiusPx * (0.3 + (i % 4) * 0.1)
+        const delay = (i / 12) * (GROUND_AOE_IMPACT_DURATION_MS * 0.65)
+        scene.time.delayedCall(delay, () => {
+          const speck = scene.add.circle(
+            x + Math.cos(a) * dist,
+            y + Math.sin(a) * dist * 0.7,
+            2,
+            0xe0f2fe,
+            0.85,
+          )
+          setDepthByFeet(speck, y, depthEps)
+          scene.tweens.add({
+            targets: speck,
+            alpha: 0,
+            scale: 1.8,
+            duration: GROUND_AOE_IMPACT_DURATION_MS - delay,
+            onComplete: () => speck.destroy(),
+          })
         })
       }
       break
     case 'heavens_drive':
-      groundAoEGroundRing(scene, x, y, radiusPx, style.stroke, 400)
+      groundAoEGroundRing(scene, x, y, radiusPx, style.stroke)
       for (let i = 0; i < 5; i++) {
-        const ox = (i - 2) * (radiusPx * 0.22)
-        const spike = scene.add.graphics()
-        setDepthByFeet(spike, y, depthEps)
-        spike.fillStyle(style.accent, 0.75)
-        spike.fillTriangle(x + ox, y + 6, x + ox - 5, y + 14, x + ox + 5, y + 14)
-        scene.tweens.add({
-          targets: spike,
-          alpha: 0,
-          duration: 280 + i * 30,
-          onComplete: () => spike.destroy(),
+        scene.time.delayedCall(i * (GROUND_AOE_IMPACT_DURATION_MS / 6), () => {
+          const ox = (i - 2) * (radiusPx * 0.22)
+          const spike = scene.add.graphics()
+          setDepthByFeet(spike, y, depthEps)
+          spike.fillStyle(style.accent, 0.75)
+          spike.fillTriangle(x + ox, y + 6, x + ox - 5, y + 14, x + ox + 5, y + 14)
+          scene.tweens.add({
+            targets: spike,
+            alpha: 0,
+            duration: GROUND_AOE_IMPACT_DURATION_MS * 0.55,
+            onComplete: () => spike.destroy(),
+          })
         })
       }
       break
@@ -279,8 +315,8 @@ export class GroundAoECastMarker {
       scaleX: 1.35,
       scaleY: 1.35,
       alpha: 0,
-      duration: 300,
-      ease: 'Sine.easeOut',
+      duration: GROUND_AOE_IMPACT_DURATION_MS,
+      ease: 'Sine.easeIn',
       onComplete: () => {
         this.releaseTween = null
         this.resetVisual()

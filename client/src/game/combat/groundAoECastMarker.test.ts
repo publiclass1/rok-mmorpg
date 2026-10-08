@@ -1,6 +1,8 @@
 import assert from 'node:assert'
 import { SKILLS } from '../character/skillsConfig'
 import {
+  GROUND_AOE_IMPACT_DURATION_MS,
+  groundAoEDamageTickCount,
   groundAoEElementStyle,
   groundAoERadiusPx,
   usesGroundAoECastMarker,
@@ -27,6 +29,8 @@ function run() {
 
   assert.equal(usesGroundAoECastMarker('meteor_storm'), true)
   assert.equal(usesGroundAoECastMarker('fire_bolt'), false)
+  assert.equal(GROUND_AOE_IMPACT_DURATION_MS, 3000)
+  assert.equal(groundAoEDamageTickCount(), 10)
 
   console.log('groundAoECastMarker.test.ts: ok')
 }
