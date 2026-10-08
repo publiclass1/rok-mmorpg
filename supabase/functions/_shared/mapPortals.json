@@ -39,7 +39,7 @@
         "targetX": 1600,
         "targetY": 1400,
         "label": "Prontera",
-        "mode": "walk"
+        "mode": "npc"
       }
     ],
     "dun_f2": [
@@ -53,7 +53,7 @@
         "targetX": 1600,
         "targetY": 1400,
         "label": "Prontera",
-        "mode": "walk"
+        "mode": "npc"
       }
     ],
     "dun_f3": [
@@ -67,7 +67,7 @@
         "targetX": 1600,
         "targetY": 1400,
         "label": "Prontera",
-        "mode": "walk"
+        "mode": "npc"
       }
     ],
     "dun_f4": [
@@ -81,7 +81,7 @@
         "targetX": 1600,
         "targetY": 1400,
         "label": "Prontera",
-        "mode": "walk"
+        "mode": "npc"
       }
     ],
     "dun_f5": [
@@ -95,7 +95,7 @@
         "targetX": 1600,
         "targetY": 1400,
         "label": "Prontera",
-        "mode": "walk"
+        "mode": "npc"
       }
     ]
   }

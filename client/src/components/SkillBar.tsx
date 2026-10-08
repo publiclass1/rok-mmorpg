@@ -242,9 +242,7 @@ function SkillBarRowPanel({
                 setDropTarget({ bar, slot })
               }}
               onDragLeave={() => {
-                setDropTarget((current) =>
-                  current?.bar === bar && current?.slot === slot ? null : current,
-                )
+                setDropTarget(dropTarget?.bar === bar && dropTarget?.slot === slot ? null : dropTarget)
               }}
               onDrop={(e) => {
                 e.stopPropagation()

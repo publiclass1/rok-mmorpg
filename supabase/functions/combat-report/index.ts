@@ -35,12 +35,6 @@ function jobCap(jobId: string): number {
   return job?.maxJobLevel ?? 50
 }
 
-function addItemsToInventory(inv: unknown, itemIds: string[]): unknown {
-  const list = Array.isArray(inv) ? [...inv] : []
-  for (const id of itemIds) list.push(id)
-  return list
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -153,7 +147,6 @@ Deno.serve(async (req) => {
       jobCap(progress.job_id),
     )
 
-    const nextInventory = addItemsToInventory(progress.session_inventory, loot.itemIds)
     let nextZeny = character.zeny
     if (loot.zeny > 0) {
       nextZeny = character.zeny + loot.zeny
@@ -166,7 +159,8 @@ Deno.serve(async (req) => {
         base_exp: baseAfter.baseExp,
         job_level: jobAfter.jobLevel,
         job_exp: jobAfter.jobExp,
-        session_inventory: nextInventory,
+        // Items are granted via ground-drop pickup, not immediately on kill.
+        session_inventory: progress.session_inventory,
         updated_at: now.toISOString(),
       })
       .eq('character_id', body.characterId)
@@ -227,7 +221,7 @@ Deno.serve(async (req) => {
           jobExp: jobAfter.jobExp,
         },
         zenyTotal: nextZeny,
-        sessionInventory: nextInventory,
+        sessionInventory: progress.session_inventory,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )

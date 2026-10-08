@@ -117,7 +117,6 @@ import { appearanceFromCharacterRow } from '../character/characterAppearance'
 import { moveSpeedFromAgi } from '../character/statFormulas'
 import { attackStyleForWeapon } from '../character/characterSpriteRegistry'
 import { ensureMasterCharacterSheets } from '../character/characterSpriteAssets'
-import { addItemsToSessionInventory, parseSessionInventory } from '../character/sessionInventory'
 import type { MobInstance } from '../combat/mobTypes'
 import { SfxPlayer } from '../combat/sfx'
 import {
@@ -1103,7 +1102,9 @@ export class WorldScene extends Phaser.Scene {
       const px = this.playerDisplay.container.x
       const py = this.playerDisplay.container.y
       const portal = findPortalAtPoint(this.character.map_id, px, py)
-      if (portal) {
+      const skipDungeonWalkPortal =
+        portal != null && isDungeonMapId(this.character.map_id) && this.dungeonBoot != null
+      if (portal && !skipDungeonWalkPortal) {
         this.portalWarpCooldownUntil = now + 1500
         emitGameEvent('portalWarpRequest', {
           portalId: portal.id,
@@ -4299,6 +4300,30 @@ export class WorldScene extends Phaser.Scene {
     return hit?.mob ?? null
   }
 
+  private spawnAndBroadcastMobItemDrops(params: {
+    dropGroupId: number
+    itemIds: string[]
+    x: number
+    y: number
+    fromCharacterId: string
+    spawnIndex: number
+  }) {
+    const { dropGroupId, itemIds, x, y, fromCharacterId, spawnIndex } = params
+    for (let i = 0; i < itemIds.length; i++) {
+      const itemId = itemIds[i]
+      const dropId = `mobdrop_${fromCharacterId}_${spawnIndex}_${dropGroupId}_${i}`
+      this.mapDropManager?.spawnDrop(dropId, itemId, x, y)
+      this.presence?.sendCombat({
+        kind: 'map_drop',
+        dropId,
+        itemId,
+        x,
+        y,
+        fromCharacterId,
+      })
+    }
+  }
+
   private killMob(mob: MobInstance) {
     const def = MOB_DEFS[mob.defId]
     const isMvpKill = this.mvpMob === mob
@@ -4313,12 +4338,17 @@ export class WorldScene extends Phaser.Scene {
         emitGameEvent('zenyGain', { amount: loot.zeny })
       }
       if (loot.itemIds.length > 0) {
-        this.session = {
-          ...this.session,
-          sessionInventory: addItemsToSessionInventory(this.session.sessionInventory, loot.itemIds),
-        }
+        const dropGroupId = Date.now()
+        this.spawnAndBroadcastMobItemDrops({
+          dropGroupId,
+          itemIds: loot.itemIds,
+          x: mob.sprite.x,
+          y: mob.sprite.y,
+          fromCharacterId: this.character.id,
+          spawnIndex: mob.spawnIndex,
+        })
         for (const itemId of loot.itemIds) {
-          logActivity('combat', `Obtained ${getItemDisplayName(itemId)}.`, itemId)
+          logActivity('combat', `Dropped ${getItemDisplayName(itemId)}.`, itemId)
         }
       }
 
@@ -4431,8 +4461,9 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private grantFieldMobKillFromServer(mob: MobInstance, _def: (typeof MOB_DEFS)[string]) {
-    const px = this.playerDisplay.container.x
-    const py = this.playerDisplay.container.y
+    const px = mob.sprite.x
+    const py = mob.sprite.y
+    const dropGroupId = Date.now()
     combatReport({
       characterId: this.character.id,
       mapId: this.character.map_id,
@@ -4447,16 +4478,17 @@ export class WorldScene extends Phaser.Scene {
           emitGameEvent('characterZenySync', { zeny: result.zenyTotal })
         }
         if (result.itemIds.length > 0) {
-          this.session = {
-            ...this.session,
-            sessionInventory: addItemsToSessionInventory(
-              this.session.sessionInventory,
-              result.itemIds,
-            ),
-          }
           for (const itemId of result.itemIds) {
-            logActivity('combat', `Obtained ${getItemDisplayName(itemId)}.`, itemId)
+            logActivity('combat', `Dropped ${getItemDisplayName(itemId)}.`, itemId)
           }
+          this.spawnAndBroadcastMobItemDrops({
+            dropGroupId,
+            itemIds: result.itemIds,
+            x: px,
+            y: py,
+            fromCharacterId: this.character.id,
+            spawnIndex: mob.spawnIndex,
+          })
         }
         const beforeBase = this.session.progress.baseLevel
         const beforeJob = this.session.progress.jobLevel
@@ -4473,9 +4505,8 @@ export class WorldScene extends Phaser.Scene {
           const applied = applyServerProgressUpdate(
             {
               ...s,
-              sessionInventory: Array.isArray(result.sessionInventory)
-                ? parseSessionInventory(result.sessionInventory)
-                : s.sessionInventory,
+              // Server no longer grants item drops into session inventory.
+              sessionInventory: s.sessionInventory,
             },
             progress,
           )

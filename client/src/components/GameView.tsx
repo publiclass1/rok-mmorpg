@@ -57,7 +57,7 @@ import type {
   TradeSessionRow,
 } from '../types/database'
 import type { BootDungeonState } from '../game/world/bootDungeon'
-import { dungeonFloors, isDungeonMapId } from '../game/world/dungeonConfig'
+import { dungeonFloorByMapId, dungeonFloors, isDungeonMapId } from '../game/world/dungeonConfig'
 import { ChatStrip, type ChatStripHandle } from './ChatStrip'
 import { PlayerTargetPopup } from './PlayerTargetPopup'
 import { GuildModal } from './GuildModal'
@@ -231,6 +231,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [partySnapshot, setPartySnapshot] = useState<PartySnapshot>(null)
   const [partyLoadState, setPartyLoadState] = useState<'loading' | 'ready'>('loading')
   const dungeonValidatedKeyRef = useRef<string | null>(null)
+  const dungeonClearedWarpRef = useRef(false)
   const bootDungeonRef = useRef<BootDungeonState | null>(null)
   const [guildSnapshot, setGuildSnapshot] = useState<GuildSnapshot>(null)
   const [partyRequest, setPartyRequest] = useState<{ request: PartyRequestRow; fromName: string } | null>(
@@ -337,6 +338,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     if (!isDungeonMapId(character.map_id)) {
       dungeonValidatedKeyRef.current = null
+      dungeonClearedWarpRef.current = false
       setBootDungeon(null)
       setDungeonReady(true)
       return
@@ -344,6 +346,12 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
     if (partyLoadState !== 'ready') {
       setDungeonReady(false)
+      return
+    }
+
+    const floor = dungeonFloorByMapId(character.map_id)
+    if (!floor) {
+      setDungeonReady(true)
       return
     }
 
@@ -371,6 +379,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             setMessage(message)
           }
           dungeonValidatedKeyRef.current = null
+          dungeonClearedWarpRef.current = false
           setBootDungeon(null)
           finishReady()
         })
@@ -388,7 +397,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     const gateBaseKey = `${character.id}:${character.map_id}:${partyId}`
     if (
       dungeonValidatedKeyRef.current?.startsWith(`${gateBaseKey}:`) &&
-      bootDungeonRef.current?.mapId === character.map_id
+      bootDungeonRef.current?.mapId === character.map_id &&
+      bootDungeonRef.current?.status !== 'cleared'
     ) {
       finishReady()
       return () => {
@@ -403,7 +413,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         .from('dungeon_instances')
         .select('*')
         .eq('party_id', partyId)
-        .eq('map_id', character.map_id)
+        .eq('floor_id', floor.id)
         .neq('status', 'cleared')
         .maybeSingle()
         .then(({ data, error }) => {
@@ -415,7 +425,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             }
             setMessage('Could not verify dungeon instance. Check your connection.')
             const cached = bootDungeonRef.current
-            if (cached?.mapId === character.map_id) {
+            if (cached?.mapId === character.map_id && cached.status !== 'cleared') {
               finishReady()
             }
             return
@@ -437,7 +447,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     return () => {
       cancelled = true
     }
-  }, [character.id, character.map_id, partySnapshot?.party.id, partyLoadState, onCharacterUpdated])
+  }, [character.id, character.map_id, partySnapshot?.party.id, partyLoadState])
 
   useEffect(() => {
     if (!bootDungeon?.instanceId) return
@@ -457,13 +467,33 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           const sync = dungeonInstanceToSync(row)
           setBootDungeon(sync)
           emitGameEvent('dungeonSync', sync)
+          if (sync.status === 'cleared' && !dungeonClearedWarpRef.current) {
+            dungeonClearedWarpRef.current = true
+            void supabase
+              .from('characters')
+              .update({
+                map_id: 'prontera',
+                x: PRONTERA_TOWN_SPAWN.x,
+                y: PRONTERA_TOWN_SPAWN.y,
+              })
+              .eq('id', characterRef.current.id)
+              .select('*')
+              .single()
+              .then(({ data }) => {
+                if (!data) return
+                onCharacterUpdated(data as CharacterRow)
+                setMessage('Dungeon cleared — returned to Prontera.')
+                dungeonValidatedKeyRef.current = null
+                setBootDungeon(null)
+              })
+          }
         },
       )
       .subscribe()
     return () => {
       void supabase.removeChannel(channel)
     }
-  }, [bootDungeon?.instanceId])
+  }, [bootDungeon?.instanceId, onCharacterUpdated])
 
   useEffect(() => {
     const unsubKill = onGameEvent('dungeonMobKilled', ({ instanceId, spawnIndex }) => {
@@ -490,6 +520,26 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           const sync = dungeonInstanceToSync(res.instance)
           setBootDungeon(sync)
           emitGameEvent('dungeonSync', sync)
+          if (sync.status === 'cleared' && !dungeonClearedWarpRef.current) {
+            dungeonClearedWarpRef.current = true
+            void supabase
+              .from('characters')
+              .update({
+                map_id: 'prontera',
+                x: PRONTERA_TOWN_SPAWN.x,
+                y: PRONTERA_TOWN_SPAWN.y,
+              })
+              .eq('id', characterRef.current.id)
+              .select('*')
+              .single()
+              .then(({ data }) => {
+                if (!data) return
+                onCharacterUpdated(data as CharacterRow)
+                setMessage('Dungeon cleared — returned to Prontera.')
+                dungeonValidatedKeyRef.current = null
+                setBootDungeon(null)
+              })
+          }
         }
       })
     })
@@ -497,7 +547,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       unsubKill()
       unsubMvp()
     }
-  }, [character.id])
+  }, [character.id, onCharacterUpdated])
 
   useEffect(() => {
     setNpcsReady(false)
@@ -1585,11 +1635,9 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         ? `Hide bar ${SKILL_BAR_ROW_LABELS[bar]}`
         : `Show bar ${SKILL_BAR_ROW_LABELS[bar]}`,
       onClick: () => {
-        setSkillBarRowsVisible((prev) => {
-          const next = [...prev]
-          next[bar] = !next[bar]
-          return next
-        })
+        const next = [...skillBarRowsVisible]
+        next[bar] = !next[bar]
+        setSkillBarRowsVisible(next)
       },
     })),
     { id: 'party', label: 'Party', onClick: () => setPartyOpen(true) },

@@ -105,7 +105,7 @@ export function GameHudMenu({ items }: Props) {
           <span className="hud-menu-btn__icon">
             <HudMenuIcon id={item.id} />
           </span>
-          <span className="hud-menu-btn__label">{item.label}</span>
+          <span className="hud-menu-btn__label">{item.title ?? item.label}</span>
         </button>
       ))}
     </nav>
