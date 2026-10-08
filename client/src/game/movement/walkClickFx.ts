@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { setDepthByFeet } from '../world/depthSort'
+import { attachToWorldRoot } from '../world/worldViewRootAttach'
 
 const RING_COLOR = 0x4ade80
 const RING_STROKE = 0x86efac
@@ -13,6 +14,7 @@ export function playWalkClickFx(scene: Phaser.Scene, x: number, y: number) {
   const ring = scene.add.ellipse(x, y, 28, 20, RING_COLOR, 0.35)
   ring.setStrokeStyle(2, RING_STROKE, 0.9)
   setDepthByFeet(ring, depthY, depthEpsilon)
+  attachToWorldRoot(scene, ring)
 
   scene.tweens.add({
     targets: ring,
@@ -27,6 +29,7 @@ export function playWalkClickFx(scene: Phaser.Scene, x: number, y: number) {
   const pin = scene.add.graphics()
   pin.setPosition(x, y - 4)
   setDepthByFeet(pin, depthY, depthEpsilon + 0.01)
+  attachToWorldRoot(scene, pin)
   pin.lineStyle(2, PIN_COLOR, 0.95)
   pin.beginPath()
   pin.moveTo(-5, -3)

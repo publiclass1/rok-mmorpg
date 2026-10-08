@@ -3,6 +3,7 @@ import { addItemsToSessionInventory } from '../character/sessionInventory'
 import type { CharacterSessionState } from '../character/characterState'
 import { ensureItemEquipIconTexture } from '../player/itemEquipIconTexture'
 import { createMapDropRarityFx, destroyMapDropRarityFx, type MapDropRarityFx } from './mapDropRarityFx'
+import { attachToWorldRoot } from './worldViewRootAttach'
 
 const PICKUP_RANGE = 48
 const HOVER_RADIUS = 18
@@ -48,6 +49,8 @@ export class MapDropManager {
     sprite.on('pointerdown', () => this.tryPickup(dropId))
 
     const rarityFx = createMapDropRarityFx(this.scene, x, y, itemId, y - 2)
+    attachToWorldRoot(this.scene, sprite)
+    if (rarityFx) attachToWorldRoot(this.scene, rarityFx.container)
 
     this.drops.set(dropId, { dropId, itemId, sprite, rarityFx, x, y })
 

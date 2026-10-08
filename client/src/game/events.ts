@@ -258,6 +258,7 @@ export type GameEvents = {
   autoAttackSync: AutoAttackConfig
   autoAttackToggle: { enabled: boolean }
   autoAttackDisable: Record<string, never>
+  worldViewPerspective: { yScale: number }
 }
 
 type Listener = (payload: unknown) => void

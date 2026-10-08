@@ -53,6 +53,20 @@ export function jobChangeOffersFromNpcConfig(config: unknown): JobChangeOffer[] 
   return parsed
 }
 
+/** Offers the player can see at the Job Master: only direct advances from `currentJobId`. */
+export function jobChangeOffersForCurrentJob(
+  offers: JobChangeOffer[],
+  currentJobId: string,
+): JobChangeOffer[] {
+  const jobs = loadRoContent().jobs
+  return offers.filter((offer) => {
+    const target = jobs.find((j) => j.id === offer.jobId)
+    if (!target) return false
+    const fromJobId = offer.fromJobId ?? target.parentJobId
+    return fromJobId != null && fromJobId === currentJobId
+  })
+}
+
 export function canAcceptJobChange(
   params: { jobId: string; jobLevel: number; baseLevel: number },
   offer: JobChangeOffer,

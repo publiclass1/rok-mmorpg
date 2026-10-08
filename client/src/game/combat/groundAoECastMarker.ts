@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import type { SkillDefinition } from '../character/skillsConfig'
 import { isPlayerGroundMagicSkill } from '../character/skillsConfig'
 import { setDepthByFeet } from '../world/depthSort'
+import { attachToWorldRoot } from '../world/worldViewRootAttach'
 
 export const GROUND_AOE_DEPTH_EPSILON = -0.14
 const DEFAULT_STUB_AOE_RADIUS = 48
@@ -109,6 +110,7 @@ export class GroundAoECastMarker {
 
     this.container = scene.add.container(0, 0, [this.baseEllipse, this.ringA, this.ringB])
     this.container.setVisible(false)
+    attachToWorldRoot(scene, this.container)
   }
 
   get isActive(): boolean {

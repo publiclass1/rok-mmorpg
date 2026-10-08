@@ -4,6 +4,7 @@ import type { Facing } from '../movement/clickToMove'
 import type { PlayerDisplay } from '../player/playerSprites'
 import { setPlayerHitFlash } from '../player/playerSprites'
 import type { AttackVariant } from '../player/playerCombatAnim'
+import { attachToWorldRoot } from '../world/worldViewRootAttach'
 
 export type FloatStyle =
   | 'hit'
@@ -137,6 +138,7 @@ export function showDamageFloat(
       })
       .setOrigin(0.5)
     floater.add(text)
+    attachToWorldRoot(scene, floater)
 
     floater.setScale(0.55)
     scene.tweens.add({
@@ -171,6 +173,7 @@ export function showDamageFloat(
       fontStyle: isBlood ? 'bold' : 'normal',
     })
     .setOrigin(0.5)
+  attachToWorldRoot(scene, text)
 
   scene.tweens.add({
     targets: text,
@@ -215,6 +218,7 @@ export function showFloatingText(
       fontStyle: style === 'crit' || style === 'critMagic' ? 'bold' : undefined,
     })
     .setOrigin(0.5)
+  attachToWorldRoot(scene, label)
   scene.tweens.add({
     targets: label,
     y: y - 28,

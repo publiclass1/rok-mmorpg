@@ -57,7 +57,7 @@ function sitHeadAnchor(): { x: number; y: number } {
   return { x: 0, y: torsoTop - 6 }
 }
 
-function sitOffset(slot: PlayerVisualLayer, pose: CharacterPose): EquipPoseOffset {
+function sitOffset(slot: PlayerVisualLayer): EquipPoseOffset {
   const { x, y } = sitHeadAnchor()
   const layerDy = slot === 'headTop' ? -2 : slot === 'headLower' ? 2 : 0
   return {
@@ -96,7 +96,7 @@ export function equipmentPoseOffset(slot: PlayerVisualLayer, pose: CharacterPose
     return deadOffset(slot, pose)
   }
   if (pose.anim === 'sit' && !pose.mounted) {
-    return sitOffset(slot, pose)
+    return sitOffset(slot)
   }
   return ZERO
 }

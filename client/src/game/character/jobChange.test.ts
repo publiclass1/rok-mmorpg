@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict'
-import { applyJobChange } from './jobChange'
+import {
+  applyJobChange,
+  jobChangeOffersForCurrentJob,
+  jobChangeOffersForNpc,
+} from './jobChange'
 import { createInitialCharacterState } from './characterState'
 
 const base = createInitialCharacterState()
@@ -26,5 +30,18 @@ const noviceToSword = applyJobChange(
 )
 assert.equal(noviceToSword.skills.bash ?? 0, 0, '1st job strips prior skills')
 assert.equal(noviceToSword.equipment.weapon?.startsWith('ri:sword:'), true)
+
+const pronteraOffers = jobChangeOffersForNpc('prontera_job_master', null)
+const noviceVisible = jobChangeOffersForCurrentJob(pronteraOffers, 'novice')
+const noviceIds = noviceVisible.map((o) => o.jobId)
+assert.equal(noviceVisible.length, 6, 'novice sees six 1st jobs')
+assert.ok(noviceIds.includes('swordman'))
+assert.equal(noviceIds.includes('knight'), false, 'novice does not see knight')
+assert.equal(noviceIds.includes('hunter'), false, 'novice does not see hunter')
+assert.equal(noviceIds.includes('wizard'), false, 'novice does not see wizard')
+
+const swordmanVisible = jobChangeOffersForCurrentJob(pronteraOffers, 'swordman')
+assert.equal(swordmanVisible.length, 1)
+assert.equal(swordmanVisible[0]?.jobId, 'knight')
 
 console.log('jobChange.test.ts: ok')

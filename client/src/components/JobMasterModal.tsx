@@ -1,5 +1,10 @@
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
-import { canAcceptJobChange, jobChangeOffersForNpc, type JobChangeOffer } from '../game/character/jobChange'
+import {
+  canAcceptJobChange,
+  jobChangeOffersForCurrentJob,
+  jobChangeOffersForNpc,
+  type JobChangeOffer,
+} from '../game/character/jobChange'
 import { JOB_NAMES } from '../game/character/skillsConfig'
 import type { CharacterSheetPayload } from '../game/events'
 import type { CharacterRow, NpcRow } from '../types/database'
@@ -30,7 +35,8 @@ function describeOffer(offer: JobChangeOffer): string {
 }
 
 export function JobMasterModal({ character, npc, sheet, onClose, onCharacterUpdated }: Props) {
-  const offers = jobChangeOffersForNpc(npc.id, npc.config)
+  const allOffers = jobChangeOffersForNpc(npc.id, npc.config)
+  const offers = jobChangeOffersForCurrentJob(allOffers, sheet.jobId)
   const progress = { jobId: sheet.jobId, jobLevel: sheet.jobLevel, baseLevel: sheet.baseLevel }
 
   async function accept(offer: JobChangeOffer) {
@@ -56,7 +62,11 @@ export function JobMasterModal({ character, npc, sheet, onClose, onCharacterUpda
           Current: {JOB_NAMES[sheet.jobId] ?? sheet.jobId} · Job Lv {sheet.jobLevel} · Base Lv {sheet.baseLevel}
         </p>
         {offers.length === 0 ? (
-          <p className="muted">No job paths configured for this NPC.</p>
+          <p className="muted">
+            {allOffers.length === 0
+              ? 'No job paths configured for this NPC.'
+              : 'No advancement paths for your current job.'}
+          </p>
         ) : (
           <ul className="item-list">
             {offers.map((offer) => {

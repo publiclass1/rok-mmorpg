@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { PLAYER_CAST_BAR_OFFSET_ABOVE } from '../world/worldNameLabel'
+import { attachToWorldRoot } from '../world/worldViewRootAttach'
 
 const BAR_WIDTH = 54
 const BAR_HEIGHT = 7
@@ -57,6 +58,7 @@ export class PlayerCastBarGfx {
 
     this.container = scene.add.container(0, 0, [bg, this.fill, highlight])
     this.container.setVisible(false)
+    attachToWorldRoot(scene, this.container)
     this.activeTween = null
   }
 

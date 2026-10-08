@@ -22,6 +22,7 @@ import {
 import { syncPlayerRarityGlow, type RarityGlowHost } from './playerRarityGlow'
 import type { PlayerAvatarKey } from './playerJobAvatar'
 import { playPlayerWalkStepFx } from './playerWalkStepFx'
+import { attachToWorldRoot } from '../world/worldViewRootAttach'
 
 export type { CharacterPose } from '../character/characterPose'
 export { defaultCharacterPose } from '../character/characterPose'
@@ -145,6 +146,7 @@ export function createPlayerDisplay(
     equipment: createDefaultEquipment(),
   }
   syncSpritePose(display)
+  attachToWorldRoot(scene, container)
   return display
 }
 

@@ -4,6 +4,7 @@ import {
   styleSpellChantLabel,
 } from '../world/worldNameLabel'
 import { spellChantVisibleLength } from './spellChants'
+import { attachToWorldRoot } from '../world/worldViewRootAttach'
 
 export class PlayerSpellChantGfx {
   private readonly scene: Phaser.Scene
@@ -17,6 +18,7 @@ export class PlayerSpellChantGfx {
     this.text = scene.add.text(0, 0, '')
     styleSpellChantLabel(this.text)
     this.text.setVisible(false)
+    attachToWorldRoot(scene, this.text)
   }
 
   get isActive(): boolean {
