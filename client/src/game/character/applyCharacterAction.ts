@@ -23,6 +23,7 @@ import { getEquipmentDefinition } from './equipmentConfig'
 import { isRolledGearItemId } from './itemCatalog'
 import { applyJobChange } from './jobChange'
 import { applyRental, clearActiveRental, rentalCatalogEntry } from './rental'
+import { isSkillBarIndexInRange, skillBarsEqual } from './skillBars'
 import { canPlaceOnSkillBar } from './skillBarEntry'
 import { canLearnSkill, JOB_NAMES, SKILLS } from './skillsConfig'
 import {
@@ -107,26 +108,35 @@ export function applyCharacterAction(
   }
 
   if (action.type === 'assignSkillBar') {
-    if (action.slot < 0 || action.slot > 8) return { state, changed: false }
+    if (!isSkillBarIndexInRange(action.bar, action.slot)) return { state, changed: false }
     if (action.skillId === null) {
-      if (state.skillBar[action.slot] == null) return { state, changed: false }
-      return { state: assignSkillBarSlot(state, action.slot, null), changed: true }
+      if (state.skillBars[action.bar][action.slot] == null) return { state, changed: false }
+      return { state: assignSkillBarSlot(state, action.bar, action.slot, null), changed: true }
     }
     if (!canPlaceOnSkillBar(action.skillId, state.jobId, state.skills)) {
       return { state, changed: false, message: 'That skill cannot be placed on the bar.' }
     }
-    const next = placeSkillOnBar(state, action.slot, action.skillId)
-    if (next.skillBar[action.slot] !== action.skillId) return { state, changed: false }
+    const next = placeSkillOnBar(state, action.bar, action.slot, action.skillId)
+    if (next.skillBars[action.bar][action.slot] !== action.skillId) return { state, changed: false }
     return { state: next, changed: true }
   }
 
   if (action.type === 'moveSkillBar') {
-    if (action.from === action.to || action.from < 0 || action.from > 8 || action.to < 0 || action.to > 8) {
+    if (
+      (action.fromBar === action.toBar && action.fromSlot === action.toSlot) ||
+      !isSkillBarIndexInRange(action.fromBar, action.fromSlot) ||
+      !isSkillBarIndexInRange(action.toBar, action.toSlot)
+    ) {
       return { state, changed: false }
     }
-    const next = relocateSkillOnBar(state, action.from, action.to)
-    const barChanged = next.skillBar.some((id, i) => id !== state.skillBar[i])
-    if (!barChanged) return { state, changed: false }
+    const next = relocateSkillOnBar(
+      state,
+      action.fromBar,
+      action.fromSlot,
+      action.toBar,
+      action.toSlot,
+    )
+    if (skillBarsEqual(next.skillBars, state.skillBars)) return { state, changed: false }
     return { state: next, changed: true }
   }
 

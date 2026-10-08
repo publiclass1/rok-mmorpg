@@ -43,7 +43,7 @@ const progress = {
   skill_points_unspent: wizard.skillPointsUnspent,
   hp: wizard.hp,
   mp: wizard.mp,
-  skill_bar: wizard.skillBar,
+  skill_bar: wizard.skillBars,
   session_inventory: wizard.sessionInventory,
   rolled_items: wizard.rolledItems,
   active_rental: wizard.activeRental,

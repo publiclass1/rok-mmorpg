@@ -31,6 +31,7 @@ import {
 import { mergeSheetIntoSession, toCharacterSheetPayload } from '../game/character/characterSheet'
 import { setCharacterSession } from '../game/character/characterSessionBridge'
 import { createInitialCharacterState } from '../game/character/characterState'
+import { skillBarSlotFromKey } from '../game/character/skillBars'
 import { isChatStripInputFocused } from '../game/chatInputFocus'
 import { createPhaserGame } from '../game/createGame'
 import {
@@ -1307,7 +1308,13 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       const num = parseInt(e.key, 10)
       if (num >= 1 && num <= 9) {
         e.preventDefault()
-        emitGameEvent('useSkillSlot', { slot: num - 1 })
+        emitGameEvent('useSkillSlot', { bar: 0, slot: num - 1 })
+        return
+      }
+      const hotkeySlot = skillBarSlotFromKey(e.key)
+      if (hotkeySlot) {
+        e.preventDefault()
+        emitGameEvent('useSkillSlot', hotkeySlot)
       }
     }
     window.addEventListener('keydown', onKey)

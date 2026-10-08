@@ -655,7 +655,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     this.eventUnsubs.push(
-      onGameEvent('useSkillSlot', ({ slot }) => this.useSkillSlot(slot)),
+      onGameEvent('useSkillSlot', ({ bar, slot }) => this.useSkillSlot(bar, slot)),
       onGameEvent('sessionSync', (payload) => {
         const prevJobId = this.session.jobId
         setCharacterSession(structuredClone(payload.state))
@@ -1641,10 +1641,10 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  private useSkillSlot(slot: number) {
+  private useSkillSlot(bar: number, slot: number) {
     if (this.isPlayerDead) return
-    if (slot < 0 || slot > 8) return
-    const skillId = this.session.skillBar[slot]
+    if (bar < 0 || bar > 3 || slot < 0 || slot > 8) return
+    const skillId = this.session.skillBars[bar]?.[slot]
     if (!skillId) {
       emitGameEvent('status', 'Empty skill slot')
       return

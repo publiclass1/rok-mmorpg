@@ -12,6 +12,7 @@ import {
   type EquipSlot,
 } from '../game/character/characterState'
 import { parseActiveRental } from '../game/character/rental'
+import { parseSkillBars, serializeSkillBars } from '../game/character/skillBars'
 import type { CharacterRow } from '../types/database'
 import { emitGameEvent } from '../game/events'
 import { progressSave } from './api'
@@ -66,12 +67,6 @@ function equipmentFromRows(rows: EquipRow[]): Record<EquipSlot, string | null> {
   return normalizeEquipment(equipment)
 }
 
-function parseSkillBar(raw: unknown): (string | null)[] {
-  const fallback = createInitialCharacterState().skillBar
-  if (!Array.isArray(raw) || raw.length !== 9) return [...fallback]
-  return raw.map((v) => (typeof v === 'string' ? v : null))
-}
-
 function rowToSession(
   progress: ProgressRow,
   skills: SkillRow[],
@@ -114,7 +109,7 @@ function rowToSession(
     skillPointsUnspent: progress.skill_points_unspent,
     skills: skillsMap,
     equipment: normalizeEquipment(equipment),
-    skillBar: parseSkillBar(progress.skill_bar),
+    skillBars: parseSkillBars(progress.skill_bar),
     sessionInventory: parseSessionInventory(progress.session_inventory),
     rolledItems: parseRolledItemsRecord(progress.rolled_items),
     activeRental: parseActiveRental(progress.active_rental),
@@ -335,7 +330,7 @@ async function writeCharacterSession(characterId: string, state: CharacterSessio
     skill_points_unspent: synced.skillPointsUnspent,
     hp: synced.hp,
     mp: synced.mp,
-    skill_bar: synced.skillBar,
+    skill_bar: serializeSkillBars(synced.skillBars),
     session_inventory: synced.sessionInventory,
     rolled_items: synced.rolledItems,
     active_rental: synced.activeRental,

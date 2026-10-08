@@ -61,7 +61,7 @@ export function toCharacterSheetPayload(state: CharacterSessionState): Character
     skillPointsUnspent: state.skillPointsUnspent,
     skills: { ...state.skills },
     equipment: { ...state.equipment },
-    skillBar: [...state.skillBar],
+    skillBars: state.skillBars.map((row) => [...row]),
     sessionInventory: parseSessionInventory(state.sessionInventory),
     attackDamage,
     combatStats: buildCombatStatPreview(state),
@@ -100,7 +100,7 @@ export function sessionFromSheetPayload(
     skillPointsUnspent: sheet.skillPointsUnspent,
     skills: { ...sheet.skills },
     equipment: { ...sheet.equipment },
-    skillBar: [...sheet.skillBar],
+    skillBars: sheet.skillBars.map((row) => [...row]),
     sessionInventory: parseSessionInventory(sheet.sessionInventory),
     jobId: sheet.jobId,
   })
@@ -115,5 +115,5 @@ export function mergeSheetIntoSession(
   prev: CharacterSessionState,
 ): CharacterSessionState {
   const merged = sessionFromSheetPayload(sheet, prev)
-  return { ...merged, skillBar: [...prev.skillBar] }
+  return { ...merged, skillBars: prev.skillBars.map((row) => [...row]) }
 }

@@ -100,6 +100,26 @@ export type ProgressPayload = {
 export type SkillRow = { skill_id: string; level: number }
 export type EquipRow = { slot: string; item_id: string; instance_id?: string | null }
 
+const SKILL_BAR_ROW_COUNT = 4
+const SKILL_BAR_SLOTS_PER_ROW = 9
+
+function isValidSkillBarPayload(raw: unknown): boolean {
+  if (!Array.isArray(raw)) return false
+  if (raw.length === SKILL_BAR_SLOTS_PER_ROW && !Array.isArray(raw[0])) {
+    return raw.every((v) => v === null || typeof v === 'string')
+  }
+  if (raw.length === SKILL_BAR_ROW_COUNT * SKILL_BAR_SLOTS_PER_ROW && !Array.isArray(raw[0])) {
+    return raw.every((v) => v === null || typeof v === 'string')
+  }
+  if (raw.length !== SKILL_BAR_ROW_COUNT || !Array.isArray(raw[0])) return false
+  return raw.every(
+    (row) =>
+      Array.isArray(row) &&
+      row.length === SKILL_BAR_SLOTS_PER_ROW &&
+      row.every((v) => v === null || typeof v === 'string'),
+  )
+}
+
 function statRaiseCost(currentStat: number): number {
   return 2 + Math.floor((currentStat - 1) / 10)
 }
@@ -225,7 +245,7 @@ export function validateCharacterProgress(
   const skillErr = validateSkillBudget(payload.job_id, payload.job_level, skills, payload.skill_points_unspent)
   if (skillErr) return { ok: false, error: skillErr }
 
-  if (!Array.isArray(payload.skill_bar) || payload.skill_bar.length !== 9) {
+  if (!isValidSkillBarPayload(payload.skill_bar)) {
     return { ok: false, error: 'invalid skill_bar' }
   }
 

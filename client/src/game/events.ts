@@ -148,7 +148,7 @@ export type CharacterSheetPayload = PlayerStatsPayload & {
   skillPointsUnspent: number
   skills: Record<string, number>
   equipment: Record<EquipSlot, string | null>
-  skillBar: (string | null)[]
+  skillBars: (string | null)[][]
   sessionInventory: SessionInventorySlot[]
   attackDamage: number
   combatStats: CombatStatPreview
@@ -160,8 +160,8 @@ export type CharacterActionPayload =
   | { type: 'resetSkills' }
   | { type: 'learnSkill'; skillId: string }
   | { type: 'changeJob'; jobId: string }
-  | { type: 'assignSkillBar'; slot: number; skillId: string | null }
-  | { type: 'moveSkillBar'; from: number; to: number }
+  | { type: 'assignSkillBar'; bar: number; slot: number; skillId: string | null }
+  | { type: 'moveSkillBar'; fromBar: number; fromSlot: number; toBar: number; toSlot: number }
   | { type: 'equip'; slot: EquipSlot; itemId: string | null; sessionInventoryIndex?: number }
   | { type: 'useConsumable'; sessionInventoryIndex: number }
   | { type: 'shopAddItems'; itemId: string; quantity: number }
@@ -211,7 +211,7 @@ export type GameEvents = {
   playerStats: PlayerStatsPayload
   playerBuffs: PlayerBuffPayload[]
   characterSheet: CharacterSheetPayload
-  useSkillSlot: { slot: number }
+  useSkillSlot: { bar: number; slot: number }
   characterAction: CharacterActionPayload
   uiPointerLock: boolean
   uiKeyboardLock: boolean

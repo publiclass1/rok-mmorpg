@@ -113,8 +113,11 @@ function skillsAfterJobChange(state: CharacterSessionState, targetJobId: string)
   return next
 }
 
-function sanitizeSkillBar(state: CharacterSessionState): (string | null)[] {
-  return state.skillBar.map((skillId) => {
+function sanitizeSkillBarRow(
+  state: CharacterSessionState,
+  row: (string | null)[],
+): (string | null)[] {
+  return row.map((skillId) => {
     if (!skillId) return null
     if (isSkillBarConsumable(skillId)) return skillId
     if (skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead') return skillId
@@ -123,6 +126,10 @@ function sanitizeSkillBar(state: CharacterSessionState): (string | null)[] {
     if ((state.skills[skillId] ?? 0) < 1) return null
     return skillId
   })
+}
+
+function sanitizeSkillBars(state: CharacterSessionState): (string | null)[][] {
+  return state.skillBars.map((row) => sanitizeSkillBarRow(state, row))
 }
 
 function applyStarterGear(state: CharacterSessionState, targetJobId: string): CharacterSessionState {
@@ -156,7 +163,7 @@ export function applyJobChange(state: CharacterSessionState, targetJobId: string
       targetJobId,
     ),
     skills,
-    skillBar: sanitizeSkillBar({
+    skillBars: sanitizeSkillBars({
       ...stashed,
       jobId: targetJobId,
       skills,

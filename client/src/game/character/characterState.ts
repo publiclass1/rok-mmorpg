@@ -10,6 +10,7 @@ import {
   type SessionInventorySlot,
 } from './sessionInventory'
 import { totalSkillPointsEarned } from './skillPointBudget'
+import { createEmptySkillBars, isSkillBarIndexInRange } from './skillBars'
 import { derivedMaxHp, derivedMaxMp, SKILL_POINTS_PER_JOB_LEVEL, statRaiseCost } from './statFormulas'
 
 export type { SessionInventorySlot } from './sessionInventory'
@@ -80,7 +81,7 @@ export type CharacterSessionState = {
   skillPointsUnspent: number
   skills: Record<string, number>
   equipment: Record<EquipSlot, string | null>
-  skillBar: (string | null)[]
+  skillBars: (string | null)[][]
   sessionInventory: SessionInventorySlot[]
   rolledItems: Record<string, RolledItem>
   hp: number
@@ -172,14 +173,16 @@ export function resetAllocatedSkills(state: CharacterSessionState): CharacterSes
   for (const skillId of Object.keys(FREE_SKILL_LEVELS)) {
     skills[skillId] = FREE_SKILL_LEVELS[skillId]
   }
-  const skillBar = state.skillBar.map((skillId) =>
-    skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead' ? skillId : null,
+  const skillBars = state.skillBars.map((row) =>
+    row.map((skillId) =>
+      skillId === 'basic_attack' || skillId === 'sit' || skillId === 'play_dead' ? skillId : null,
+    ),
   )
   return {
     ...state,
     skills,
     skillPointsUnspent: state.skillPointsUnspent + refund,
-    skillBar,
+    skillBars,
   }
 }
 
@@ -192,7 +195,7 @@ export function createInitialCharacterState(): CharacterSessionState {
     skillPointsUnspent: 0,
     skills: { basic_attack: 1, sit: 1, play_dead: 1 },
     equipment: createDefaultEquipment(),
-    skillBar: ['basic_attack', 'sit', null, null, null, null, null, null, null],
+    skillBars: createEmptySkillBars(),
     rolledItems: {},
     activeRental: null,
     sessionInventory: parseSessionInventory([
@@ -424,40 +427,71 @@ export function stashAllEquipment(state: CharacterSessionState): CharacterSessio
   return { ...state, equipment, sessionInventory }
 }
 
-export function assignSkillBarSlot(state: CharacterSessionState, index: number, skillId: string | null): CharacterSessionState {
-  if (index < 0 || index > 8) return state
-  const skillBar = [...state.skillBar]
-  skillBar[index] = skillId
-  return { ...state, skillBar }
+export function assignSkillBarSlot(
+  state: CharacterSessionState,
+  bar: number,
+  slot: number,
+  skillId: string | null,
+): CharacterSessionState {
+  if (!isSkillBarIndexInRange(bar, slot)) return state
+  const skillBars = state.skillBars.map((row, rowIndex) =>
+    rowIndex === bar ? [...row] : row,
+  )
+  skillBars[bar][slot] = skillId
+  return { ...state, skillBars }
 }
 
 /** Move or swap skills between bar slots (legacy swap). */
-export function moveSkillBarSlot(state: CharacterSessionState, from: number, to: number): CharacterSessionState {
-  if (from === to || from < 0 || from > 8 || to < 0 || to > 8) return state
-  const skillBar = [...state.skillBar]
-  const tmp = skillBar[from]
-  skillBar[from] = skillBar[to]
-  skillBar[to] = tmp
-  return { ...state, skillBar }
+export function moveSkillBarSlot(
+  state: CharacterSessionState,
+  fromBar: number,
+  fromSlot: number,
+  toBar: number,
+  toSlot: number,
+): CharacterSessionState {
+  if (
+    (fromBar === toBar && fromSlot === toSlot) ||
+    !isSkillBarIndexInRange(fromBar, fromSlot) ||
+    !isSkillBarIndexInRange(toBar, toSlot)
+  ) {
+    return state
+  }
+  const skillBars = state.skillBars.map((row) => [...row])
+  const tmp = skillBars[fromBar][fromSlot]
+  skillBars[fromBar][fromSlot] = skillBars[toBar][toSlot]
+  skillBars[toBar][toSlot] = tmp
+  return { ...state, skillBars }
 }
 
 /** Move a bar skill to another slot; target’s previous skill is discarded. */
-export function relocateSkillOnBar(state: CharacterSessionState, from: number, to: number): CharacterSessionState {
-  if (from === to || from < 0 || from > 8 || to < 0 || to > 8) return state
-  const skillId = state.skillBar[from]
+export function relocateSkillOnBar(
+  state: CharacterSessionState,
+  fromBar: number,
+  fromSlot: number,
+  toBar: number,
+  toSlot: number,
+): CharacterSessionState {
+  if (
+    (fromBar === toBar && fromSlot === toSlot) ||
+    !isSkillBarIndexInRange(fromBar, fromSlot) ||
+    !isSkillBarIndexInRange(toBar, toSlot)
+  ) {
+    return state
+  }
+  const skillId = state.skillBars[fromBar][fromSlot]
   if (!skillId) return state
-  const skillBar = [...state.skillBar]
-  skillBar[to] = skillId
-  skillBar[from] = null
-  return { ...state, skillBar }
+  const skillBars = state.skillBars.map((row) => [...row])
+  skillBars[toBar][toSlot] = skillId
+  skillBars[fromBar][fromSlot] = null
+  return { ...state, skillBars }
 }
 
-/** Place skill on a bar slot; clears duplicate slot if the skill is already assigned elsewhere. */
-export function placeSkillOnBar(state: CharacterSessionState, slot: number, skillId: string): CharacterSessionState {
-  let next = state
-  const existing = next.skillBar.findIndex((id, i) => id === skillId && i !== slot)
-  if (existing >= 0) {
-    next = assignSkillBarSlot(next, existing, null)
-  }
-  return assignSkillBarSlot(next, slot, skillId)
+/** Place skill on a bar slot (duplicates allowed across slots). */
+export function placeSkillOnBar(
+  state: CharacterSessionState,
+  bar: number,
+  slot: number,
+  skillId: string,
+): CharacterSessionState {
+  return assignSkillBarSlot(state, bar, slot, skillId)
 }
