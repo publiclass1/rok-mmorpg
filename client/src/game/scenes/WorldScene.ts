@@ -658,7 +658,18 @@ export class WorldScene extends Phaser.Scene {
       const mob = this.findMobAt(wx, wy)
       if (mob) {
         this.breakRestState()
-        this.beginChaseMob(mob)
+        // Selecting a mob should not automatically start chasing/attacking.
+        // Basic attack (skill bar) should be the only way to trigger an attack.
+        this.disableAutoAttackFromManualInput()
+        this.chaseMob = null
+        this.chaseMobForSkillOnly = false
+        this.queuedSkillCast = null
+        this.clearGroundSkillChase()
+        this.stopPvpChase()
+        this.setSelectedMob(mob)
+        this.setSelectedPlayer(null)
+        this.faceToward(mob.sprite.x, mob.sprite.y)
+        this.refreshCursor()
       } else {
         if (this.isSitting || this.isPlayingDead) {
           this.breakRestState()

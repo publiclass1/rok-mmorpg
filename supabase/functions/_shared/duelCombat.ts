@@ -48,7 +48,8 @@ export function calcDuelStrike(
 ): { damage: number; hit: boolean; critical: boolean } {
   const hitStat = calcHit(attacker.baseLevel, attacker.dex, attacker.luk)
   const flee = calcFlee(defender.baseLevel, defender.agi, defender.luk)
-  const critRoll = rng() * 100 < Math.max(0, Math.floor(attacker.luk / 3))
+  const critChancePercent = Math.max(0, Math.floor(attacker.luk / 3) - Math.floor(defender.luk / 5))
+  const critRoll = rng() * 100 < critChancePercent
   let hit = critRoll
   if (!hit) hit = rollHitSuccess(hitStat, flee, rng)
   if (!hit) return { damage: 0, hit: false, critical: false }
@@ -56,7 +57,7 @@ export function calcDuelStrike(
   const atk = calcStatusAtk(attacker.baseLevel, attacker.str, attacker.dex, attacker.luk) + 10
   const def = critRoll ? 0 : softDef(defender.vit)
   let damage = damageAfterDef(atk, def, defender.vit)
-  if (critRoll) damage = Math.floor(damage * 1.4)
+  if (critRoll) damage = Math.floor(damage * (1.4 + Math.floor(attacker.luk / 3) * 0.01))
   if (skillId && skillLevel != null) {
     if (skillId === 'bash') {
       damage = Math.max(1, Math.floor(damage * (1 + skillLevel * 0.15)) + skillLevel * 3)

@@ -165,10 +165,11 @@ export function showDamageFloat(
   const text = scene.add
     .text(x, y, label, {
       fontSize: isBlood ? '14px' : '12px',
-      color: textStyle.fill,
-      stroke: textStyle.stroke,
-      strokeThickness: isBlood ? 3 : 1,
-      fontStyle: isBlood ? 'bold' : 'normal',
+      // For non-crit damage readability: white digits with a black outline.
+      color: !isCrit ? '#ffffff' : textStyle.fill,
+      stroke: !isCrit ? '#000000' : textStyle.stroke,
+      strokeThickness: !isCrit ? 3 : isBlood ? 3 : 1,
+      fontStyle: 'bold',
     })
     .setOrigin(0.5)
 
@@ -208,11 +209,15 @@ export function showFloatingText(
         ? CRIT_MAGIC_TEXT.fill
         : STYLE_COLORS[style as keyof typeof STYLE_COLORS] ?? STYLE_COLORS.hit
 
+  const isMobHitPlayer = style === 'mobHitPlayer'
+
   const label = scene.add
     .text(x, y, text, {
       fontSize: style === 'miss' ? '11px' : style === 'crit' || style === 'critMagic' ? '14px' : '12px',
-      color,
-      fontStyle: style === 'crit' || style === 'critMagic' ? 'bold' : undefined,
+      color: isMobHitPlayer ? STYLE_COLORS.mobHitPlayer : color,
+      fontStyle: style === 'crit' || style === 'critMagic' || isMobHitPlayer ? 'bold' : undefined,
+      stroke: isMobHitPlayer ? '#450a0a' : undefined,
+      strokeThickness: isMobHitPlayer ? 3 : undefined,
     })
     .setOrigin(0.5)
   scene.tweens.add({
