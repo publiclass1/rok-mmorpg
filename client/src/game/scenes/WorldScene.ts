@@ -68,6 +68,8 @@ import {
   calcPlayerVsMobDamage,
   calcPlayerVsPlayerDamage,
 } from '../combat/damage'
+import { playJobChangeAudio, preloadJobChangeAudio } from '../combat/jobChangeAudio'
+import { playJobChangeWorldFx } from '../combat/jobChangeFx'
 import { playLevelUpAudio, preloadLevelUpAudio } from '../combat/levelUpAudio'
 import { playLevelUpWorldFx } from '../combat/levelUpFx'
 import { buildLevelUpSteps, type LevelUpStep } from '../combat/levelUpSteps'
@@ -415,6 +417,7 @@ export class WorldScene extends Phaser.Scene {
     registerMobDeathAnimation(this)
     ensureMasterCharacterSheets(this)
     preloadLevelUpAudio()
+    preloadJobChangeAudio()
 
     const map = this.make.tilemap({ key: 'map' })
     const tileset = map.addTilesetImage('tiles', 'tiles', 32, 32, 0, 0, TILESET_TILE_COUNT)
@@ -656,6 +659,13 @@ export class WorldScene extends Phaser.Scene {
 
     this.eventUnsubs.push(
       onGameEvent('useSkillSlot', ({ bar, slot }) => this.useSkillSlot(bar, slot)),
+      onGameEvent('jobChange', ({ jobName }) => {
+        if (!this.playerDisplay) return
+        const x = this.playerDisplay.container.x
+        const y = this.playerDisplay.container.y
+        playJobChangeWorldFx(this, x, y, jobName, this.playerDisplay)
+        playJobChangeAudio()
+      }),
       onGameEvent('sessionSync', (payload) => {
         const prevJobId = this.session.jobId
         setCharacterSession(structuredClone(payload.state))

@@ -2,6 +2,7 @@ import { logActivity } from '../activityLog'
 import type { CharacterSheetPayload } from '../events'
 import { emitGameEvent, sessionSyncPayload, type CharacterActionPayload } from '../events'
 import { applyCharacterAction, publishSessionState } from './applyCharacterAction'
+import { JOB_NAMES } from './skillsConfig'
 import { getCharacterSession, setCharacterSession } from './characterSessionBridge'
 import type { CharacterSessionState } from './characterState'
 
@@ -50,6 +51,10 @@ export function dispatchCharacterAction(action: CharacterActionPayload): boolean
   context.setSheet(sheet)
   emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(synced)))
   emitGameEvent('characterSheet', sheet)
+  if (action.type === 'changeJob') {
+    const jobName = JOB_NAMES[action.jobId] ?? action.jobId
+    emitGameEvent('jobChange', { jobId: action.jobId, jobName })
+  }
   if (
     action.type === 'changeJob' ||
     action.type === 'assignSkillBar' ||

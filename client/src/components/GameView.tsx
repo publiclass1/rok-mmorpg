@@ -88,6 +88,7 @@ import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { DeathModal } from './DeathModal'
 import { PvpDeathModal } from './PvpDeathModal'
 import { preloadKillStreakAudio } from '../game/combat/killStreakAudio'
+import { preloadJobChangeAudio } from '../game/combat/jobChangeAudio'
 import { preloadLevelUpAudio } from '../game/combat/levelUpAudio'
 import { PvpKillAnnounceOverlay } from './PvpKillAnnounceOverlay'
 import { isPvpMap, PVP_ROOM_EXIT_TELEPORT, randomPvpRespawnPoint } from '../game/world/pvpConfig'
@@ -779,6 +780,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     preloadKillStreakAudio()
     preloadLevelUpAudio()
+    preloadJobChangeAudio()
   }, [])
 
   useEffect(() => {
