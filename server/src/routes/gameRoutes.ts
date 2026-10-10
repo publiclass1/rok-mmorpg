@@ -16,6 +16,7 @@ import { handle as dungeonManage } from '../edge/dungeon-manage.js'
 import { handle as gmCommand } from '../edge/gm-command.js'
 import { handle as combatReport } from '../edge/combat-report.js'
 import { handle as lootManage } from '../edge/loot-manage.js'
+import { handle as npcShopBuy } from '../edge/npc-shop-buy.js'
 import { handle as adminPanel } from '../edge/admin-panel.js'
 
 export const gameRoutes = Router()
@@ -63,4 +64,5 @@ post('/dungeon', dungeonManage)
 post('/gm/command', gmCommand)
 post('/combat/report', combatReport)
 post('/loot', lootManage)
+post('/shop/buy-rolled', npcShopBuy)
 post('/admin', adminPanel)

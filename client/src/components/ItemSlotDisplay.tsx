@@ -20,14 +20,19 @@ const ICON_PX: Record<Size, number> = {
   lg: 52,
 }
 
+export function itemIconGlowClassName(itemId: string): string {
+  if (!isWeaponOrArmorItem(itemId) || !isRolledItemId(itemId)) return ''
+  const rarity = getItemRarity(itemId)
+  const tier = rarity ? rarityTier(rarity) : 0
+  const classes = ['item-icon--drop-glow']
+  if (tier >= 4) classes.push('item-icon--drop-glow-strong')
+  return classes.join(' ')
+}
+
 export function itemSlotDisplayClassName(itemId: string, size: Size = 'md'): string {
   const classes = ['item-slot-display', `item-slot-display--${size}`]
-  if (isWeaponOrArmorItem(itemId)) {
-    const rarity = getItemRarity(itemId)
-    if (rarity) classes.push('item-slot-display--rarity')
-    if (isRolledItemId(itemId)) classes.push('item-slot-display--drop-glow')
-    const tier = rarity ? rarityTier(rarity) : 0
-    if (tier >= 4) classes.push('item-slot-display--glow-strong')
+  if (isWeaponOrArmorItem(itemId) && getItemRarity(itemId)) {
+    classes.push('item-slot-display--rarity')
   }
   return classes.join(' ')
 }
@@ -48,12 +53,18 @@ export function ItemSlotDisplay({ itemId, size = 'md', className, fallbackLabel,
   const showIcon = hasItemIcon(itemId)
   const classes = [itemSlotDisplayClassName(itemId, size), className].filter(Boolean).join(' ')
 
+  const iconGlow = itemIconGlowClassName(itemId)
+
   return (
     <div className={classes} style={itemSlotDisplayStyle(itemId)}>
-      {isRolledItemId(itemId) && <span className="item-slot-display__glow" aria-hidden />}
       {children ??
         (showIcon ? (
-          <ItemIcon itemId={itemId} size={ICON_PX[size]} alt="" />
+          <ItemIcon
+            itemId={itemId}
+            size={ICON_PX[size]}
+            alt=""
+            className={iconGlow || undefined}
+          />
         ) : (
           <span className="item-slot-display__fallback">{fallbackLabel ?? '?'}</span>
         ))}

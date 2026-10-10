@@ -3375,6 +3375,10 @@ body.chat-strip-resizing {
   width: min(520px, 100%);
 }
 
+.inventory-modal .modal-scroll-body {
+  overflow-x: hidden;
+}
+
 .equipment-modal {
   width: min(560px, 100%);
 }
@@ -3588,9 +3592,10 @@ body.chat-strip-resizing {
 
 .inv-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
-  gap: 0.55rem;
-  margin-top: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+  padding: 2px 0;
 }
 
 .item-slot-display {
@@ -3600,8 +3605,9 @@ body.chat-strip-resizing {
   justify-content: center;
   width: 100%;
   height: 100%;
-  border-radius: 8px;
-  overflow: visible;
+  border-radius: 4px;
+  overflow: hidden;
+  background: transparent;
 }
 
 .item-slot-display--md {
@@ -3641,65 +3647,28 @@ body.chat-strip-resizing {
 
 .item-slot-display--rarity {
   --item-rarity-accent: #9ca3af;
-  background: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--item-rarity-accent) 48%, #0f172a 52%) 0%,
-    color-mix(in srgb, var(--item-rarity-accent) 22%, #1e293b 78%) 100%
-  );
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--item-rarity-accent) 35%, transparent),
-    0 3px 8px rgba(0, 0, 0, 0.35);
 }
 
-.item-slot-display__glow {
-  position: absolute;
-  inset: -3px;
-  border-radius: 10px;
-  pointer-events: none;
-  z-index: 0;
-  background: radial-gradient(
-    ellipse 80% 70% at 50% 85%,
-    color-mix(in srgb, var(--item-rarity-accent) 55%, transparent) 0%,
-    transparent 72%
-  );
-  animation: item-slot-drop-glow var(--item-rarity-glow-speed, 1.8s) ease-in-out infinite;
+.item-slot-display .item-icon.item-icon--drop-glow {
+  animation: item-icon-rarity-pulse var(--item-rarity-glow-speed, 1.8s) ease-in-out infinite;
 }
 
-.item-slot-display--drop-glow {
-  box-shadow:
-    0 0 10px color-mix(in srgb, var(--item-rarity-accent) 45%, transparent),
-    0 0 22px color-mix(in srgb, var(--item-rarity-accent) 25%, transparent);
-  animation: item-slot-drop-pulse var(--item-rarity-glow-speed, 1.8s) ease-in-out infinite;
-}
-
-.item-slot-display--drop-glow.item-slot-display--glow-strong {
+.item-slot-display .item-icon.item-icon--drop-glow-strong {
   animation-duration: calc(var(--item-rarity-glow-speed, 1.8s) * 0.85);
 }
 
-@keyframes item-slot-drop-glow {
+@keyframes item-icon-rarity-pulse {
   0%,
   100% {
-    opacity: 0.45;
-    transform: scale(0.96);
+    filter:
+      drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5))
+      drop-shadow(0 0 5px color-mix(in srgb, var(--item-rarity-accent) 45%, transparent));
   }
   50% {
-    opacity: 0.95;
-    transform: scale(1.04);
-  }
-}
-
-@keyframes item-slot-drop-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 8px color-mix(in srgb, var(--item-rarity-accent) 40%, transparent),
-      0 0 18px color-mix(in srgb, var(--item-rarity-accent) 18%, transparent);
-  }
-  50% {
-    box-shadow:
-      0 0 14px color-mix(in srgb, var(--item-rarity-accent) 65%, transparent),
-      0 0 28px color-mix(in srgb, var(--item-rarity-accent) 35%, transparent),
-      0 0 42px color-mix(in srgb, var(--item-rarity-accent) 15%, transparent);
+    filter:
+      drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5))
+      drop-shadow(0 0 10px color-mix(in srgb, var(--item-rarity-accent) 75%, transparent))
+      drop-shadow(0 0 16px color-mix(in srgb, var(--item-rarity-accent) 35%, transparent));
   }
 }
 
@@ -3763,10 +3732,10 @@ body.chat-strip-resizing {
 
 .inv-slot {
   position: relative;
-  width: 64px;
-  height: 64px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 4px;
   background: transparent;
   color: #f9fafb;
   font-size: 10px;
@@ -3774,8 +3743,8 @@ body.chat-strip-resizing {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
-  overflow: visible;
+  padding: 0;
+  overflow: hidden;
 }
 
 .inv-slot--empty {
@@ -3783,7 +3752,8 @@ body.chat-strip-resizing {
 }
 
 .inv-slot.equippable:hover {
-  border-color: #93c5fd;
+  outline: 1px solid rgba(147, 197, 253, 0.65);
+  outline-offset: 0;
 }
 
 .inv-slot.equipped {
@@ -3798,8 +3768,8 @@ body.chat-strip-resizing {
 
 .inv-slot-qty {
   position: absolute;
-  right: 3px;
-  bottom: 2px;
+  right: 1px;
+  bottom: 0;
   z-index: 2;
   font-size: 10px;
   font-weight: 700;

@@ -162,6 +162,20 @@ export type FieldMapDrop = {
   expires_at: string
 }
 
+export function rarityShopBuy(payload: {
+  characterId: string
+  npcId: string
+  lines: Array<{ itemId: string; quantity: number }>
+}) {
+  return apiFetch<{
+    ok: boolean
+    zeny: number
+    rolledItems: unknown[]
+    sessionInventory: unknown
+    rolledItemsRecord: unknown
+  }>('/api/shop/buy-rolled', { method: 'POST', body: JSON.stringify(payload) })
+}
+
 export function lootManage(payload: { action: 'list' | 'pickup'; characterId: string; dropId?: string }) {
   return apiFetch<{ drops?: FieldMapDrop[]; ok?: boolean; itemId?: string; sessionInventory?: unknown }>(
     '/api/loot',

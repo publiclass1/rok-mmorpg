@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { GearRarityId } from '../content/ro/types'
-import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
+import { toCharacterSheetPayload } from '../game/character/characterSheet'
 import { formatEquipRequirements, meetsEquipRequirements } from '../game/character/equipRequirements'
 import { getItemDisplayName, isEquippable } from '../game/character/itemCatalog'
 import { shopStockFromNpcConfig } from '../game/character/npcServices'
@@ -19,10 +19,12 @@ import {
   removeFromCart,
   type ShopCart,
 } from '../game/character/shopCart'
-import { emitGameEvent } from '../game/events'
+import { emitGameEvent, sessionSyncPayload } from '../game/events'
+import { loadCharacterSession } from '../lib/characterProgress'
+import { rarityShopBuy } from '../lib/api'
+import { apiFetch } from '../lib/http'
 import type { CharacterSheetPayload } from '../game/events'
 import type { CharacterRow, NpcRow } from '../types/database'
-import { spendCharacterZeny } from '../lib/zeny'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalCloseButton } from './motion/ModalCloseButton'
 import { ItemHoverTooltip } from './ItemHoverTooltip'
@@ -71,13 +73,6 @@ export function RarityTabShopModal({
     return GEAR_RARITY_ORDER.filter((r) => set.has(r))
   }, [stock])
 
-  async function adjustZeny(delta: number): Promise<boolean> {
-    const nextZeny = await spendCharacterZeny(character.id, delta)
-    if (nextZeny == null) return false
-    onCharacterUpdated({ ...character, zeny: nextZeny })
-    return true
-  }
-
   async function confirmBuy() {
     const entries = cartEntries(buyCart)
     if (entries.length === 0) return
@@ -87,15 +82,20 @@ export function RarityTabShopModal({
     }
     setBusy(true)
     try {
-      const ok = await adjustZeny(-buyTotal)
-      if (!ok) {
-        emitGameEvent('status', 'Could not deduct zeny.')
-        return
-      }
-      for (const { itemId, quantity } of entries) {
-        dispatchCharacterAction({ type: 'shopAddItems', itemId, quantity })
-      }
+      await rarityShopBuy({
+        characterId: character.id,
+        npcId: npc.id,
+        lines: entries,
+      })
+      const session = await apiFetch<{ character: CharacterRow }>(`/api/characters/${character.id}/session`)
+      if (session.character) onCharacterUpdated(session.character)
+      const loaded = await loadCharacterSession(character.id)
+      emitGameEvent('sessionSync', sessionSyncPayload(loaded, { persist: false }))
+      emitGameEvent('characterSheet', toCharacterSheetPayload(loaded))
       setBuyCart(clearCart())
+      emitGameEvent('status', 'Purchase complete.')
+    } catch (err) {
+      emitGameEvent('status', err instanceof Error ? err.message : 'Purchase failed.')
     } finally {
       setBusy(false)
     }

@@ -15,11 +15,10 @@ import {
   resetAllocatedPrimaryStats,
   resetAllocatedSkills,
   consumeConsumableFromSession,
-  grantRolledGear,
   type CharacterSessionState,
 } from './characterState'
 import { checkCanEquipItem } from './equipRequirements'
-import { getItemDefinition, getItemDisplayName } from './itemCatalog'
+import { getItemDisplayName } from './itemCatalog'
 import { getEquipmentDefinition } from './equipmentConfig'
 import { isRolledGearItemId } from './itemCatalog'
 import { applyJobChange } from './jobChange'
@@ -27,7 +26,6 @@ import { applyRental, clearActiveRental, rentalCatalogEntry } from './rental'
 import { isSkillBarIndexInRange, skillBarsEqual } from './skillBars'
 import { canPlaceOnSkillBar } from './skillBarEntry'
 import { canLearnSkill, JOB_NAMES, SKILLS } from './skillsConfig'
-import { createRolledGearFromBase } from '../items/rolledItem'
 import { isRarityDealerBaseItem } from '../items/rarityDealerStock'
 import {
   addItemsToSessionInventory,
@@ -192,23 +190,12 @@ export function applyCharacterAction(
   if (action.type === 'shopAddItems') {
     const qty = Math.floor(action.quantity)
     if (qty <= 0) return { state, changed: false, message: 'Invalid quantity.' }
-    const baseDef = getItemDefinition(action.itemId)
-    if (isRarityDealerBaseItem(action.itemId) && baseDef?.rarity && baseDef.equipSlot) {
-      let next = state
-      for (let i = 0; i < qty; i++) {
-        const rolled = createRolledGearFromBase(action.itemId, {
-          rarity: baseDef.rarity,
-          requiredBaseLevel: baseDef.requiredBaseLevel ?? 1,
-          jobId: state.jobId,
-        })
-        if (!rolled) {
-          return { state, changed: false, message: 'Could not roll gear for this item.' }
-        }
-        next = grantRolledGear(next, rolled)
+    if (isRarityDealerBaseItem(action.itemId)) {
+      return {
+        state,
+        changed: false,
+        message: 'Rarity dealer gear must be purchased through the shop (server roll).',
       }
-      const synced = syncDerivedVitals(next)
-      logActivity('character', `Bought ${qty}× rolled ${getItemDisplayName(action.itemId)}.`)
-      return { state: synced, changed: true }
     }
     const ids = Array.from({ length: qty }, () => action.itemId)
     const nextInv = addItemsToSessionInventory(state.sessionInventory, ids)

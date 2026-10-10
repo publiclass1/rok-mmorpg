@@ -7,6 +7,7 @@ import {
   jobExpRequiredForLevel,
   statPointsForReachingBaseLevel,
 } from './combatRewards.js'
+import { validateRolledItemsPayload } from './rolledGear/validateRolledProgress.js'
 
 const ITEM_IDS = new Set((itemsJson as { items: { id: string; equip_slot?: string | null }[] }).items.map((i) => i.id))
 const ITEM_SLOT = new Map(
@@ -254,6 +255,9 @@ export function validateCharacterProgress(
   for (const itemId of inv) {
     if (!isKnownItemId(itemId)) return { ok: false, error: `unknown inventory item ${itemId}` }
   }
+
+  const rolledErr = validateRolledItemsPayload(payload.session_inventory, payload.rolled_items)
+  if (rolledErr) return { ok: false, error: rolledErr }
 
   for (const row of equipment) {
     if (!EQUIP_SLOTS.includes(row.slot as typeof EQUIP_SLOTS[number])) {
