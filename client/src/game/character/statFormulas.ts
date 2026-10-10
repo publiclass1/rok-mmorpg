@@ -4,10 +4,10 @@ import { loadRoContent } from '../../content/ro/loadContent'
 export const SKILL_POINTS_PER_JOB_LEVEL = 1
 
 /** Extra max HP per base level above 1 (not scaled by VIT). */
-export const FLAT_MAX_HP_PER_BASE_LEVEL = 200
+export const FLAT_MAX_HP_PER_BASE_LEVEL = 50
 
 /** Extra max SP per base level above 1 (not scaled by INT). */
-export const FLAT_MAX_SP_PER_BASE_LEVEL = 50
+export const FLAT_MAX_SP_PER_BASE_LEVEL = 25
 
 const DEFAULT_HP_JOB_A = 0
 const DEFAULT_HP_JOB_B = 5

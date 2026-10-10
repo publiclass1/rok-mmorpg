@@ -18,13 +18,43 @@ export function canSteelCrowAutoBlitzProc(input: {
   hasFalconRental: boolean
   attackKind: BasicAttackKind
 }): boolean {
-  if (input.attackKind !== 'basic_attack') return false
-  if (!input.critical) return false
-  if (input.weaponClass !== 'bow') return false
-  if ((input.skills.steel_crow ?? 0) < 1) return false
-  if ((input.skills.blitz_beat ?? 0) < 1) return false
-  if (!input.hasFalconRental) return false
-  return true
+  return steelCrowProcSkipReason(input) === null
+}
+
+/** Human-readable reason when a Steel Crow proc cannot run (null = ok). */
+export function steelCrowProcSkipReason(input: {
+  critical: boolean
+  weaponClass: WeaponClass
+  skills: Record<string, number>
+  hasFalconRental: boolean
+  attackKind: BasicAttackKind
+}): string | null {
+  if (input.attackKind !== 'basic_attack') return 'only basic attacks can proc Steel Crow'
+  if (!input.critical) return 'not a critical hit'
+  if (input.weaponClass !== 'bow') return 'bow required'
+  if ((input.skills.steel_crow ?? 0) < 1) return 'Steel Crow not learned'
+  if ((input.skills.blitz_beat ?? 0) < 1) return 'Blitz Beat not learned'
+  if (!input.hasFalconRental) return 'falcon rental required'
+  return null
+}
+
+/** After damage calc on a basic attack hit — queue one Blitz proc if this returns true. */
+export function shouldQueueSteelCrowProcAfterBasicCrit(input: {
+  hit: boolean
+  damage: number
+  critical: boolean
+  weaponClass: WeaponClass
+  skills: Record<string, number>
+  hasFalconRental: boolean
+}): boolean {
+  if (!input.hit || input.damage <= 0 || !input.critical) return false
+  return canSteelCrowAutoBlitzProc({
+    critical: input.critical,
+    weaponClass: input.weaponClass,
+    skills: input.skills,
+    hasFalconRental: input.hasFalconRental,
+    attackKind: 'basic_attack',
+  })
 }
 
 /** +1 DEX per Owl's Eye level. */

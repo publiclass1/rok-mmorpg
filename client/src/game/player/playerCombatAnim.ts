@@ -156,6 +156,7 @@ export function startPlayerAttackAnim(
         }
       } else {
         const origin = rangedProjectileOrigin(container.x, container.y, facing)
+        // Basic bow/staff: onStrike then onComplete when projectile lands (not at animEndMs).
         deferCompleteToProjectile = true
         const onArrive = () => {
           options.onStrike?.()

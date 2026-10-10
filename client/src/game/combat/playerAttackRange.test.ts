@@ -5,6 +5,7 @@ import {
   findMobInAttackCone,
   getEquippedWeaponClass,
   getPlayerAttackRangePx,
+  isWithinSkillStrikeRange,
   MAP_TILE_SIZE,
   resolveEnemySkillTarget,
   resolvePlayerAttackTarget,
@@ -169,6 +170,19 @@ function run() {
     selectedMob: outOfSkill,
   })
   assert.equal(skillMiss, null)
+
+  const bowEquip = { ...emptyEquip, weapon: 'composite_bow' }
+  const cornerX = 7 * MAP_TILE_SIZE
+  const cornerY = 7 * MAP_TILE_SIZE
+  assert.ok(
+    isWithinSkillStrikeRange(bowEquip, 'blitz_beat', 0, 0, 0, cornerX, cornerY),
+    'blitz at max chebyshev bow corner',
+  )
+  const pastBow = (7 + 1) * MAP_TILE_SIZE
+  assert.ok(
+    !isWithinSkillStrikeRange(bowEquip, 'blitz_beat', 0, 0, 0, pastBow, 0),
+    'blitz rejects beyond attack cells',
+  )
 
   console.log('playerAttackRange.test.ts: ok')
 }

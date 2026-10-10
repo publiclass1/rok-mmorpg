@@ -1,7 +1,9 @@
 import assert from 'node:assert'
 import {
   canSteelCrowAutoBlitzProc,
+  shouldQueueSteelCrowProcAfterBasicCrit,
   steelCrowBlitzDamageMultiplier,
+  steelCrowProcSkipReason,
 } from './skillPassives'
 
 function run() {
@@ -24,6 +26,31 @@ function run() {
   assert.equal(canSteelCrowAutoBlitzProc({ ...base, weaponClass: 'sword' }), false)
   assert.equal(canSteelCrowAutoBlitzProc({ ...base, skills: { steel_crow: 0, blitz_beat: 1 } }), false)
   assert.equal(canSteelCrowAutoBlitzProc({ ...base, hasFalconRental: false }), false)
+  assert.equal(steelCrowProcSkipReason(base), null)
+  assert.ok(steelCrowProcSkipReason({ ...base, hasFalconRental: false })?.includes('falcon'))
+
+  assert.equal(
+    shouldQueueSteelCrowProcAfterBasicCrit({
+      hit: true,
+      damage: 50,
+      critical: true,
+      weaponClass: 'bow',
+      skills: { steel_crow: 1, blitz_beat: 1 },
+      hasFalconRental: true,
+    }),
+    true,
+  )
+  assert.equal(
+    shouldQueueSteelCrowProcAfterBasicCrit({
+      hit: true,
+      damage: 50,
+      critical: false,
+      weaponClass: 'bow',
+      skills: { steel_crow: 1, blitz_beat: 1 },
+      hasFalconRental: true,
+    }),
+    false,
+  )
 
   console.log('skillPassives.test.ts: ok')
 }

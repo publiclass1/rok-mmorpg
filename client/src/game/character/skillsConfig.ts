@@ -172,6 +172,7 @@ export function canPlaceOnAutoAttackRotation(
   if (!canPlaceSkillOnBar(skillId, sheet.jobId, sheet.skills)) return false
   const def = SKILLS[skillId]
   if (!def) return false
+  if (def.type === 'passive') return false
   if (def.target === 'ground') return isGroundAoEDamageSkill(skillId)
   return true
 }

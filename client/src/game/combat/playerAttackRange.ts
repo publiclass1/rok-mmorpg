@@ -175,6 +175,41 @@ function euclideanDistance(px: number, py: number, tx: number, ty: number): numb
   return Math.hypot(tx - px, ty - py)
 }
 
+/** Blitz Beat uses the same Chebyshev strike box as the equipped weapon's basic attack. */
+export function skillStrikeUsesPlayerAttackRange(skillId: string): boolean {
+  return skillId === 'blitz_beat'
+}
+
+/** Euclidean px budget for chase/targeting when strike range is attack-range Chebyshev. */
+export function skillStrikeRangePx(
+  equipment: Record<EquipSlot, string | null>,
+  skillId: string,
+  defRange: number,
+): number {
+  if (skillStrikeUsesPlayerAttackRange(skillId)) {
+    const cells = getPlayerAttackRangeCells(equipment)
+    return cells * MAP_TILE_SIZE * Math.SQRT2
+  }
+  if (defRange > 0) return defRange
+  return getPlayerAttackRangePx(equipment)
+}
+
+export function isWithinSkillStrikeRange(
+  equipment: Record<EquipSlot, string | null>,
+  skillId: string,
+  defRange: number,
+  playerX: number,
+  playerY: number,
+  targetX: number,
+  targetY: number,
+): boolean {
+  if (skillStrikeUsesPlayerAttackRange(skillId)) {
+    return isWithinPlayerAttackRange(equipment, playerX, playerY, targetX, targetY)
+  }
+  const rangePx = defRange > 0 ? defRange : getPlayerAttackRangePx(equipment)
+  return euclideanDistance(playerX, playerY, targetX, targetY) <= rangePx
+}
+
 function mobWithinSkillRangePx<T extends AttackTargetCandidate>(
   mob: T | null | undefined,
   playerX: number,

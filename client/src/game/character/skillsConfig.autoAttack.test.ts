@@ -37,6 +37,8 @@ const hunterSheet = {
   jobId: 'hunter',
   skills: {
     ankle_snare: 3,
+    steel_crow: 5,
+    blitz_beat: 3,
   },
 }
 
@@ -50,6 +52,16 @@ assert.ok(isGroundAoEDamageSkill('fire_ball'))
 assert.equal(canPlaceOnAutoAttackRotation('fire_ball', wizardSheet), true, 'ground AoE allowed')
 assert.equal(canPlaceOnAutoAttackRotation('safety_wall', wizardSheet), false, 'ground stub blocked')
 assert.equal(canPlaceOnAutoAttackRotation('ankle_snare', hunterSheet), false, 'trap ground blocked')
+assert.equal(
+  canPlaceOnAutoAttackRotation('steel_crow', hunterSheet),
+  false,
+  'passive steel_crow not rotatable',
+)
+assert.equal(
+  canPlaceOnAutoAttackRotation('blitz_beat', hunterSheet),
+  true,
+  'blitz_beat active rotatable',
+)
 assert.equal(canPlaceOnAutoAttackRotation('arrow_shower', archerSheet), true, 'physical ground AoE')
 assert.equal(canPlaceOnAutoAttackRotation('sit', knightSheet), true, 'sit allowed in rotation')
 assert.equal(canPlaceOnAutoAttackRotation('play_dead', knightSheet), false, 'play_dead excluded')
