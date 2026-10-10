@@ -1,7 +1,11 @@
 import Phaser from 'phaser'
 import type { RoSkillMagicElement } from '../../content/ro/types'
 import type { SkillDefinition } from '../character/skillsConfig'
-import { SKILLS, isPlayerGroundMagicSkill } from '../character/skillsConfig'
+import {
+  SKILLS,
+  isPlayerGroundMagicSkill,
+  isPlayerGroundPhysicalSkill,
+} from '../character/skillsConfig'
 import { setDepthByFeet } from '../world/depthSort'
 
 export const GROUND_AOE_DEPTH_EPSILON = -0.14
@@ -46,7 +50,12 @@ export function groundAoEElementStyle(skillId: string): GroundAoEElementStyle {
 }
 
 export function usesGroundAoECastMarker(skillId: string): boolean {
-  return isPlayerGroundMagicSkill(skillId)
+  if (isPlayerGroundMagicSkill(skillId)) return true
+  if (isPlayerGroundPhysicalSkill(skillId)) return true
+  const def = SKILLS[skillId]
+  if (def?.target !== 'ground') return false
+  const r = def.magic?.aoeRadius ?? def.physical?.aoeRadius
+  return r != null && r > 0
 }
 
 /** One-shot ground burst when an AoE lands (after cast preview is dismissed). */

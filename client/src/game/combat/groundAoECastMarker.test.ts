@@ -28,6 +28,8 @@ function run() {
   assert.notEqual(windStyle.fill, fireStyle.fill)
 
   assert.equal(usesGroundAoECastMarker('meteor_storm'), true)
+  assert.equal(usesGroundAoECastMarker('fire_ball'), true)
+  assert.equal(usesGroundAoECastMarker('arrow_shower'), true)
   assert.equal(usesGroundAoECastMarker('fire_bolt'), false)
   assert.equal(GROUND_AOE_IMPACT_DURATION_MS, 3000)
   assert.equal(groundAoEDamageTickCount(), 10)

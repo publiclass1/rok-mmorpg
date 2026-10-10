@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { playPlayerAttackSlash } from '../combat/combatFx'
+import { usesGroundAoECastMarker } from '../combat/groundAoECastMarker'
 import {
   playBowArrowProjectile,
   playMagicSkillProjectileVolley,
@@ -80,7 +81,11 @@ export function startPlayerAttackAnim(
     if (ranged && aim) {
       const container = display.container
       const depth = container.depth + 1.25
-      playRangedAttackRecoil(scene, display.bodyRig, facing)
+      const skipTravelProjectile =
+        options.magicSkillId != null && usesGroundAoECastMarker(options.magicSkillId)
+      if (!skipTravelProjectile) {
+        playRangedAttackRecoil(scene, display.bodyRig, facing)
+      }
       if (options.magicSkillId) {
         const hitCount = options.magicHitCount ?? 1
         playMagicSkillProjectileVolley(

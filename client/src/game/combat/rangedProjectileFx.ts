@@ -258,6 +258,10 @@ export function playMagicSkillProjectile(
   depth: number,
   onArrive?: () => void,
 ) {
+  if (usesGroundAoECastMarker(skillId)) {
+    onArrive?.()
+    return
+  }
   const kind = magicProjectileKindForSkill(skillId)
   const dist = Math.hypot(toX - fromX, toY - fromY)
   let duration = projectileTravelMs(dist)

@@ -2575,6 +2575,7 @@ export class WorldScene extends Phaser.Scene {
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       attackStyle: 'bow',
+      magicSkillId: skillId,
       getAimTarget: () => aim,
       onStrike: () => {
         playGroundAoEImpact(this, this.groundAoEMarker, wx, wy, skillId, aoeRadius)
