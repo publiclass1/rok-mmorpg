@@ -17,6 +17,7 @@ import {
   beastBaneDamageMultiplier,
   skillPassiveDexBonus,
   skillPassiveHitBonus,
+  steelCrowBlitzDamageMultiplier,
 } from './skillPassives'
 import type { MobDefinition } from './mobConfig'
 import { PORING } from './mobConfig'
@@ -115,6 +116,11 @@ function run() {
   assert.ok(strafeL5.damage > 100, 'double strafe should scale damage')
   const strafeBane = calcPlayerSkillVsMobDamage(baseHit, 'double_strafe', 5, { beast_bane: 10 })
   assert.ok(strafeBane.damage > strafeL5.damage, 'beast bane should boost archer skill damage')
+
+  const blitz = calcPlayerSkillVsMobDamage(baseHit, 'blitz_beat', 3, {})
+  const blitzSteel = calcPlayerSkillVsMobDamage(baseHit, 'blitz_beat', 3, { steel_crow: 10 })
+  assert.ok(blitzSteel.damage > blitz.damage, 'steel crow should boost blitz beat damage')
+  assert.equal(steelCrowBlitzDamageMultiplier({ steel_crow: 5 }), 1.3)
 
   console.log('damage.test.ts: ok')
 }

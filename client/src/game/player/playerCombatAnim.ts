@@ -9,6 +9,7 @@ import {
   playStaffMagicProjectile,
   rangedProjectileOrigin,
 } from '../combat/rangedProjectileFx'
+import type { BlitzFalconCompanionRef } from './falconCompanionVisual'
 import type { AttackStyle } from '../character/characterSpriteRegistry'
 import type { Facing } from '../movement/clickToMove'
 import { stopIdleRigTween } from './playerIdleMotion'
@@ -49,6 +50,8 @@ export function startPlayerAttackAnim(
     onRangedHit?: (hitIndex: number) => void
     onStrike?: () => void
     onComplete?: () => void
+    /** Rented falcon to animate for Blitz Beat (avoids a static perch + duplicate sprite). */
+    blitzFalconCompanion?: BlitzFalconCompanionRef
   },
 ) {
   const bash = options.variant === 'bash'
@@ -69,9 +72,16 @@ export function startPlayerAttackAnim(
   const rangedHits = options.rangedHitCount ?? 1
   const boltStagger =
     options.magicSkillId?.endsWith('_bolt') && hitCount > 1 ? (hitCount - 1) * 90 : 0
+  const blitzStagger =
+    options.magicSkillId === 'blitz_beat' && hitCount > 1 ? (hitCount - 1) * 100 : 0
+  const blitzTravelMs =
+    options.magicSkillId === 'blitz_beat' ? Math.min(320, POST_STRIKE_PROJECTILE_MS) * hitCount : 0
   const bowStagger =
     options.attackStyle === 'bow' && rangedHits > 1 ? (rangedHits - 1) * 90 : 0
-  const animEndMs = Math.max(END_MS, strikeDelay + POST_STRIKE_PROJECTILE_MS + boltStagger + bowStagger)
+  const animEndMs = Math.max(
+    END_MS,
+    strikeDelay + POST_STRIKE_PROJECTILE_MS + boltStagger + blitzStagger + blitzTravelMs + bowStagger,
+  )
   const strikePhaseMs = strikeDelay + Math.max(0, STRIKE_MS - WINDUP_MS)
 
   scene.time.delayedCall(strikeDelay, () => {
@@ -106,6 +116,7 @@ export function startPlayerAttackAnim(
             options.onMagicVolleyComplete?.()
             options.onStrike?.()
           },
+          options.blitzFalconCompanion,
         )
       } else if (
         options.projectileSkillId === 'double_strafe' &&

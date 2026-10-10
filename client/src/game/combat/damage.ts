@@ -9,7 +9,11 @@ import { sumEquippedCritChancePercent } from './critBonuses'
 import { sumEquippedRolledDamagePercent } from '../items/rolledItemCombat'
 import type { MobDefinition } from './mobConfig'
 import { physicalSkillModifier, SKILLS, type SkillDefinition } from '../character/skillsConfig'
-import { beastBaneDamageMultiplier, skillPassiveHitBonus } from './skillPassives'
+import {
+  beastBaneDamageMultiplier,
+  skillPassiveHitBonus,
+  steelCrowBlitzDamageMultiplier,
+} from './skillPassives'
 
 /** Base Pre-Renewal crit damage before LUK bonus (iRO 140%). */
 export const CRITICAL_DAMAGE_BASE = 1.4
@@ -280,6 +284,9 @@ export function calcPlayerSkillVsMobDamage(
   }
   if (skills && ARCHER_PHYSICAL_SKILL_IDS.has(skillId)) {
     damage = Math.max(1, Math.floor(damage * beastBaneDamageMultiplier(skills)))
+  }
+  if (skills && skillId === 'blitz_beat') {
+    damage = Math.max(1, Math.floor(damage * steelCrowBlitzDamageMultiplier(skills)))
   }
   return { ...base, damage }
 }

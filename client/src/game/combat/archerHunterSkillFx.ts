@@ -1,4 +1,12 @@
 import Phaser from 'phaser'
+import { FALCON_HOVER_OFFSET_Y } from '../player/falconCompanionVisual'
+import {
+  createFalconGraphicsContainer,
+  drawFalconSideView,
+  FALCON_BEAK,
+  FALCON_BODY,
+  FALCON_TALON as FALCON_CLAW,
+} from '../player/falconSilhouette'
 import { setDepthByFeet } from '../world/depthSort'
 
 export const BLITZ_AOE_VISUAL_RADIUS_PX = 72
@@ -16,9 +24,6 @@ export const ARCHER_SHOWER_STYLE: ArcherHunterGroundStyle = {
 }
 
 const ARCHER_SHAFT = 0x451a03
-const FALCON_BODY = 0x1e293b
-const FALCON_TALON = 0xfbbf24
-const FALCON_CLAW = 0xef4444
 
 export function archerGroundStyle(skillId: string): ArcherHunterGroundStyle | null {
   if (skillId === 'arrow_shower') return ARCHER_SHOWER_STYLE
@@ -180,8 +185,8 @@ export function playDoubleStrafeImpactSpark(
 
 export function playBlitzBeatCastWindup(scene: Phaser.Scene, playerX: number, playerY: number, depth: number) {
   expandingRing(scene, playerX, playerY - 14, depth, FALCON_BODY, 1.3, 300)
-  expandingRing(scene, playerX, playerY - 14, depth + 0.01, FALCON_TALON, 0.9, 240)
-  const eye = scene.add.circle(playerX, playerY - 16, 3, FALCON_TALON, 0.9)
+  expandingRing(scene, playerX, playerY - 14, depth + 0.01, FALCON_BEAK, 0.9, 240)
+  const eye = scene.add.circle(playerX, playerY - 16, 3, FALCON_BEAK, 0.9)
   eye.setDepth(depth + 0.02)
   scene.tweens.add({
     targets: eye,
@@ -193,17 +198,20 @@ export function playBlitzBeatCastWindup(scene: Phaser.Scene, playerX: number, pl
   })
 }
 
-function buildFalconGraphic(scene: Phaser.Scene): Phaser.GameObjects.Container {
-  const container = scene.add.container(0, 0)
-  const g = scene.add.graphics()
-  g.fillStyle(FALCON_BODY, 1)
-  g.fillEllipse(0, 0, 14, 6)
-  g.fillTriangle(-6, 0, -14, -8, -10, 2)
-  g.fillTriangle(-6, 0, -14, 8, -10, -2)
-  g.fillStyle(FALCON_TALON, 1)
-  g.fillTriangle(8, 0, 14, -3, 14, 3)
-  container.add(g)
-  return container
+export const BLITZ_BEAT_VOLLEY_STAGGER_MS = 100
+
+export function playBlitzBeatPerHitImpact(scene: Phaser.Scene, x: number, y: number, depth: number) {
+  const flash = scene.add.circle(x, y, 5, FALCON_CLAW, 0.85)
+  flash.setDepth(depth + 0.06)
+  scene.tweens.add({
+    targets: flash,
+    alpha: 0,
+    scaleX: 1.8,
+    scaleY: 1.8,
+    duration: 90,
+    onComplete: () => flash.destroy(),
+  })
+  expandingRing(scene, x, y, depth, FALCON_BEAK, 1.1, 160)
 }
 
 export function playBlitzBeatFalconStrike(
@@ -218,8 +226,11 @@ export function playBlitzBeatFalconStrike(
   const dist = Math.hypot(toX - fromX, toY - fromY)
   const duration = Math.min(320, Math.max(100, dist * 2))
 
-  const container = buildFalconGraphic(scene)
-  container.setPosition(fromX, fromY - 20)
+  const container = createFalconGraphicsContainer(scene)
+  const startY = fromY + FALCON_HOVER_OFFSET_Y
+  const facing = toX >= fromX ? 'right' : 'left'
+  drawFalconSideView(container.falconGfx, facing, 0.55)
+  container.setPosition(fromX, startY)
   container.setDepth(depth + 0.05)
 
   const progress = { t: 0 }
@@ -232,25 +243,50 @@ export function playBlitzBeatFalconStrike(
       const t = progress.t
       const x = fromX + (toX - fromX) * t
       const arcLift = Math.sin(t * Math.PI) * 28
-      const y = fromY - 20 + (toY - fromY) * t - arcLift
+      const y = startY + (toY - startY) * t - arcLift
       container.setPosition(x, y)
-      container.setRotation(Math.atan2(toY - y, toX - x))
+      const travelFacing = toX >= x ? 'right' : 'left'
+      drawFalconSideView(container.falconGfx, travelFacing, 0.55)
     },
     onComplete: () => {
-      const flash = scene.add.circle(toX, toY, 6, FALCON_CLAW, 0.85)
-      flash.setDepth(depth + 0.06)
-      scene.tweens.add({
-        targets: flash,
-        alpha: 0,
-        scaleX: 2,
-        scaleY: 2,
-        duration: 100,
-        onComplete: () => flash.destroy(),
-      })
       container.destroy()
       onArrive?.()
     },
   })
+}
+
+/** One falcon projectile per hit; staggered swoops from perch height to the target. */
+export function playBlitzBeatFalconVolley(
+  scene: Phaser.Scene,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  depth: number,
+  hitCount: number,
+  onHit: (hitIndex: number) => void,
+  onComplete?: () => void,
+) {
+  const count = Math.max(1, hitCount)
+  if (count === 1) {
+    playBlitzBeatFalconStrike(scene, fromX, fromY, toX, toY, depth, () => {
+      onHit(0)
+      onComplete?.()
+    })
+    return
+  }
+
+  let finished = 0
+  for (let i = 0; i < count; i++) {
+    const lateral = (i - (count - 1) / 2) * 8
+    scene.time.delayedCall(i * BLITZ_BEAT_VOLLEY_STAGGER_MS, () => {
+      playBlitzBeatFalconStrike(scene, fromX + lateral, fromY, toX, toY, depth, () => {
+        onHit(i)
+        finished += 1
+        if (finished >= count) onComplete?.()
+      })
+    })
+  }
 }
 
 export function playBlitzBeatAoEImpact(
@@ -295,5 +331,5 @@ export function playBlitzBeatAoEImpact(
     })
   }
 
-  expandingRing(scene, x, y, depth, FALCON_TALON, 1.8, 300)
+  expandingRing(scene, x, y, depth, FALCON_BEAK, 1.8, 300)
 }

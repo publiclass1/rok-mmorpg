@@ -1,5 +1,8 @@
 import Phaser from 'phaser'
-import { playBlitzBeatFalconStrike } from './archerHunterSkillFx'
+import { playBlitzBeatFalconStrike, playBlitzBeatFalconVolley } from './archerHunterSkillFx'
+import type { BlitzFalconCompanionRef } from '../player/falconCompanionVisual'
+import { playBlitzBeatCompanionVolley } from '../player/falconCompanionVisual'
+import { drawFalconSideView } from '../player/falconSilhouette'
 import { usesGroundAoECastMarker } from './groundAoECastMarker'
 import type { Facing } from '../movement/clickToMove'
 
@@ -282,12 +285,7 @@ function buildMagicProjectileGraphic(
       break
     }
     case 'falcon': {
-      g.fillStyle(0x1e293b, 1)
-      g.fillEllipse(0, 0, 12, 5)
-      g.fillTriangle(-5, 0, -12, -6, -8, 2)
-      g.fillTriangle(-5, 0, -12, 6, -8, -2)
-      g.fillStyle(0xfbbf24, 1)
-      g.fillTriangle(7, 0, 12, -2, 12, 2)
+      drawFalconSideView(g, 'right', 0.55)
       container.add(g)
       break
     }
@@ -408,6 +406,7 @@ export function playMagicSkillProjectileVolley(
   hitCount: number,
   onHit: (hitIndex: number) => void,
   onVolleyComplete?: () => void,
+  blitzCompanion?: BlitzFalconCompanionRef,
 ) {
   if (usesGroundAoECastMarker(skillId)) {
     scene.time.delayedCall(0, () => {
@@ -419,8 +418,36 @@ export function playMagicSkillProjectileVolley(
 
   const origin = rangedProjectileOrigin(playerX, playerY, facing)
   const count = Math.max(1, hitCount)
-  const stagger =
-    skillId.endsWith('_bolt') ? BOLT_STAGGER_MS : skillId === 'blitz_beat' ? 100 : 0
+
+  if (skillId === 'blitz_beat') {
+    if (blitzCompanion) {
+      playBlitzBeatCompanionVolley(
+        scene,
+        blitzCompanion,
+        aimX,
+        aimY,
+        depth,
+        count,
+        onHit,
+        onVolleyComplete,
+      )
+    } else {
+      playBlitzBeatFalconVolley(
+        scene,
+        playerX,
+        playerY,
+        aimX,
+        aimY,
+        depth,
+        count,
+        onHit,
+        onVolleyComplete,
+      )
+    }
+    return
+  }
+
+  const stagger = skillId.endsWith('_bolt') ? BOLT_STAGGER_MS : 0
 
   if (count === 1) {
     playMagicSkillProjectile(scene, skillId, origin.x, origin.y, aimX, aimY, depth, () => {

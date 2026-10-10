@@ -4,6 +4,7 @@ import {
   playArrowShowerCastWindup,
   playBlitzBeatAoEImpact,
   playBlitzBeatCastWindup,
+  playBlitzBeatPerHitImpact,
   playDoubleStrafeCastWindup,
   playDoubleStrafeImpactSpark,
   BLITZ_AOE_VISUAL_RADIUS_PX,
@@ -241,6 +242,7 @@ export function playSkillImpactFx(
   y: number,
   depth: number,
   hitIndex = 0,
+  totalHits?: number,
 ) {
   if (usesGroundAoECastMarker(skillId)) return
   const ty = y
@@ -278,9 +280,18 @@ export function playSkillImpactFx(
     case 'double_strafe':
       playDoubleStrafeImpactSpark(scene, x, ty, depth, hitIndex)
       break
-    case 'blitz_beat':
-      playBlitzBeatAoEImpact(scene, x, ty, depth, BLITZ_AOE_VISUAL_RADIUS_PX)
+    case 'blitz_beat': {
+      const hits = totalHits ?? 1
+      if (hits > 1) {
+        playBlitzBeatPerHitImpact(scene, x, ty, depth)
+        if (hitIndex >= hits - 1) {
+          playBlitzBeatAoEImpact(scene, x, ty, depth, BLITZ_AOE_VISUAL_RADIUS_PX)
+        }
+      } else {
+        playBlitzBeatAoEImpact(scene, x, ty, depth, BLITZ_AOE_VISUAL_RADIUS_PX)
+      }
       break
+    }
     default:
       expandingRing(scene, x, ty, depth, 0x7dd3fc, 1.4, 260)
       break

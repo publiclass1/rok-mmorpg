@@ -630,7 +630,7 @@
       "castTimeMs": 0,
       "range": 0,
       "prerequisites": [{ "skillId": "falcon_mastery", "level": 1 }],
-      "description": "Increases damage dealt by your falcon.",
+      "description": "Increases Blitz Beat damage per level. On bow critical basic attacks, automatically commands Blitz Beat on the target (requires Blitz Beat learned and an active falcon rental; no SP cost).",
       "sourceUrl": "https://irowiki.org/wiki/Steel_Crow"
     },
     {
@@ -645,7 +645,7 @@
       "castTimeMs": 0,
       "range": 224,
       "prerequisites": [{ "skillId": "falcon_mastery", "level": 1 }],
-      "description": "Command your falcon to strike a target.",
+      "description": "Command your falcon to strike a target. Number of hits equals skill level.",
       "sourceUrl": "https://irowiki.org/wiki/Blitz_Beat",
       "physical": {
         "hitsEqualLevel": true,

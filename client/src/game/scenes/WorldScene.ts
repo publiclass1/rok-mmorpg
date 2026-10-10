@@ -90,6 +90,7 @@ import { calcPreRenewalCastTimeMsFromSession, skillCastStrikeDelayMs } from '../
 import { PlayerSpellChantGfx } from '../combat/spellChantFx'
 import { buildRandomCastChant, shouldShowSpellChant } from '../combat/spellChants'
 import { playSkillCastFx, playSkillImpactFx } from '../combat/skillFx'
+import { canSteelCrowAutoBlitzProc } from '../combat/skillPassives'
 import { MOB_DEFS, MOB_RESPAWN_MS, MOB_SPAWNS_BY_MAP } from '../combat/mobConfig'
 import {
   autoAttackRotationHasSit,
@@ -153,6 +154,13 @@ import {
   startPlayerAttackAnim,
 } from '../player/playerCombatAnim'
 import { isOnPecoMount } from '../player/mountState'
+import {
+  attachFalconCompanionToDisplay,
+  createFalconCompanion,
+  FALCON_HOVER_OFFSET_Y,
+  syncFalconCompanionGfx,
+  type FalconCompanionGfx,
+} from '../player/falconCompanionVisual'
 import {
   attachPecoMountToDisplay,
   createPecoMount,
@@ -288,8 +296,7 @@ export class WorldScene extends Phaser.Scene {
   private playerShadow!: Phaser.GameObjects.Ellipse
   private pecoMountGfx!: PecoMountGfx
   private rentalCartGfx!: Phaser.GameObjects.Rectangle
-  private rentalFalconGfx!: Phaser.GameObjects.Arc
-  private rentalFalconAngle = 0
+  private rentalFalconGfx!: FalconCompanionGfx
   private presence: MapPresenceChannel | null = null
   private remotePlayers = new Map<string, RemotePlayerEntity>()
   /** Hysteresis for presence walk vs idle (avoids flicker near velocity threshold). */
@@ -355,6 +362,8 @@ export class WorldScene extends Phaser.Scene {
     wx: number
     wy: number
   } | null = null
+  private pendingSteelCrowBlitzMob: MobInstance | null = null
+  private falconBlitzVolleyActive = false
   private chaseGroundForSkillOnly = false
   private skillCalloutTween: Phaser.Tweens.Tween | null = null
   private playerCastBar!: PlayerCastBarGfx
@@ -499,7 +508,8 @@ export class WorldScene extends Phaser.Scene {
     this.pecoMountGfx = createPecoMount(this)
     attachPecoMountToDisplay(this.playerDisplay, this.pecoMountGfx)
     this.rentalCartGfx = this.add.rectangle(spawn.x, spawn.y, 20, 14, 0x78716c, 1).setVisible(false)
-    this.rentalFalconGfx = this.add.circle(spawn.x, spawn.y, 6, 0x1e293b, 1).setVisible(false)
+    this.rentalFalconGfx = createFalconCompanion(this)
+    attachFalconCompanionToDisplay(this.playerDisplay, this.rentalFalconGfx)
     const playerBody = this.playerDisplay.container.body as Phaser.Physics.Arcade.Body
     playerBody.setCollideWorldBounds(true)
     if (collision) {
@@ -2425,6 +2435,7 @@ export class WorldScene extends Phaser.Scene {
     skillLevel: number,
     def: SkillDefinition,
     primaryMob: MobInstance,
+    options?: { skipMpCost?: boolean; steelCrowProc?: boolean },
   ) {
     if (!this.archerOffenseRequiresBow()) return
     if (skillId === 'blitz_beat') {
@@ -2437,26 +2448,40 @@ export class WorldScene extends Phaser.Scene {
 
     if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
-    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
-    if (!this.spendMp(def.mpCost)) return
+    const steelCrowProc = options?.steelCrowProc === true
+    if (
+      !steelCrowProc &&
+      (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping)
+    ) {
+      return
+    }
+    if (!steelCrowProc && (this.isAttacking || this.isJumping)) return
+    if (!options?.skipMpCost && !this.spendMp(def.mpCost)) return
     if (!primaryMob.alive) return
 
     const px = this.playerDisplay.container.x
     const py = this.playerDisplay.container.y
+    const strikeRangePx = steelCrowProc
+      ? Math.max(this.skillRangePx(def), getPlayerAttackRangePx(this.session.equipment))
+      : this.skillRangePx(def)
     if (
       Phaser.Math.Distance.Between(px, py, primaryMob.sprite.x, primaryMob.sprite.y) >
-      this.skillRangePx(def)
+      strikeRangePx
     ) {
-      emitGameEvent('status', 'Target out of range.')
+      if (!steelCrowProc) emitGameEvent('status', 'Target out of range.')
       return
     }
 
-    this.lastAttackAt = now
+    if (!steelCrowProc) this.lastAttackAt = now
     this.isAttacking = true
     this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
     this.faceToward(primaryMob.sprite.x, primaryMob.sprite.y)
-    this.showSkillCallout(def.name)
+    if (steelCrowProc) {
+      this.showSkillCallout('Steel Crow')
+    } else {
+      this.showSkillCallout(def.name)
+    }
 
     const skillLabel = def.name
     const depth = this.playerDisplay.container.depth + 0.1
@@ -2475,11 +2500,26 @@ export class WorldScene extends Phaser.Scene {
     const hitCount = physicalSkillHitCount(def, skillLevel)
     const useBowAnim = skillId !== 'blitz_beat'
     const attackStyle = useBowAnim ? 'bow' : 'cast'
+    const blitzFalconCompanion =
+      skillId === 'blitz_beat'
+        ? {
+            companion: this.rentalFalconGfx,
+            playerContainer: this.playerDisplay.container,
+            facing: this.facing,
+            onVolleyStart: () => {
+              this.falconBlitzVolleyActive = true
+            },
+            onVolleyEnd: () => {
+              this.falconBlitzVolleyActive = false
+            },
+          }
+        : undefined
 
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       attackStyle,
       projectileSkillId: skillId,
+      blitzFalconCompanion,
       getAimTarget: () => toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y),
       rangedHitCount: useBowAnim ? hitCount : undefined,
       magicSkillId: useBowAnim ? undefined : skillId,
@@ -2488,7 +2528,7 @@ export class WorldScene extends Phaser.Scene {
         ? (hitIndex) => {
             if (!primaryMob.alive) return
             const aim = toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y)
-            playSkillImpactFx(this, skillId, aim.x, aim.y, depth, hitIndex)
+            playSkillImpactFx(this, skillId, aim.x, aim.y, depth, hitIndex, hitCount)
             this.applyPhysicalSkillHitToMob(primaryMob, skillId, skillLevel, skillLabel)
           }
         : undefined,
@@ -2496,7 +2536,7 @@ export class WorldScene extends Phaser.Scene {
         ? (hitIndex) => {
             if (!primaryMob.alive) return
             const aim = toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y)
-            playSkillImpactFx(this, skillId, aim.x, aim.y, depth, hitIndex)
+            playSkillImpactFx(this, skillId, aim.x, aim.y, depth, hitIndex, hitCount)
             this.applyPhysicalSkillHitToMob(primaryMob, skillId, skillLevel, skillLabel)
           }
         : undefined,
@@ -2517,6 +2557,46 @@ export class WorldScene extends Phaser.Scene {
       onComplete: () => {
         this.isAttacking = false
       },
+    })
+  }
+
+  private queueSteelCrowBlitzAfterCrit(mob: MobInstance) {
+    this.pendingSteelCrowBlitzMob = mob
+    const attempt = () => {
+      if (this.isAttacking || this.isJumping) {
+        this.time.delayedCall(40, attempt)
+        return
+      }
+      const pending = this.pendingSteelCrowBlitzMob
+      this.pendingSteelCrowBlitzMob = null
+      if (pending?.alive) this.trySteelCrowBlitzProc(pending)
+    }
+    this.time.delayedCall(0, attempt)
+  }
+
+  private trySteelCrowBlitzProc(mob: MobInstance) {
+    const def = SKILLS.blitz_beat
+    const skillLevel = this.session.skills.blitz_beat ?? 0
+    if (!def || skillLevel < 1 || !mob.alive) return
+
+    const weaponClass = getEquippedWeaponClass(this.session.equipment)
+    const rental = activeRentalAt(this.session, Date.now())
+    const hasFalcon = rental?.kind === 'falcon'
+    if (
+      !canSteelCrowAutoBlitzProc({
+        critical: true,
+        weaponClass,
+        skills: this.session.skills,
+        hasFalconRental: hasFalcon,
+        attackKind: 'basic_attack',
+      })
+    ) {
+      return
+    }
+
+    this.runPlayerRangedPhysicalSkill('blitz_beat', skillLevel, def, mob, {
+      skipMpCost: true,
+      steelCrowProc: true,
     })
   }
 
@@ -3179,7 +3259,6 @@ export class WorldScene extends Phaser.Scene {
     syncPecoMountGfx(this.pecoMountGfx, onPeco, pose.facing, pose.anim, pose.walkFrame)
 
     this.rentalCartGfx.setVisible(showCart)
-    this.rentalFalconGfx.setVisible(showFalcon)
 
     if (showCart) {
       const backX = this.facing === 'left' ? px + 14 : this.facing === 'right' ? px - 14 : px
@@ -3187,13 +3266,27 @@ export class WorldScene extends Phaser.Scene {
       this.rentalCartGfx.setPosition(backX, backY)
       setDepthByFeet(this.rentalCartGfx, playerFeet, -0.35)
     }
-    if (showFalcon) {
-      this.rentalFalconAngle += 0.04
-      const orbit = 28
-      const fx = px + Math.cos(this.rentalFalconAngle) * orbit
-      const fy = py - 18 + Math.sin(this.rentalFalconAngle) * 8
-      this.rentalFalconGfx.setPosition(fx, fy)
-      setDepthByFeet(this.rentalFalconGfx, playerFeet, 0.06)
+    if (showFalcon && !this.falconBlitzVolleyActive) {
+      syncFalconCompanionGfx(
+        this.rentalFalconGfx,
+        true,
+        pose.facing,
+        pose.anim,
+        pose.walkFrame === 1 ? 1 : 0,
+        this.time.now,
+      )
+      setDepthByFeet(this.rentalFalconGfx, py + FALCON_HOVER_OFFSET_Y, 0.08)
+    } else if (showFalcon && this.falconBlitzVolleyActive) {
+      this.rentalFalconGfx.setVisible(true)
+    } else {
+      syncFalconCompanionGfx(
+        this.rentalFalconGfx,
+        false,
+        pose.facing,
+        pose.anim,
+        pose.walkFrame === 1 ? 1 : 0,
+        this.time.now,
+      )
     }
   }
 
@@ -4684,6 +4777,19 @@ export class WorldScene extends Phaser.Scene {
         }
 
         this.applyDamageToMob(target, damage, def, 'Attack', { critical })
+        const rental = activeRentalAt(this.session, Date.now())
+        const hasFalcon = rental?.kind === 'falcon'
+        if (
+          canSteelCrowAutoBlitzProc({
+            critical,
+            weaponClass,
+            skills: this.session.skills,
+            hasFalconRental: hasFalcon,
+            attackKind: 'basic_attack',
+          })
+        ) {
+          this.queueSteelCrowBlitzAfterCrit(target)
+        }
       },
       onComplete: () => {
         this.isAttacking = false
