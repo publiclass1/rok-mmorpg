@@ -18,8 +18,10 @@ import {
   updateCharacterSession,
 } from '../character/characterSessionBridge'
 import {
+  AUTO_ATTACK_BUFF_REFRESH_REMAINING_MS,
   SKILLS,
   isArcherSkillStub,
+  isGroundAoEDamageSkill,
   isPlayerEnemyCastSkill,
   isPlayerGroundMagicSkill,
   isPlayerGroundMagicStub,
@@ -39,6 +41,7 @@ import {
   PECO_RIDE_STATUS_ID,
   pruneExpired,
   removeStatus,
+  shouldAutoRefreshSelfBuff,
   toPlayerBuffPayloads,
   type PlayerStatusBuff,
 } from '../character/statusEffects'
@@ -1406,8 +1409,13 @@ export class WorldScene extends Phaser.Scene {
     def: SkillDefinition,
     wx: number,
     wy: number,
+    fromAuto = false,
   ) {
-    this.disableAutoAttackFromManualInput()
+    if (!fromAuto) {
+      this.disableAutoAttackFromManualInput()
+    } else {
+      this.autoAttackChaseActive = true
+    }
     this.clearGroundSkillChase()
     this.queuedGroundSkillCast = { skillId, level, def, wx, wy }
     this.chaseGroundForSkillOnly = true
@@ -1893,7 +1901,33 @@ export class WorldScene extends Phaser.Scene {
       return !fromAuto
     }
     if (def.selfBuff) {
-      this.trySelfBuffSkill(skillId, level, def)
+      if (fromAuto) {
+        const wallNow = Date.now()
+        this.activeBuffs = pruneExpired(this.activeBuffs, wallNow)
+        if (
+          !shouldAutoRefreshSelfBuff(
+            this.activeBuffs,
+            def.selfBuff.statusId,
+            wallNow,
+            AUTO_ATTACK_BUFF_REFRESH_REMAINING_MS,
+          )
+        ) {
+          return true
+        }
+      }
+      return this.trySelfBuffSkill(skillId, level, def)
+    }
+    if (fromAuto && isGroundAoEDamageSkill(skillId) && targetMob?.alive) {
+      const wx = targetMob.sprite.x
+      const wy = targetMob.sprite.y
+      const px = this.playerDisplay.container.x
+      const py = this.playerDisplay.container.y
+      const skillRange = this.skillRangePx(def)
+      if (Phaser.Math.Distance.Between(px, py, wx, wy) <= skillRange) {
+        this.executePlayerGroundSkill(skillId, level, def, wx, wy)
+        return true
+      }
+      this.beginChaseGroundSkill(skillId, level, def, wx, wy, true)
       return true
     }
     if (isArcherSkillStub(skillId)) {
@@ -3306,17 +3340,16 @@ export class WorldScene extends Phaser.Scene {
     )
   }
 
-  private trySelfBuffSkill(skillId: string, skillLevel: number, def: SkillDefinition) {
-    if (!def.selfBuff) return
+  private trySelfBuffSkill(skillId: string, skillLevel: number, def: SkillDefinition): boolean {
+    if (!def.selfBuff) return false
     if (skillId === 'peco_peco_ride') {
-      this.tryPecoRideSkill(skillId, skillLevel, def)
-      return
+      return this.tryPecoRideSkill(skillId, skillLevel, def)
     }
     if (this.isAttacking || this.isJumping) {
       emitGameEvent('status', 'Cannot cast right now.')
-      return
+      return false
     }
-    if (!this.spendMp(def.mpCost)) return
+    if (!this.spendMp(def.mpCost)) return false
 
     const wallNow = Date.now()
     const durationMs = selfBuffDurationMs(def.selfBuff, skillLevel)
@@ -3342,11 +3375,12 @@ export class WorldScene extends Phaser.Scene {
     logActivity('character', `${def.name} Lv ${skillLevel} (${seconds}s).`)
     this.emitPlayerBuffs()
     this.emitCharacterSheet()
+    return true
   }
 
-  private tryPecoRideSkill(skillId: string, skillLevel: number, def: SkillDefinition) {
-    if (!def.selfBuff) return
-    if (this.isAttacking || this.isJumping) return
+  private tryPecoRideSkill(skillId: string, skillLevel: number, def: SkillDefinition): boolean {
+    if (!def.selfBuff) return false
+    if (this.isAttacking || this.isJumping) return false
 
     const wallNow = Date.now()
     if (hasStatus(this.activeBuffs, PECO_RIDE_STATUS_ID)) {
@@ -3355,10 +3389,10 @@ export class WorldScene extends Phaser.Scene {
       logActivity('character', 'Dismounted from Peco Peco.')
       this.emitPlayerBuffs()
       this.emitCharacterSheet()
-      return
+      return true
     }
 
-    if (!this.spendMp(def.mpCost)) return
+    if (!this.spendMp(def.mpCost)) return false
     this.activeBuffs = applySelfBuff(this.activeBuffs, {
       statusId: def.selfBuff.statusId,
       name: def.name,
@@ -3380,6 +3414,7 @@ export class WorldScene extends Phaser.Scene {
     logActivity('character', `${def.name} Lv ${skillLevel} — mounted.`)
     this.emitPlayerBuffs()
     this.emitCharacterSheet()
+    return true
   }
 
   private standUp() {

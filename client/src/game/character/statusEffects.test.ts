@@ -2,11 +2,13 @@ import assert from 'node:assert'
 import {
   applySelfBuff,
   buffDurationMs,
+  buffRemainingMs,
   buffsEqual,
   hasStatus,
   PECO_RIDE_STATUS_ID,
   pruneExpired,
   removeStatus,
+  shouldAutoRefreshSelfBuff,
   toPlayerBuffPayloads,
 } from './statusEffects'
 
@@ -72,6 +74,20 @@ function run() {
 
   const afterDismount = removeStatus(mounted, PECO_RIDE_STATUS_ID)
   assert.equal(afterDismount.length, 0)
+
+  const magnumBuffs = applySelfBuff([], {
+    statusId: 'magnum_break',
+    name: 'Magnum Break',
+    iconSkillId: 'magnum',
+    skillLevel: 1,
+    now: 0,
+    durationMs: 10000,
+  })
+  assert.equal(buffRemainingMs(magnumBuffs[0], 4000), 6000)
+  assert.equal(shouldAutoRefreshSelfBuff(magnumBuffs, 'magnum_break', 4000, 5000), false)
+  assert.equal(shouldAutoRefreshSelfBuff(magnumBuffs, 'magnum_break', 6000, 5000), true)
+  assert.equal(shouldAutoRefreshSelfBuff([], 'magnum_break', 0, 5000), true)
+  assert.equal(shouldAutoRefreshSelfBuff(mounted, PECO_RIDE_STATUS_ID, 1000, 5000), false)
 
   console.log('statusEffects.test.ts: ok')
 }

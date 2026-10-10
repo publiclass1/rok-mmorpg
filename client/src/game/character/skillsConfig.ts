@@ -143,6 +143,26 @@ export function canPlaceSkillOnBar(
 
 const AUTO_ATTACK_EXCLUDED_SKILL_IDS = new Set<string>(['play_dead'])
 
+export const AUTO_ATTACK_BUFF_REFRESH_REMAINING_MS = 5000
+
+export const ENEMY_TARGET_AOE_SKILL_IDS = new Set<string>(['brandish_spear', 'bowling_bash'])
+
+export function isEnemyTargetAoESkill(skillId: string): boolean {
+  return ENEMY_TARGET_AOE_SKILL_IDS.has(skillId)
+}
+
+export function skillHasGroundAoERadius(def: SkillDefinition): boolean {
+  if (def.target !== 'ground') return false
+  const radius = def.magic?.aoeRadius ?? def.physical?.aoeRadius ?? 0
+  return radius > 0
+}
+
+export function isGroundAoEDamageSkill(skillId: string): boolean {
+  const def = SKILLS[skillId]
+  if (!def) return false
+  return skillHasGroundAoERadius(def)
+}
+
 export function canPlaceOnAutoAttackRotation(
   skillId: string,
   sheet: { jobId: string; skills: Record<string, number> },
@@ -152,7 +172,7 @@ export function canPlaceOnAutoAttackRotation(
   if (!canPlaceSkillOnBar(skillId, sheet.jobId, sheet.skills)) return false
   const def = SKILLS[skillId]
   if (!def) return false
-  if (def.target === 'ground') return false
+  if (def.target === 'ground') return isGroundAoEDamageSkill(skillId)
   return true
 }
 

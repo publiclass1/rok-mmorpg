@@ -19,6 +19,27 @@ export function buffDurationMs(buff: Pick<PlayerStatusBuff, 'startedAt' | 'expir
   return Math.max(1, buff.expiresAt - buff.startedAt)
 }
 
+export function buffRemainingMs(buff: Pick<PlayerStatusBuff, 'expiresAt'>, now: number): number {
+  if (!Number.isFinite(buff.expiresAt)) return Number.POSITIVE_INFINITY
+  return Math.max(0, buff.expiresAt - now)
+}
+
+/** Whether auto-attack should spend SP to cast or refresh a self-buff. */
+export function shouldAutoRefreshSelfBuff(
+  buffs: PlayerStatusBuff[],
+  statusId: string,
+  now: number,
+  thresholdMs: number,
+): boolean {
+  const active = pruneExpired(buffs, now)
+  const buff = active.find((b) => b.statusId === statusId)
+  if (!buff) return true
+  if (statusId === PECO_RIDE_STATUS_ID || !Number.isFinite(buff.expiresAt)) {
+    return false
+  }
+  return buffRemainingMs(buff, now) <= thresholdMs
+}
+
 export function applySelfBuff(
   buffs: PlayerStatusBuff[],
   params: {
