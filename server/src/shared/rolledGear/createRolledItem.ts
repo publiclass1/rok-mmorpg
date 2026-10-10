@@ -24,7 +24,7 @@ export function createServerRolledGear(
 ): RolledItem | null {
   const base = ITEMS_BY_ID[baseItemId]
   if (!base?.equipSlot || !base.bonuses || !base.layerColor) return null
-  const rolled = rollGearAffixes(options.rarity, options.jobId, base, rng)
+  const rolled = rollGearAffixes(options.rarity, options.jobId, base, rng, { source: 'dealer' })
   const id = `ri:${baseItemId}:${randomId8()}`
   return {
     id,

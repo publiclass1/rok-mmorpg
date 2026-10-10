@@ -9,6 +9,7 @@ import { sumEquippedCritChancePercent, sumEquippedCritResist } from './critBonus
 import {
   sumEquippedCombatAffixes,
   sumEquippedCritDamagePercent,
+  sumEquippedDamageReductionPercent,
   sumEquippedRolledDamagePercent,
 } from '../items/rolledItemCombat'
 import type { MobDefinition } from './mobConfig'
@@ -165,6 +166,34 @@ function sampleMatk(int: number, critical: boolean, rng: () => number): number {
   return min + Math.floor(rng() * (max - min + 1))
 }
 
+export function gearBoostedAtk(statusAtk: number, weaponAtk: number, gearAtk: number, gearAtkPercent: number): number {
+  let atk = statusAtk + weaponAtk + gearAtk
+  if (gearAtkPercent > 0) atk = Math.floor(atk * (1 + gearAtkPercent / 100))
+  return atk
+}
+
+export function gearBoostedMatk(baseMatk: number, gearMatk: number, gearMatkPercent: number): number {
+  let matk = baseMatk + gearMatk
+  if (gearMatkPercent > 0) matk = Math.floor(matk * (1 + gearMatkPercent / 100))
+  return matk
+}
+
+/** Flat gear DEF plus DEF% on (soft DEF + flat gear DEF). */
+export function playerPhysicalDef(vit: number, gearDef: number, gearDefPercent: number): number {
+  const base = softDef(vit) + gearDef
+  return Math.floor(base * (1 + gearDefPercent / 100))
+}
+
+export function playerMagicDef(int: number, gearMdef: number, gearMdefPercent: number): number {
+  const base = int + gearMdef
+  return Math.floor(base * (1 + gearMdefPercent / 100))
+}
+
+export function applyDamageReduction(damage: number, reductionPercent: number): number {
+  if (reductionPercent <= 0) return damage
+  return Math.max(1, Math.floor(damage * (1 - reductionPercent / 100)))
+}
+
 export function calcPlayerVsMobDamage(
   state: CharacterSessionState,
   mob: MobDefinition,
@@ -192,7 +221,9 @@ export function calcPlayerVsMobDamage(
   }
   if (!hit) return { damage: 0, hit: false, critical: false }
 
-  const atk = calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk) + weaponAtk
+  const gear = sumEquippedCombatAffixes(state.equipment)
+  const statusAtk = calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk)
+  const atk = gearBoostedAtk(statusAtk, weaponAtk, gear.atk, gear.atkPercent)
   const def = critical ? 0 : mob.def
   let damage = damageAfterDef(atk, def, 0)
   damage = applyCriticalDamageMultiplier(damage, critical, stats.luk, gearCritDmg)
@@ -250,8 +281,12 @@ export function calcPlayerVsPlayerDamage(
   }
   if (!hit) return { damage: 0, hit: false, critical: false }
 
-  const atk = calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk) + weaponAtk
-  const def = critical ? 0 : softDef(defStats.vit) + defenderGear.def
+  const attackerGear = sumEquippedCombatAffixes(state.equipment)
+  const statusAtk = calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk)
+  const atk = gearBoostedAtk(statusAtk, weaponAtk, attackerGear.atk, attackerGear.atkPercent)
+  const def = critical
+    ? 0
+    : playerPhysicalDef(defStats.vit, defenderGear.def, defenderGear.defPercent)
   let damage = damageAfterDef(atk, def, defStats.vit)
   damage = applyCriticalDamageMultiplier(damage, critical, stats.luk, gearCritDmg)
   damage = Math.floor(damage * elementMultiplier(weaponElement, 'neutral'))
@@ -262,6 +297,8 @@ export function calcPlayerVsPlayerDamage(
   if (bonusPct > 0) {
     damage = Math.floor(damage * (1 + bonusPct / 100))
   }
+  const reduction = sumEquippedDamageReductionPercent(defender.equipment)
+  damage = applyDamageReduction(damage, reduction)
   return { damage: Math.max(1, damage), hit: true, critical }
 }
 
@@ -329,9 +366,10 @@ export function calcPlayerMagicVsMobDamage(
   const skillModifier = options?.skillModifier ?? 1
   const attackElement = options?.attackElement ?? 'neutral'
 
+  const gear = sumEquippedCombatAffixes(state.equipment)
   const gearCritDmg = sumEquippedCritDamagePercent(state.equipment)
   const critical = rollPlayerCritVsMob(equipCrit, stats.luk, defenderLuk, 0, rng)
-  const matk = sampleMatk(stats.int, critical, rng)
+  const matk = gearBoostedMatk(sampleMatk(stats.int, critical, rng), gear.matk, gear.matkPercent)
   const mdef = critical ? 0 : mob.mdef
   let damage = damageAfterMdef(matk, mdef, skillModifier)
   damage = applyCriticalDamageMultiplier(damage, critical, stats.luk, gearCritDmg)
@@ -389,6 +427,7 @@ export function calcPlayerMagicSkillVsPlayerSnapshot(
   options?: { rng?: () => number },
 ): { damage: number; critical: boolean } {
   const defStats = defenderEffectiveStats(defender)
+  const defenderGear = sumEquippedCombatAffixes(defender.equipment)
   const mob = {
     id: 'player',
     name: 'Player',
@@ -396,7 +435,7 @@ export function calcPlayerMagicSkillVsPlayerSnapshot(
     maxHp: 1,
     atk: 0,
     def: 0,
-    mdef: defStats.int,
+    mdef: playerMagicDef(defStats.int, defenderGear.mdef, defenderGear.mdefPercent),
     element: 'neutral',
     size: 'medium',
     hit: 0,
@@ -414,10 +453,12 @@ export function calcPlayerMagicSkillVsPlayerSnapshot(
     skills: [],
     isBoss: false,
   } satisfies MobDefinition
-  return calcPlayerMagicSkillSingleHit(state, mob, skillId, skillLevel, {
+  const hit = calcPlayerMagicSkillSingleHit(state, mob, skillId, skillLevel, {
     ...options,
     defenderLuk: defStats.luk,
   })
+  const reduction = sumEquippedDamageReductionPercent(defender.equipment)
+  return { ...hit, damage: applyDamageReduction(hit.damage, reduction) }
 }
 
 export function calcPlayerMagicSkillSingleHit(
@@ -472,10 +513,12 @@ export function calcMobVsPlayerDamage(mob: MobDefinition, state: CharacterSessio
   )
   if (!hit) return 0
 
+  const gear = sumEquippedCombatAffixes(state.equipment)
   const atk = mob.atk
-  const playerDef = softDef(stats.vit)
+  const playerDef = playerPhysicalDef(stats.vit, gear.def, gear.defPercent)
   let damage = damageAfterDef(atk, playerDef, stats.vit)
   damage = Math.floor(damage * elementMultiplier(mob.element, 'neutral'))
+  damage = applyDamageReduction(damage, sumEquippedDamageReductionPercent(state.equipment))
   return Math.max(1, damage)
 }
 
@@ -509,5 +552,7 @@ export function previewPlayerAttack(state: CharacterSessionState): number {
   const stats = effectiveStats(state)
   const weapon = state.equipment.weapon ? getItemCombatStats(state.equipment.weapon) : null
   const weaponAtk = weapon?.weaponAtk ?? 0
-  return calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk) + weaponAtk
+  const gear = sumEquippedCombatAffixes(state.equipment)
+  const statusAtk = calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk)
+  return gearBoostedAtk(statusAtk, weaponAtk, gear.atk, gear.atkPercent)
 }

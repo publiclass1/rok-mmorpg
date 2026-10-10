@@ -49,6 +49,17 @@ export function sumEquippedCritDamagePercent(equipment: Record<EquipSlot, string
   return total
 }
 
+export function sumEquippedDamageReductionPercent(equipment: Record<EquipSlot, string | null>): number {
+  let total = 0
+  for (const itemId of Object.values(equipment)) {
+    if (!itemId) continue
+    const rolled = getRolledItem(itemId)
+    if (!rolled?.effect || rolled.effect.kind !== 'damageReduction') continue
+    total += rolled.effect.percent
+  }
+  return total
+}
+
 export function sumEquippedGearAspdBonus(equipment: Record<EquipSlot, string | null>): number {
   return sumEquippedCombatAffixes(equipment).aspd
 }

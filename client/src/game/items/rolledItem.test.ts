@@ -7,6 +7,7 @@ import {
 } from './rollGearAffixes'
 import { loadRoContent } from '../../content/ro/loadContent'
 import {
+  createRolledGearFromBase,
   isRolledItemId,
   parseRolledBaseItemId,
   rollDungeonGear,
@@ -15,6 +16,7 @@ import {
 
 function run() {
   assert.equal(ceilingFromCapPercent(1, 20, 20), 4)
+  assert.equal(ceilingFromCapPercent(10, 200, 20), 40)
   assert.equal(affixCapPercentForRarity('common'), 20)
 
   const floor = dungeonFloors()[0]
@@ -44,16 +46,31 @@ function run() {
     const rolled = rollGearAffixes('mythic', 'thief', base!, () => i / 400)
     if (rolled.effect) {
       mythicWithEffect++
-      assert.equal(rolled.effect.level, 1)
-      assert.equal(rolled.effect.percent, 2.5)
+      assert.ok(rolled.effect.level >= 1 && rolled.effect.level <= 4)
+      assert.ok([2.5, 5, 7.5, 10].includes(rolled.effect.percent))
     }
   }
   assert.ok(mythicWithEffect > 50 && mythicWithEffect < 150, 'mythic option 3 should proc near 25%')
 
   const artifactRoll = rollGearAffixes('artifact', 'thief', base!, () => 0.5)
   assert.ok(artifactRoll.effect)
-  assert.equal(artifactRoll.effect!.level, 1)
-  assert.equal(artifactRoll.effect!.percent, 2.5)
+  assert.ok(artifactRoll.effect!.level >= 1)
+
+  let dungeonHighLevel = 0
+  for (let i = 0; i < 200; i++) {
+    const rolled = rollGearAffixes('artifact', 'thief', base!, () => i / 200, { source: 'dungeon' })
+    if (rolled.effect && rolled.effect.level > 1) dungeonHighLevel++
+  }
+  assert.ok(dungeonHighLevel > 0, 'dungeon artifact should sometimes roll option 3 above Lv1')
+
+  const dealerItem = createRolledGearFromBase(base!.id, {
+    rarity: 'artifact',
+    requiredBaseLevel: 1,
+    jobId: 'thief',
+  }, () => 0.42)
+  assert.ok(dealerItem?.effect)
+  assert.equal(dealerItem!.effect!.level, 1)
+  assert.equal(dealerItem!.effect!.percent, 2.5)
 
   const nonMvpItem = rollDungeonGear(floor, false, () => 0, 'mage')
   assert.ok(nonMvpItem, 'non-mvp roll should produce gear')

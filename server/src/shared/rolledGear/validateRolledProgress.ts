@@ -15,6 +15,12 @@ const AFFIX_RANGE: Record<string, { min: number; max: number }> = {
   hpPercent: { min: 5, max: 20 },
   spPercent: { min: 5, max: 20 },
   aspd: { min: 1, max: 5 },
+  atk: { min: 10, max: 200 },
+  atkPercent: { min: 1, max: 35 },
+  matk: { min: 10, max: 200 },
+  matkPercent: { min: 1, max: 35 },
+  defPercent: { min: 1, max: 35 },
+  mdefPercent: { min: 1, max: 35 },
 }
 
 const ALLOWED_EFFECT_PERCENTS = new Set([2.5, 5, 7.5, 10])

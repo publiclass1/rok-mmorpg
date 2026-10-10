@@ -11,7 +11,7 @@ import type { CombatAffixKind } from './rollGearAffixes'
 
 export type RolledDamageEffectKind = 'melee' | 'range' | 'magic'
 
-export type RolledEffectKind = RolledDamageEffectKind | 'critChance' | 'critDamage'
+export type RolledEffectKind = RolledDamageEffectKind | 'critChance' | 'critDamage' | 'damageReduction'
 
 export type RolledGearAffix =
   | { pool: 'primary'; stat: PrimaryStat; value: number }
@@ -20,6 +20,7 @@ export type RolledGearAffix =
 export type RolledItemEffect =
   | { kind: RolledDamageEffectKind; level?: 1 | 2 | 3 | 4; percent: number }
   | { kind: 'critDamage'; level: 1 | 2 | 3 | 4; percent: number }
+  | { kind: 'damageReduction'; level: 1 | 2 | 3 | 4; percent: number }
   | { kind: 'critChance'; percent: number }
 
 export type RolledItem = {
@@ -88,9 +89,10 @@ function buildRolledItem(
   requiredBaseLevel: number,
   jobId: string,
   rng: () => number,
+  source: 'dungeon' | 'dealer' = 'dungeon',
 ): RolledItem {
   const id = `${ROLLED_PREFIX}${base.id}:${randomId8(rng)}`
-  const rolled = rollGearAffixes(rarity, jobId, base, rng)
+  const rolled = rollGearAffixes(rarity, jobId, base, rng, { source })
   return {
     id,
     baseItemId: base.id,
@@ -118,7 +120,7 @@ export function createRolledGearFromBase(
   const base = loadRoContent().items.find((i) => i.id === baseItemId)
   if (!base?.equipSlot || !base.bonuses || !base.layerColor) return null
   const jobId = options.jobId ?? 'novice'
-  return buildRolledItem(base, options.rarity, options.requiredBaseLevel, jobId, rng)
+  return buildRolledItem(base, options.rarity, options.requiredBaseLevel, jobId, rng, 'dealer')
 }
 
 function rollOneDungeonGear(floor: RoDungeonFloor, rng: () => number, jobId: string): RolledItem | null {
@@ -192,6 +194,12 @@ const AFFIX_RANGE: Record<string, { min: number; max: number }> = {
   hpPercent: { min: 5, max: 20 },
   spPercent: { min: 5, max: 20 },
   aspd: { min: 1, max: 5 },
+  atk: { min: 10, max: 200 },
+  atkPercent: { min: 1, max: 35 },
+  matk: { min: 10, max: 200 },
+  matkPercent: { min: 1, max: 35 },
+  defPercent: { min: 1, max: 35 },
+  mdefPercent: { min: 1, max: 35 },
 }
 
 const ALLOWED_EFFECT_PERCENTS = new Set([2.5, 5, 7.5, 10])

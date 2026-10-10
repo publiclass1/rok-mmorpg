@@ -6,6 +6,10 @@ import {
   calcStatusAtk,
   calcStatusMatkMax,
   calcStatusMatkMin,
+  gearBoostedAtk,
+  gearBoostedMatk,
+  playerMagicDef,
+  playerPhysicalDef,
 } from '../combat/damage'
 import { sumEquippedCritChancePercent } from '../combat/critBonuses'
 import { sumEquippedCombatAffixes } from '../items/rolledItemCombat'
@@ -64,11 +68,11 @@ export function buildCombatStatPreview(state: CharacterSessionState): CombatStat
     attacksPerSecond: attackTiming.attacksPerSecond,
     statusAtk,
     weaponAtk,
-    atk: statusAtk + weaponAtk,
-    matkMin: calcStatusMatkMin(stats.int),
-    matkMax: calcStatusMatkMax(stats.int),
-    def: stats.vit + gearAffixes.def,
-    mdef: stats.int + gearAffixes.mdef,
+    atk: gearBoostedAtk(statusAtk, weaponAtk, gearAffixes.atk, gearAffixes.atkPercent),
+    matkMin: gearBoostedMatk(calcStatusMatkMin(stats.int), gearAffixes.matk, gearAffixes.matkPercent),
+    matkMax: gearBoostedMatk(calcStatusMatkMax(stats.int), gearAffixes.matk, gearAffixes.matkPercent),
+    def: playerPhysicalDef(stats.vit, gearAffixes.def, gearAffixes.defPercent),
+    mdef: playerMagicDef(stats.int, gearAffixes.mdef, gearAffixes.mdefPercent),
     hit:
       calcHit(baseLevel, stats.dex, stats.luk) +
       skillPassiveHitBonus(state.skills, getEquippedWeaponClass(state.equipment)),

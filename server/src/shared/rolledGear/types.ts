@@ -25,10 +25,17 @@ export type CombatAffixKind =
   | 'hpPercent'
   | 'spPercent'
   | 'aspd'
+  | 'atk'
+  | 'atkPercent'
+  | 'matk'
+  | 'matkPercent'
+  | 'defPercent'
+  | 'mdefPercent'
 
 export type RolledItemEffect =
   | { kind: RolledDamageEffectKind; level?: 1 | 2 | 3 | 4; percent: number }
   | { kind: 'critDamage'; level: 1 | 2 | 3 | 4; percent: number }
+  | { kind: 'damageReduction'; level: 1 | 2 | 3 | 4; percent: number }
   | { kind: 'critChance'; percent: number }
 
 export type RoItem = {
