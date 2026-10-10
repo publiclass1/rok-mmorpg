@@ -42,9 +42,14 @@ function statusTitle(buff: PlayerBuffPayload, now: number): string {
     const remaining = buff.expiresAt - now
     if (remaining > 0) {
       const seconds = Math.max(0, Math.ceil(remaining / 1000))
-      const mins = Math.floor(seconds / 60)
-      const sec = seconds % 60
-      return `${buff.name} active — ${mins}:${sec.toString().padStart(2, '0')} left`
+      const days = Math.floor(seconds / 86400)
+      const hours = Math.floor((seconds % 86400) / 3600)
+      const mins = Math.floor((seconds % 3600) / 60)
+      const parts: string[] = []
+      if (days > 0) parts.push(`${days}d`)
+      if (hours > 0 || days > 0) parts.push(`${hours}h`)
+      parts.push(`${mins}m`)
+      return `${buff.name} active — ${parts.join(' ')} left`
     }
   }
   return `${buff.name} active`

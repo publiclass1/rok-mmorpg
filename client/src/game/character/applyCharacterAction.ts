@@ -241,7 +241,10 @@ export function applyCharacterAction(
 
   if (action.type === 'rentEquipment') {
     const entry = rentalCatalogEntry(action.kind)
-    const next = syncDerivedVitals(applyRental(state, action.kind))
+    const next = syncDerivedVitals(applyRental(state, action.kind, action.tierId))
+    if (next === state) {
+      return { state, changed: false, message: 'Invalid rental duration.' }
+    }
     logActivity('character', `Rented ${entry.name}.`)
     return { state: next, changed: true, message: `${entry.name} rental started.` }
   }

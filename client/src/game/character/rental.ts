@@ -1,8 +1,10 @@
 import { loadRoContent } from '../../content/ro/loadContent'
-import type { RoRentalKind } from '../../content/ro/types'
+import type { RoRentalDurationTier, RoRentalDurationTierId, RoRentalKind } from '../../content/ro/types'
 import type { CharacterSessionState } from './characterState'
 import { jobAncestorIds } from './jobLineage'
 import { JOB_NAMES, SKILLS } from './skillsConfig'
+
+const MS_PER_DAY = 86_400_000
 
 export type ActiveRental = {
   kind: RoRentalKind
@@ -26,6 +28,26 @@ export function rentalCatalogEntry(kind: RoRentalKind) {
   return loadRoContent().rentals.catalog[kind]
 }
 
+export function rentalDurationTiers(): RoRentalDurationTier[] {
+  return loadRoContent().rentals.durationTiers
+}
+
+export function rentalZenyPerDay(): number {
+  return loadRoContent().rentals.zenyPerDay
+}
+
+export function rentalTierById(tierId: string): RoRentalDurationTier | undefined {
+  return rentalDurationTiers().find((t) => t.id === tierId)
+}
+
+export function rentalTierZenyCost(tier: RoRentalDurationTier): number {
+  return rentalZenyPerDay() * tier.days
+}
+
+export function rentalTierDurationMs(tier: RoRentalDurationTier): number {
+  return tier.days * MS_PER_DAY
+}
+
 export function activeRentalAt(state: CharacterSessionState, now = Date.now()): ActiveRental | null {
   const r = state.activeRental
   if (!r) return null
@@ -36,11 +58,15 @@ export function activeRentalAt(state: CharacterSessionState, now = Date.now()): 
 export function canRentOffer(
   state: CharacterSessionState,
   kind: RoRentalKind,
+  tierId: RoRentalDurationTierId,
   zeny: number,
   now = Date.now(),
 ): { ok: true } | { ok: false; reason: string } {
   const entry = rentalCatalogEntry(kind)
   if (!entry) return { ok: false, reason: 'Unknown rental.' }
+
+  const tier = rentalTierById(tierId)
+  if (!tier) return { ok: false, reason: 'Unknown rental duration.' }
 
   const active = activeRentalAt(state, now)
   if (active && active.kind !== kind) {
@@ -66,16 +92,23 @@ export function canRentOffer(
     }
   }
 
-  if (zeny < entry.zenyCost) {
-    return { ok: false, reason: `Need ${entry.zenyCost} zeny.` }
+  const cost = rentalTierZenyCost(tier)
+  if (zeny < cost) {
+    return { ok: false, reason: `Need ${cost} zeny.` }
   }
 
   return { ok: true }
 }
 
-export function applyRental(state: CharacterSessionState, kind: RoRentalKind, now = Date.now()): CharacterSessionState {
-  const entry = rentalCatalogEntry(kind)
-  const expiresAt = now + entry.durationMs
+export function applyRental(
+  state: CharacterSessionState,
+  kind: RoRentalKind,
+  tierId: RoRentalDurationTierId,
+  now = Date.now(),
+): CharacterSessionState {
+  const tier = rentalTierById(tierId)
+  if (!tier) return state
+  const expiresAt = now + rentalTierDurationMs(tier)
   return { ...state, activeRental: { kind, expiresAt } }
 }
 
@@ -98,5 +131,6 @@ export function formatRentalRequirements(kind: RoRentalKind): string {
     return `${name} Lv ${req.level}`
   })
   const skills = skillParts.length ? ` · ${skillParts.join(', ')}` : ''
-  return `${jobPart}${skills} · ${entry.zenyCost} zeny`
+  const perDay = rentalZenyPerDay()
+  return `${jobPart}${skills} · ${perDay.toLocaleString()} zeny/day`
 }

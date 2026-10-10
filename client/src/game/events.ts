@@ -191,7 +191,7 @@ export type CharacterActionPayload =
   | { type: 'shopRemoveItem'; itemId: string; quantity: number }
   | { type: 'restoreVitals' }
   | { type: 'respawnPartial' }
-  | { type: 'rentEquipment'; kind: 'cart' | 'peco_peco' | 'falcon' }
+  | { type: 'rentEquipment'; kind: 'cart' | 'peco_peco' | 'falcon'; tierId: '1d' | '3d' | '7d' | '30d' }
   | { type: 'dismissRental' }
 
 export type SelectedMobPayload = {

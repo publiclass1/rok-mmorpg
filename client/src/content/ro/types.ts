@@ -164,10 +164,16 @@ export type RoJobMasterConfig = {
 
 export type RoRentalKind = 'cart' | 'peco_peco' | 'falcon'
 
+export type RoRentalDurationTierId = '1d' | '3d' | '7d' | '30d'
+
+export type RoRentalDurationTier = {
+  id: RoRentalDurationTierId
+  label: string
+  days: number
+}
+
 export type RoRentalCatalogEntry = {
   name: string
-  zenyCost: number
-  durationMs: number
   speedMultiplier: number
   requiredJobIds: string[]
   requiredSkills: SkillPrerequisite[]
@@ -175,6 +181,8 @@ export type RoRentalCatalogEntry = {
 }
 
 export type RoRentalsConfig = {
+  zenyPerDay: number
+  durationTiers: RoRentalDurationTier[]
   catalog: Record<RoRentalKind, RoRentalCatalogEntry>
   offersByNpcId: Record<string, RoRentalKind[]>
 }

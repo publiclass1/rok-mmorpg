@@ -4,10 +4,12 @@ import {
   canRentOffer,
   formatRentalRequirements,
   rentalCatalogEntry,
+  rentalDurationTiers,
   rentalOffersForNpc,
+  rentalTierZenyCost,
   type ActiveRental,
 } from '../game/character/rental'
-import type { RoRentalKind } from '../content/ro/types'
+import type { RoRentalDurationTierId, RoRentalKind } from '../content/ro/types'
 import type { CharacterSheetPayload } from '../game/events'
 import { getCharacterSession } from '../game/character/characterSessionBridge'
 import type { CharacterRow, NpcRow } from '../types/database'
@@ -28,24 +30,32 @@ type Props = {
 function describeActive(active: ActiveRental): string {
   const entry = rentalCatalogEntry(active.kind)
   const seconds = Math.max(0, Math.ceil((active.expiresAt - Date.now()) / 1000))
-  const mins = Math.floor(seconds / 60)
-  const sec = seconds % 60
-  return `${entry.name} — ${mins}:${sec.toString().padStart(2, '0')} remaining`
+  const days = Math.floor(seconds / 86400)
+  const hours = Math.floor((seconds % 86400) / 3600)
+  const mins = Math.floor((seconds % 3600) / 60)
+  const parts: string[] = []
+  if (days > 0) parts.push(`${days}d`)
+  if (hours > 0 || days > 0) parts.push(`${hours}h`)
+  parts.push(`${mins}m`)
+  return `${entry.name} — ${parts.join(' ')} remaining`
 }
 
 export function RentalModal({ character, npc, sheet, onClose, onCharacterUpdated, onMessage }: Props) {
   const offers = rentalOffersForNpc(npc.id)
+  const tiers = rentalDurationTiers()
   const session = getCharacterSession()
   const active = activeRentalAt(session)
   const progress = { jobId: sheet.jobId, skills: sheet.skills }
 
-  async function rent(kind: RoRentalKind) {
-    const check = canRentOffer(session, kind, character.zeny)
+  async function rent(kind: RoRentalKind, tierId: RoRentalDurationTierId) {
+    const check = canRentOffer(session, kind, tierId, character.zeny)
     if (check.ok === false) {
       onMessage?.(check.reason)
       return
     }
-    const cost = rentalCatalogEntry(kind).zenyCost
+    const tier = tiers.find((t) => t.id === tierId)
+    if (!tier) return
+    const cost = rentalTierZenyCost(tier)
     if (cost > 0) {
       const nextZeny = await spendCharacterZeny(character.id, -cost)
       if (nextZeny == null) {
@@ -54,8 +64,8 @@ export function RentalModal({ character, npc, sheet, onClose, onCharacterUpdated
       }
       onCharacterUpdated({ ...character, zeny: nextZeny })
     }
-    dispatchCharacterAction({ type: 'rentEquipment', kind })
-    onMessage?.(`Rented ${rentalCatalogEntry(kind).name}.`)
+    dispatchCharacterAction({ type: 'rentEquipment', kind, tierId })
+    onMessage?.(`Rented ${rentalCatalogEntry(kind).name} (${tier.label}).`)
     onClose()
   }
 
@@ -83,27 +93,40 @@ export function RentalModal({ character, npc, sheet, onClose, onCharacterUpdated
         <ul className="item-list">
           {offers.map((kind) => {
             const entry = rentalCatalogEntry(kind)
-            const check = canRentOffer(session, kind, character.zeny)
             return (
-              <li key={kind} className="row spread">
+              <li key={kind} className="rental-offer-row">
                 <div>
                   <strong>{entry.name}</strong>
                   <p className="muted small">{formatRentalRequirements(kind)}</p>
-                  <p className="muted small">
-                    {Math.round(entry.durationMs / 60000)} min · speed ×{entry.speedMultiplier}
-                  </p>
-                  {check.ok === false ? <p className="muted small">{check.reason}</p> : null}
+                  <p className="muted small">Speed ×{entry.speedMultiplier}</p>
                 </div>
-                <button type="button" disabled={!check.ok} onClick={() => void rent(kind)}>
-                  Rent
-                </button>
+                <div className="rental-tier-buttons">
+                  {tiers.map((tier) => {
+                    const tierId = tier.id as RoRentalDurationTierId
+                    const cost = rentalTierZenyCost(tier)
+                    const check = canRentOffer(session, kind, tierId, character.zeny)
+                    return (
+                      <button
+                        key={tier.id}
+                        type="button"
+                        className="rental-tier-btn"
+                        disabled={!check.ok}
+                        title={check.ok === false ? check.reason : undefined}
+                        onClick={() => void rent(kind, tierId)}
+                      >
+                        <span className="rental-tier-btn-label">{tier.label}</span>
+                        <span className="muted small">{cost.toLocaleString()}z</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </li>
             )
           })}
         </ul>
       )}
       <p className="muted small" style={{ marginTop: 8 }}>
-        Job: {progress.jobId} · Zeny: {character.zeny}
+        Job: {progress.jobId} · Zeny: {character.zeny.toLocaleString()}
       </p>
       </ModalScrollBody>
     </AnimatedModal>

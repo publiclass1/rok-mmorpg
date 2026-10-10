@@ -1,9 +1,14 @@
 {
+  "zenyPerDay": 1000,
+  "durationTiers": [
+    { "id": "1d", "label": "1 day", "days": 1 },
+    { "id": "3d", "label": "3 days", "days": 3 },
+    { "id": "7d", "label": "7 days", "days": 7 },
+    { "id": "30d", "label": "1 month", "days": 30 }
+  ],
   "catalog": {
     "cart": {
       "name": "Pushcart",
-      "zenyCost": 800,
-      "durationMs": 1800000,
       "speedMultiplier": 0.85,
       "requiredJobIds": ["merchant"],
       "requiredSkills": [{ "skillId": "pushcart", "level": 1 }],
@@ -11,8 +16,6 @@
     },
     "peco_peco": {
       "name": "Peco Peco",
-      "zenyCost": 800,
-      "durationMs": 1800000,
       "speedMultiplier": 1.35,
       "requiredJobIds": ["knight"],
       "requiredSkills": [
@@ -23,8 +26,6 @@
     },
     "falcon": {
       "name": "Falcon",
-      "zenyCost": 800,
-      "durationMs": 1800000,
       "speedMultiplier": 1,
       "requiredJobIds": ["hunter"],
       "requiredSkills": [{ "skillId": "falcon_mastery", "level": 1 }],

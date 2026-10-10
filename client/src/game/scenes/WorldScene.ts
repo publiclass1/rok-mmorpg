@@ -3435,7 +3435,7 @@ export class WorldScene extends Phaser.Scene {
     const entry = rentalCatalogEntry(active.kind)
     const iconSkillId =
       active.kind === 'cart' ? 'pushcart' : active.kind === 'falcon' ? 'falcon_mastery' : 'peco_peco_ride'
-    const durationMs = Math.max(1, entry.durationMs)
+    const durationMs = Math.max(1, active.expiresAt - wallNow)
     return [
       {
         statusId: `rental_${active.kind}`,

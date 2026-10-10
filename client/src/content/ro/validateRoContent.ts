@@ -187,11 +187,20 @@ export function validateRoContent(pack: RoContentPack): void {
     }
   }
 
+  assert(pack.rentals.zenyPerDay > 0, 'rentals zenyPerDay invalid')
+  assert(pack.rentals.durationTiers.length > 0, 'rentals durationTiers required')
+  const tierIds = new Set<string>()
+  for (const tier of pack.rentals.durationTiers) {
+    assert(Boolean(tier.id), 'rentals tier id required')
+    assert(!tierIds.has(tier.id), `rentals duplicate tier id ${tier.id}`)
+    tierIds.add(tier.id)
+    assert(tier.days >= 1, `rentals tier ${tier.id} days invalid`)
+    assert(Boolean(tier.label), `rentals tier ${tier.id} label required`)
+  }
+
   const rentalKinds = new Set(['cart', 'peco_peco', 'falcon'])
   for (const [kind, entry] of Object.entries(pack.rentals.catalog)) {
     assert(rentalKinds.has(kind), `rentals catalog unknown kind ${kind}`)
-    assert(entry.zenyCost >= 0, `rentals ${kind} zenyCost invalid`)
-    assert(entry.durationMs > 0, `rentals ${kind} durationMs invalid`)
     assert(entry.speedMultiplier > 0, `rentals ${kind} speedMultiplier invalid`)
     for (const jid of entry.requiredJobIds) {
       assert(jobIds.has(jid), `rentals ${kind} unknown job ${jid}`)
