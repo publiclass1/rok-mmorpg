@@ -83,6 +83,13 @@ export function startPlayerAttackAnim(
     strikeDelay + POST_STRIKE_PROJECTILE_MS + boltStagger + blitzStagger + blitzTravelMs + bowStagger,
   )
   const strikePhaseMs = strikeDelay + Math.max(0, STRIKE_MS - WINDUP_MS)
+  let attackCompleteFired = false
+  let deferCompleteToProjectile = false
+  const finishAttack = () => {
+    if (attackCompleteFired) return
+    attackCompleteFired = true
+    options.onComplete?.()
+  }
 
   scene.time.delayedCall(strikeDelay, () => {
     if (display.pose.anim !== 'attack') return
@@ -149,7 +156,11 @@ export function startPlayerAttackAnim(
         }
       } else {
         const origin = rangedProjectileOrigin(container.x, container.y, facing)
-        const onArrive = () => options.onStrike?.()
+        deferCompleteToProjectile = true
+        const onArrive = () => {
+          options.onStrike?.()
+          finishAttack()
+        }
         if (options.attackStyle === 'bow') {
           playBowArrowProjectile(scene, origin.x, origin.y, aim.x, aim.y, depth, onArrive)
         } else {
@@ -175,7 +186,9 @@ export function startPlayerAttackAnim(
     if (display.pose.anim === 'attack') {
       setPlayerToIdle(display, facing)
     }
-    options.onComplete?.()
+    if (!deferCompleteToProjectile || !attackCompleteFired) {
+      finishAttack()
+    }
   })
 }
 

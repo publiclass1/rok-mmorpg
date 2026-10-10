@@ -2438,17 +2438,19 @@ export class WorldScene extends Phaser.Scene {
     options?: { skipMpCost?: boolean; steelCrowProc?: boolean },
   ) {
     if (!this.archerOffenseRequiresBow()) return
+    const steelCrowProc = options?.steelCrowProc === true
     if (skillId === 'blitz_beat') {
       const rental = activeRentalAt(this.session, Date.now())
       if (rental?.kind !== 'falcon') {
-        emitGameEvent('status', 'Rent a falcon first (Falcon Mastery).')
+        const msg = 'Rent a falcon first (Falcon Mastery).'
+        if (steelCrowProc) emitGameEvent('status', `Steel Crow: ${msg}`)
+        else emitGameEvent('status', msg)
         return
       }
     }
 
     if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
-    const steelCrowProc = options?.steelCrowProc === true
     if (
       !steelCrowProc &&
       (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping)
@@ -2468,7 +2470,8 @@ export class WorldScene extends Phaser.Scene {
       Phaser.Math.Distance.Between(px, py, primaryMob.sprite.x, primaryMob.sprite.y) >
       strikeRangePx
     ) {
-      if (!steelCrowProc) emitGameEvent('status', 'Target out of range.')
+      if (steelCrowProc) emitGameEvent('status', 'Steel Crow: target out of Blitz range.')
+      else emitGameEvent('status', 'Target out of range.')
       return
     }
 
@@ -2560,24 +2563,23 @@ export class WorldScene extends Phaser.Scene {
     })
   }
 
-  private queueSteelCrowBlitzAfterCrit(mob: MobInstance) {
-    this.pendingSteelCrowBlitzMob = mob
-    const attempt = () => {
-      if (this.isAttacking || this.isJumping) {
-        this.time.delayedCall(40, attempt)
-        return
-      }
-      const pending = this.pendingSteelCrowBlitzMob
-      this.pendingSteelCrowBlitzMob = null
-      if (pending?.alive) this.trySteelCrowBlitzProc(pending)
-    }
-    this.time.delayedCall(0, attempt)
+  /** One crit basic attack → at most one pending proc; flushed when that attack ends. */
+  private flushPendingSteelCrowBlitzProc() {
+    const pending = this.pendingSteelCrowBlitzMob
+    this.pendingSteelCrowBlitzMob = null
+    if (!pending) return
+    this.trySteelCrowBlitzProc(pending)
   }
 
   private trySteelCrowBlitzProc(mob: MobInstance) {
     const def = SKILLS.blitz_beat
     const skillLevel = this.session.skills.blitz_beat ?? 0
-    if (!def || skillLevel < 1 || !mob.alive) return
+    const resolved = this.getMobBySpawnIndex(mob.spawnIndex) ?? mob
+    if (!def || skillLevel < 1) return
+    if (!resolved.alive) {
+      emitGameEvent('status', 'Steel Crow: target is gone.')
+      return
+    }
 
     const weaponClass = getEquippedWeaponClass(this.session.equipment)
     const rental = activeRentalAt(this.session, Date.now())
@@ -2594,7 +2596,7 @@ export class WorldScene extends Phaser.Scene {
       return
     }
 
-    this.runPlayerRangedPhysicalSkill('blitz_beat', skillLevel, def, mob, {
+    this.runPlayerRangedPhysicalSkill('blitz_beat', skillLevel, def, resolved, {
       skipMpCost: true,
       steelCrowProc: true,
     })
@@ -4788,11 +4790,12 @@ export class WorldScene extends Phaser.Scene {
             attackKind: 'basic_attack',
           })
         ) {
-          this.queueSteelCrowBlitzAfterCrit(target)
+          this.pendingSteelCrowBlitzMob = target
         }
       },
       onComplete: () => {
         this.isAttacking = false
+        this.flushPendingSteelCrowBlitzProc()
       },
     })
   }

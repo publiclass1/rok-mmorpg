@@ -630,7 +630,7 @@
       "castTimeMs": 0,
       "range": 0,
       "prerequisites": [{ "skillId": "falcon_mastery", "level": 1 }],
-      "description": "Increases Blitz Beat damage per level. On bow critical basic attacks, automatically commands Blitz Beat on the target (requires Blitz Beat learned and an active falcon rental; no SP cost).",
+      "description": "Increases Blitz Beat damage per level. Each bow basic attack critical hit auto-casts one Blitz Beat on that target (Attack / basic_attack only; requires Blitz Beat and an active falcon rental; no SP per proc).",
       "sourceUrl": "https://irowiki.org/wiki/Steel_Crow"
     },
     {
