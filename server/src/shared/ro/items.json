@@ -9,7 +9,9 @@
       "equipSlot": null,
       "layerColor": null,
       "bonuses": null,
-      "consumable": { "healHp": 45 },
+      "consumable": {
+        "healHp": 45
+      },
       "sourceUrl": "https://irowiki.org/wiki/Red_Potion"
     },
     {
@@ -21,7 +23,9 @@
       "equipSlot": null,
       "layerColor": null,
       "bonuses": null,
-      "consumable": { "healSp": 40 },
+      "consumable": {
+        "healSp": 40
+      },
       "sourceUrl": "https://irowiki.org/wiki/Blue_Potion"
     },
     {
@@ -32,7 +36,14 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0xc0c0c0",
-      "bonuses": { "str": 1, "agi": 0, "vit": 0, "int": 0, "dex": 1, "luk": 0 },
+      "bonuses": {
+        "str": 1,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 1,
+        "luk": 0
+      },
       "weaponAtk": 17,
       "weaponSize": "small",
       "weaponClass": "knife",
@@ -47,13 +58,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x9ca3af",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 25,
       "weaponSize": "small",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 2,
-      "requiredJobIds": ["swordman"],
+      "requiredJobIds": [
+        "swordman"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Sword"
     },
     {
@@ -64,13 +84,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x6b7280",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 39,
       "weaponSize": "small",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 2,
-      "requiredJobIds": ["swordman"],
+      "requiredJobIds": [
+        "swordman"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Falchion"
     },
     {
@@ -81,13 +110,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x4b5563",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 44,
       "weaponSize": "small",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 3,
-      "requiredJobIds": ["swordman"],
+      "requiredJobIds": [
+        "swordman"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Blade"
     },
     {
@@ -98,13 +136,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0xd1d5db",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 1, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 1,
+        "luk": 0
+      },
       "weaponAtk": 47,
       "weaponSize": "small",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 4,
-      "requiredJobIds": ["swordman"],
+      "requiredJobIds": [
+        "swordman"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Rapier"
     },
     {
@@ -115,13 +162,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0xb45309",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 48,
       "weaponSize": "medium",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 4,
-      "requiredJobIds": ["swordman"],
+      "requiredJobIds": [
+        "swordman"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Saber"
     },
     {
@@ -132,13 +188,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x78716c",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 28,
       "weaponSize": "medium",
       "weaponClass": "spear",
       "attackElement": "neutral",
       "requiredBaseLevel": 2,
-      "requiredJobIds": ["swordman"],
+      "requiredJobIds": [
+        "swordman"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Spear"
     },
     {
@@ -149,13 +214,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x78350f",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 2, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 2,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 15,
       "weaponSize": "small",
       "weaponClass": "staff",
       "attackElement": "neutral",
       "requiredBaseLevel": 2,
-      "requiredJobIds": ["mage"],
+      "requiredJobIds": [
+        "mage"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Rod"
     },
     {
@@ -166,13 +240,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x7c3aed",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 3, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 3,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 25,
       "weaponSize": "small",
       "weaponClass": "staff",
       "attackElement": "neutral",
       "requiredBaseLevel": 4,
-      "requiredJobIds": ["mage"],
+      "requiredJobIds": [
+        "mage"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Wand"
     },
     {
@@ -183,13 +266,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x57534e",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 4, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 4,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 35,
       "weaponSize": "medium",
       "weaponClass": "staff",
       "attackElement": "neutral",
       "requiredBaseLevel": 10,
-      "requiredJobIds": ["mage"],
+      "requiredJobIds": [
+        "mage"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Staff"
     },
     {
@@ -200,13 +292,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0xa16207",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 2, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 2,
+        "luk": 0
+      },
       "weaponAtk": 29,
       "weaponSize": "large",
       "weaponClass": "bow",
       "attackElement": "neutral",
       "requiredBaseLevel": 4,
-      "requiredJobIds": ["archer"],
+      "requiredJobIds": [
+        "archer"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Bow"
     },
     {
@@ -217,13 +318,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x854d0e",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 3, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 3,
+        "luk": 0
+      },
       "weaponAtk": 49,
       "weaponSize": "large",
       "weaponClass": "bow",
       "attackElement": "neutral",
       "requiredBaseLevel": 14,
-      "requiredJobIds": ["archer"],
+      "requiredJobIds": [
+        "archer"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Great_Bow"
     },
     {
@@ -234,13 +344,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x713f12",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 4, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 4,
+        "luk": 0
+      },
       "weaponAtk": 58,
       "weaponSize": "large",
       "weaponClass": "bow",
       "attackElement": "neutral",
       "requiredBaseLevel": 25,
-      "requiredJobIds": ["archer"],
+      "requiredJobIds": [
+        "archer"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Composite_Bow"
     },
     {
@@ -251,13 +370,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x78716c",
-      "bonuses": { "str": 1, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 1,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 37,
       "weaponSize": "small",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 2,
-      "requiredJobIds": ["acolyte"],
+      "requiredJobIds": [
+        "acolyte"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Mace"
     },
     {
@@ -268,13 +396,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x44403c",
-      "bonuses": { "str": 1, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 1,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 44,
       "weaponSize": "small",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 4,
-      "requiredJobIds": ["acolyte"],
+      "requiredJobIds": [
+        "acolyte"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Club"
     },
     {
@@ -285,13 +422,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x292524",
-      "bonuses": { "str": 2, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 2,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 54,
       "weaponSize": "medium",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 6,
-      "requiredJobIds": ["acolyte"],
+      "requiredJobIds": [
+        "acolyte"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Smasher"
     },
     {
@@ -302,13 +448,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x57534e",
-      "bonuses": { "str": 2, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 2,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 38,
       "weaponSize": "medium",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 3,
-      "requiredJobIds": ["merchant"],
+      "requiredJobIds": [
+        "merchant"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Axe"
     },
     {
@@ -319,13 +474,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0x1c1917",
-      "bonuses": { "str": 3, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 3,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 55,
       "weaponSize": "medium",
       "weaponClass": "sword",
       "attackElement": "neutral",
       "requiredBaseLevel": 6,
-      "requiredJobIds": ["merchant"],
+      "requiredJobIds": [
+        "merchant"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Battle_Axe"
     },
     {
@@ -336,13 +500,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0xe5e7eb",
-      "bonuses": { "str": 0, "agi": 1, "vit": 0, "int": 0, "dex": 1, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 1,
+        "vit": 0,
+        "int": 0,
+        "dex": 1,
+        "luk": 0
+      },
       "weaponAtk": 30,
       "weaponSize": "small",
       "weaponClass": "knife",
       "attackElement": "neutral",
       "requiredBaseLevel": 2,
-      "requiredJobIds": ["thief"],
+      "requiredJobIds": [
+        "thief"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Main_Gauche"
     },
     {
@@ -353,13 +526,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0xd1d5db",
-      "bonuses": { "str": 0, "agi": 1, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 1,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 33,
       "weaponSize": "small",
       "weaponClass": "knife",
       "attackElement": "neutral",
       "requiredBaseLevel": 3,
-      "requiredJobIds": ["thief"],
+      "requiredJobIds": [
+        "thief"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Dagger"
     },
     {
@@ -370,13 +552,22 @@
       "stackMax": 1,
       "equipSlot": "weapon",
       "layerColor": "0xf3f4f6",
-      "bonuses": { "str": 0, "agi": 2, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 2,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "weaponAtk": 37,
       "weaponSize": "small",
       "weaponClass": "knife",
       "attackElement": "neutral",
       "requiredBaseLevel": 4,
-      "requiredJobIds": ["thief"],
+      "requiredJobIds": [
+        "thief"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Stiletto"
     },
     {
@@ -387,7 +578,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0xf5f5dc",
-      "bonuses": { "str": 0, "agi": 0, "vit": 1, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 1,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "sourceUrl": "https://irowiki.org/wiki/Cotton_Shirt"
     },
     {
@@ -398,7 +596,14 @@
       "stackMax": 1,
       "equipSlot": "headTop",
       "layerColor": "0x8b4513",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 1 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 1
+      },
       "sourceUrl": "https://irowiki.org/wiki/Cap"
     },
     {
@@ -409,7 +614,14 @@
       "stackMax": 1,
       "equipSlot": "headMiddle",
       "layerColor": "0x374151",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 1, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 1,
+        "luk": 0
+      },
       "sourceUrl": "https://irowiki.org/wiki/Goggles"
     },
     {
@@ -420,7 +632,14 @@
       "stackMax": 1,
       "equipSlot": "headLower",
       "layerColor": "0xe5e7eb",
-      "bonuses": { "str": 0, "agi": 0, "vit": 1, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 1,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "sourceUrl": "https://irowiki.org/wiki/Flu_Mask"
     },
     {
@@ -432,7 +651,14 @@
       "equipSlot": "offhand",
       "offhandKind": "shield",
       "layerColor": "0xa16207",
-      "bonuses": { "str": 0, "agi": 0, "vit": 2, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 2,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "sourceUrl": "https://irowiki.org/wiki/Wooden_Shield"
     },
     {
@@ -443,7 +669,14 @@
       "stackMax": 1,
       "equipSlot": "garment",
       "layerColor": "0x4c1d95",
-      "bonuses": { "str": 0, "agi": 1, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 1,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "sourceUrl": null
     },
     {
@@ -454,7 +687,14 @@
       "stackMax": 1,
       "equipSlot": "boots",
       "layerColor": "0x92400e",
-      "bonuses": { "str": 0, "agi": 1, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 1,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "sourceUrl": "https://irowiki.org/wiki/Sandals"
     },
     {
@@ -465,8 +705,17 @@
       "stackMax": 1,
       "equipSlot": "accLeft",
       "layerColor": "0xf59e0b",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 1 },
-      "combatBonuses": { "critChance": 7 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 1
+      },
+      "combatBonuses": {
+        "critChance": 7
+      },
       "sourceUrl": "https://irowiki.org/wiki/Clip"
     },
     {
@@ -477,7 +726,14 @@
       "stackMax": 1,
       "equipSlot": "accRight",
       "layerColor": "0x78716c",
-      "bonuses": { "str": 1, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 1,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "sourceUrl": null
     },
     {
@@ -488,7 +744,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0x65a30d",
-      "bonuses": { "str": 0, "agi": 0, "vit": 2, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 2,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 4,
       "sourceUrl": "https://irowiki.org/wiki/Adventurer's_Suit"
     },
@@ -500,9 +763,18 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0xddd6fe",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 2, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 2,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 4,
-      "requiredJobIds": ["mage"],
+      "requiredJobIds": [
+        "mage"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Silk_Robe"
     },
     {
@@ -513,9 +785,18 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0x92400e",
-      "bonuses": { "str": 0, "agi": 0, "vit": 3, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 3,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 5,
-      "requiredJobIds": ["swordman"],
+      "requiredJobIds": [
+        "swordman"
+      ],
       "sourceUrl": "https://irowiki.org/wiki/Wooden_Mail"
     },
     {
@@ -526,7 +807,14 @@
       "stackMax": 1,
       "equipSlot": "garment",
       "layerColor": "0x1e3a8a",
-      "bonuses": { "str": 0, "agi": 0, "vit": 1, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 1,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 10,
       "sourceUrl": "https://irowiki.org/wiki/Mantle"
     },
@@ -538,7 +826,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0x374151",
-      "bonuses": { "str": 0, "agi": 0, "vit": 4, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 4,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 15,
       "sourceUrl": "https://irowiki.org/wiki/Coat"
     },
@@ -551,7 +846,14 @@
       "equipSlot": "offhand",
       "offhandKind": "shield",
       "layerColor": "0x6b7280",
-      "bonuses": { "str": 0, "agi": 0, "vit": 3, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 3,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 4,
       "sourceUrl": "https://irowiki.org/wiki/Buckler"
     },
@@ -563,7 +865,14 @@
       "stackMax": 1,
       "equipSlot": "boots",
       "layerColor": "0x1f2937",
-      "bonuses": { "str": 0, "agi": 2, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 2,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 4,
       "sourceUrl": "https://irowiki.org/wiki/Shoes"
     },
@@ -575,7 +884,14 @@
       "stackMax": 1,
       "equipSlot": "headTop",
       "layerColor": "0x4b5563",
-      "bonuses": { "str": 0, "agi": 0, "vit": 2, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 2,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 25,
       "sourceUrl": "https://irowiki.org/wiki/Helm"
     },
@@ -818,7 +1134,14 @@
       "stackMax": 1,
       "equipSlot": "headMiddle",
       "layerColor": "0xfcd34d",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 1, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 1,
+        "dex": 0,
+        "luk": 0
+      },
       "sourceUrl": null
     },
     {
@@ -829,7 +1152,14 @@
       "stackMax": 1,
       "equipSlot": "headLower",
       "layerColor": "0x374151",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 1 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 1
+      },
       "sourceUrl": null
     },
     {
@@ -840,7 +1170,14 @@
       "stackMax": 1,
       "equipSlot": "accRight",
       "layerColor": "0xeab308",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 1 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 1
+      },
       "sourceUrl": null
     },
     {
@@ -851,7 +1188,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0x9ca3af",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 1,
       "rarity": "common",
       "dungeonRollable": false,
@@ -865,7 +1209,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0x22c55e",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 10,
       "rarity": "uncommon",
       "dungeonRollable": false,
@@ -879,7 +1230,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0x3b82f6",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 20,
       "rarity": "rare",
       "dungeonRollable": false,
@@ -893,7 +1251,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0xd946ef",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 30,
       "rarity": "epic",
       "dungeonRollable": false,
@@ -907,7 +1272,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0xf59e0b",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 40,
       "rarity": "legendary",
       "dungeonRollable": false,
@@ -921,7 +1293,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0x7dd3fc",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 50,
       "rarity": "mythic",
       "dungeonRollable": false,
@@ -935,7 +1314,14 @@
       "stackMax": 1,
       "equipSlot": "armor",
       "layerColor": "0xc2410c",
-      "bonuses": { "str": 0, "agi": 0, "vit": 0, "int": 0, "dex": 0, "luk": 0 },
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
       "requiredBaseLevel": 60,
       "rarity": "artifact",
       "dungeonRollable": false,
@@ -1833,6 +2219,1001 @@
         "thief"
       ],
       "sourceUrl": "https://irowiki.org/wiki/Stiletto"
+    },
+    {
+      "id": "rarity_rd_armor_10",
+      "name": "Rarity Armor (Lv.10)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 10,
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cotton_shirt.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_armor_30",
+      "name": "Rarity Armor (Lv.30)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0x22c55e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 30,
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cotton_shirt.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_armor_50",
+      "name": "Rarity Armor (Lv.50)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0x3b82f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 50,
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cotton_shirt.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_armor_70",
+      "name": "Rarity Armor (Lv.70)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0xd946ef",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 70,
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cotton_shirt.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_armor_90",
+      "name": "Rarity Armor (Lv.90)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "armor",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 90,
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cotton_shirt.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_garment_10",
+      "name": "Rarity Garment (Lv.10)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "garment",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 10,
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/hooded_mantle.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_garment_30",
+      "name": "Rarity Garment (Lv.30)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "garment",
+      "layerColor": "0x22c55e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 30,
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/hooded_mantle.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_garment_50",
+      "name": "Rarity Garment (Lv.50)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "garment",
+      "layerColor": "0x3b82f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 50,
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/hooded_mantle.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_garment_70",
+      "name": "Rarity Garment (Lv.70)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "garment",
+      "layerColor": "0xd946ef",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 70,
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/hooded_mantle.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_garment_90",
+      "name": "Rarity Garment (Lv.90)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "garment",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 90,
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/hooded_mantle.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_offhand_10",
+      "name": "Rarity Shield (Lv.10)",
+      "type": "armor",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "offhand",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 10,
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/wooden_shield.svg",
+      "sourceUrl": null,
+      "offhandKind": "shield"
+    },
+    {
+      "id": "rarity_rd_offhand_30",
+      "name": "Rarity Shield (Lv.30)",
+      "type": "armor",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "offhand",
+      "layerColor": "0x22c55e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 30,
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/wooden_shield.svg",
+      "sourceUrl": null,
+      "offhandKind": "shield"
+    },
+    {
+      "id": "rarity_rd_offhand_50",
+      "name": "Rarity Shield (Lv.50)",
+      "type": "armor",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "offhand",
+      "layerColor": "0x3b82f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 50,
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/wooden_shield.svg",
+      "sourceUrl": null,
+      "offhandKind": "shield"
+    },
+    {
+      "id": "rarity_rd_offhand_70",
+      "name": "Rarity Shield (Lv.70)",
+      "type": "armor",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "offhand",
+      "layerColor": "0xd946ef",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 70,
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/wooden_shield.svg",
+      "sourceUrl": null,
+      "offhandKind": "shield"
+    },
+    {
+      "id": "rarity_rd_offhand_90",
+      "name": "Rarity Shield (Lv.90)",
+      "type": "armor",
+      "weight": 40,
+      "stackMax": 1,
+      "equipSlot": "offhand",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 90,
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/wooden_shield.svg",
+      "sourceUrl": null,
+      "offhandKind": "shield"
+    },
+    {
+      "id": "rarity_rd_boots_10",
+      "name": "Rarity Shoes (Lv.10)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "boots",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 10,
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/sandals.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_boots_30",
+      "name": "Rarity Shoes (Lv.30)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "boots",
+      "layerColor": "0x22c55e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 30,
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/sandals.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_boots_50",
+      "name": "Rarity Shoes (Lv.50)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "boots",
+      "layerColor": "0x3b82f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 50,
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/sandals.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_boots_70",
+      "name": "Rarity Shoes (Lv.70)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "boots",
+      "layerColor": "0xd946ef",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 70,
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/sandals.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_boots_90",
+      "name": "Rarity Shoes (Lv.90)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "boots",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 90,
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/sandals.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headTop_10",
+      "name": "Rarity Headgear (Lv.10)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headTop",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 10,
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cap.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headTop_30",
+      "name": "Rarity Headgear (Lv.30)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headTop",
+      "layerColor": "0x22c55e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 30,
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cap.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headTop_50",
+      "name": "Rarity Headgear (Lv.50)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headTop",
+      "layerColor": "0x3b82f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 50,
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cap.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headTop_70",
+      "name": "Rarity Headgear (Lv.70)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headTop",
+      "layerColor": "0xd946ef",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 70,
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cap.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headTop_90",
+      "name": "Rarity Headgear (Lv.90)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headTop",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 90,
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/cap.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headMiddle_10",
+      "name": "Rarity Middle (Lv.10)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headMiddle",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 10,
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/goggles.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headMiddle_30",
+      "name": "Rarity Middle (Lv.30)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headMiddle",
+      "layerColor": "0x22c55e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 30,
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/goggles.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headMiddle_50",
+      "name": "Rarity Middle (Lv.50)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headMiddle",
+      "layerColor": "0x3b82f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 50,
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/goggles.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headMiddle_70",
+      "name": "Rarity Middle (Lv.70)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headMiddle",
+      "layerColor": "0xd946ef",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 70,
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/goggles.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headMiddle_90",
+      "name": "Rarity Middle (Lv.90)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headMiddle",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 90,
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/goggles.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headLower_10",
+      "name": "Rarity Lower (Lv.10)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headLower",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 10,
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/flu_mask.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headLower_30",
+      "name": "Rarity Lower (Lv.30)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headLower",
+      "layerColor": "0x22c55e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 30,
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/flu_mask.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headLower_50",
+      "name": "Rarity Lower (Lv.50)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headLower",
+      "layerColor": "0x3b82f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 50,
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/flu_mask.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headLower_70",
+      "name": "Rarity Lower (Lv.70)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headLower",
+      "layerColor": "0xd946ef",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 70,
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/flu_mask.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_headLower_90",
+      "name": "Rarity Lower (Lv.90)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "headLower",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 90,
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/flu_mask.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accLeft_10",
+      "name": "Rarity Accessory (Lv.10)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accLeft",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 10,
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/clip.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accLeft_30",
+      "name": "Rarity Accessory (Lv.30)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accLeft",
+      "layerColor": "0x22c55e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 30,
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/clip.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accLeft_50",
+      "name": "Rarity Accessory (Lv.50)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accLeft",
+      "layerColor": "0x3b82f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 50,
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/clip.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accLeft_70",
+      "name": "Rarity Accessory (Lv.70)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accLeft",
+      "layerColor": "0xd946ef",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 70,
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/clip.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accLeft_90",
+      "name": "Rarity Accessory (Lv.90)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accLeft",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 90,
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/clip.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accRight_10",
+      "name": "Rarity Accessory (Lv.10)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accRight",
+      "layerColor": "0x9ca3af",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 10,
+      "rarity": "common",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/glove.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accRight_30",
+      "name": "Rarity Accessory (Lv.30)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accRight",
+      "layerColor": "0x22c55e",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 30,
+      "rarity": "uncommon",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/glove.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accRight_50",
+      "name": "Rarity Accessory (Lv.50)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accRight",
+      "layerColor": "0x3b82f6",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 50,
+      "rarity": "rare",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/glove.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accRight_70",
+      "name": "Rarity Accessory (Lv.70)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accRight",
+      "layerColor": "0xd946ef",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 70,
+      "rarity": "epic",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/glove.svg",
+      "sourceUrl": null
+    },
+    {
+      "id": "rarity_rd_accRight_90",
+      "name": "Rarity Accessory (Lv.90)",
+      "type": "armor",
+      "weight": 10,
+      "stackMax": 1,
+      "equipSlot": "accRight",
+      "layerColor": "0xf59e0b",
+      "bonuses": {
+        "str": 0,
+        "agi": 0,
+        "vit": 0,
+        "int": 0,
+        "dex": 0,
+        "luk": 0
+      },
+      "requiredBaseLevel": 90,
+      "rarity": "legendary",
+      "dungeonRollable": false,
+      "iconFile": "/items/armor/glove.svg",
+      "sourceUrl": null
     }
   ]
 }

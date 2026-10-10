@@ -96,7 +96,8 @@ import { JobMasterModal } from './JobMasterModal'
 import { RentalModal } from './RentalModal'
 import { ShopModal } from './ShopModal'
 import { RarityTabShopModal } from './RarityTabShopModal'
-import { isRarityTabShop } from '../game/character/npcServices'
+import { RaritySlotTabShopModal } from './RaritySlotTabShopModal'
+import { isRaritySlotTabShop, isRarityTabShop } from '../game/character/npcServices'
 import { NpcOptionsModal, type NpcMenuChoice } from './NpcOptionsModal'
 import { DeathModal } from './DeathModal'
 import { PvpDeathModal } from './PvpDeathModal'
@@ -2039,6 +2040,15 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               npc={shopNpc}
               sheet={sheet}
               initialTab="sell"
+              onClose={() => setShopNpc(null)}
+              onCharacterUpdated={onCharacterUpdated}
+            />
+          ) : isRaritySlotTabShop(shopNpc.config) ? (
+            <RaritySlotTabShopModal
+              key={`shop-${shopNpc.id}-buy`}
+              character={character}
+              npc={shopNpc}
+              sheet={sheet}
               onClose={() => setShopNpc(null)}
               onCharacterUpdated={onCharacterUpdated}
             />

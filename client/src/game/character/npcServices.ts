@@ -39,3 +39,7 @@ export function healerZenyCost(config: NpcRow['config']): number {
 export function isRarityTabShop(config: NpcRow['config']): boolean {
   return config?.shopLayout === 'rarityTabs'
 }
+
+export function isRaritySlotTabShop(config: NpcRow['config']): boolean {
+  return config?.shopLayout === 'raritySlotTabs'
+}

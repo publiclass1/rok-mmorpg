@@ -10,5 +10,6 @@ const RARITY_ARMOR_DEALER_IDS = new Set([
 
 export function isRarityDealerBaseItem(itemId: string): boolean {
   if (RARITY_ARMOR_DEALER_IDS.has(itemId)) return true
+  if (itemId.startsWith('rarity_rd_')) return true
   return itemId.startsWith('rarity_cos_')
 }

@@ -1,0 +1,32 @@
+{
+  "tiers": [
+    { "level": 10, "rarity": "common", "price": 100 },
+    { "level": 30, "rarity": "uncommon", "price": 500 },
+    { "level": 50, "rarity": "rare", "price": 2000 },
+    { "level": 70, "rarity": "epic", "price": 8000 },
+    { "level": 90, "rarity": "legendary", "price": 25000 }
+  ],
+  "rarityColors": {
+    "common": "0x9ca3af",
+    "uncommon": "0x22c55e",
+    "rare": "0x3b82f6",
+    "epic": "0xd946ef",
+    "legendary": "0xf59e0b"
+  },
+  "slots": {
+    "armor": { "label": "Armor", "iconFile": "/items/armor/cotton_shirt.svg", "name": "Rarity Armor" },
+    "garment": { "label": "Garments", "iconFile": "/items/armor/hooded_mantle.svg", "name": "Rarity Garment" },
+    "offhand": { "label": "Shield", "iconFile": "/items/armor/wooden_shield.svg", "name": "Rarity Shield", "offhandKind": "shield" },
+    "boots": { "label": "Shoes", "iconFile": "/items/armor/sandals.svg", "name": "Rarity Shoes" },
+    "headTop": { "label": "Head", "iconFile": "/items/armor/cap.svg", "name": "Rarity Headgear" },
+    "headMiddle": { "label": "Middle", "iconFile": "/items/armor/goggles.svg", "name": "Rarity Middle" },
+    "headLower": { "label": "Lower", "iconFile": "/items/armor/flu_mask.svg", "name": "Rarity Lower" },
+    "accLeft": { "label": "Accessory L", "iconFile": "/items/armor/clip.svg", "name": "Rarity Accessory" },
+    "accRight": { "label": "Accessory R", "iconFile": "/items/armor/glove.svg", "name": "Rarity Accessory" }
+  },
+  "dealerKinds": {
+    "armor": ["armor", "garment", "offhand", "boots", "headTop", "headMiddle", "headLower", "accLeft", "accRight"],
+    "head": ["headTop", "headMiddle", "headLower"],
+    "accessory": ["accLeft", "accRight"]
+  }
+}

@@ -874,6 +874,20 @@
       "tileY": 58
     },
     {
+      "id": "prontera_rarity_head_dealer",
+      "label": "Rarity Head Dealer",
+      "npcType": "shop",
+      "tileX": 50,
+      "tileY": 58
+    },
+    {
+      "id": "prontera_rarity_accessory_dealer",
+      "label": "Rarity Accessory Dealer",
+      "npcType": "shop",
+      "tileX": 58,
+      "tileY": 58
+    },
+    {
       "id": "prontera_tool_dealer",
       "label": "Tool Dealer",
       "npcType": "shop",

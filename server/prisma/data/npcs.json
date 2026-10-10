@@ -502,35 +502,188 @@
     "label": "Rarity Armor Dealer",
     "config": {
       "facing": "down",
-      "shopLayout": "rarityTabs",
+      "shopLayout": "raritySlotTabs",
+      "rarityDealerKind": "armor",
       "stock": [
         {
-          "itemId": "padded_vest",
+          "itemId": "rarity_rd_armor_10",
           "price": 100
         },
         {
-          "itemId": "scout_mail",
+          "itemId": "rarity_rd_armor_30",
           "price": 500
         },
         {
-          "itemId": "knight_plate",
+          "itemId": "rarity_rd_armor_50",
           "price": 2000
         },
         {
-          "itemId": "violet_cuirass",
+          "itemId": "rarity_rd_armor_70",
           "price": 8000
         },
         {
-          "itemId": "dragon_scale_mail",
+          "itemId": "rarity_rd_armor_90",
           "price": 25000
         },
         {
-          "itemId": "skyweave_robe",
-          "price": 80000
+          "itemId": "rarity_rd_garment_10",
+          "price": 100
         },
         {
-          "itemId": "relic_guardplate",
-          "price": 250000
+          "itemId": "rarity_rd_garment_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_garment_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_garment_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_garment_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_offhand_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_offhand_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_offhand_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_offhand_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_offhand_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_boots_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_boots_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_boots_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_boots_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_boots_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_headTop_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_headTop_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_headTop_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_headTop_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_headTop_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_headLower_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_headLower_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_headLower_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_headLower_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_headLower_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_accLeft_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_accLeft_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_accLeft_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_accLeft_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_accLeft_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_accRight_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_accRight_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_accRight_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_accRight_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_accRight_90",
+          "price": 25000
         }
       ]
     }
@@ -783,6 +936,136 @@
         {
           "itemId": "rarity_cos_stiletto",
           "price": 3200
+        }
+      ]
+    }
+  },
+  {
+    "id": "prontera_rarity_head_dealer",
+    "map_id": "prontera",
+    "x": 1600,
+    "y": 1856,
+    "npc_type": "shop",
+    "label": "Rarity Head Dealer",
+    "config": {
+      "facing": "down",
+      "shopLayout": "raritySlotTabs",
+      "rarityDealerKind": "head",
+      "stock": [
+        {
+          "itemId": "rarity_rd_headTop_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_headTop_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_headTop_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_headTop_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_headTop_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_headMiddle_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_headLower_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_headLower_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_headLower_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_headLower_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_headLower_90",
+          "price": 25000
+        }
+      ]
+    }
+  },
+  {
+    "id": "prontera_rarity_accessory_dealer",
+    "map_id": "prontera",
+    "x": 1856,
+    "y": 1856,
+    "npc_type": "shop",
+    "label": "Rarity Accessory Dealer",
+    "config": {
+      "facing": "down",
+      "shopLayout": "raritySlotTabs",
+      "rarityDealerKind": "accessory",
+      "stock": [
+        {
+          "itemId": "rarity_rd_accLeft_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_accLeft_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_accLeft_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_accLeft_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_accLeft_90",
+          "price": 25000
+        },
+        {
+          "itemId": "rarity_rd_accRight_10",
+          "price": 100
+        },
+        {
+          "itemId": "rarity_rd_accRight_30",
+          "price": 500
+        },
+        {
+          "itemId": "rarity_rd_accRight_50",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_rd_accRight_70",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_rd_accRight_90",
+          "price": 25000
         }
       ]
     }

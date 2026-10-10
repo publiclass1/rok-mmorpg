@@ -22,12 +22,10 @@ type Body = {
   lines: PurchaseLine[]
 }
 
-function isRarityTabShop(config: unknown): boolean {
-  return (
-    config != null &&
-    typeof config === 'object' &&
-    (config as { shopLayout?: string }).shopLayout === 'rarityTabs'
-  )
+function isRarityRolledShop(config: unknown): boolean {
+  if (config == null || typeof config !== 'object') return false
+  const layout = (config as { shopLayout?: string }).shopLayout
+  return layout === 'rarityTabs' || layout === 'raritySlotTabs'
 }
 
 const ITEMS_BY_ID = Object.fromEntries(
@@ -83,7 +81,7 @@ export async function handle(req: Request): Promise<Response> {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-    if (!isRarityTabShop(npc.config)) {
+    if (!isRarityRolledShop(npc.config)) {
       return new Response(JSON.stringify({ error: 'This shop does not sell rolled rarity gear' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
