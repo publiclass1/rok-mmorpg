@@ -92,7 +92,7 @@ export function skillWindowTabs(jobId: string): string[] {
 
 /** Skills shown on a job tab (strict jobId match — never mix Hunter into Archer). */
 export function skillsForSkillWindowTab(tabJobId: string): SkillDefinition[] {
-  return skillsForJob(tabJobId)
+  return skillsForJob(tabJobId).filter((s) => s.jobId === tabJobId)
 }
 
 export function skillWindowTabEntries(jobId: string): SkillWindowTabEntry[] {
@@ -218,7 +218,7 @@ const ARCHER_RANGED_PHYSICAL_SKILLS = new Set(['double_strafe', 'blitz_beat'])
 
 const ARCHER_GROUND_PHYSICAL_SKILLS = new Set(['arrow_shower'])
 
-const ARCHER_SKILL_STUBS = new Set([
+const ARCHER_TRAP_STUBS = new Set([
   'arrow_crafting',
   'ankle_snare',
   'shockwave_trap',
@@ -228,11 +228,9 @@ const ARCHER_SKILL_STUBS = new Set([
   'blast_mine',
   'claymore_trap',
   'remove_trap',
-  'talk_with_cute_pet',
-  'detect',
-  'land_mine',
-  'spring_trap',
 ])
+
+const HUNTER_SKILL_STUBS = new Set(['talk_with_cute_pet', 'detect', 'land_mine', 'spring_trap'])
 
 export function isPlayerRangedPhysicalSkill(skillId: string): boolean {
   return ARCHER_RANGED_PHYSICAL_SKILLS.has(skillId)
@@ -243,7 +241,7 @@ export function isPlayerGroundPhysicalSkill(skillId: string): boolean {
 }
 
 export function isArcherSkillStub(skillId: string): boolean {
-  return ARCHER_SKILL_STUBS.has(skillId)
+  return ARCHER_TRAP_STUBS.has(skillId) || HUNTER_SKILL_STUBS.has(skillId)
 }
 
 export function physicalSkillModifier(def: SkillDefinition | undefined, skillLevel: number): number {

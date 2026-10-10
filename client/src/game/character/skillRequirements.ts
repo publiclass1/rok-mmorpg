@@ -29,6 +29,7 @@ export function skillRequirementDetail(
 ): SkillDetailView {
   const level = sheet.skills[skill.id] ?? 0
   const statsLines: string[] = []
+  statsLines.push(`${JOB_NAMES[skill.jobId] ?? skill.jobId} skill`)
   statsLines.push(skill.type === 'passive' ? 'Passive' : 'Active')
   if (skill.type === 'active' && skill.mpCost > 0) statsLines.push(`SP ${skill.mpCost}`)
   if (skill.castTimeMs > 0) {
@@ -62,9 +63,12 @@ export function skillRequirementDetail(
   for (const pre of skill.prerequisites) {
     const preDef = SKILLS[pre.skillId]
     const preName = preDef?.name ?? pre.skillId
+    const preJob = preDef ? (JOB_NAMES[preDef.jobId] ?? preDef.jobId) : null
+    const crossJob =
+      preDef && preDef.jobId !== skill.jobId ? ` (${preJob} tree)` : ''
     const have = sheet.skills[pre.skillId] ?? 0
     requirements.push({
-      label: `${preName} Lv ${pre.level}`,
+      label: `${preName} Lv ${pre.level}${crossJob}`,
       met: have >= pre.level,
     })
   }
@@ -115,10 +119,14 @@ export function learnableSkillIdsForTab(
   return out
 }
 
-/** All skill ids on prerequisite chains leading to learnable skills (includes cross-job prereqs). */
-export function pathSkillIdsForGuidance(learnableIds: Set<string>): Set<string> {
+/** Prerequisite chain for learnable skills on this tab (stays within tab job skills). */
+export function pathSkillIdsForGuidance(
+  learnableIds: Set<string>,
+  tabSkillIds: Set<string>,
+): Set<string> {
   const path = new Set<string>()
   const visit = (skillId: string) => {
+    if (!tabSkillIds.has(skillId)) return
     if (path.has(skillId)) return
     path.add(skillId)
     const def = SKILLS[skillId]

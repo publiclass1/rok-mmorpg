@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { hasAllocatedSkillPoints } from '../game/character/characterState'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import {
@@ -34,6 +34,13 @@ export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: 
     SKILL_WINDOW_GENERAL_TAB_ID
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    const validIds = new Set(tabs.map((t) => t.id))
+    if (!validIds.has(activeTab)) {
+      setActiveTab(defaultTab)
+    }
+  }, [sheet.jobId, tabs, activeTab, defaultTab])
 
   const isGeneralTab = activeTab === SKILL_WINDOW_GENERAL_TAB_ID
   const tabSkills = isGeneralTab ? [] : skillsForSkillWindowTab(activeTab)

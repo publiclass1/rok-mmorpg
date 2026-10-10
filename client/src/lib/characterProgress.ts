@@ -12,6 +12,7 @@ import {
   type EquipSlot,
 } from '../game/character/characterState'
 import { parseActiveRental } from '../game/character/rental'
+import { sanitizeSkillsForJob } from '../game/character/skillLineageSanitize'
 import { isValidSkillBarPayload, parseSkillBars, serializeSkillBars } from '../game/character/skillBars'
 import type { CharacterRow } from '../types/database'
 import { emitGameEvent } from '../game/events'
@@ -90,6 +91,8 @@ function rowToSession(
     skillsMap.play_dead = 1
   }
 
+  const sanitizedSkills = sanitizeSkillsForJob(progress.job_id, skillsMap)
+
   let state: CharacterSessionState = {
     progress: progressFromLevels(
       progress.base_level,
@@ -107,7 +110,7 @@ function rowToSession(
     statPointsUnspent: progress.stat_points_unspent,
     jobId: progress.job_id,
     skillPointsUnspent: progress.skill_points_unspent,
-    skills: skillsMap,
+    skills: sanitizedSkills,
     equipment: normalizeEquipment(equipment),
     skillBars: parseSkillBars(progress.skill_bar),
     sessionInventory: parseSessionInventory(progress.session_inventory),

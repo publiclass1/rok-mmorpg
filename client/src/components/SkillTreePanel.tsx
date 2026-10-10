@@ -21,6 +21,7 @@ import {
 } from '../game/character/skillTreeLayout'
 import type { SkillDefinition } from '../game/character/skillsConfig'
 import { SKILLS } from '../game/character/skillsConfig'
+import { isSkillSpendingTab } from '../game/character/skillPointBudget'
 import type { CharacterSheetPayload } from '../game/events'
 
 type Props = {
@@ -32,12 +33,16 @@ type Props = {
 export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
   const layout = useMemo(() => computeSkillTreeLayout(skills), [skills])
   const { width, height } = useMemo(() => skillTreeContentSize(layout), [layout])
-  const showLearnButton = tabJobId === sheet.jobId
+  const showLearnButton = isSkillSpendingTab(sheet.jobId, tabJobId)
   const learnableIds = useMemo(
     () => learnableSkillIdsForTab(skills, sheet, tabJobId),
     [skills, sheet, tabJobId],
   )
-  const pathIds = useMemo(() => pathSkillIdsForGuidance(learnableIds), [learnableIds])
+  const tabSkillIds = useMemo(() => new Set(skills.map((s) => s.id)), [skills])
+  const pathIds = useMemo(
+    () => pathSkillIdsForGuidance(learnableIds, tabSkillIds),
+    [learnableIds, tabSkillIds],
+  )
 
   const [hoverAnchor, setHoverAnchor] = useState<{
     skillId: string
