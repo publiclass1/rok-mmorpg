@@ -559,6 +559,8 @@ export class WorldScene extends Phaser.Scene {
           const rolled = getRolledItem(itemId)
           if (rolled) this.session = grantRolledGear(this.session, rolled)
         } else this.session = applyPickupToSession(this.session, itemId)
+        setCharacterSession(this.session)
+        this.session = getCharacterSession()
         this.mapDropManager?.removeDrop(dropId)
         this.presence?.sendCombat({ kind: 'map_pickup', dropId, characterId: this.character.id })
         logActivity('combat', `Picked up ${getItemDisplayName(itemId)}.`)
@@ -3395,6 +3397,9 @@ export class WorldScene extends Phaser.Scene {
     if (!this.session.activeRental) return
     if (activeRentalAt(this.session, wallNow)) return
     this.session = clearActiveRental(this.session)
+    setCharacterSession(this.session)
+    this.session = getCharacterSession()
+    this.emitCharacterSheet()
     emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
     this.scheduleProgressSave()
     this.emitPlayerBuffs()
@@ -4038,8 +4043,11 @@ export class WorldScene extends Phaser.Scene {
     const rolled = rollDungeonGear(floor, isMvp, Math.random, this.session.jobId)
     if (!rolled) return
     this.session = grantRolledGear(this.session, rolled)
+    setCharacterSession(this.session)
+    this.session = getCharacterSession()
     const label = rolledItemDisplayName(rolled)
     logActivity('combat', `Obtained ${label}.`, rolled.id)
+    this.emitCharacterSheet()
     emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
     this.scheduleProgressSave()
   }

@@ -37,7 +37,9 @@ export function dispatchCharacterAction(action: CharacterActionPayload): boolean
         action.type === 'resetSkills' ||
         action.type === 'learnSkill' ||
         action.type === 'changeJob' ||
-        action.type === 'assignSkillBar'
+        action.type === 'assignSkillBar' ||
+        action.type === 'equip' ||
+        action.type === 'useConsumable'
       ) {
         logActivity('character', result.message)
       }

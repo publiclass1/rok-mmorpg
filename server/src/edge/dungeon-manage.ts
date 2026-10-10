@@ -55,6 +55,10 @@ function floorById(floorId: string): FloorMeta | undefined {
   return FLOORS.find((f) => f.id === floorId)
 }
 
+function floorByMapId(mapId: string): FloorMeta | undefined {
+  return FLOORS.find((f) => f.mapId === mapId)
+}
+
 export async function handle(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -71,6 +75,24 @@ export async function handle(req: Request): Promise<Response> {
       const dungeonMaps = new Set(FLOORS.map((f) => f.mapId))
       if (!dungeonMaps.has(character.map_id)) {
         return new Response(JSON.stringify({ character }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+      const floor = floorByMapId(character.map_id)
+      if (floor) {
+        const membership = await getMembership(service, character.id)
+        if (membership) {
+          const { data: activeInstance } = await service
+            .from('dungeon_instances')
+            .select('id')
+            .eq('party_id', membership.party_id)
+            .eq('floor_id', floor.id)
+            .neq('status', 'cleared')
+            .maybeSingle()
+          if (activeInstance) {
+            return new Response(JSON.stringify({ character, recovered: false }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+          }
+        }
       }
       const { data: recovered, error } = await service.from('characters').update({ map_id: 'prontera', x: 800, y: 360 })
         .eq('id', character.id).select('*').single()

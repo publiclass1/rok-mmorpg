@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { getCharacterSession } from '../game/character/characterSessionBridge'
 import { getEquipmentDefinition } from '../game/character/equipmentConfig'
 import { getItemDisplayName, isConsumable, isEquippable } from '../game/character/itemCatalog'
 import { ItemHoverTooltip } from './ItemHoverTooltip'
@@ -27,15 +28,40 @@ type InvCell = {
   sessionIndex?: number
 }
 
+const SELECT_CLICK_DELAY_MS = 250
+
+function resolveSessionInventoryIndex(cell: InvCell): number {
+  const inv = getCharacterSession().sessionInventory
+  const preferred = cell.sessionIndex
+  if (
+    preferred !== undefined &&
+    preferred >= 0 &&
+    preferred < inv.length &&
+    inv[preferred].itemId === cell.itemId
+  ) {
+    return preferred
+  }
+  return inv.findIndex((s) => s.itemId === cell.itemId)
+}
+
 export function InventoryWindow({ characterId, sheet, onClose }: Props) {
   const [dbRows, setDbRows] = useState<Array<{ item_id: string; quantity: number }>>([])
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
+  const selectClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     void apiFetch<{ inventory: Array<{ item_id: string; quantity: number }> }>(
       `/api/characters/${characterId}/inventory`,
     ).then(({ inventory }) => setDbRows(inventory ?? []))
   }, [characterId])
+
+  useEffect(() => {
+    return () => {
+      if (selectClickTimerRef.current != null) {
+        clearTimeout(selectClickTimerRef.current)
+      }
+    }
+  }, [])
 
   const cells = useMemo(() => {
     const list: InvCell[] = []
@@ -60,15 +86,40 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
     return list
   }, [sheet.sessionInventory, dbRows])
 
-  function onDoubleClick(cell: InvCell) {
+  function clearSelectClickTimer() {
+    if (selectClickTimerRef.current != null) {
+      clearTimeout(selectClickTimerRef.current)
+      selectClickTimerRef.current = null
+    }
+  }
+
+  function handleSlotClick(itemId: string) {
+    clearSelectClickTimer()
+    selectClickTimerRef.current = setTimeout(() => {
+      selectClickTimerRef.current = null
+      setSelectedItemId(itemId)
+    }, SELECT_CLICK_DELAY_MS)
+  }
+
+  function handleSlotDoubleClick(cell: InvCell) {
+    clearSelectClickTimer()
+    setSelectedItemId(null)
+
     if (cell.source !== 'session') {
       emitGameEvent('status', 'Cannot use items from account storage yet.')
       return
     }
+
+    const sessionIndex = resolveSessionInventoryIndex(cell)
+    if (sessionIndex < 0) {
+      emitGameEvent('status', 'Item is not in your session inventory.')
+      return
+    }
+
     if (isConsumable(cell.itemId)) {
       dispatchCharacterAction({
         type: 'useConsumable',
-        sessionInventoryIndex: cell.sessionIndex ?? 0,
+        sessionInventoryIndex: sessionIndex,
       })
       return
     }
@@ -81,7 +132,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
       type: 'equip',
       slot: def.slot,
       itemId: cell.itemId,
-      sessionInventoryIndex: cell.sessionIndex,
+      sessionInventoryIndex: sessionIndex,
     })
   }
 
@@ -108,8 +159,8 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
                     if (!canDragToBar) return
                     writeSkillBarDrag(e.dataTransfer, { source: 'inventory', itemId: cell.itemId })
                   }}
-                  onClick={() => setSelectedItemId(cell.itemId)}
-                  onDoubleClick={() => onDoubleClick(cell)}
+                  onClick={() => handleSlotClick(cell.itemId)}
+                  onDoubleClick={() => handleSlotDoubleClick(cell)}
                 >
                   <ItemSlotDisplay
                     itemId={cell.itemId}

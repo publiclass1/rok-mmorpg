@@ -61,10 +61,16 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
     }
   }
   const canReset = sheetHasRaisedStats(sheet)
-  const resetTitle = `Reset stats (${STAT_RESET_ZENY_COST.toLocaleString()} zeny)`
+  const resetTitle = 'Reset stats'
 
   function raise(stat: PrimaryStat) {
     dispatchCharacterAction({ type: 'raiseStat', stat })
+  }
+
+  function raiseMax(stat: PrimaryStat) {
+    while (dispatchCharacterAction({ type: 'raiseStat', stat })) {
+      /* re-reads session each iteration */
+    }
   }
 
   async function resetStats() {
@@ -108,31 +114,69 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
           />
         }
       />
-      <ModalScrollBody>
-      <p className="muted small stats-window__meta">
-        <span className="stats-window__char-id">
-          ID:{' '}
-          <code className="stats-window__char-id-value" title={character.id}>{character.id}</code>
-          <button type="button" className="stats-window__copy-id-btn" onClick={() => void copyCharacterId()}>
-            {idCopied ? 'Copied' : 'Copy'}
-          </button>
-        </span>
-        <span className="stats-window__meta-sep">·</span>
-        Points: <strong>{sheet.statPointsUnspent}</strong>
-        <span className="stats-window__meta-sep">·</span>
-        Raise: 2 + floor((stat − 1) / 10)
-        <span className="stats-window__meta-sep">·</span>
-        Reset: {STAT_RESET_ZENY_COST.toLocaleString()}z
-        {sheet.statPointsUnspent === 0 && (
-          <span className="stats-window__meta-sep">· level up for more</span>
-        )}
-        <span className="stats-window__meta-sep">·</span>
-        Reset clears base stats; gear and buffs show as +amount on stats; combat uses total
-      </p>
-
+      <ModalScrollBody className="stats-window__scroll">
       <div className="stats-window__body two-col">
+        <section className="stats-window__allocate" aria-label="Stat allocation">
+          <table className="stats-window__alloc-table">
+            <thead>
+              <tr>
+                <th scope="col">Stat</th>
+                <th scope="col">Value</th>
+                <th scope="col">Cost</th>
+                <th scope="col" className="stats-window__alloc-actions-head">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(Object.keys(STAT_LABELS) as PrimaryStat[]).map((stat) => {
+                const effKey = EFF_BY_STAT[stat]
+                const base = sheet[stat]
+                const bonus = (sheet[effKey] as number) - base
+                const cost = sheet.statRaiseCosts[stat]
+                const label = STAT_LABELS[stat]
+                const canRaise = sheet.statPointsUnspent >= cost
+                const raiseTitle = `Raise ${label} (+1, ${cost} pt)`
+                const maxTitle = `Spend all remaining points on ${label}`
+                return (
+                  <tr key={stat}>
+                    <td className="stats-window__alloc-stat">{label}</td>
+                    <td className="stats-window__alloc-value">
+                      <span className="stats-window__stat-base">{base}</span>
+                      {bonus > 0 && (
+                        <span className="stats-window__stat-bonus">+{bonus}</span>
+                      )}
+                    </td>
+                    <td className="stats-window__alloc-cost muted small">{cost} pt</td>
+                    <td className="stats-window__alloc-actions">
+                      <button
+                        type="button"
+                        className="modal-icon-btn stats-window__raise-btn"
+                        disabled={!canRaise}
+                        title={raiseTitle}
+                        aria-label={raiseTitle}
+                        onClick={() => raise(stat)}
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        className="modal-icon-btn stats-window__max-btn"
+                        disabled={!canRaise}
+                        title={maxTitle}
+                        aria-label={maxTitle}
+                        onClick={() => raiseMax(stat)}
+                      >
+                        MAX
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </section>
+
         <section className="stats-window__details" aria-label="Character stats">
-          <div className="stats-window__compact">
+            <div className="stats-window__compact">
             <div className="stats-window__compact-row">
               <span className="stats-window__compact-pair">
                 <span className="stats-window__compact-label">HP:</span>
@@ -194,35 +238,23 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
               </span>
             </div>
           </div>
-        </section>
-
-        <section className="stats-window__allocate" aria-label="Stat allocation">
-          <ul className="stat-list stats-window__stat-list">
-            {(Object.keys(STAT_LABELS) as PrimaryStat[]).map((stat) => {
-              const effKey = EFF_BY_STAT[stat]
-              const base = sheet[stat]
-              const bonus = (sheet[effKey] as number) - base
-              const cost = sheet.statRaiseCosts[stat]
-              return (
-                <li key={stat} className="stats-window__stat-row">
-                  <span className="stats-window__stat-label">
-                    {STAT_LABELS[stat]} {base}
-                    {bonus > 0 && (
-                      <span className="stats-window__stat-bonus">+{bonus}</span>
-                    )}
-                  </span>
-                  <button
-                    type="button"
-                    className="stats-window__raise-btn"
-                    disabled={sheet.statPointsUnspent < cost}
-                    onClick={() => raise(stat)}
-                  >
-                    +1 ({cost} pt)
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
+            <div className="stats-window__details-meta">
+              <div className="stats-window__char-id">
+                <span className="stats-window__char-id-label">Char ID:</span>
+                <button
+                  type="button"
+                  className="stats-window__copy-id-btn"
+                  title={character.id}
+                  aria-label={idCopied ? 'Character ID copied' : `Copy character ID ${character.id}`}
+                  onClick={() => void copyCharacterId()}
+                >
+                  {idCopied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+              <p className="stats-window__points">
+                Points: <strong>{sheet.statPointsUnspent}</strong>
+              </p>
+            </div>
         </section>
       </div>
       </ModalScrollBody>
