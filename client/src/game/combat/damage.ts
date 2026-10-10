@@ -12,6 +12,9 @@ import {
   sumEquippedDamageReductionPercent,
   sumEquippedRolledDamagePercent,
 } from '../items/rolledItemCombat'
+import type { EquippedCombatAffixTotals } from '../items/rollGearAffixes'
+import type { EquipSlot } from '../character/characterState'
+import { mergeCombatAffixTotals } from './potionBuffs'
 import type { MobDefinition } from './mobConfig'
 import { physicalSkillModifier, SKILLS, type SkillDefinition } from '../character/skillsConfig'
 import {
@@ -19,6 +22,15 @@ import {
   skillPassiveHitBonus,
   steelCrowBlitzDamageMultiplier,
 } from './skillPassives'
+
+function gearAffixesForEquipment(
+  equipment: Record<EquipSlot, string | null>,
+  extra?: EquippedCombatAffixTotals,
+): EquippedCombatAffixTotals {
+  const gear = sumEquippedCombatAffixes(equipment)
+  if (!extra) return gear
+  return mergeCombatAffixTotals(gear, extra)
+}
 
 /** Base Pre-Renewal crit damage before LUK bonus (iRO 140%). */
 export const CRITICAL_DAMAGE_BASE = 1.4
@@ -197,7 +209,12 @@ export function applyDamageReduction(damage: number, reductionPercent: number): 
 export function calcPlayerVsMobDamage(
   state: CharacterSessionState,
   mob: MobDefinition,
-  options?: { attackElementOverride?: string; rng?: () => number; defenderLuk?: number },
+  options?: {
+    attackElementOverride?: string
+    rng?: () => number
+    defenderLuk?: number
+    extraAffixes?: EquippedCombatAffixTotals
+  },
 ): { damage: number; hit: boolean; critical: boolean } {
   const rng = options?.rng ?? Math.random
   const stats = effectiveStats(state)
@@ -221,7 +238,7 @@ export function calcPlayerVsMobDamage(
   }
   if (!hit) return { damage: 0, hit: false, critical: false }
 
-  const gear = sumEquippedCombatAffixes(state.equipment)
+  const gear = gearAffixesForEquipment(state.equipment, options?.extraAffixes)
   const statusAtk = calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk)
   const atk = gearBoostedAtk(statusAtk, weaponAtk, gear.atk, gear.atkPercent)
   const def = critical ? 0 : mob.def
@@ -258,7 +275,11 @@ function defenderEffectiveStats(defender: DuelCombatSnapshot) {
 export function calcPlayerVsPlayerDamage(
   state: CharacterSessionState,
   defender: DuelCombatSnapshot,
-  options?: { rng?: () => number },
+  options?: {
+    rng?: () => number
+    extraAffixes?: EquippedCombatAffixTotals
+    defenderExtraAffixes?: EquippedCombatAffixTotals
+  },
 ): { damage: number; hit: boolean; critical: boolean } {
   const rng = options?.rng ?? Math.random
   const stats = effectiveStats(state)
@@ -272,7 +293,7 @@ export function calcPlayerVsPlayerDamage(
   const weaponSize = weapon?.weaponSize ?? 'medium'
 
   const defenderCritResist = sumEquippedCritResist(defender.equipment)
-  const defenderGear = sumEquippedCombatAffixes(defender.equipment)
+  const defenderGear = gearAffixesForEquipment(defender.equipment, options?.defenderExtraAffixes)
   const gearCritDmg = sumEquippedCritDamagePercent(state.equipment)
   const critical = rollPlayerCritVsMob(equipCrit, stats.luk, defenderLuk, defenderCritResist, rng)
   let hit = critical
@@ -281,7 +302,7 @@ export function calcPlayerVsPlayerDamage(
   }
   if (!hit) return { damage: 0, hit: false, critical: false }
 
-  const attackerGear = sumEquippedCombatAffixes(state.equipment)
+  const attackerGear = gearAffixesForEquipment(state.equipment, options?.extraAffixes)
   const statusAtk = calcStatusAtk(state.progress.baseLevel, stats.str, stats.dex, stats.luk)
   const atk = gearBoostedAtk(statusAtk, weaponAtk, attackerGear.atk, attackerGear.atkPercent)
   const def = critical
@@ -357,6 +378,7 @@ export function calcPlayerMagicVsMobDamage(
     attackElement?: string
     rng?: () => number
     defenderLuk?: number
+    extraAffixes?: EquippedCombatAffixTotals
   },
 ): { damage: number; critical: boolean } {
   const rng = options?.rng ?? Math.random
@@ -366,7 +388,7 @@ export function calcPlayerMagicVsMobDamage(
   const skillModifier = options?.skillModifier ?? 1
   const attackElement = options?.attackElement ?? 'neutral'
 
-  const gear = sumEquippedCombatAffixes(state.equipment)
+  const gear = gearAffixesForEquipment(state.equipment, options?.extraAffixes)
   const gearCritDmg = sumEquippedCritDamagePercent(state.equipment)
   const critical = rollPlayerCritVsMob(equipCrit, stats.luk, defenderLuk, 0, rng)
   const matk = gearBoostedMatk(sampleMatk(stats.int, critical, rng), gear.matk, gear.matkPercent)
@@ -424,10 +446,10 @@ export function calcPlayerMagicSkillVsPlayerSnapshot(
   defender: DuelCombatSnapshot,
   skillId: string,
   skillLevel: number,
-  options?: { rng?: () => number },
+  options?: { rng?: () => number; extraAffixes?: EquippedCombatAffixTotals },
 ): { damage: number; critical: boolean } {
   const defStats = defenderEffectiveStats(defender)
-  const defenderGear = sumEquippedCombatAffixes(defender.equipment)
+  const defenderGear = gearAffixesForEquipment(defender.equipment)
   const mob = {
     id: 'player',
     name: 'Player',
@@ -456,6 +478,7 @@ export function calcPlayerMagicSkillVsPlayerSnapshot(
   const hit = calcPlayerMagicSkillSingleHit(state, mob, skillId, skillLevel, {
     ...options,
     defenderLuk: defStats.luk,
+    extraAffixes: options?.extraAffixes,
   })
   const reduction = sumEquippedDamageReductionPercent(defender.equipment)
   return { ...hit, damage: applyDamageReduction(hit.damage, reduction) }
@@ -466,7 +489,7 @@ export function calcPlayerMagicSkillSingleHit(
   mob: MobDefinition,
   skillId: string,
   skillLevel: number,
-  options?: { rng?: () => number; defenderLuk?: number },
+  options?: { rng?: () => number; defenderLuk?: number; extraAffixes?: EquippedCombatAffixTotals },
 ): { damage: number; critical: boolean } {
   const def = SKILLS[skillId]
   const rng = options?.rng ?? Math.random
@@ -476,6 +499,7 @@ export function calcPlayerMagicSkillSingleHit(
     attackElement: element,
     rng,
     defenderLuk: options?.defenderLuk,
+    extraAffixes: options?.extraAffixes,
   })
 }
 
@@ -504,7 +528,12 @@ export function calcPlayerMagicSkillVsMob(
   return { totalDamage: total, hits: hitCount, criticalAny, perHitDamage }
 }
 
-export function calcMobVsPlayerDamage(mob: MobDefinition, state: CharacterSessionState, rng = Math.random): number {
+export function calcMobVsPlayerDamage(
+  mob: MobDefinition,
+  state: CharacterSessionState,
+  rng = Math.random,
+  extraAffixes?: EquippedCombatAffixTotals,
+): number {
   const stats = effectiveStats(state)
   const hit = rollHitSuccess(
     mob.hit,
@@ -513,7 +542,7 @@ export function calcMobVsPlayerDamage(mob: MobDefinition, state: CharacterSessio
   )
   if (!hit) return 0
 
-  const gear = sumEquippedCombatAffixes(state.equipment)
+  const gear = gearAffixesForEquipment(state.equipment, extraAffixes)
   const atk = mob.atk
   const playerDef = playerPhysicalDef(stats.vit, gear.def, gear.defPercent)
   let damage = damageAfterDef(atk, playerDef, stats.vit)
@@ -529,10 +558,11 @@ export function calcMobSkillVsPlayerDamage(
   skillLevel: number,
   state: CharacterSessionState,
   rng = Math.random,
+  extraAffixes?: EquippedCombatAffixTotals,
 ): number {
   if (skillId === 'provoke') return 0
 
-  const base = calcMobVsPlayerDamage(mob, state, rng)
+  const base = calcMobVsPlayerDamage(mob, state, rng, extraAffixes)
   if (base <= 0) return 0
 
   if (skillId === 'bash' || skillId === 'mob_bash') {

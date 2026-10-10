@@ -273,33 +273,46 @@ function drawRing(id, color) {
 }
 
 function drawRedPotion(id) {
-  return wrap(
-    `
-  <path d="M13 10 H19 V11 H13 Z" fill="#94a3b8"/>
-  <rect x="13" y="11" width="6" height="2" fill="#64748b"/>
-  <path d="M12 13 H20 L19 26 H13 L12 13 Z" fill="#dc2626"/>
-  <path d="M13 14 L14 25 H18 L19 14" fill="#ef4444" opacity="0.5"/>
-  <rect x="14" y="16" width="4" height="6" fill="#fff" opacity="0.15" rx="0.5"/>
-  <ellipse cx="16" cy="26" rx="4" ry="1" fill="#991b1b"/>
-  `,
-    id,
-    '#ef4444',
-  )
+  return drawTintedPotion(id, '#dc2626', '#991b1b', '#ef4444', '#ef4444')
 }
 
 function drawBluePotion(id) {
+  return drawTintedPotion(id, '#1d4ed8', '#1e3a8a', '#3b82f6', '#3b82f6')
+}
+
+function drawTintedPotion(id, fill, shadow, highlight, glow) {
   return wrap(
     `
   <path d="M13 10 H19 V11 H13 Z" fill="#94a3b8"/>
   <rect x="13" y="11" width="6" height="2" fill="#64748b"/>
-  <path d="M12 13 H20 L19 26 H13 L12 13 Z" fill="#1d4ed8"/>
-  <path d="M13 14 L14 25 H18 L19 14" fill="#3b82f6" opacity="0.5"/>
+  <path d="M12 13 H20 L19 26 H13 L12 13 Z" fill="${fill}"/>
+  <path d="M13 14 L14 25 H18 L19 14" fill="${highlight}" opacity="0.5"/>
   <rect x="14" y="16" width="4" height="6" fill="#fff" opacity="0.15" rx="0.5"/>
-  <ellipse cx="16" cy="26" rx="4" ry="1" fill="#1e3a8a"/>
+  <ellipse cx="16" cy="26" rx="4" ry="1" fill="${shadow}"/>
   `,
     id,
-    '#3b82f6',
+    glow,
   )
+}
+
+function consumableBuilderForItemId(itemId) {
+  if (consumableBuilders[itemId]) return consumableBuilders[itemId]
+  if (itemId.startsWith('aspd_potion_')) {
+    return (id) => drawTintedPotion(id, '#ca8a04', '#713f12', '#facc15', '#eab308')
+  }
+  if (itemId.startsWith('atk_potion_')) {
+    return (id) => drawTintedPotion(id, '#b91c1c', '#7f1d1d', '#f87171', '#ef4444')
+  }
+  if (itemId.startsWith('matk_potion_')) {
+    return (id) => drawTintedPotion(id, '#6d28d9', '#4c1d95', '#a78bfa', '#8b5cf6')
+  }
+  if (itemId.startsWith('def_potion_')) {
+    return (id) => drawTintedPotion(id, '#15803d', '#14532d', '#4ade80', '#22c55e')
+  }
+  if (itemId.startsWith('mdef_potion_')) {
+    return (id) => drawTintedPotion(id, '#0e7490', '#164e63', '#22d3ee', '#06b6d4')
+  }
+  return consumableBuilders[baseGearIconId(itemId)]
 }
 
 const armorBuilders = {
@@ -399,7 +412,7 @@ function runGenerate() {
       }
       svg = build(gid, item)
     } else {
-      const build = consumableBuilders[item.id] ?? consumableBuilders[baseGearIconId(item.id)]
+      const build = consumableBuilderForItemId(item.id)
       if (!build) {
         console.error(`[icons:gear] no consumable builder for "${item.id}"`)
         process.exit(1)

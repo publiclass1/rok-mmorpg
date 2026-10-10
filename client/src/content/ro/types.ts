@@ -93,9 +93,19 @@ export type RoCombatBonuses = {
   critChance?: number
 }
 
+export type RoConsumableBuff = {
+  durationMs: number
+  aspd?: number
+  atk?: number
+  matk?: number
+  def?: number
+  mdef?: number
+}
+
 export type RoConsumableEffect = {
   healHp?: number
   healSp?: number
+  buff?: RoConsumableBuff
 }
 
 export type WeaponClass = 'unarmed' | 'knife' | 'sword' | 'spear' | 'staff' | 'bow'

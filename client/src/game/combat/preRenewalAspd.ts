@@ -71,10 +71,12 @@ export function calcPreRenewalAspd(input: PreRenewalAspdInput): PlayerAttackTimi
 
 export function playerAttackTiming(
   state: CharacterSessionState,
-  opts?: { speedModifier?: number },
+  opts?: { speedModifier?: number; flatAspdBonusExtra?: number },
 ): PlayerAttackTiming {
   const stats = effectiveStats(state)
   const weaponClass = getEquippedWeaponClass(state.equipment) as RoAspdWeaponClass
+  const gearAspd = sumEquippedGearAspdBonus(state.equipment)
+  const extraAspd = opts?.flatAspdBonusExtra ?? 0
   return calcPreRenewalAspd({
     jobId: state.jobId,
     weaponClass,
@@ -82,6 +84,6 @@ export function playerAttackTiming(
     dex: stats.dex,
     shieldEquipped: hasShieldEquipped(state.equipment),
     speedModifier: opts?.speedModifier,
-    flatAspdBonus: sumEquippedGearAspdBonus(state.equipment),
+    flatAspdBonus: gearAspd + extraAspd,
   })
 }

@@ -111,6 +111,7 @@ import {
   type AutoAttackMobCandidate,
 } from '../combat/autoAttackTargeting'
 import { pickNearestMobInView } from '../combat/nearestMobInView'
+import { applyPotionBuff, isBuffPotionItem, sumPotionBuffAffixes } from '../combat/potionBuffs'
 import { playerAttackTiming } from '../combat/preRenewalAspd'
 import {
   getEquippedWeaponClass,
@@ -767,6 +768,9 @@ export class WorldScene extends Phaser.Scene {
         playJobChangeWorldFx(this, x, y, jobName, this.playerDisplay)
         playJobChangeAudio()
       }),
+      onGameEvent('potionBuffUsed', ({ itemId }) => {
+        this.applyPotionBuffFromItem(itemId)
+      }),
       onGameEvent('sessionSync', (payload) => {
         const prevJobId = this.session.jobId
         setCharacterSession(structuredClone(payload.state))
@@ -1096,8 +1100,14 @@ export class WorldScene extends Phaser.Scene {
     this.getPlayerBody()?.setVelocity(0, 0)
   }
 
+  private potionCombatAffixes() {
+    return sumPotionBuffAffixes(this.activeBuffs)
+  }
+
   private playerAttackCooldownMs(): number {
-    return playerAttackTiming(this.session).attackIntervalMs
+    return playerAttackTiming(this.session, {
+      flatAspdBonusExtra: this.potionCombatAffixes().aspd,
+    }).attackIntervalMs
   }
 
   update() {
@@ -2049,7 +2059,17 @@ export class WorldScene extends Phaser.Scene {
     emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
     this.scheduleProgressSave()
     logActivity('character', `Used ${getItemDisplayName(itemId)}.`)
+    if (isBuffPotionItem(itemId)) {
+      this.applyPotionBuffFromItem(itemId)
+    }
     return true
+  }
+
+  private applyPotionBuffFromItem(itemId: string) {
+    const result = applyPotionBuff(this.activeBuffs, itemId, Date.now())
+    if (result.ok === false) return
+    this.activeBuffs = result.buffs
+    this.emitPlayerBuffs()
   }
 
   private beginSkillTargeting(skillId: string, level: number, def: SkillDefinition) {
@@ -2412,6 +2432,7 @@ export class WorldScene extends Phaser.Scene {
       snapshot,
       skillId,
       skillLevel,
+      { extraAffixes: this.potionCombatAffixes() },
     )
     if (damage <= 0) return
 
@@ -2986,7 +3007,9 @@ export class WorldScene extends Phaser.Scene {
     skillLabel: string,
     mobDef: (typeof MOB_DEFS)[string],
   ) {
-    const { damage, critical } = calcPlayerMagicSkillSingleHit(this.session, mobDef, skillId, skillLevel)
+    const { damage, critical } = calcPlayerMagicSkillSingleHit(this.session, mobDef, skillId, skillLevel, {
+      extraAffixes: this.potionCombatAffixes(),
+    })
     if (damage <= 0 || !mob.alive) return
     this.applyDamageToMob(mob, damage, mobDef, skillLabel, { critical, criticalMagic: critical })
   }
@@ -3495,11 +3518,11 @@ export class WorldScene extends Phaser.Scene {
 
   private calcPlayerVsMobDamageForSession(def: (typeof MOB_DEFS)[string]) {
     const override = this.playerAttackElementOverride()
-    return calcPlayerVsMobDamage(
-      this.session,
-      def,
-      override ? { attackElementOverride: override } : undefined,
-    )
+    const extraAffixes = this.potionCombatAffixes()
+    return calcPlayerVsMobDamage(this.session, def, {
+      ...(override ? { attackElementOverride: override } : {}),
+      extraAffixes,
+    })
   }
 
   private trySelfBuffSkill(skillId: string, skillLevel: number, def: SkillDefinition): boolean {
@@ -3894,7 +3917,7 @@ export class WorldScene extends Phaser.Scene {
     const enduring = hasStatus(this.activeBuffs, 'endure')
     if (!enduring) this.breakRestState()
     const def = MOB_DEFS[mob.defId]
-    const damage = def ? calcMobVsPlayerDamage(def, this.session) : 0
+    const damage = def ? calcMobVsPlayerDamage(def, this.session, Math.random, this.potionCombatAffixes()) : 0
     if (damage <= 0) {
       const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
       showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
@@ -3947,7 +3970,9 @@ export class WorldScene extends Phaser.Scene {
     const enduring = hasStatus(this.activeBuffs, 'endure')
     if (!enduring) this.breakRestState()
     const def = MOB_DEFS[mob.defId]
-    const damage = def ? calcMobSkillVsPlayerDamage(def, skillId, skillLevel, this.session) : 0
+    const damage = def
+      ? calcMobSkillVsPlayerDamage(def, skillId, skillLevel, this.session, Math.random, this.potionCombatAffixes())
+      : 0
     if (damage <= 0) {
       const pos = missTextPosition(this.playerDisplay.container.x, this.playerDisplay.container.y, this.facing)
       showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
@@ -4788,7 +4813,9 @@ export class WorldScene extends Phaser.Scene {
   ) {
     const tx = target.display.container.x
     const ty = target.display.container.y - 40
-    let result = calcPlayerVsPlayerDamage(this.session, snapshot)
+    let result = calcPlayerVsPlayerDamage(this.session, snapshot, {
+      extraAffixes: this.potionCombatAffixes(),
+    })
     if (skillId && skillLevel != null) {
       result = calcPlayerSkillVsMobDamage(result, skillId, skillLevel)
     }

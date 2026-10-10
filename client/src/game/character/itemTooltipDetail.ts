@@ -167,6 +167,30 @@ export function buildItemTooltipDetail(
     if (consumable.healSp) {
       effectRows.push({ label: 'Restores SP', value: String(consumable.healSp), variant: 'effect' })
     }
+    const buff = consumable.buff
+    if (buff) {
+      if (buff.aspd != null) {
+        effectRows.push({ label: 'ASPD', value: `+${buff.aspd}`, variant: 'effect' })
+      }
+      if (buff.atk != null) {
+        effectRows.push({ label: 'ATK', value: `+${buff.atk}`, variant: 'effect' })
+      }
+      if (buff.matk != null) {
+        effectRows.push({ label: 'MATK', value: `+${buff.matk}`, variant: 'effect' })
+      }
+      if (buff.def != null) {
+        effectRows.push({ label: 'DEF', value: `+${buff.def}`, variant: 'effect' })
+      }
+      if (buff.mdef != null) {
+        effectRows.push({ label: 'MDEF', value: `+${buff.mdef}`, variant: 'effect' })
+      }
+      const mins = Math.round(buff.durationMs / 60_000)
+      effectRows.push({
+        label: 'Duration',
+        value: mins >= 1 ? `${mins} min` : `${Math.round(buff.durationMs / 1000)}s`,
+        variant: 'effect',
+      })
+    }
   }
 
   pushSection(sections, { title: 'Item', rows: infoRows })

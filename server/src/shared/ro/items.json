@@ -29,6 +29,266 @@
       "sourceUrl": "https://irowiki.org/wiki/Blue_Potion"
     },
     {
+      "id": "aspd_potion_3",
+      "name": "ASPD Potion (+3)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "aspd": 3 }
+      }
+    },
+    {
+      "id": "aspd_potion_5",
+      "name": "ASPD Potion (+5)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "aspd": 5 }
+      }
+    },
+    {
+      "id": "aspd_potion_7",
+      "name": "ASPD Potion (+7)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "aspd": 7 }
+      }
+    },
+    {
+      "id": "aspd_potion_10",
+      "name": "ASPD Potion (+10)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "aspd": 10 }
+      }
+    },
+    {
+      "id": "atk_potion_20",
+      "name": "ATK Potion (+20)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "atk": 20 }
+      }
+    },
+    {
+      "id": "atk_potion_30",
+      "name": "ATK Potion (+30)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "atk": 30 }
+      }
+    },
+    {
+      "id": "atk_potion_40",
+      "name": "ATK Potion (+40)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "atk": 40 }
+      }
+    },
+    {
+      "id": "atk_potion_50",
+      "name": "ATK Potion (+50)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "atk": 50 }
+      }
+    },
+    {
+      "id": "matk_potion_20",
+      "name": "MATK Potion (+20)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "matk": 20 }
+      }
+    },
+    {
+      "id": "matk_potion_30",
+      "name": "MATK Potion (+30)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "matk": 30 }
+      }
+    },
+    {
+      "id": "matk_potion_40",
+      "name": "MATK Potion (+40)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "matk": 40 }
+      }
+    },
+    {
+      "id": "matk_potion_50",
+      "name": "MATK Potion (+50)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "matk": 50 }
+      }
+    },
+    {
+      "id": "def_potion_20",
+      "name": "DEF Potion (+20)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "def": 20 }
+      }
+    },
+    {
+      "id": "def_potion_30",
+      "name": "DEF Potion (+30)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "def": 30 }
+      }
+    },
+    {
+      "id": "def_potion_40",
+      "name": "DEF Potion (+40)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "def": 40 }
+      }
+    },
+    {
+      "id": "def_potion_50",
+      "name": "DEF Potion (+50)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "def": 50 }
+      }
+    },
+    {
+      "id": "mdef_potion_20",
+      "name": "MDEF Potion (+20)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "mdef": 20 }
+      }
+    },
+    {
+      "id": "mdef_potion_30",
+      "name": "MDEF Potion (+30)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "mdef": 30 }
+      }
+    },
+    {
+      "id": "mdef_potion_40",
+      "name": "MDEF Potion (+40)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "mdef": 40 }
+      }
+    },
+    {
+      "id": "mdef_potion_50",
+      "name": "MDEF Potion (+50)",
+      "type": "consumable",
+      "weight": 7,
+      "stackMax": 99,
+      "equipSlot": null,
+      "layerColor": null,
+      "bonuses": null,
+      "consumable": {
+        "buff": { "durationMs": 300000, "mdef": 50 }
+      }
+    },
+    {
       "id": "knife",
       "name": "Knife",
       "type": "weapon",

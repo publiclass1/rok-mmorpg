@@ -369,6 +369,18 @@ export function consumeConsumableFromSession(
   const effect = getConsumableEffect(itemId)
   if (!effect) return { ok: false, reason: 'Item is not usable.' }
 
+  const hasHeal = effect.healHp != null || effect.healSp != null
+  const buff = effect.buff
+  const hasBuff =
+    buff != null &&
+    buff.durationMs > 0 &&
+    (buff.aspd != null ||
+      buff.atk != null ||
+      buff.matk != null ||
+      buff.def != null ||
+      buff.mdef != null)
+  if (!hasHeal && !hasBuff) return { ok: false, reason: 'Item is not usable.' }
+
   const hpMax = sessionMaxHp(state)
   const mpMax = sessionMaxMp(state)
 

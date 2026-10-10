@@ -19,6 +19,9 @@ function remainingProgress(buff: PlayerBuffPayload, now: number): number {
 
 function buffTitle(buff: PlayerBuffPayload, now: number): string {
   const seconds = Math.max(0, Math.ceil((buff.expiresAt - now) / 1000))
+  if (buff.iconItemId) {
+    return `${buff.name} — ${seconds}s remaining`
+  }
   return `${buff.name} Lv ${buff.skillLevel} — ${seconds}s remaining`
 }
 
@@ -97,6 +100,7 @@ export function BuffBar({ buffs, sheet }: Props) {
             <BuffDurationRing
               progress={progress}
               iconSkillId={buff.iconSkillId}
+              iconItemId={buff.iconItemId}
               skillLevel={buff.skillLevel}
             />
           </SkillHoverTooltip>

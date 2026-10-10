@@ -144,6 +144,7 @@ export type PlayerBuffPayload = {
   statusId: string
   name: string
   iconSkillId: string
+  iconItemId?: string
   skillLevel: number
   expiresAt: number
   durationMs: number
@@ -235,6 +236,7 @@ export type GameEvents = {
   selectedMob: SelectedMobPayload | null
   activityLog: ActivityLogEntry
   sessionSync: SessionSyncPayload
+  potionBuffUsed: { itemId: string }
   jobChange: { jobId: string; jobName: string }
   progressSaveError: { message: string }
   worldReady: { mapId: string }

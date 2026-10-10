@@ -109,6 +109,23 @@ export function validateRoContent(pack: RoContentPack): void {
   for (const item of pack.items) {
     if (item.type === 'consumable') {
       assert(item.consumable != null, `consumable item ${item.id} must define consumable effect`)
+      const c = item.consumable
+      const hasHeal = c.healHp != null || c.healSp != null
+      const buff = c.buff
+      const buffStats =
+        buff &&
+        (buff.aspd != null ||
+          buff.atk != null ||
+          buff.matk != null ||
+          buff.def != null ||
+          buff.mdef != null)
+      assert(
+        hasHeal || buffStats,
+        `consumable item ${item.id} must heal or define a stat buff`,
+      )
+      if (buffStats) {
+        assert(buff!.durationMs > 0, `consumable item ${item.id} buff durationMs must be > 0`)
+      }
     }
   }
 

@@ -222,7 +222,27 @@
         {
           "price": 120,
           "itemId": "blue_potion"
-        }
+        },
+        { "price": 4000, "itemId": "aspd_potion_3" },
+        { "price": 8000, "itemId": "aspd_potion_5" },
+        { "price": 16000, "itemId": "aspd_potion_7" },
+        { "price": 25000, "itemId": "aspd_potion_10" },
+        { "price": 4000, "itemId": "atk_potion_20" },
+        { "price": 8000, "itemId": "atk_potion_30" },
+        { "price": 16000, "itemId": "atk_potion_40" },
+        { "price": 25000, "itemId": "atk_potion_50" },
+        { "price": 4000, "itemId": "matk_potion_20" },
+        { "price": 8000, "itemId": "matk_potion_30" },
+        { "price": 16000, "itemId": "matk_potion_40" },
+        { "price": 25000, "itemId": "matk_potion_50" },
+        { "price": 4000, "itemId": "def_potion_20" },
+        { "price": 8000, "itemId": "def_potion_30" },
+        { "price": 16000, "itemId": "def_potion_40" },
+        { "price": 25000, "itemId": "def_potion_50" },
+        { "price": 4000, "itemId": "mdef_potion_20" },
+        { "price": 8000, "itemId": "mdef_potion_30" },
+        { "price": 16000, "itemId": "mdef_potion_40" },
+        { "price": 25000, "itemId": "mdef_potion_50" }
       ],
       "facing": "down"
     }

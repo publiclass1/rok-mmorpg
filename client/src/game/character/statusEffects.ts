@@ -1,4 +1,5 @@
 import type { PlayerBuffPayload } from '../events'
+import type { EquippedCombatAffixTotals } from '../items/rollGearAffixes'
 
 export const PECO_RIDE_STATUS_ID = 'peco_ride'
 
@@ -13,6 +14,10 @@ export type PlayerStatusBuff = {
   skillLevel: number
   startedAt: number
   expiresAt: number
+  /** When set, buff bar shows this consumable icon instead of a skill icon. */
+  iconItemId?: string
+  /** Flat combat bonuses from potion buff instances (stacked in combat via sumPotionBuffAffixes). */
+  affixBonus?: Partial<EquippedCombatAffixTotals>
 }
 
 export function buffDurationMs(buff: Pick<PlayerStatusBuff, 'startedAt' | 'expiresAt'>): number {
@@ -101,6 +106,7 @@ export function toPlayerBuffPayloads(buffs: PlayerStatusBuff[]): PlayerBuffPaylo
     statusId: b.statusId,
     name: b.name,
     iconSkillId: b.iconSkillId,
+    iconItemId: b.iconItemId,
     skillLevel: b.skillLevel,
     expiresAt: b.expiresAt,
     durationMs: buffDurationMs(b),

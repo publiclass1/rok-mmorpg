@@ -1,6 +1,8 @@
 import { loadRoContent } from '../../content/ro/loadContent'
 import { logActivity } from '../activityLog'
 import type { CharacterActionPayload } from '../events'
+import { emitGameEvent } from '../events'
+import { isBuffPotionItem } from '../combat/potionBuffs'
 import { syncDerivedVitals, toCharacterSheetPayload } from './characterSheet'
 import {
   assignSkillBarSlot,
@@ -183,6 +185,9 @@ export function applyCharacterAction(
     }
     const next = syncDerivedVitals(result.state)
     logActivity('character', `Used ${getItemDisplayName(itemId ?? 'item')}.`)
+    if (itemId && isBuffPotionItem(itemId)) {
+      emitGameEvent('potionBuffUsed', { itemId })
+    }
     return { state: next, changed: true }
   }
 
