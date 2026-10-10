@@ -1,6 +1,6 @@
 // @ts-nocheck
 export const SOCIAL_RANGE = 120
-export const MAX_PARTY_SIZE = 12
+export const MAX_PARTY_SIZE = 20
 export const GUILD_CREATE_ZENY = 5000
 
 export async function assertSameMapAndRange(

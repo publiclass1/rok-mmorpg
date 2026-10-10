@@ -3,6 +3,8 @@ import type { RoAspdWeaponClass } from '../../content/ro/types'
 import type { CharacterSessionState, EquipSlot } from '../character/characterState'
 import { effectiveStats } from '../character/effectiveStats'
 import { getItemDefinition } from '../character/itemCatalog'
+import { sumEquippedGearAspdBonus } from '../items/rolledItemCombat'
+import { GEAR_ASPD_DISPLAY_CAP } from '../items/rollGearAffixes'
 import { getEquippedWeaponClass } from './playerAttackRange'
 
 /** Minimum ms between player basic/melee attacks (animation floor). */
@@ -18,6 +20,7 @@ export type PreRenewalAspdInput = {
   dex: number
   shieldEquipped: boolean
   speedModifier?: number
+  flatAspdBonus?: number
 }
 
 export type PlayerAttackTiming = {
@@ -57,7 +60,8 @@ export function calcPreRenewalAspd(input: PreRenewalAspdInput): PlayerAttackTimi
   if (input.shieldEquipped) {
     aspd -= row.shieldAspdPenalty
   }
-  aspd = Math.min(190, Math.max(100, aspd))
+  aspd += input.flatAspdBonus ?? 0
+  aspd = Math.min(GEAR_ASPD_DISPLAY_CAP, Math.max(100, aspd))
   const aspdFloor = Math.floor(aspd)
   const delaySeconds = (200 - aspdFloor) / 50
   const attackIntervalMs = Math.max(MIN_PLAYER_ATTACK_INTERVAL_MS, Math.round(delaySeconds * 1000))
@@ -78,5 +82,6 @@ export function playerAttackTiming(
     dex: stats.dex,
     shieldEquipped: hasShieldEquipped(state.equipment),
     speedModifier: opts?.speedModifier,
+    flatAspdBonus: sumEquippedGearAspdBonus(state.equipment),
   })
 }

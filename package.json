@@ -16,6 +16,8 @@
     "preview": "npm run preview -w client",
     "content:validate": "npm run content:validate -w client",
     "content:sync-mob-spots": "node scripts/sync-mob-spots-to-server.mjs",
+    "content:sync-items": "node scripts/sync-items-to-server.mjs",
+    "content:sync-items:check": "node scripts/sync-items-to-server.mjs --check",
     "icons:weapons": "node scripts/generate-weapon-icons.mjs",
     "icons:weapons:check": "node scripts/generate-weapon-icons.mjs --check",
     "icons:gear": "node scripts/generate-gear-icons.mjs",

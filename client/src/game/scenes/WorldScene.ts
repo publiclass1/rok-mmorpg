@@ -974,6 +974,13 @@ export class WorldScene extends Phaser.Scene {
             y: r.y,
             isVending: r.isVending,
             stallTitle: r.stallTitle,
+            jobId: r.jobId,
+            appearance: r.appearance,
+            baseLevel: r.baseLevel,
+            hp: r.hp,
+            hpMax: r.hpMax,
+            mp: r.mp,
+            mpMax: r.mpMax,
           })),
         )
       },
@@ -1748,6 +1755,14 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private buildPlayerPresencePayload(): PlayerPresencePayload {
+    const sheet = toCharacterSheetPayload(this.session)
+    const vitals = {
+      hp: sheet.hp,
+      hpMax: sheet.hpMax,
+      mp: sheet.mp,
+      mpMax: sheet.mpMax,
+    }
+
     if (!this.playerDisplay) {
       return {
         characterId: this.character.id,
@@ -1766,6 +1781,7 @@ export class WorldScene extends Phaser.Scene {
         isVending: Boolean(this.socialPresence.isVending),
         stallTitle: this.socialPresence.stallTitle ?? null,
         baseLevel: this.session.progress.baseLevel,
+        ...vitals,
       }
     }
 
@@ -1805,6 +1821,7 @@ export class WorldScene extends Phaser.Scene {
       stallTitle: this.socialPresence.stallTitle ?? null,
       pvpSnapshot: this.isPvpActive() ? combatSnapshotFromSession(this.session) : undefined,
       baseLevel: this.session.progress.baseLevel,
+      ...vitals,
     }
   }
 
@@ -4018,7 +4035,7 @@ export class WorldScene extends Phaser.Scene {
   private rollAndGrantDungeonGear(isMvp: boolean) {
     const floor = dungeonFloorByMapId(this.character.map_id)
     if (!floor) return
-    const rolled = rollDungeonGear(floor, isMvp)
+    const rolled = rollDungeonGear(floor, isMvp, Math.random, this.session.jobId)
     if (!rolled) return
     this.session = grantRolledGear(this.session, rolled)
     const label = rolledItemDisplayName(rolled)
@@ -4030,7 +4047,7 @@ export class WorldScene extends Phaser.Scene {
   private dropDungeonMvpGear(mob: MobInstance) {
     const floor = dungeonFloorByMapId(this.character.map_id)
     if (!floor) return
-    const drops = rollDungeonMvpGearDrops(floor)
+    const drops = rollDungeonMvpGearDrops(floor, Math.random, this.session.jobId)
     if (drops.length === 0) return
     const dropGroupId = Date.now()
     for (let i = 0; i < drops.length; i++) {

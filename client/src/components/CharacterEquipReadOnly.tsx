@@ -1,8 +1,7 @@
 import type { EquipSlot } from '../game/character/characterState'
-import { EQUIPMENT } from '../game/character/equipmentConfig'
-import { getItemDisplayName, hasItemIcon } from '../game/character/itemCatalog'
+import { getItemDisplayName } from '../game/character/itemCatalog'
 import { ItemHoverTooltip } from './ItemHoverTooltip'
-import { ItemIcon } from './ItemIcon'
+import { ItemSlotDisplay } from './ItemSlotDisplay'
 import type { CharacterAppearance } from '../game/character/characterAppearance'
 import { CharacterEquipPreview } from './CharacterEquipPreview'
 
@@ -30,27 +29,24 @@ type SlotCellProps = {
 }
 
 function EquipSlotCell({ slot, itemId, compact, onUnequip }: SlotCellProps) {
-  const hasIcon = itemId ? hasItemIcon(itemId) : false
-  const color = itemId ? EQUIPMENT[itemId]?.layerColor ?? 0x4b5563 : 0x1f2937
   return (
     <div className={`equip-slot-cell${compact ? ' equip-slot-cell--compact' : ''}`}>
       <span className="muted small equip-slot-label">{EQUIP_SLOT_LABELS[slot]}</span>
       {itemId ? (
         <ItemHoverTooltip itemId={itemId}>
           <div
-            className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''} filled${hasIcon ? ' inv-slot--has-icon' : ''}`}
-            style={!hasIcon ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` } : undefined}
+            className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''} filled`}
           >
-            {hasIcon ? (
-              <ItemIcon itemId={itemId} size={compact ? 28 : 36} alt="" />
-            ) : (
-              getItemDisplayName(itemId).slice(0, 3)
-            )}
+            <ItemSlotDisplay
+              itemId={itemId}
+              size={compact ? 'compact' : 'lg'}
+              fallbackLabel={getItemDisplayName(itemId).slice(0, 3)}
+            />
           </div>
         </ItemHoverTooltip>
       ) : (
         <div
-          className={`inv-slot equip-slot-preview ${compact ? 'equip-slot-preview--compact' : ''}`}
+          className={`inv-slot equip-slot-preview inv-slot--empty ${compact ? 'equip-slot-preview--compact' : ''}`}
           aria-label="Empty"
         >
           —

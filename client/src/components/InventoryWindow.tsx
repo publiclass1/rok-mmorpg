@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getEquipmentDefinition } from '../game/character/equipmentConfig'
-import {
-  getEquipColor,
-  getItemDisplayName,
-  isConsumable,
-  isEquippable,
-  hasItemIcon,
-} from '../game/character/itemCatalog'
+import { getItemDisplayName, isConsumable, isEquippable } from '../game/character/itemCatalog'
 import { ItemHoverTooltip } from './ItemHoverTooltip'
-import { ItemIcon } from './ItemIcon'
-import { getItemRarity, rarityColor } from '../game/items/itemRarity'
+import { ItemSlotDisplay } from './ItemSlotDisplay'
 import { RolledItemDetails } from './RolledItemDetails'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import { writeSkillBarDrag } from '../game/character/skillBarDrag'
@@ -105,37 +98,24 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
             const equippable = isEquippable(cell.itemId)
             const consumable = isConsumable(cell.itemId)
             const canDragToBar = consumable && cell.source === 'session'
-            const hasIcon = hasItemIcon(cell.itemId)
-            const color = getEquipColor(cell.itemId)
-            const itemRarity = getItemRarity(cell.itemId)
-            const nameColor = itemRarity ? rarityColor(itemRarity) : undefined
             return (
               <ItemHoverTooltip key={cell.key} itemId={cell.itemId} quantity={cell.quantity}>
                 <button
                   type="button"
-                  className={`inv-slot ${equippable ? 'equippable' : ''}${hasIcon ? ' inv-slot--has-icon' : ''}${canDragToBar ? ' inv-slot--draggable' : ''}`}
+                  className={`inv-slot ${equippable ? 'equippable' : ''}${canDragToBar ? ' inv-slot--draggable' : ''}`}
                   draggable={canDragToBar}
                   onDragStart={(e) => {
                     if (!canDragToBar) return
                     writeSkillBarDrag(e.dataTransfer, { source: 'inventory', itemId: cell.itemId })
                   }}
                   onClick={() => setSelectedItemId(cell.itemId)}
-                  style={
-                    equippable && !hasIcon
-                      ? { backgroundColor: `#${color.toString(16).padStart(6, '0')}` }
-                      : equippable && hasIcon
-                        ? { borderColor: nameColor ?? `#${color.toString(16).padStart(6, '0')}` }
-                        : undefined
-                  }
                   onDoubleClick={() => onDoubleClick(cell)}
                 >
-                  {hasIcon ? (
-                    <ItemIcon itemId={cell.itemId} size={36} alt="" />
-                  ) : (
-                    <span className="inv-slot-label" style={nameColor ? { color: nameColor } : undefined}>
-                      {getItemDisplayName(cell.itemId).slice(0, 4)}
-                    </span>
-                  )}
+                  <ItemSlotDisplay
+                    itemId={cell.itemId}
+                    size="lg"
+                    fallbackLabel={getItemDisplayName(cell.itemId).slice(0, 4)}
+                  />
                   {cell.quantity > 1 && <span className="inv-slot-qty">{cell.quantity}</span>}
                 </button>
               </ItemHoverTooltip>

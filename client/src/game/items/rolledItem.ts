@@ -1,13 +1,20 @@
 import { loadRoContent } from '../../content/ro/loadContent'
 import type { GearRarityId, RoDungeonFloor, RoItem } from '../../content/ro/types'
 import type { PrimaryStat } from '../character/characterState'
+import { rollGearAffixes } from './rollGearAffixes'
+import type { CombatAffixKind } from './rollGearAffixes'
 
 export type RolledDamageEffectKind = 'melee' | 'range' | 'magic'
 
-export type RolledEffectKind = RolledDamageEffectKind | 'critChance'
+export type RolledEffectKind = RolledDamageEffectKind | 'critChance' | 'critDamage'
+
+export type RolledGearAffix =
+  | { pool: 'primary'; stat: PrimaryStat; value: number }
+  | { pool: 'combat'; kind: CombatAffixKind; value: number }
 
 export type RolledItemEffect =
-  | { kind: RolledDamageEffectKind; percent: number }
+  | { kind: RolledDamageEffectKind; level?: 1 | 2 | 3 | 4; percent: number }
+  | { kind: 'critDamage'; level: 1 | 2 | 3 | 4; percent: number }
   | { kind: 'critChance'; percent: number }
 
 export type RolledItem = {
@@ -16,12 +23,11 @@ export type RolledItem = {
   rarity: GearRarityId
   requiredBaseLevel: number
   stats: Partial<Record<PrimaryStat, number>>
-  effect: RolledItemEffect
+  affixes: RolledGearAffix[]
+  effect: RolledItemEffect | null
   slots: 2
   cards: [string | null, string | null]
 }
-
-const PRIMARY_STATS: PrimaryStat[] = ['str', 'agi', 'vit', 'int', 'dex', 'luk']
 
 const ROLLED_PREFIX = 'ri:'
 
@@ -62,37 +68,6 @@ function rollLevelInBand(minLevel: number, maxLevel: number, rng: () => number):
   return Math.max(minLevel, Math.min(maxLevel, Math.floor(raw / 5) * 5 || minLevel))
 }
 
-function rollStats(rarity: GearRarityId, rng: () => number): Partial<Record<PrimaryStat, number>> {
-  const { dungeons } = loadRoContent()
-  const statMin = dungeons.gear.rarities[rarity].statMin
-  const pool = [...PRIMARY_STATS]
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1))
-    ;[pool[i], pool[j]] = [pool[j], pool[i]]
-  }
-  const picked = pool.slice(0, 3)
-  const out: Partial<Record<PrimaryStat, number>> = {}
-  for (const stat of picked) {
-    const lo = statMin
-    const hi = 10
-    out[stat] = lo + Math.floor(rng() * (hi - lo + 1))
-  }
-  return out
-}
-
-function rollEffect(
-  rarity: GearRarityId,
-  rng: () => number,
-  options?: { allowCritChance: boolean },
-): RolledItem['effect'] {
-  const { dungeons } = loadRoContent()
-  const effectMin = dungeons.gear.rarities[rarity].effectMin
-  const kinds = dungeons.gear.effectKinds.filter((k) => (options?.allowCritChance ? true : k !== 'critChance'))
-  const kind = kinds[Math.floor(rng() * kinds.length)] ?? 'melee'
-  const percent = effectMin + Math.floor(rng() * (25 - effectMin + 1))
-  return { kind, percent }
-}
-
 function baseItemsForSlot(slot: string): RoItem[] {
   const { items, dungeons } = loadRoContent()
   const allowed = new Set(dungeons.gear.dropSlots)
@@ -102,9 +77,32 @@ function baseItemsForSlot(slot: string): RoItem[] {
   )
 }
 
+function buildRolledItem(
+  base: RoItem,
+  rarity: GearRarityId,
+  requiredBaseLevel: number,
+  jobId: string,
+  rng: () => number,
+): RolledItem {
+  const id = `${ROLLED_PREFIX}${base.id}:${randomId8(rng)}`
+  const rolled = rollGearAffixes(rarity, jobId, base, rng)
+  return {
+    id,
+    baseItemId: base.id,
+    rarity,
+    requiredBaseLevel,
+    stats: rolled.stats,
+    affixes: rolled.affixes,
+    effect: rolled.effect,
+    slots: 2,
+    cards: [null, null],
+  }
+}
+
 export type CreateRolledGearOptions = {
   rarity: GearRarityId
   requiredBaseLevel: number
+  jobId?: string
 }
 
 export function createRolledGearFromBase(
@@ -114,25 +112,11 @@ export function createRolledGearFromBase(
 ): RolledItem | null {
   const base = loadRoContent().items.find((i) => i.id === baseItemId)
   if (!base?.equipSlot || !base.bonuses || !base.layerColor) return null
-  const id = `${ROLLED_PREFIX}${baseItemId}:${randomId8(rng)}`
-  const rarity = options.rarity
-  return {
-    id,
-    baseItemId,
-    rarity,
-    requiredBaseLevel: options.requiredBaseLevel,
-    stats: rollStats(rarity, rng),
-    effect: rollEffect(rarity, rng, { allowCritChance: false }),
-    slots: 2,
-    cards: [null, null],
-  }
+  const jobId = options.jobId ?? 'novice'
+  return buildRolledItem(base, options.rarity, options.requiredBaseLevel, jobId, rng)
 }
 
-function rollOneDungeonGear(
-  floor: RoDungeonFloor,
-  rng: () => number,
-  options?: { allowCritChance: boolean },
-): RolledItem | null {
+function rollOneDungeonGear(floor: RoDungeonFloor, rng: () => number, jobId: string): RolledItem | null {
   const { dungeons } = loadRoContent()
   const slots = dungeons.gear.dropSlots
   const slot = slots[Math.floor(rng() * slots.length)]
@@ -140,36 +124,41 @@ function rollOneDungeonGear(
   if (bases.length === 0) return null
   const base = bases[Math.floor(rng() * bases.length)]
   const rarity = pickWeightedRarity(floor.gearDrop.rarityWeights, rng)
-  const id = `${ROLLED_PREFIX}${base.id}:${randomId8(rng)}`
-  return {
-    id,
-    baseItemId: base.id,
+  return buildRolledItem(
+    base,
     rarity,
-    requiredBaseLevel: rollLevelInBand(floor.minLevel, floor.maxLevel, rng),
-    stats: rollStats(rarity, rng),
-    effect: rollEffect(rarity, rng, { allowCritChance: options?.allowCritChance ?? false }),
-    slots: 2,
-    cards: [null, null],
-  }
+    rollLevelInBand(floor.minLevel, floor.maxLevel, rng),
+    jobId,
+    rng,
+  )
 }
 
-export function rollDungeonMvpGearDrops(floor: RoDungeonFloor, rng = Math.random): RolledItem[] {
+export function rollDungeonMvpGearDrops(
+  floor: RoDungeonFloor,
+  rng = Math.random,
+  jobId = 'novice',
+): RolledItem[] {
   const drops: RolledItem[] = []
   for (let r = 0; r < floor.gearDrop.mvpRolls; r++) {
-    const rolled = rollOneDungeonGear(floor, rng, { allowCritChance: true })
+    const rolled = rollOneDungeonGear(floor, rng, jobId)
     if (rolled) drops.push(rolled)
   }
   return drops
 }
 
-export function rollDungeonGear(floor: RoDungeonFloor, isMvp: boolean, rng = Math.random): RolledItem | null {
+export function rollDungeonGear(
+  floor: RoDungeonFloor,
+  isMvp: boolean,
+  rng = Math.random,
+  jobId = 'novice',
+): RolledItem | null {
   if (isMvp) {
-    const drops = rollDungeonMvpGearDrops(floor, rng)
+    const drops = rollDungeonMvpGearDrops(floor, rng, jobId)
     return drops[drops.length - 1] ?? null
   }
   const chanceRoll = Math.floor(rng() * 10000)
   if (chanceRoll >= floor.gearDrop.chancePerMille) return null
-  return rollOneDungeonGear(floor, rng, { allowCritChance: false })
+  return rollOneDungeonGear(floor, rng, jobId)
 }
 
 export function rolledItemDisplayName(rolled: RolledItem): string {
@@ -182,23 +171,43 @@ export function rarityColor(rarity: GearRarityId): string {
   return loadRoContent().dungeons.gear.rarities[rarity].color
 }
 
+function normalizeLegacyEffect(raw: unknown): RolledItemEffect | null {
+  if (!raw || typeof raw !== 'object') return null
+  const o = raw as RolledItemEffect
+  if (typeof o.percent !== 'number' || !o.kind) return null
+  return o
+}
+
+function legacyStatsToAffixes(stats: Partial<Record<PrimaryStat, number>>): RolledGearAffix[] {
+  const affixes: RolledGearAffix[] = []
+  for (const [stat, value] of Object.entries(stats)) {
+    if (value == null || value <= 0) continue
+    affixes.push({ pool: 'primary', stat: stat as PrimaryStat, value })
+  }
+  return affixes
+}
+
 export function parseRolledItemsRecord(raw: unknown): Record<string, RolledItem> {
   if (!raw || typeof raw !== 'object') return {}
   const out: Record<string, RolledItem> = {}
   for (const [key, val] of Object.entries(raw as Record<string, unknown>)) {
     if (!val || typeof val !== 'object') continue
-    const o = val as RolledItem
-    if (typeof o.baseItemId === 'string' && o.rarity && o.effect) {
-      out[key] = {
-        id: typeof o.id === 'string' ? o.id : key,
-        baseItemId: o.baseItemId,
-        rarity: o.rarity,
-        requiredBaseLevel: o.requiredBaseLevel ?? 1,
-        stats: o.stats ?? {},
-        effect: o.effect,
-        slots: 2,
-        cards: o.cards ?? [null, null],
-      }
+    const o = val as RolledItem & { effect?: RolledItemEffect | null }
+    if (typeof o.baseItemId !== 'string' || !o.rarity) continue
+    const stats = o.stats ?? {}
+    const affixes =
+      Array.isArray(o.affixes) && o.affixes.length > 0 ? o.affixes : legacyStatsToAffixes(stats)
+    const effect = o.effect === undefined ? normalizeLegacyEffect((val as { effect?: unknown }).effect) : o.effect
+    out[key] = {
+      id: typeof o.id === 'string' ? o.id : key,
+      baseItemId: o.baseItemId,
+      rarity: o.rarity,
+      requiredBaseLevel: o.requiredBaseLevel ?? 1,
+      stats,
+      affixes,
+      effect,
+      slots: 2,
+      cards: o.cards ?? [null, null],
     }
   }
   return out

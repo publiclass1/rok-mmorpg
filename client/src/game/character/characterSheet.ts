@@ -3,15 +3,15 @@ import { parseSessionInventory } from './sessionInventory'
 import { buildCombatStatPreview } from './combatStatPreview'
 import { previewPlayerAttack } from '../combat/damage'
 import { effectiveStats } from './effectiveStats'
-import { derivedMaxHp, derivedMaxMp, statRaiseCost } from './statFormulas'
+import { sessionMaxHp, sessionMaxMp } from './gearVitals'
+import { statRaiseCost } from './statFormulas'
 import type { CharacterSheetPayload } from '../events'
 
 export { effectiveStats } from './effectiveStats'
 
 export function syncDerivedVitals(state: CharacterSessionState): CharacterSessionState {
-  const stats = effectiveStats(state)
-  const hpMax = derivedMaxHp(state.jobId, state.progress.baseLevel, stats.vit)
-  const mpMax = derivedMaxMp(state.jobId, state.progress.baseLevel, stats.int)
+  const hpMax = sessionMaxHp(state)
+  const mpMax = sessionMaxMp(state)
   return {
     ...state,
     hp: Math.min(state.hp, hpMax),
@@ -21,8 +21,8 @@ export function syncDerivedVitals(state: CharacterSessionState): CharacterSessio
 
 export function toCharacterSheetPayload(state: CharacterSessionState): CharacterSheetPayload {
   const stats = effectiveStats(state)
-  const hpMax = derivedMaxHp(state.jobId, state.progress.baseLevel, stats.vit)
-  const mpMax = derivedMaxMp(state.jobId, state.progress.baseLevel, stats.int)
+  const hpMax = sessionMaxHp(state)
+  const mpMax = sessionMaxMp(state)
   const attackDamage = previewPlayerAttack(state)
 
   return {

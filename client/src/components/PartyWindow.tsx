@@ -1,19 +1,53 @@
 import { useState } from 'react'
 import { partyManage } from '../lib/api'
-import { createParty as createPartyRpc, type PartySnapshot } from '../lib/partyState'
+import {
+  approximateMemberVitals,
+  createParty as createPartyRpc,
+  MAX_PARTY_SIZE,
+  type PartyMemberInfo,
+  type PartyMemberVitals,
+  type PartySnapshot,
+} from '../lib/partyState'
+import type { CharacterSheetPayload } from '../game/events'
+import { CharacterAppearancePreview } from './CharacterAppearancePreview'
+import { PartyMemberRow } from './PartyMemberRow'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
-import { ModalScrollBody } from './motion/ModalScrollBody'
 
 type Props = {
   characterId: string
   snapshot: PartySnapshot
+  selfSheet: CharacterSheetPayload
+  presenceByMemberId: Record<string, PartyMemberVitals>
   onClose: () => void
   onChanged: () => void
   onMessage: (msg: string) => void
 }
 
-export function PartyWindow({ characterId, snapshot, onClose, onChanged, onMessage }: Props) {
+function vitalsForMember(
+  memberId: string,
+  characterId: string,
+  member: PartyMemberInfo,
+  selfSheet: CharacterSheetPayload,
+  presenceByMemberId: Record<string, PartyMemberVitals>,
+): PartyMemberVitals {
+  if (memberId === characterId) {
+    return { hp: selfSheet.hp, hpMax: selfSheet.hpMax, mp: selfSheet.mp, mpMax: selfSheet.mpMax }
+  }
+  const live = presenceByMemberId[memberId]
+  if (live) return live
+  return approximateMemberVitals(member)
+}
+
+export function PartyWindow({
+  characterId,
+  snapshot,
+  selfSheet,
+  presenceByMemberId,
+  onClose,
+  onChanged,
+  onMessage,
+}: Props) {
   const [partyName, setPartyName] = useState('')
   const [inviteName, setInviteName] = useState('')
   const [busy, setBusy] = useState(false)
@@ -58,44 +92,51 @@ export function PartyWindow({ characterId, snapshot, onClose, onChanged, onMessa
   }
 
   return (
-    <AnimatedModal onClose={onClose} role="dialog" aria-modal="true" panelClassName="panel modal party-modal">
+    <AnimatedModal
+      onClose={onClose}
+      role="dialog"
+      aria-modal="true"
+      panelClassName="panel modal party-modal"
+    >
       <ModalHeader title="Party" onClose={onClose} className="party-modal__header" />
-      <ModalScrollBody>
       {snapshot ? (
-        <>
-          <p className="party-modal__title">
-            <strong>{snapshot.party.name}</strong>
-          </p>
-          <ul className="item-list party-modal__members">
-            {snapshot.members.map((m) => {
-              const isMemberLeader = m.characterId === snapshot.party.leader_character_id
-              const isSelf = m.characterId === characterId
-              return (
-                <li key={m.characterId} className="small party-modal__member-row row spread gap">
-                  <span>
-                    {m.name}
-                    {isMemberLeader ? ' (Leader)' : ''}
-                    {isSelf ? ' (You)' : ''}
-                  </span>
-                  {isLeader && !isSelf && (
-                    <span className="row gap party-modal__member-actions">
+        <div className="party-modal__body">
+          <div className="party-modal__meta">
+            <strong className="party-modal__title">{snapshot.party.name}</strong>
+            <span className="muted small">
+              {snapshot.members.length}/{MAX_PARTY_SIZE}
+            </span>
+          </div>
+
+          {isLeader && snapshot.pendingApplications.length > 0 && (
+            <section className="party-modal__pending" aria-label="Pending applications">
+              <h3 className="party-modal__section-label small">Pending</h3>
+              <ul className="party-modal__pending-list">
+                {snapshot.pendingApplications.map((app) => (
+                  <li key={app.request.id} className="party-modal__pending-row">
+                    <CharacterAppearancePreview appearance={app.appearance} jobId={app.jobId} size="sm" />
+                    <div className="party-modal__pending-info">
+                      <span className="party-modal__member-name">{app.name}</span>
+                      <span className="muted small">Lv {app.baseLevel}</span>
+                    </div>
+                    <div className="party-modal__pending-actions">
                       <button
                         type="button"
-                        className="secondary hud-btn small"
+                        className="hud-btn small"
                         disabled={busy}
                         onClick={() =>
                           void run(
                             () =>
                               partyManage({
-                                action: 'transfer_leader',
+                                action: 'accept',
                                 characterId,
-                                targetCharacterId: m.characterId,
+                                requestId: app.request.id,
                               }),
-                            `${m.name} is now party leader.`,
+                            `${app.name} joined the party.`,
                           )
                         }
                       >
-                        Make leader
+                        OK
                       </button>
                       <button
                         type="button"
@@ -105,89 +146,104 @@ export function PartyWindow({ characterId, snapshot, onClose, onChanged, onMessa
                           void run(
                             () =>
                               partyManage({
-                                action: 'kick',
+                                action: 'decline',
                                 characterId,
-                                targetCharacterId: m.characterId,
+                                requestId: app.request.id,
                               }),
-                            `${m.name} was removed from the party.`,
                           )
                         }
                       >
-                        Kick
+                        No
                       </button>
-                    </span>
-                  )}
-                </li>
-              )
-            })}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <ul className="party-modal__roster" aria-label="Party members">
+            {snapshot.members.map((m) => (
+              <PartyMemberRow
+                key={m.characterId}
+                member={m}
+                vitals={vitalsForMember(m.characterId, characterId, m, selfSheet, presenceByMemberId)}
+                isSelf={m.characterId === characterId}
+                viewerIsLeader={isLeader}
+                busy={busy}
+                onAction={(fn, msg) => void run(fn, msg)}
+                characterId={characterId}
+              />
+            ))}
           </ul>
 
-          {isLeader && (
-            <>
-              <div className="row gap party-modal__invite">
-                <input
-                  type="text"
-                  placeholder="Character name"
-                  value={inviteName}
-                  onChange={(e) => setInviteName(e.target.value)}
-                  maxLength={32}
+          <footer className="party-modal__footer">
+            {isLeader && (
+              <>
+                <div className="row gap party-modal__invite">
+                  <input
+                    type="text"
+                    placeholder="Invite by name"
+                    value={inviteName}
+                    onChange={(e) => setInviteName(e.target.value)}
+                    maxLength={32}
+                    disabled={busy}
+                  />
+                  <button type="button" className="hud-btn small" disabled={busy} onClick={() => void inviteByName()}>
+                    Invite
+                  </button>
+                </div>
+                <label className="small row gap party-modal__exp-share">
+                  <input
+                    type="checkbox"
+                    checked={snapshot.party.exp_share}
+                    disabled={busy}
+                    onChange={() =>
+                      void run(() =>
+                        partyManage({
+                          action: 'set_exp_share',
+                          characterId,
+                          expShare: !snapshot.party.exp_share,
+                        }),
+                      )
+                    }
+                  />
+                  EXP share
+                </label>
+                <button
+                  type="button"
+                  className="secondary hud-btn small party-modal__footer-btn"
                   disabled={busy}
-                />
-                <button type="button" disabled={busy} onClick={() => void inviteByName()}>
-                  Invite
-                </button>
-              </div>
-              <label className="small row gap party-modal__exp-share">
-                <input
-                  type="checkbox"
-                  checked={snapshot.party.exp_share}
-                  disabled={busy}
-                  onChange={() =>
-                    void run(() =>
-                      partyManage({
-                        action: 'set_exp_share',
-                        characterId,
-                        expShare: !snapshot.party.exp_share,
-                      }),
-                    )
+                  onClick={() =>
+                    void run(async () => {
+                      await partyManage({ action: 'disband', characterId })
+                      onClose()
+                    })
                   }
-                />
-                EXP share
-              </label>
+                >
+                  Disband
+                </button>
+              </>
+            )}
+            {!isLeader && (
               <button
                 type="button"
-                className="secondary"
+                className="secondary hud-btn small party-modal__footer-btn"
                 disabled={busy}
                 onClick={() =>
                   void run(async () => {
-                    await partyManage({ action: 'disband', characterId })
+                    await partyManage({ action: 'leave', characterId })
                     onClose()
                   })
                 }
               >
-                Disband party
+                Leave party
               </button>
-            </>
-          )}
-
-          {!isLeader && (
-            <button
-              type="button"
-              className="secondary"
-              disabled={busy}
-              onClick={() =>
-                void run(async () => {
-                  await partyManage({ action: 'leave', characterId })
-                  onClose()
-                })
-              }
-            >
-              Leave party
-            </button>
-          )}
-        </>
+            )}
+          </footer>
+        </div>
       ) : (
-        <div className="party-modal__create">
+        <div className="party-modal__body party-modal__create">
           <p className="muted small">Create a party and invite others by character name.</p>
           <label className="small party-modal__field">
             Party name
@@ -208,7 +264,6 @@ export function PartyWindow({ characterId, snapshot, onClose, onChanged, onMessa
           </div>
         </div>
       )}
-      </ModalScrollBody>
     </AnimatedModal>
   )
 }

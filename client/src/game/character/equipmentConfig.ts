@@ -39,13 +39,23 @@ export function getEquipmentDefinition(itemId: string | null): EquipmentDefiniti
   const base = EQUIPMENT[baseId]
   if (!base) return null
   if (!rolled) return base
+  const rolledPrimary = rolled.affixes?.length
+    ? rolled.affixes.reduce(
+        (acc, a) => {
+          if (a.pool !== 'primary') return acc
+          acc[a.stat] = (acc[a.stat] ?? 0) + a.value
+          return acc
+        },
+        {} as Partial<Record<keyof StatBonuses, number>>,
+      )
+    : rolled.stats
   const merged: StatBonuses = {
-    str: base.bonuses.str + (rolled.stats.str ?? 0),
-    agi: base.bonuses.agi + (rolled.stats.agi ?? 0),
-    vit: base.bonuses.vit + (rolled.stats.vit ?? 0),
-    int: base.bonuses.int + (rolled.stats.int ?? 0),
-    dex: base.bonuses.dex + (rolled.stats.dex ?? 0),
-    luk: base.bonuses.luk + (rolled.stats.luk ?? 0),
+    str: base.bonuses.str + (rolledPrimary.str ?? 0),
+    agi: base.bonuses.agi + (rolledPrimary.agi ?? 0),
+    vit: base.bonuses.vit + (rolledPrimary.vit ?? 0),
+    int: base.bonuses.int + (rolledPrimary.int ?? 0),
+    dex: base.bonuses.dex + (rolledPrimary.dex ?? 0),
+    luk: base.bonuses.luk + (rolledPrimary.luk ?? 0),
   }
   return {
     id: itemId,

@@ -8,6 +8,8 @@ import {
   calcStatusMatkMin,
 } from '../combat/damage'
 import { sumEquippedCritChancePercent } from '../combat/critBonuses'
+import { sumEquippedCombatAffixes } from '../items/rolledItemCombat'
+import { sessionMaxHp, sessionMaxMp } from './gearVitals'
 import { calcDexVariableCastReducePercent } from '../combat/castTime'
 import { playerAttackTiming } from '../combat/preRenewalAspd'
 import { getItemCombatStats } from './itemCatalog'
@@ -15,7 +17,7 @@ import { effectiveStats } from './effectiveStats'
 import { getEquippedWeaponClass } from '../combat/playerAttackRange'
 import { skillPassiveHitBonus } from '../combat/skillPassives'
 import { rentalSpeedMultiplier } from './rental'
-import { derivedMaxHp, derivedMaxMp, moveSpeedFromAgi } from './statFormulas'
+import { moveSpeedFromAgi } from './statFormulas'
 
 export type CombatStatPreview = {
   hp: number
@@ -45,8 +47,9 @@ export function buildCombatStatPreview(state: CharacterSessionState): CombatStat
   const weapon = state.equipment.weapon ? getItemCombatStats(state.equipment.weapon) : null
   const weaponAtk = weapon?.weaponAtk ?? 0
   const statusAtk = calcStatusAtk(baseLevel, stats.str, stats.dex, stats.luk)
-  const hpMax = derivedMaxHp(state.jobId, baseLevel, stats.vit)
-  const mpMax = derivedMaxMp(state.jobId, baseLevel, stats.int)
+  const gearAffixes = sumEquippedCombatAffixes(state.equipment)
+  const hpMax = sessionMaxHp(state)
+  const mpMax = sessionMaxMp(state)
   const moveSpeed = Math.round(moveSpeedFromAgi(stats.agi) * rentalSpeedMultiplier(state))
   const attackTiming = playerAttackTiming(state)
 
@@ -64,8 +67,8 @@ export function buildCombatStatPreview(state: CharacterSessionState): CombatStat
     atk: statusAtk + weaponAtk,
     matkMin: calcStatusMatkMin(stats.int),
     matkMax: calcStatusMatkMax(stats.int),
-    def: stats.vit,
-    mdef: stats.int,
+    def: stats.vit + gearAffixes.def,
+    mdef: stats.int + gearAffixes.mdef,
     hit:
       calcHit(baseLevel, stats.dex, stats.luk) +
       skillPassiveHitBonus(state.skills, getEquippedWeaponClass(state.equipment)),

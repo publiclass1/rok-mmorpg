@@ -141,6 +141,7 @@ function applyStarterGear(state: CharacterSessionState, targetJobId: string): Ch
     const rolled = createRolledGearFromBase(piece.baseItemId, {
       rarity: 'common',
       requiredBaseLevel: reqLevel,
+      jobId: targetJobId,
     })
     if (!rolled) continue
     next = grantAndEquipRolledGear(next, rolled, piece.slot as EquipSlot)

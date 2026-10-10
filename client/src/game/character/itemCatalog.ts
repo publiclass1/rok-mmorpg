@@ -123,6 +123,16 @@ export function isWeaponItem(itemId: string): boolean {
   return ITEMS_BY_ID[baseId]?.type === 'weapon'
 }
 
+export function isArmorItem(itemId: string): boolean {
+  const baseId = isRolledItemId(itemId) ? parseRolledBaseItemId(itemId) : itemId
+  if (!baseId) return false
+  return ITEMS_BY_ID[baseId]?.type === 'armor'
+}
+
+export function isWeaponOrArmorItem(itemId: string): boolean {
+  return isWeaponItem(itemId) || isArmorItem(itemId)
+}
+
 export function getRolledItemOrNull(itemId: string): RolledItem | null {
   return getRolledItem(itemId)
 }

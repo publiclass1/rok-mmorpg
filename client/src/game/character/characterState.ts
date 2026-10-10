@@ -1,6 +1,5 @@
 import { addBaseExp, addJobExp, createInitialProgress, type PlayerProgressState } from '../combat/exp'
 import { statPointsForReachingBaseLevel } from '../../content/ro/expTables'
-import { equipmentBonusesFromState } from './equipmentConfig'
 import { addRolledItemToSession, type RolledItem } from '../items/rolledItem'
 import { getConsumableEffect } from './itemCatalog'
 import {
@@ -11,7 +10,8 @@ import {
 } from './sessionInventory'
 import { totalSkillPointsEarned } from './skillPointBudget'
 import { createEmptySkillBars, isSkillBarIndexInRange } from './skillBars'
-import { derivedMaxHp, derivedMaxMp, SKILL_POINTS_PER_JOB_LEVEL, statRaiseCost } from './statFormulas'
+import { sessionMaxHp, sessionMaxMp } from './gearVitals'
+import { SKILL_POINTS_PER_JOB_LEVEL, statRaiseCost } from './statFormulas'
 
 export type { SessionInventorySlot } from './sessionInventory'
 export { parseSessionInventory } from './sessionInventory'
@@ -246,11 +246,8 @@ export function applyVitalGainAfterProgress(
   before: { baseLevel: number; jobId: string },
 ): CharacterSessionState {
   if (state.progress.baseLevel <= before.baseLevel) return state
-  const bonuses = equipmentBonusesFromState(state.equipment)
-  const vit = state.vit + bonuses.vit
-  const int = state.int + bonuses.int
-  const newHpMax = derivedMaxHp(state.jobId, state.progress.baseLevel, vit)
-  const newMpMax = derivedMaxMp(state.jobId, state.progress.baseLevel, int)
+  const newHpMax = sessionMaxHp(state)
+  const newMpMax = sessionMaxMp(state)
   return {
     ...state,
     hp: newHpMax,
@@ -372,11 +369,8 @@ export function consumeConsumableFromSession(
   const effect = getConsumableEffect(itemId)
   if (!effect) return { ok: false, reason: 'Item is not usable.' }
 
-  const bonuses = equipmentBonusesFromState(state.equipment)
-  const vit = state.vit + bonuses.vit
-  const int = state.int + bonuses.int
-  const hpMax = derivedMaxHp(state.jobId, state.progress.baseLevel, vit)
-  const mpMax = derivedMaxMp(state.jobId, state.progress.baseLevel, int)
+  const hpMax = sessionMaxHp(state)
+  const mpMax = sessionMaxMp(state)
 
   let hp = state.hp
   let mp = state.mp

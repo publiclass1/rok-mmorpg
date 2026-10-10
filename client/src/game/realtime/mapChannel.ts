@@ -30,6 +30,16 @@ function normalizeBaseLevel(raw: unknown): number {
   return Math.min(Math.max(n, 1), cap)
 }
 
+function normalizeVitalMax(raw: unknown, fallback = 1): number {
+  const n = typeof raw === 'number' && Number.isFinite(raw) ? Math.floor(raw) : fallback
+  return Math.max(1, n)
+}
+
+function normalizeVitalCurrent(raw: unknown, max: number): number {
+  const n = typeof raw === 'number' && Number.isFinite(raw) ? Math.floor(raw) : max
+  return Math.min(Math.max(0, n), max)
+}
+
 function normalizePresence(raw: Partial<PlayerPresencePayload>, channelMapId: string): PlayerPresencePayload | null {
   if (!raw.characterId || !raw.name) return null
   const mapId =
@@ -52,6 +62,16 @@ function normalizePresence(raw: Partial<PlayerPresencePayload>, channelMapId: st
     stallTitle: raw.stallTitle ?? null,
     pvpSnapshot: raw.pvpSnapshot != null ? parseDuelCombatSnapshot(raw.pvpSnapshot) : undefined,
     baseLevel: normalizeBaseLevel(raw.baseLevel),
+    hp: normalizeVitalCurrent(
+      raw.hp,
+      normalizeVitalMax(raw.hpMax, normalizeVitalMax(raw.hp, 1)),
+    ),
+    hpMax: normalizeVitalMax(raw.hpMax, normalizeVitalMax(raw.hp, 1)),
+    mp: normalizeVitalCurrent(
+      raw.mp,
+      normalizeVitalMax(raw.mpMax, normalizeVitalMax(raw.mp, 1)),
+    ),
+    mpMax: normalizeVitalMax(raw.mpMax, normalizeVitalMax(raw.mp, 1)),
   }
 }
 

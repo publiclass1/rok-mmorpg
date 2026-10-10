@@ -45,6 +45,26 @@ export type PlayerPresencePayload = PositionPayload & {
   /** Present on PVP maps for damage calculation against this player. */
   pvpSnapshot?: DuelCombatSnapshot | null
   baseLevel: number
+  hp: number
+  hpMax: number
+  mp: number
+  mpMax: number
+}
+
+export type RemotePlayerHudInfo = {
+  characterId: string
+  name: string
+  x: number
+  y: number
+  isVending?: boolean
+  stallTitle?: string | null
+  jobId?: string
+  appearance?: CharacterAppearance
+  baseLevel?: number
+  hp?: number
+  hpMax?: number
+  mp?: number
+  mpMax?: number
 }
 
 export type SelectedPlayerPayload = {
@@ -195,14 +215,7 @@ export type GameEvents = {
   position: { x: number; y: number; mapId: string }
   npcNearby: NpcRow | null
   npcInteract: NpcRow
-  remotePlayers: Array<{
-    characterId: string
-    name: string
-    x: number
-    y: number
-    isVending?: boolean
-    stallTitle?: string | null
-  }>
+  remotePlayers: RemotePlayerHudInfo[]
   selectedPlayer: SelectedPlayerPayload | null
   selectedPlayerAnchor: { x: number; y: number } | null
   clearSelectedPlayer: Record<string, never>

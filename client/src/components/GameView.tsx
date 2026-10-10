@@ -4,7 +4,11 @@ import Phaser from 'phaser'
 import { duelManage, dungeonManage, gmCommand, partyManage, portalWarp, savePoint, teleport } from '../lib/api'
 import { clearCharacterPresence, upsertCharacterPresence } from '../lib/characterPresence'
 import { loadGuildForCharacter, type GuildSnapshot } from '../lib/guildState'
-import { loadPartyForCharacter, type PartySnapshot } from '../lib/partyState'
+import {
+  loadPartyForCharacter,
+  type PartyMemberVitals,
+  type PartySnapshot,
+} from '../lib/partyState'
 import { flushActiveMapPresenceLeave } from '../game/realtime/activeMapPresence'
 import { MapChatChannel, type ChatMessage } from '../game/realtime/mapChat'
 import { PartyRealtimeChannel } from '../game/realtime/partyChannel'
@@ -49,6 +53,7 @@ import {
   type DungeonSyncPayload,
   type DuelSyncPayload,
   type GameEvents,
+  type RemotePlayerHudInfo,
 } from '../game/events'
 import { duelRowToSyncPayload } from '../game/duel/duelSync'
 import type {
@@ -197,16 +202,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const [shopInitialTab, setShopInitialTab] = useState<'buy' | 'sell'>('buy')
   const [rentalNpc, setRentalNpc] = useState<NpcRow | null>(null)
   const [npcMenu, setNpcMenu] = useState<NpcRow | null>(null)
-  const [remotePlayers, setRemotePlayers] = useState<
-    Array<{
-      characterId: string
-      name: string
-      x: number
-      y: number
-      isVending?: boolean
-      stallTitle?: string | null
-    }>
-  >([])
+  const [remotePlayers, setRemotePlayers] = useState<RemotePlayerHudInfo[]>([])
   const [tradePartner, setTradePartner] = useState<{
     characterId: string
     name: string
@@ -320,7 +316,32 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   useEffect(() => {
     if (!partyOpen) return
     refreshParty()
+    const interval = window.setInterval(refreshParty, 5000)
+    return () => window.clearInterval(interval)
   }, [partyOpen, character.id])
+
+  const partyPresenceById = useMemo(() => {
+    const memberIds = new Set(partySnapshot?.members.map((m) => m.characterId) ?? [])
+    const out: Record<string, PartyMemberVitals> = {}
+    for (const p of remotePlayers) {
+      if (!memberIds.has(p.characterId)) continue
+      if (
+        p.hp == null ||
+        p.hpMax == null ||
+        p.mp == null ||
+        p.mpMax == null
+      ) {
+        continue
+      }
+      out[p.characterId] = {
+        hp: p.hp,
+        hpMax: p.hpMax,
+        mp: p.mp,
+        mpMax: p.mpMax,
+      }
+    }
+    return out
+  }, [partySnapshot, remotePlayers])
 
   const refreshGuild = () => {
     void loadGuildForCharacter(character.id).then(setGuildSnapshot)
@@ -666,6 +687,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     const socket = getGameSocket()
     const onPartyRequest = async (row: PartyRequestRow) => {
       if (row.to_character_id !== character.id || row.status !== 'pending') return
+      if (row.kind === 'apply') {
+        refreshParty()
+        return
+      }
       setPartyRequest({ request: row, fromName: 'Adventurer' })
     }
     const onPartyRoster = () => {
@@ -677,7 +702,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       socket.off('party_request', onPartyRequest)
       socket.off('party_roster', onPartyRoster)
     }
-  }, [character.id])
+  }, [character.id, refreshParty])
 
   const restoreVitalsAfterDuel = useCallback(() => {
     const session = getCharacterSession()
@@ -2077,6 +2102,8 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             key="party"
             characterId={character.id}
             snapshot={partySnapshot}
+            selfSheet={sheet}
+            presenceByMemberId={partyPresenceById}
             onClose={() => setPartyOpen(false)}
             onChanged={refreshParty}
             onMessage={setMessage}
