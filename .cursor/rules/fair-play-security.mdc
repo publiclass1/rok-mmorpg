@@ -1,0 +1,36 @@
+---
+description: Server authority and anti-cheat mindset for gameplay and economy changes
+alwaysApply: true
+---
+
+# Fair play and client trust boundaries
+
+Browser clients can be edited with devtools, console scripts, or memory tools. Treat **all client state as untrusted** unless it is cosmetic-only.
+
+## Default rule for new features
+
+Before merging gameplay, economy, or progression changes, ask:
+
+1. **Can a player grant themselves value by patching the client?** (items, zeny, stats, XP, skills, rolled affixes, cooldowns, damage)
+2. **If yes**, move the decision to the **server** (or validate on `progress-save` / dedicated API) and reject impossible payloads.
+3. **RNG that affects power or economy** (drops, shop rolls, gacha, crit resolution for PvP if applicable) must use **server-side randomness** and persist authoritative results in the DB.
+
+## Patterns to follow in this repo
+
+- **Zeny**: mutate only via server routes (`/api/characters/:id/economy`, shop buy, combat report, vendor), not client-only dispatch.
+- **Rolled gear (`ri:`)**: affixes live in `rolled_items` on `character_progress`; inventory may reference `ri:` ids only if a matching record exists. Rolls for **rarity dealer purchases** go through `POST /api/shop/buy-rolled` (`server/src/shared/rolledGear/`).
+- **Progress save**: `validateProgress` must stay in sync when adding new persisted fields; bound-check stats, skills, inventory, and rolled items.
+- **Duplicating logic**: when server and client both need formulas (tooltips, previews), keep **one authoritative copy on the server** and mirror to client only for display—or accept drift and document the sync script.
+
+## Red flags in diffs
+
+- Client-only `dispatchCharacterAction` granting items, zeny, XP, or rolled stats
+- Trusting client-sent `rolled_items`, affix values, or prices without server stock lookup
+- Skipping validation for new JSON blobs on `character_progress`
+- "We'll validate later" for multiplayer-visible or tradeable rewards
+
+## When client-only is OK
+
+- Rendering, animations, sound, local UI preferences
+- Predicted movement or visuals that the server can correct or ignore
+- Read-only previews that match server rules but do not commit state
