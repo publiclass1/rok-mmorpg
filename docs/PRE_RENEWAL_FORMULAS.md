@@ -44,6 +44,14 @@ Typically 1 skill point per job level ([Skills](https://irowiki.org/wiki/Skills)
 
 **Today:** `SKILL_POINTS_PER_JOB_LEVEL = 1` (matches classic simplification).
 
+## Job level bonuses (Renewal — hybrid exception)
+
+Pre-Renewal does not grant automatic STR–LUK on job level; **Renewal** class pages list per-job-level bonuses ([Job Bonuses](https://irowiki.org/wiki/Category:Classes) tables on iRO Wiki).
+
+- Cumulative bonuses for **current job only** at `jobLevel` (not persisted; not part of stat-point budget).
+- Data: [`content/ro/jobBonuses.json`](../content/ro/jobBonuses.json); runtime: [`client/src/game/character/jobBonuses.ts`](../client/src/game/character/jobBonuses.ts) applied in `effectiveStats.ts`.
+- Combat/EXP/ASPD remain Pre-Renewal; see [`IRO_REFERENCE.md`](IRO_REFERENCE.md).
+
 ## Cast time (variable)
 
 Classic Pre-Renewal cast time scales with **DEX** ([Cast Time](https://irowiki.org/classic/Cast_Time)):

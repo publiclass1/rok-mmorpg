@@ -251,6 +251,30 @@ export function validateRoContent(pack: RoContentPack): void {
     }
   }
 
+  const bonusStatKeys = ['str', 'agi', 'vit', 'int', 'dex', 'luk'] as const
+  assert(pack.jobBonuses.schemaVersion >= 1, 'jobBonuses.schemaVersion must be >= 1')
+  for (const job of pack.jobs) {
+    if (job.id === 'monster') continue
+    const table = pack.jobBonuses.jobs[job.id]
+    assert(table != null, `jobBonuses.jobs missing entry for ${job.id}`)
+    const maxLv = job.maxJobLevel
+    for (const grant of table.bonusAtJobLevel) {
+      assert(grant.jobLevel >= 1 && grant.jobLevel <= maxLv, `jobBonuses ${job.id} invalid jobLevel ${grant.jobLevel}`)
+      let amount = 0
+      for (const key of bonusStatKeys) {
+        const v = grant[key]
+        if (v != null) {
+          assert(v >= 1 && Number.isInteger(v), `jobBonuses ${job.id} grant at ${grant.jobLevel}: ${key} must be positive int`)
+          amount += v
+        }
+      }
+      assert(amount > 0, `jobBonuses ${job.id} empty grant at job level ${grant.jobLevel}`)
+    }
+  }
+  for (const jobId of Object.keys(pack.jobBonuses.jobs)) {
+    assert(jobIds.has(jobId), `jobBonuses references unknown job ${jobId}`)
+  }
+
   for (const [mapId, portalList] of Object.entries(pack.portals)) {
     if (mapIds.size > 0 && !mapIds.has(mapId)) {
       assert(false, `portals key ${mapId} has no matching map entry`)

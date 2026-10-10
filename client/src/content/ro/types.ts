@@ -358,6 +358,27 @@ export type RoDungeonFloor = {
   gearDrop: RoDungeonGearDrop
 }
 
+export type RoJobBonusGrant = {
+  jobLevel: number
+  str?: number
+  agi?: number
+  vit?: number
+  int?: number
+  dex?: number
+  luk?: number
+}
+
+export type RoJobBonusTable = {
+  sourceUrl?: string | null
+  bonusAtJobLevel: RoJobBonusGrant[]
+}
+
+export type RoJobBonusesConfig = {
+  schemaVersion: number
+  description?: string
+  jobs: Record<string, RoJobBonusTable>
+}
+
 export type RoDungeonsConfig = {
   gear: {
     dropSlots: string[]
@@ -383,4 +404,5 @@ export type RoContentPack = {
   jobMaster: RoJobMasterConfig
   rentals: RoRentalsConfig
   aspd: RoAspdConfig
+  jobBonuses: RoJobBonusesConfig
 }

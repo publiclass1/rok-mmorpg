@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import { addExperience, createInitialCharacterState } from './characterState'
 import { derivedMaxHp } from './statFormulas'
+import { effectiveStats } from './effectiveStats'
 import { progressFromLevels } from '../combat/exp'
 import { toCharacterSheetPayload } from './characterSheet'
 
@@ -32,6 +33,8 @@ function run() {
   )
   assert.equal(hpAfter, hpBefore, 'job level alone should not change max HP')
   assert.ok(jobLeveled.state.skillPointsUnspent >= 1, 'job level up should grant skill points')
+  const effStr = effectiveStats(jobLeveled.state).str
+  assert.ok(effStr > jobSession.str, 'job level up should raise effective stats via job bonuses')
 
   console.log('characterState.levelUp.test.ts: ok')
 }

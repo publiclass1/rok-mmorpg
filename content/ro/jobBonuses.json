@@ -1,0 +1,847 @@
+{
+  "schemaVersion": 1,
+  "description": "Renewal-style job level stat bonuses (iRO Wiki Job Bonuses); hybrid ruleset with Pre-Renewal combat.",
+  "jobs": {
+    "novice": {
+      "sourceUrl": "https://irowiki.org/wiki/Novice",
+      "bonusAtJobLevel": []
+    },
+    "swordman": {
+      "sourceUrl": "https://irowiki.org/wiki/Swordman",
+      "bonusAtJobLevel": [
+        {
+          "jobLevel": 2,
+          "str": 1
+        },
+        {
+          "jobLevel": 6,
+          "vit": 1
+        },
+        {
+          "jobLevel": 10,
+          "dex": 1
+        },
+        {
+          "jobLevel": 14,
+          "str": 1
+        },
+        {
+          "jobLevel": 18,
+          "vit": 1
+        },
+        {
+          "jobLevel": 22,
+          "dex": 1
+        },
+        {
+          "jobLevel": 26,
+          "luk": 1
+        },
+        {
+          "jobLevel": 30,
+          "agi": 1
+        },
+        {
+          "jobLevel": 33,
+          "str": 1
+        },
+        {
+          "jobLevel": 36,
+          "dex": 1
+        },
+        {
+          "jobLevel": 38,
+          "vit": 1
+        },
+        {
+          "jobLevel": 40,
+          "str": 1
+        },
+        {
+          "jobLevel": 42,
+          "vit": 1
+        },
+        {
+          "jobLevel": 44,
+          "luk": 1
+        },
+        {
+          "jobLevel": 46,
+          "agi": 1
+        },
+        {
+          "jobLevel": 47,
+          "str": 1
+        },
+        {
+          "jobLevel": 49,
+          "str": 1
+        },
+        {
+          "jobLevel": 50,
+          "str": 1
+        }
+      ]
+    },
+    "knight": {
+      "sourceUrl": "https://irowiki.org/wiki/Knight",
+      "bonusAtJobLevel": [
+        {
+          "jobLevel": 1,
+          "vit": 1
+        },
+        {
+          "jobLevel": 3,
+          "vit": 1
+        },
+        {
+          "jobLevel": 4,
+          "str": 1
+        },
+        {
+          "jobLevel": 5,
+          "dex": 1
+        },
+        {
+          "jobLevel": 5,
+          "luk": 1
+        },
+        {
+          "jobLevel": 8,
+          "vit": 1
+        },
+        {
+          "jobLevel": 10,
+          "str": 1
+        },
+        {
+          "jobLevel": 12,
+          "vit": 1
+        },
+        {
+          "jobLevel": 13,
+          "agi": 1
+        },
+        {
+          "jobLevel": 15,
+          "str": 1
+        },
+        {
+          "jobLevel": 17,
+          "vit": 1
+        },
+        {
+          "jobLevel": 18,
+          "vit": 1
+        },
+        {
+          "jobLevel": 20,
+          "dex": 1
+        },
+        {
+          "jobLevel": 20,
+          "luk": 1
+        },
+        {
+          "jobLevel": 21,
+          "str": 1
+        },
+        {
+          "jobLevel": 23,
+          "vit": 1
+        },
+        {
+          "jobLevel": 27,
+          "str": 1
+        },
+        {
+          "jobLevel": 28,
+          "luk": 1
+        },
+        {
+          "jobLevel": 29,
+          "vit": 1
+        },
+        {
+          "jobLevel": 31,
+          "dex": 1
+        },
+        {
+          "jobLevel": 33,
+          "str": 1
+        },
+        {
+          "jobLevel": 36,
+          "vit": 1
+        },
+        {
+          "jobLevel": 37,
+          "luk": 1
+        },
+        {
+          "jobLevel": 38,
+          "agi": 1
+        },
+        {
+          "jobLevel": 40,
+          "dex": 1
+        },
+        {
+          "jobLevel": 43,
+          "vit": 1
+        },
+        {
+          "jobLevel": 46,
+          "str": 1
+        },
+        {
+          "jobLevel": 47,
+          "str": 1
+        },
+        {
+          "jobLevel": 48,
+          "dex": 1
+        },
+        {
+          "jobLevel": 49,
+          "dex": 1
+        }
+      ]
+    },
+    "mage": {
+      "sourceUrl": "https://irowiki.org/wiki/Mage",
+      "bonusAtJobLevel": [
+        {
+          "jobLevel": 2,
+          "int": 1
+        },
+        {
+          "jobLevel": 6,
+          "dex": 1
+        },
+        {
+          "jobLevel": 10,
+          "dex": 1
+        },
+        {
+          "jobLevel": 14,
+          "int": 1
+        },
+        {
+          "jobLevel": 18,
+          "agi": 1
+        },
+        {
+          "jobLevel": 22,
+          "int": 1
+        },
+        {
+          "jobLevel": 26,
+          "agi": 1
+        },
+        {
+          "jobLevel": 30,
+          "luk": 1
+        },
+        {
+          "jobLevel": 33,
+          "int": 1
+        },
+        {
+          "jobLevel": 36,
+          "dex": 1
+        },
+        {
+          "jobLevel": 38,
+          "int": 1
+        },
+        {
+          "jobLevel": 40,
+          "agi": 1
+        },
+        {
+          "jobLevel": 42,
+          "luk": 1
+        },
+        {
+          "jobLevel": 44,
+          "int": 1
+        },
+        {
+          "jobLevel": 46,
+          "int": 1
+        },
+        {
+          "jobLevel": 47,
+          "agi": 1
+        },
+        {
+          "jobLevel": 49,
+          "luk": 1
+        },
+        {
+          "jobLevel": 50,
+          "int": 1
+        }
+      ]
+    },
+    "wizard": {
+      "sourceUrl": "https://irowiki.org/wiki/Wizard",
+      "bonusAtJobLevel": [
+        {
+          "jobLevel": 1,
+          "int": 1
+        },
+        {
+          "jobLevel": 2,
+          "dex": 1
+        },
+        {
+          "jobLevel": 4,
+          "int": 1
+        },
+        {
+          "jobLevel": 5,
+          "dex": 1
+        },
+        {
+          "jobLevel": 6,
+          "agi": 1
+        },
+        {
+          "jobLevel": 9,
+          "int": 1
+        },
+        {
+          "jobLevel": 10,
+          "agi": 1
+        },
+        {
+          "jobLevel": 12,
+          "str": 1
+        },
+        {
+          "jobLevel": 13,
+          "dex": 1
+        },
+        {
+          "jobLevel": 15,
+          "luk": 1
+        },
+        {
+          "jobLevel": 18,
+          "int": 1
+        },
+        {
+          "jobLevel": 22,
+          "int": 1
+        },
+        {
+          "jobLevel": 24,
+          "agi": 1
+        },
+        {
+          "jobLevel": 26,
+          "dex": 1
+        },
+        {
+          "jobLevel": 29,
+          "int": 1
+        },
+        {
+          "jobLevel": 31,
+          "int": 1
+        },
+        {
+          "jobLevel": 32,
+          "dex": 1
+        },
+        {
+          "jobLevel": 33,
+          "int": 1
+        },
+        {
+          "jobLevel": 34,
+          "agi": 1
+        },
+        {
+          "jobLevel": 34,
+          "luk": 1
+        },
+        {
+          "jobLevel": 38,
+          "vit": 1
+        },
+        {
+          "jobLevel": 39,
+          "dex": 1
+        },
+        {
+          "jobLevel": 40,
+          "int": 1
+        },
+        {
+          "jobLevel": 41,
+          "agi": 1
+        },
+        {
+          "jobLevel": 43,
+          "agi": 1
+        },
+        {
+          "jobLevel": 45,
+          "int": 1
+        },
+        {
+          "jobLevel": 46,
+          "agi": 1
+        },
+        {
+          "jobLevel": 47,
+          "agi": 1
+        },
+        {
+          "jobLevel": 48,
+          "int": 1
+        },
+        {
+          "jobLevel": 50,
+          "int": 1
+        }
+      ]
+    },
+    "archer": {
+      "sourceUrl": "https://irowiki.org/wiki/Archer",
+      "bonusAtJobLevel": [
+        {
+          "jobLevel": 2,
+          "dex": 1
+        },
+        {
+          "jobLevel": 6,
+          "str": 1
+        },
+        {
+          "jobLevel": 10,
+          "int": 1
+        },
+        {
+          "jobLevel": 14,
+          "dex": 1
+        },
+        {
+          "jobLevel": 18,
+          "dex": 1
+        },
+        {
+          "jobLevel": 22,
+          "luk": 1
+        },
+        {
+          "jobLevel": 26,
+          "agi": 1
+        },
+        {
+          "jobLevel": 30,
+          "dex": 1
+        },
+        {
+          "jobLevel": 33,
+          "agi": 1
+        },
+        {
+          "jobLevel": 36,
+          "dex": 1
+        },
+        {
+          "jobLevel": 38,
+          "str": 1
+        },
+        {
+          "jobLevel": 40,
+          "str": 1
+        },
+        {
+          "jobLevel": 42,
+          "dex": 1
+        },
+        {
+          "jobLevel": 44,
+          "luk": 1
+        },
+        {
+          "jobLevel": 46,
+          "vit": 1
+        },
+        {
+          "jobLevel": 47,
+          "int": 1
+        },
+        {
+          "jobLevel": 49,
+          "agi": 1
+        },
+        {
+          "jobLevel": 50,
+          "dex": 1
+        }
+      ]
+    },
+    "hunter": {
+      "sourceUrl": "https://irowiki.org/wiki/Hunter",
+      "bonusAtJobLevel": [
+        {
+          "jobLevel": 1,
+          "dex": 1
+        },
+        {
+          "jobLevel": 2,
+          "int": 1
+        },
+        {
+          "jobLevel": 4,
+          "dex": 1
+        },
+        {
+          "jobLevel": 5,
+          "str": 1
+        },
+        {
+          "jobLevel": 7,
+          "luk": 1
+        },
+        {
+          "jobLevel": 8,
+          "dex": 1
+        },
+        {
+          "jobLevel": 10,
+          "str": 1
+        },
+        {
+          "jobLevel": 11,
+          "str": 1
+        },
+        {
+          "jobLevel": 12,
+          "agi": 1
+        },
+        {
+          "jobLevel": 14,
+          "dex": 1
+        },
+        {
+          "jobLevel": 15,
+          "luk": 1
+        },
+        {
+          "jobLevel": 17,
+          "vit": 1
+        },
+        {
+          "jobLevel": 19,
+          "agi": 1
+        },
+        {
+          "jobLevel": 20,
+          "agi": 1
+        },
+        {
+          "jobLevel": 21,
+          "dex": 1
+        },
+        {
+          "jobLevel": 22,
+          "vit": 1
+        },
+        {
+          "jobLevel": 27,
+          "dex": 1
+        },
+        {
+          "jobLevel": 29,
+          "luk": 1
+        },
+        {
+          "jobLevel": 31,
+          "agi": 1
+        },
+        {
+          "jobLevel": 33,
+          "dex": 1
+        },
+        {
+          "jobLevel": 34,
+          "int": 1
+        },
+        {
+          "jobLevel": 38,
+          "dex": 1
+        },
+        {
+          "jobLevel": 39,
+          "agi": 1
+        },
+        {
+          "jobLevel": 41,
+          "int": 1
+        },
+        {
+          "jobLevel": 42,
+          "luk": 1
+        },
+        {
+          "jobLevel": 43,
+          "dex": 1
+        },
+        {
+          "jobLevel": 44,
+          "str": 1
+        },
+        {
+          "jobLevel": 46,
+          "int": 1
+        },
+        {
+          "jobLevel": 47,
+          "agi": 1
+        },
+        {
+          "jobLevel": 49,
+          "dex": 1
+        }
+      ]
+    },
+    "acolyte": {
+      "sourceUrl": "https://irowiki.org/wiki/Acolyte",
+      "bonusAtJobLevel": [
+        {
+          "jobLevel": 2,
+          "luk": 1
+        },
+        {
+          "jobLevel": 6,
+          "vit": 1
+        },
+        {
+          "jobLevel": 10,
+          "int": 1
+        },
+        {
+          "jobLevel": 14,
+          "dex": 1
+        },
+        {
+          "jobLevel": 18,
+          "luk": 1
+        },
+        {
+          "jobLevel": 22,
+          "agi": 1
+        },
+        {
+          "jobLevel": 26,
+          "str": 1
+        },
+        {
+          "jobLevel": 30,
+          "vit": 1
+        },
+        {
+          "jobLevel": 33,
+          "int": 1
+        },
+        {
+          "jobLevel": 36,
+          "dex": 1
+        },
+        {
+          "jobLevel": 38,
+          "luk": 1
+        },
+        {
+          "jobLevel": 40,
+          "agi": 1
+        },
+        {
+          "jobLevel": 42,
+          "str": 1
+        },
+        {
+          "jobLevel": 44,
+          "vit": 1
+        },
+        {
+          "jobLevel": 46,
+          "int": 1
+        },
+        {
+          "jobLevel": 46,
+          "dex": 1
+        },
+        {
+          "jobLevel": 49,
+          "str": 1
+        },
+        {
+          "jobLevel": 50,
+          "luk": 1
+        }
+      ]
+    },
+    "merchant": {
+      "sourceUrl": "https://irowiki.org/wiki/Merchant",
+      "bonusAtJobLevel": [
+        {
+          "jobLevel": 2,
+          "vit": 1
+        },
+        {
+          "jobLevel": 6,
+          "dex": 1
+        },
+        {
+          "jobLevel": 10,
+          "str": 1
+        },
+        {
+          "jobLevel": 14,
+          "dex": 1
+        },
+        {
+          "jobLevel": 18,
+          "vit": 1
+        },
+        {
+          "jobLevel": 22,
+          "str": 1
+        },
+        {
+          "jobLevel": 26,
+          "int": 1
+        },
+        {
+          "jobLevel": 30,
+          "vit": 1
+        },
+        {
+          "jobLevel": 33,
+          "agi": 1
+        },
+        {
+          "jobLevel": 36,
+          "luk": 1
+        },
+        {
+          "jobLevel": 38,
+          "dex": 1
+        },
+        {
+          "jobLevel": 40,
+          "str": 1
+        },
+        {
+          "jobLevel": 42,
+          "dex": 1
+        },
+        {
+          "jobLevel": 44,
+          "str": 1
+        },
+        {
+          "jobLevel": 46,
+          "luk": 1
+        },
+        {
+          "jobLevel": 47,
+          "vit": 1
+        },
+        {
+          "jobLevel": 49,
+          "str": 1
+        },
+        {
+          "jobLevel": 50,
+          "dex": 1
+        }
+      ]
+    },
+    "thief": {
+      "sourceUrl": "https://irowiki.org/wiki/Thief",
+      "bonusAtJobLevel": [
+        {
+          "jobLevel": 2,
+          "agi": 1
+        },
+        {
+          "jobLevel": 6,
+          "str": 1
+        },
+        {
+          "jobLevel": 10,
+          "dex": 1
+        },
+        {
+          "jobLevel": 14,
+          "vit": 1
+        },
+        {
+          "jobLevel": 18,
+          "int": 1
+        },
+        {
+          "jobLevel": 22,
+          "dex": 1
+        },
+        {
+          "jobLevel": 26,
+          "luk": 1
+        },
+        {
+          "jobLevel": 30,
+          "str": 1
+        },
+        {
+          "jobLevel": 33,
+          "agi": 1
+        },
+        {
+          "jobLevel": 36,
+          "agi": 1
+        },
+        {
+          "jobLevel": 38,
+          "str": 1
+        },
+        {
+          "jobLevel": 40,
+          "luk": 1
+        },
+        {
+          "jobLevel": 42,
+          "dex": 1
+        },
+        {
+          "jobLevel": 44,
+          "vit": 1
+        },
+        {
+          "jobLevel": 46,
+          "luk": 1
+        },
+        {
+          "jobLevel": 47,
+          "str": 1
+        },
+        {
+          "jobLevel": 49,
+          "dex": 1
+        },
+        {
+          "jobLevel": 50,
+          "agi": 1
+        }
+      ]
+    }
+  }
+}
