@@ -1758,51 +1758,44 @@ button:disabled {
   overflow: hidden;
 }
 
+.skill-bar-panel--row {
+  cursor: grab;
+}
+
+.skill-bar-panel--row.modal-panel--dragging {
+  cursor: grabbing;
+}
+
+.skill-bar-panel--row .skill-slot {
+  cursor: pointer;
+}
+
 .skill-bar-panel-header {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  border-bottom: 1px solid rgba(55, 65, 81, 0.7);
-  padding-right: 0.15rem;
-}
-
-.skill-bar-panel-header .skill-bar-drag-handle {
-  flex: 0 0 auto;
-  border-bottom: none;
+  gap: 0.15rem;
+  min-height: 0;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.55);
+  padding: 0.05rem 0.08rem 0.05rem 0.28rem;
 }
 
 .skill-bar-panel-title {
   flex: 1;
-  font-size: 0.65rem;
+  font-size: 0.52rem;
   font-weight: 600;
+  line-height: 1.1;
   color: #9ca3af;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   user-select: none;
 }
 
 .skill-bar-panel-header .modal-close-btn {
   flex: 0 0 auto;
   margin-left: auto;
-}
-
-.skill-bar-drag-handle {
-  cursor: grab;
-  text-align: center;
-  font-size: 0.55rem;
-  line-height: 1;
-  letter-spacing: 0.12em;
-  color: #6b7280;
-  padding: 0.2rem 0.35rem;
-  border-bottom: 1px solid rgba(55, 65, 81, 0.7);
-  user-select: none;
-}
-
-.skill-bar-panel--row .skill-bar-drag-handle {
-  border-bottom: none;
-}
-
-.skill-bar-drag-handle:active {
-  cursor: grabbing;
+  width: 1.05rem;
+  height: 1.05rem;
+  font-size: 0.75rem;
+  border-radius: 4px;
 }
 
 .skill-bars-stack {

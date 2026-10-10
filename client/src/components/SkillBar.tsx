@@ -101,8 +101,12 @@ function SkillBarRowPanel({
   suppressClickRef,
 }: SkillBarRowPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
-  const { pos, isDragging } = useModalDrag(panelRef, true, (el) =>
-    skillBarRowInitialPosition(el, bar),
+  const { pos, isDragging } = useModalDrag(
+    panelRef,
+    true,
+    (el) => skillBarRowInitialPosition(el, bar),
+    [bar],
+    'panel',
   )
 
   function handleDrop(slot: number, e: React.DragEvent) {
@@ -195,14 +199,7 @@ function SkillBarRowPanel({
           : { position: 'fixed', left: 0, top: 0, margin: 0, visibility: 'hidden' }
       }
     >
-      <div className="skill-bar-panel-header">
-        <div
-          className="skill-bar-drag-handle modal-drag-handle"
-          title="Drag to move skill bar"
-          aria-hidden
-        >
-          ⋮⋮
-        </div>
+      <div className="skill-bar-panel-header" title="Drag to move skill bar">
         <span className="skill-bar-panel-title">{SKILL_BAR_ROW_LABELS[bar]}</span>
         <ModalCloseButton onClose={onClose} label={`Close skill bar ${SKILL_BAR_ROW_LABELS[bar]}`} />
       </div>

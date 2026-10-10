@@ -2,11 +2,14 @@ import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 're
 
 export type PanelPosition = { x: number; y: number }
 
+const INTERACTIVE_DRAG_EXCLUDE = 'button, input, a, select, textarea, label'
+
 export function useModalDrag(
   panelRef: RefObject<HTMLElement | null>,
   enabled: boolean,
   getInitialPosition?: (panel: HTMLElement) => PanelPosition,
   placementDeps: unknown[] = [],
+  dragFrom: 'handle' | 'panel' = 'handle',
 ) {
   const [pos, setPos] = useState<PanelPosition | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -49,8 +52,12 @@ export function useModalDrag(
 
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement
-      if (!target.closest('.modal-drag-handle')) return
-      if (target.closest('button, input, a, select, textarea, label')) return
+      if (dragFrom === 'handle') {
+        if (!target.closest('.modal-drag-handle')) return
+      } else if (target.closest('.skill-slot')) {
+        return
+      }
+      if (target.closest(INTERACTIVE_DRAG_EXCLUDE)) return
       dragging = true
       setIsDragging(true)
       start = {
@@ -94,7 +101,7 @@ export function useModalDrag(
       panel.removeEventListener('pointerup', endDrag)
       panel.removeEventListener('pointercancel', endDrag)
     }
-  }, [enabled, panelRef])
+  }, [dragFrom, enabled, panelRef])
 
   return { pos, isDragging }
 }
