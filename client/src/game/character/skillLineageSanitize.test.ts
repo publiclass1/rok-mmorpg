@@ -10,9 +10,13 @@ const archerSkills = {
   blitz_beat: 2,
 }
 
-const cleaned = sanitizeSkillsForJob('archer', archerSkills)
+const cleaned = sanitizeSkillsForJob('archer', {
+  ...archerSkills,
+  ankle_snare: 3,
+})
 assert.equal(cleaned.falcon_mastery ?? 0, 0, 'strips Hunter falcon_mastery from Archer')
 assert.equal(cleaned.blitz_beat ?? 0, 0, 'strips Hunter blitz_beat from Archer')
+assert.equal(cleaned.ankle_snare ?? 0, 0, 'strips Hunter trap skills from Archer')
 assert.equal(cleaned.owls_eye, 5, 'keeps Archer skills')
 
 const hunterSkills = sanitizeSkillsForJob('hunter', {

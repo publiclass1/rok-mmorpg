@@ -218,8 +218,9 @@ const ARCHER_RANGED_PHYSICAL_SKILLS = new Set(['double_strafe', 'blitz_beat'])
 
 const ARCHER_GROUND_PHYSICAL_SKILLS = new Set(['arrow_shower'])
 
-const ARCHER_TRAP_STUBS = new Set([
-  'arrow_crafting',
+const ARCHER_SKILL_STUBS = new Set(['arrow_crafting', 'improve_concentration'])
+
+const HUNTER_TRAP_STUBS = new Set([
   'ankle_snare',
   'shockwave_trap',
   'sandman_trap',
@@ -228,9 +229,13 @@ const ARCHER_TRAP_STUBS = new Set([
   'blast_mine',
   'claymore_trap',
   'remove_trap',
+  'skid_trap',
+  'land_mine',
+  'spring_trap',
+  'talkie_box',
 ])
 
-const HUNTER_SKILL_STUBS = new Set(['talk_with_cute_pet', 'detect', 'land_mine', 'spring_trap'])
+const HUNTER_SKILL_STUBS = new Set(['detect'])
 
 export function isPlayerRangedPhysicalSkill(skillId: string): boolean {
   return ARCHER_RANGED_PHYSICAL_SKILLS.has(skillId)
@@ -241,7 +246,11 @@ export function isPlayerGroundPhysicalSkill(skillId: string): boolean {
 }
 
 export function isArcherSkillStub(skillId: string): boolean {
-  return ARCHER_TRAP_STUBS.has(skillId) || HUNTER_SKILL_STUBS.has(skillId)
+  return (
+    ARCHER_SKILL_STUBS.has(skillId) ||
+    HUNTER_TRAP_STUBS.has(skillId) ||
+    HUNTER_SKILL_STUBS.has(skillId)
+  )
 }
 
 export function physicalSkillModifier(def: SkillDefinition | undefined, skillLevel: number): number {

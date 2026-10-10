@@ -77,7 +77,10 @@ function rowToSession(
 
   const skillsMap: Record<string, number> = {}
   for (const row of skills) {
-    skillsMap[row.skill_id] = row.level
+    const skillId =
+      row.skill_id === 'talk_with_cute_pet' ? 'talkie_box' : row.skill_id
+    const prev = skillsMap[skillId] ?? 0
+    skillsMap[skillId] = Math.max(prev, row.level)
   }
   if ((skillsMap.sit ?? 0) < 1) {
     skillsMap.sit = 1

@@ -492,8 +492,41 @@ function drawRemoveTrap(id) {
   return drawTrapIcon(id, '#94a3b8')
 }
 
-function drawTalkWithCutePet(id) {
-  return drawFalconMastery(id)
+function drawImproveConcentration(id) {
+  return wrap(
+    `
+  <circle cx="16" cy="18" r="8" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <circle cx="16" cy="18" r="3" fill="#c4b5fd"/>
+  <path d="M10 10 Q16 6 22 10" stroke="#e9d5ff" stroke-width="1" fill="none"/>
+  `,
+    id,
+    '#6d28d9',
+  )
+}
+
+function drawSteelCrow(id) {
+  return wrap(
+    `
+  <path d="M8 20 Q16 8 24 20" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+  <path d="M12 18 L16 12 L20 18" fill="#334155"/>
+  <path d="M14 14 L18 20 L16 19 Z" fill="#fbbf24"/>
+  `,
+    id,
+    '#0f766e',
+  )
+}
+
+function drawTalkieBox(id) {
+  return wrap(
+    `
+  <rect x="8" y="10" width="16" height="11" rx="2" fill="#1e293b"/>
+  <path d="M12 21 L14 25 L18 21" fill="#1e293b"/>
+  <path d="M11 14 H21 M11 17 H17" stroke="#94a3b8" stroke-width="1"/>
+  <circle cx="24" cy="22" r="4" fill="none" stroke="#22c55e" stroke-width="1"/>
+  `,
+    id,
+    '#334155',
+  )
 }
 
 function drawBeastBane(id) {
@@ -875,8 +908,10 @@ const builders = {
   vultures_eye: drawVulturesEye,
   double_strafe: drawDoubleStrafe,
   arrow_shower: drawArrowShower,
+  improve_concentration: drawImproveConcentration,
   arrow_crafting: drawArrowCrafting,
   ankle_snare: (id) => drawTrapIcon(id, '#84cc16'),
+  skid_trap: (id) => drawTrapIcon(id, '#65a30d'),
   shockwave_trap: (id) => drawTrapIcon(id, '#f97316'),
   sandman_trap: (id) => drawTrapIcon(id, '#eab308'),
   flasher_trap: (id) => drawTrapIcon(id, '#facc15'),
@@ -884,9 +919,10 @@ const builders = {
   blast_mine: (id) => drawTrapIcon(id, '#ef4444'),
   claymore_trap: (id) => drawTrapIcon(id, '#b91c1c'),
   remove_trap: drawRemoveTrap,
-  talk_with_cute_pet: drawTalkWithCutePet,
+  talkie_box: drawTalkieBox,
   beast_bane: drawBeastBane,
   falcon_mastery: drawFalconMastery,
+  steel_crow: drawSteelCrow,
   blitz_beat: drawBlitzBeat,
   detect: drawDetect,
   land_mine: drawLandMine,

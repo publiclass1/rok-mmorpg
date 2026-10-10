@@ -412,6 +412,29 @@
       }
     },
     {
+      "id": "improve_concentration",
+      "name": "Improve Concentration",
+      "jobId": "archer",
+      "maxLevel": 10,
+      "requiredJobLevel": 1,
+      "type": "active",
+      "target": "self",
+      "mpCost": 25,
+      "castTimeMs": 0,
+      "range": 0,
+      "prerequisites": [
+        { "skillId": "owls_eye", "level": 1 },
+        { "skillId": "vultures_eye", "level": 1 }
+      ],
+      "description": "Increase DEX and AGI; reveals hidden foes nearby (placeholder).",
+      "sourceUrl": "https://irowiki.org/wiki/Improve_Concentration",
+      "selfBuff": {
+        "statusId": "improve_concentration",
+        "durationMsBase": 60000,
+        "durationMsPerLevel": 30000
+      }
+    },
+    {
       "id": "arrow_crafting",
       "name": "Arrow Crafting",
       "jobId": "archer",
@@ -429,9 +452,9 @@
     {
       "id": "ankle_snare",
       "name": "Ankle Snare",
-      "jobId": "archer",
+      "jobId": "hunter",
       "maxLevel": 5,
-      "requiredJobLevel": 12,
+      "requiredJobLevel": 5,
       "type": "active",
       "target": "ground",
       "mpCost": 12,
@@ -446,9 +469,24 @@
       "sourceUrl": "https://irowiki.org/wiki/Ankle_Snare"
     },
     {
+      "id": "skid_trap",
+      "name": "Skid Trap",
+      "jobId": "hunter",
+      "maxLevel": 5,
+      "requiredJobLevel": 18,
+      "type": "active",
+      "target": "ground",
+      "mpCost": 12,
+      "castTimeMs": 0,
+      "range": 224,
+      "prerequisites": [{ "skillId": "ankle_snare", "level": 1 }],
+      "description": "Set a trap that slides enemies when triggered (placeholder).",
+      "sourceUrl": "https://irowiki.org/wiki/Skid_Trap"
+    },
+    {
       "id": "shockwave_trap",
       "name": "Shockwave Trap",
-      "jobId": "archer",
+      "jobId": "hunter",
       "maxLevel": 5,
       "requiredJobLevel": 18,
       "type": "active",
@@ -463,7 +501,7 @@
     {
       "id": "sandman_trap",
       "name": "Sandman Trap",
-      "jobId": "archer",
+      "jobId": "hunter",
       "maxLevel": 5,
       "requiredJobLevel": 18,
       "type": "active",
@@ -478,7 +516,7 @@
     {
       "id": "flasher_trap",
       "name": "Flasher Trap",
-      "jobId": "archer",
+      "jobId": "hunter",
       "maxLevel": 5,
       "requiredJobLevel": 18,
       "type": "active",
@@ -493,7 +531,7 @@
     {
       "id": "freezing_trap",
       "name": "Freezing Trap",
-      "jobId": "archer",
+      "jobId": "hunter",
       "maxLevel": 5,
       "requiredJobLevel": 18,
       "type": "active",
@@ -508,7 +546,7 @@
     {
       "id": "blast_mine",
       "name": "Blast Mine",
-      "jobId": "archer",
+      "jobId": "hunter",
       "maxLevel": 5,
       "requiredJobLevel": 18,
       "type": "active",
@@ -523,7 +561,7 @@
     {
       "id": "claymore_trap",
       "name": "Claymore Trap",
-      "jobId": "archer",
+      "jobId": "hunter",
       "maxLevel": 5,
       "requiredJobLevel": 18,
       "type": "active",
@@ -538,7 +576,7 @@
     {
       "id": "remove_trap",
       "name": "Remove Trap",
-      "jobId": "archer",
+      "jobId": "hunter",
       "maxLevel": 1,
       "requiredJobLevel": 18,
       "type": "active",
@@ -579,6 +617,21 @@
       "prerequisites": [],
       "description": "Allows renting and commanding a falcon.",
       "sourceUrl": "https://irowiki.org/wiki/Falcon_Mastery"
+    },
+    {
+      "id": "steel_crow",
+      "name": "Steel Crow",
+      "jobId": "hunter",
+      "maxLevel": 10,
+      "requiredJobLevel": 1,
+      "type": "passive",
+      "target": "self",
+      "mpCost": 0,
+      "castTimeMs": 0,
+      "range": 0,
+      "prerequisites": [{ "skillId": "falcon_mastery", "level": 1 }],
+      "description": "Increases damage dealt by your falcon.",
+      "sourceUrl": "https://irowiki.org/wiki/Steel_Crow"
     },
     {
       "id": "blitz_beat",
@@ -652,19 +705,19 @@
       "sourceUrl": "https://irowiki.org/wiki/Spring_Trap"
     },
     {
-      "id": "talk_with_cute_pet",
-      "name": "Talk With Cute Pet",
+      "id": "talkie_box",
+      "name": "Talkie Box",
       "jobId": "hunter",
       "maxLevel": 1,
-      "requiredJobLevel": 1,
+      "requiredJobLevel": 18,
       "type": "active",
-      "target": "self",
-      "mpCost": 0,
+      "target": "ground",
+      "mpCost": 10,
       "castTimeMs": 0,
-      "range": 0,
-      "prerequisites": [{ "skillId": "falcon_mastery", "level": 1 }],
-      "description": "Speak with a rented falcon or pet (placeholder).",
-      "sourceUrl": "https://irowiki.org/wiki/Talk_with_Cute_Pet"
+      "range": 224,
+      "prerequisites": [{ "skillId": "remove_trap", "level": 1 }],
+      "description": "Set a trap that displays a custom message (placeholder).",
+      "sourceUrl": "https://irowiki.org/wiki/Talkie_Box"
     },
     {
       "id": "heal",

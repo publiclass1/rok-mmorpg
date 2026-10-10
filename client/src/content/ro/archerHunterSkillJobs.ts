@@ -7,7 +7,16 @@ export const ARCHER_SKILL_IDS = [
   'vultures_eye',
   'double_strafe',
   'arrow_shower',
+  'improve_concentration',
   'arrow_crafting',
+] as const
+
+export const HUNTER_SKILL_IDS = [
+  'beast_bane',
+  'falcon_mastery',
+  'steel_crow',
+  'blitz_beat',
+  'detect',
   'ankle_snare',
   'shockwave_trap',
   'sandman_trap',
@@ -16,16 +25,10 @@ export const ARCHER_SKILL_IDS = [
   'blast_mine',
   'claymore_trap',
   'remove_trap',
-] as const
-
-export const HUNTER_SKILL_IDS = [
-  'beast_bane',
-  'falcon_mastery',
-  'blitz_beat',
-  'detect',
+  'skid_trap',
   'land_mine',
   'spring_trap',
-  'talk_with_cute_pet',
+  'talkie_box',
 ] as const
 
 const ARCHER_SET = new Set<string>(ARCHER_SKILL_IDS)
@@ -35,4 +38,8 @@ export function expectedSkillJobId(skillId: string): 'archer' | 'hunter' | null 
   if (ARCHER_SET.has(skillId)) return 'archer'
   if (HUNTER_SET.has(skillId)) return 'hunter'
   return null
+}
+
+export function isArcherOrHunterSkillId(skillId: string): boolean {
+  return expectedSkillJobId(skillId) != null
 }
