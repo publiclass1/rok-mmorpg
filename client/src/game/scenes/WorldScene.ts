@@ -1900,21 +1900,12 @@ export class WorldScene extends Phaser.Scene {
     }
     if (def.target === 'enemy') {
       const skillRange = this.skillRangePx(def)
-      if (!targetMob?.alive && this.chaseMob?.alive && !this.selectedMob?.alive) {
-        this.setSelectedMob(this.chaseMob)
-      }
       const mob =
         targetMob?.alive
           ? targetMob
           : this.resolveSkillTargetMob(skillRange)
       if (!mob) {
-        if (!fromAuto) {
-          const msg =
-            this.chaseMob?.alive || this.selectedMob?.alive
-              ? 'No target in range.'
-              : 'No target — select a monster first.'
-          emitGameEvent('status', msg)
-        }
+        if (!fromAuto) emitGameEvent('status', 'No monsters in view.')
         return false
       }
       const px = this.playerDisplay.container.x
@@ -4752,9 +4743,9 @@ export class WorldScene extends Phaser.Scene {
       selectedMob: selected,
     })
     if (hit) return hit.mob
-    if (this.chaseMob?.alive) return this.chaseMob
     if (this.selectedMob?.alive) return this.selectedMob
-    return null
+    if (this.chaseMob?.alive) return this.chaseMob
+    return this.findNearestMobInView()
   }
 
   private resolveAttackTargetMob(): MobInstance | null {

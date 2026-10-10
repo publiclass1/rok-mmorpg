@@ -136,6 +136,17 @@ function run() {
   })
   assert.equal(noAutopick, null)
 
+  const chaseNear: MockMob = { id: 'chase_mob', alive: true, x: 2 * MAP_TILE_SIZE, y: 0 }
+  const selectedNear: MockMob = { id: 'selected_mob', alive: true, x: 3 * MAP_TILE_SIZE, y: 0 }
+  const selectedWins = resolveEnemySkillTarget({
+    playerX: px,
+    playerY: py,
+    skillRangePx: skillRange240,
+    chaseMob: chaseNear,
+    selectedMob: selectedNear,
+  })
+  assert.equal(selectedWins?.id, 'selected_mob')
+
   const outOfSkill: MockMob = { id: 'too_far', alive: true, x: 300, y: 0 }
   const skillMiss = resolveEnemySkillTarget({
     playerX: px,

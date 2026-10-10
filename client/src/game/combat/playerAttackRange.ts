@@ -186,7 +186,7 @@ function mobWithinSkillRangePx<T extends AttackTargetCandidate>(
   return mob
 }
 
-/** Enemy skill targeting: chase → selected within skill range (Euclidean px); no auto-pick. */
+/** Enemy skill targeting: selected → chase within skill range (Euclidean px). Nearest-in-view is WorldScene fallback. */
 export function resolveEnemySkillTarget<T extends AttackTargetCandidate>(ctx: {
   playerX: number
   playerY: number
@@ -197,7 +197,7 @@ export function resolveEnemySkillTarget<T extends AttackTargetCandidate>(ctx: {
   const { playerX, playerY, skillRangePx, chaseMob, selectedMob } = ctx
   if (skillRangePx <= 0) return null
 
-  const fromChase = mobWithinSkillRangePx(chaseMob, playerX, playerY, skillRangePx)
-  if (fromChase) return fromChase
-  return mobWithinSkillRangePx(selectedMob, playerX, playerY, skillRangePx)
+  const fromSelected = mobWithinSkillRangePx(selectedMob, playerX, playerY, skillRangePx)
+  if (fromSelected) return fromSelected
+  return mobWithinSkillRangePx(chaseMob, playerX, playerY, skillRangePx)
 }
