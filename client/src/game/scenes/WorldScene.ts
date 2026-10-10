@@ -166,6 +166,7 @@ import {
   attachFalconCompanionToDisplay,
   createFalconCompanion,
   FALCON_HOVER_OFFSET_Y,
+  playBlitzBeatCompanionVolley,
   syncFalconCompanionGfx,
   type FalconCompanionGfx,
 } from '../player/falconCompanionVisual'
@@ -2508,37 +2509,27 @@ export class WorldScene extends Phaser.Scene {
     skillLevel: number,
     def: SkillDefinition,
     primaryMob: MobInstance,
-    options?: { skipMpCost?: boolean; steelCrowProc?: boolean },
   ) {
-    const steelCrowProc = options?.steelCrowProc === true
-    if (!this.archerOffenseRequiresBow(steelCrowProc)) return
+    if (!this.archerOffenseRequiresBow()) return
     if (skillId === 'blitz_beat') {
       const rental = activeRentalAt(this.session, Date.now())
       if (rental?.kind !== 'falcon') {
-        const msg = 'Rent a falcon first (Falcon Mastery).'
-        if (steelCrowProc) emitGameEvent('status', `${AUTO_BLITZ_PROC_STATUS_PREFIX} ${msg}`)
-        else emitGameEvent('status', msg)
+        emitGameEvent('status', 'Rent a falcon first (Falcon Mastery).')
         return
       }
     }
 
-    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) {
-      if (steelCrowProc) this.emitSteelCrowProcSkip('cannot act right now.')
-      return
-    }
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
     if (
-      !steelCrowProc &&
-      (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping)
+      now - this.lastAttackAt < this.playerAttackCooldownMs() ||
+      this.isAttacking ||
+      this.isJumping
     ) {
       return
     }
-    if (!steelCrowProc && (this.isAttacking || this.isJumping)) return
-    if (!options?.skipMpCost && !this.spendMp(def.mpCost)) return
-    if (!primaryMob.alive) {
-      if (steelCrowProc) this.emitSteelCrowProcSkip('target is gone.')
-      return
-    }
+    if (!this.spendMp(def.mpCost)) return
+    if (!primaryMob.alive) return
 
     const px = this.playerDisplay.container.x
     const py = this.playerDisplay.container.y
@@ -2553,15 +2544,11 @@ export class WorldScene extends Phaser.Scene {
         primaryMob.sprite.y,
       )
     ) {
-      if (steelCrowProc) {
-        this.emitSteelCrowProcSkip('target out of range.')
-      } else {
-        emitGameEvent('status', 'Target out of range.')
-      }
+      emitGameEvent('status', 'Target out of range.')
       return
     }
 
-    if (!steelCrowProc) this.lastAttackAt = now
+    this.lastAttackAt = now
     this.isAttacking = true
     this.stopPlayerMotion()
     clearMoveTarget(this.moveTarget)
@@ -2691,10 +2678,93 @@ export class WorldScene extends Phaser.Scene {
       return
     }
 
-    this.runPlayerRangedPhysicalSkill('blitz_beat', skillLevel, def, resolved, {
-      skipMpCost: true,
-      steelCrowProc: true,
-    })
+    this.runBackgroundBlitzBeatProc(resolved, skillLevel, def)
+  }
+
+  /** Steel Crow crit proc: falcon volley only — does not lock auto-attack or player cast anim. */
+  private runBackgroundBlitzBeatProc(
+    mob: MobInstance,
+    skillLevel: number,
+    def: SkillDefinition,
+  ) {
+    if (!this.archerOffenseRequiresBow(true)) return
+    const rental = activeRentalAt(this.session, Date.now())
+    if (rental?.kind !== 'falcon') {
+      emitGameEvent(
+        'status',
+        `${AUTO_BLITZ_PROC_STATUS_PREFIX} Rent a falcon first (Falcon Mastery).`,
+      )
+      return
+    }
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) {
+      this.emitSteelCrowProcSkip('cannot act right now.')
+      return
+    }
+    if (this.falconBlitzVolleyActive) {
+      this.emitSteelCrowProcSkip('falcon is busy.')
+      return
+    }
+
+    const resolved = this.getMobBySpawnIndex(mob.spawnIndex) ?? mob
+    if (!resolved.alive) {
+      this.emitSteelCrowProcSkip('target is gone.')
+      return
+    }
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (
+      !isWithinSkillStrikeRange(
+        this.session.equipment,
+        'blitz_beat',
+        def.range,
+        px,
+        py,
+        resolved.sprite.x,
+        resolved.sprite.y,
+      )
+    ) {
+      this.emitSteelCrowProcSkip('target out of range.')
+      return
+    }
+
+    const skillLabel = def.name
+    const hitCount = physicalSkillHitCount(def, skillLevel)
+    const depth = this.playerDisplay.container.depth + 0.1
+    const spawnIndex = resolved.spawnIndex
+    const aimX = resolved.sprite.x
+    const aimY = resolved.sprite.y
+
+    this.showSkillCallout(def.name)
+
+    playBlitzBeatCompanionVolley(
+      this,
+      {
+        companion: this.rentalFalconGfx,
+        playerContainer: this.playerDisplay.container,
+        facing: this.facing,
+        onVolleyStart: () => {
+          this.falconBlitzVolleyActive = true
+        },
+        onVolleyEnd: () => {
+          this.falconBlitzVolleyActive = false
+        },
+      },
+      aimX,
+      aimY,
+      depth,
+      hitCount,
+      (hitIndex) => {
+        const target = this.getMobBySpawnIndex(spawnIndex)
+        if (!target?.alive) return
+        const aim = toCombatAimPoint(target.sprite.x, target.sprite.y)
+        playSkillImpactFx(this, 'blitz_beat', aim.x, aim.y, depth, hitIndex, hitCount)
+        this.applyPhysicalSkillHitToMob(target, 'blitz_beat', skillLevel, skillLabel)
+      },
+      () => {
+        this.emitCharacterSheet()
+      },
+    )
   }
 
   private runPlayerGroundPhysicalSkill(
