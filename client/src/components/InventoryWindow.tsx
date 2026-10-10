@@ -113,7 +113,7 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
                 >
                   <ItemSlotDisplay
                     itemId={cell.itemId}
-                    size="compact"
+                    size="md"
                     fallbackLabel={getItemDisplayName(cell.itemId).slice(0, 4)}
                   />
                   {cell.quantity > 1 && <span className="inv-slot-qty">{cell.quantity}</span>}

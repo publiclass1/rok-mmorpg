@@ -3371,12 +3371,41 @@ body.chat-strip-resizing {
   width: min(520px, 100%);
 }
 
+.inventory-modal .inv-grid {
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+}
+
+.inventory-modal .inv-slot {
+  width: 64px;
+  height: 64px;
+}
+
+.inventory-modal .item-slot-display .item-icon {
+  max-width: 100%;
+  max-height: 100%;
+}
+
 .inventory-modal .modal-scroll-body {
   overflow-x: hidden;
 }
 
 .equipment-modal {
   width: min(560px, 100%);
+}
+
+.equipment-modal .equip-slot-preview {
+  width: 88px;
+  height: 88px;
+}
+
+.equipment-modal .item-slot-display--lg {
+  min-width: 80px;
+  min-height: 80px;
+}
+
+.equipment-modal .item-slot-display .item-icon {
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .modal.npc-options-modal {
@@ -3643,29 +3672,17 @@ body.chat-strip-resizing {
 
 .item-slot-display--rarity {
   --item-rarity-accent: #9ca3af;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--item-rarity-accent) var(--item-rarity-ring-alpha, 35%), transparent),
+    inset 0 0 16px color-mix(in srgb, var(--item-rarity-accent) var(--item-rarity-fill-alpha, 12%), transparent);
 }
 
 .item-slot-display .item-icon.item-icon--drop-glow {
-  animation: item-icon-rarity-pulse var(--item-rarity-glow-speed, 1.8s) ease-in-out infinite;
-}
-
-.item-slot-display .item-icon.item-icon--drop-glow-strong {
-  animation-duration: calc(var(--item-rarity-glow-speed, 1.8s) * 0.85);
-}
-
-@keyframes item-icon-rarity-pulse {
-  0%,
-  100% {
-    filter:
-      drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5))
-      drop-shadow(0 0 5px color-mix(in srgb, var(--item-rarity-accent) 45%, transparent));
-  }
-  50% {
-    filter:
-      drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5))
-      drop-shadow(0 0 10px color-mix(in srgb, var(--item-rarity-accent) 75%, transparent))
-      drop-shadow(0 0 16px color-mix(in srgb, var(--item-rarity-accent) 35%, transparent));
-  }
+  filter:
+    drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 var(--item-rarity-glow-blur, 8px) color-mix(in srgb, var(--item-rarity-accent) var(--item-rarity-glow-alpha, 55%), transparent))
+    drop-shadow(0 0 var(--item-rarity-glow-blur-outer, 14px) color-mix(in srgb, var(--item-rarity-accent) var(--item-rarity-glow-alpha-outer, 32%), transparent));
 }
 
 .activity-log-item-icon {
