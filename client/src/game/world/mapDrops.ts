@@ -6,7 +6,8 @@ import { createMapDropRarityFx, destroyMapDropRarityFx, type MapDropRarityFx } f
 
 // Pickup range is measured in pixels; maps use 32px tiles (e.g. prontera.tmj).
 // Keep this tight so pickup only happens when you're close to the drop.
-const PICKUP_RANGE = 16
+export const MAP_DROP_PICKUP_RANGE_PX = 16
+const PICKUP_RANGE = MAP_DROP_PICKUP_RANGE_PX
 const HOVER_RADIUS = 18
 
 export type MapDropVisual = {
@@ -50,7 +51,6 @@ export class MapDropManager {
     sprite.setOrigin(0.5, 0.5)
     sprite.setDepth(y)
     sprite.setInteractive({ useHandCursor: false })
-    sprite.on('pointerdown', () => this.tryPickup(dropId))
 
     const rarityFx = createMapDropRarityFx(this.scene, x, y, itemId, y - 2)
 
@@ -89,17 +89,11 @@ export class MapDropManager {
     this.drops.clear()
   }
 
-  tickPlayerProximity(px: number, py: number) {
-    for (const d of this.drops.values()) {
-      if (Phaser.Math.Distance.Between(px, py, d.x, d.y) <= PICKUP_RANGE) {
-        this.tryPickup(d.dropId)
-      }
-    }
-  }
-
-  private tryPickup(dropId: string) {
+  /** Pick up when the player is within range (click on drop). */
+  requestPickup(dropId: string, playerX: number, playerY: number) {
     const d = this.drops.get(dropId)
     if (!d) return
+    if (Phaser.Math.Distance.Between(playerX, playerY, d.x, d.y) > PICKUP_RANGE) return
     this.onPickup(d.dropId, d.itemId)
   }
 

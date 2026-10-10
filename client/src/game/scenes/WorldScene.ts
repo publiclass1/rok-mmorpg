@@ -223,6 +223,7 @@ import { getRolledItem, registerRolledItem } from '../items/rolledItemRegistry'
 import type { BootDungeonState } from '../world/bootDungeon'
 import { dungeonFloorByMapId, isDungeonMapId } from '../world/dungeonConfig'
 import { findPortalAtPoint, getWalkPortalsForMap } from '../world/mapPortals'
+import { isEphemeralMapDropId } from '../world/mapDropIds'
 import { applyPickupToSession, MapDropManager } from '../world/mapDrops'
 import { lootManage } from '../../lib/api'
 import { isPvpMap, PVP_KILL_STREAK_LABELS } from '../world/pvpConfig'
@@ -553,21 +554,7 @@ export class WorldScene extends Phaser.Scene {
     colliderWithObstacles(this, this.obstacles, this.playerDisplay.container)
 
     this.mapDropManager = new MapDropManager(this, (dropId, itemId) => {
-      void lootManage({ action: 'pickup', characterId: this.character.id, dropId }).then((result) => {
-        if (result.sessionInventory != null) {
-          this.session = { ...this.session, sessionInventory: result.sessionInventory as typeof this.session.sessionInventory }
-        } else if (isRolledItemId(itemId)) {
-          const rolled = getRolledItem(itemId)
-          if (rolled) this.session = grantRolledGear(this.session, rolled)
-        } else this.session = applyPickupToSession(this.session, itemId)
-        setCharacterSession(this.session)
-        this.session = getCharacterSession()
-        this.mapDropManager?.removeDrop(dropId)
-        this.presence?.sendCombat({ kind: 'map_pickup', dropId, characterId: this.character.id })
-        logActivity('combat', `Picked up ${getItemDisplayName(itemId)}.`)
-        this.emitCharacterSheet()
-        emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
-      }).catch(() => undefined)
+      this.handleMapDropPickup(dropId, itemId)
     })
 
     void lootManage({ action: 'list', characterId: this.character.id }).then(({ drops = [] }) => {
@@ -648,6 +635,13 @@ export class WorldScene extends Phaser.Scene {
       if (!pointer.leftButtonDown()) return
       if (this.pendingSkill) {
         this.confirmSkillTargeting(wx, wy)
+        return
+      }
+      const lootHit = this.mapDropManager?.findDropAt(wx, wy)
+      if (lootHit) {
+        const px = this.playerDisplay.container.x
+        const py = this.playerDisplay.container.y
+        this.mapDropManager?.requestPickup(lootHit.dropId, px, py)
         return
       }
       const npc = this.findNpcAt(wx, wy)
@@ -1211,13 +1205,6 @@ export class WorldScene extends Phaser.Scene {
       mapId: this.character.map_id,
     })
 
-    if (!this.isPlayerDead && this.isPvpActive()) {
-      this.mapDropManager?.tickPlayerProximity(
-        this.playerDisplay.container.x,
-        this.playerDisplay.container.y,
-      )
-    }
-
     if (now >= this.portalWarpCooldownUntil) {
       const px = this.playerDisplay.container.x
       const py = this.playerDisplay.container.y
@@ -1267,12 +1254,54 @@ export class WorldScene extends Phaser.Scene {
     this.emitMinimap(now)
   }
 
-  private worldToCanvasScreen(worldX: number, worldY: number): { x: number; y: number } {
-    const cam = this.cameras.main
-    return {
-      x: (worldX - cam.scrollX) * cam.zoom + cam.width * 0.5,
-      y: (worldY - cam.scrollY) * cam.zoom + cam.height * 0.5,
+  private handleMapDropPickup(dropId: string, itemId: string) {
+    if (isEphemeralMapDropId(dropId)) {
+      this.applyMapDropPickupToSession(itemId)
+      this.mapDropManager?.removeDrop(dropId)
+      this.presence?.sendCombat({ kind: 'map_pickup', dropId, characterId: this.character.id })
+      logActivity('combat', `Picked up ${getItemDisplayName(itemId)}.`)
+      this.emitCharacterSheet()
+      emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
+      this.scheduleProgressSave()
+      return
     }
+
+    void lootManage({ action: 'pickup', characterId: this.character.id, dropId })
+      .then((result) => {
+        if (result.sessionInventory != null) {
+          this.session = {
+            ...this.session,
+            sessionInventory: result.sessionInventory as typeof this.session.sessionInventory,
+          }
+        } else if (isRolledItemId(itemId)) {
+          const rolled = getRolledItem(itemId)
+          if (rolled) this.session = grantRolledGear(this.session, rolled)
+        } else {
+          this.session = applyPickupToSession(this.session, itemId)
+        }
+        setCharacterSession(this.session)
+        this.session = getCharacterSession()
+        this.mapDropManager?.removeDrop(dropId)
+        this.presence?.sendCombat({ kind: 'map_pickup', dropId, characterId: this.character.id })
+        logActivity('combat', `Picked up ${getItemDisplayName(itemId)}.`)
+        this.emitCharacterSheet()
+        emitGameEvent('sessionSync', sessionSyncPayload(structuredClone(this.session)))
+        this.scheduleProgressSave()
+      })
+      .catch(() => {
+        emitGameEvent('status', 'Could not pick up item.')
+      })
+  }
+
+  private applyMapDropPickupToSession(itemId: string) {
+    if (isRolledItemId(itemId)) {
+      const rolled = getRolledItem(itemId)
+      if (rolled) this.session = grantRolledGear(this.session, rolled)
+    } else {
+      this.session = applyPickupToSession(this.session, itemId)
+    }
+    setCharacterSession(this.session)
+    this.session = getCharacterSession()
   }
 
   private refreshMapDropHover() {
@@ -1286,11 +1315,10 @@ export class WorldScene extends Phaser.Scene {
       this.emitMapDropHoverIfChanged(null)
       return
     }
-    const screen = this.worldToCanvasScreen(hit.x, hit.y - 22)
     this.emitMapDropHoverIfChanged({
       itemId: hit.itemId,
-      screenX: screen.x,
-      screenY: screen.y,
+      screenX: p.x,
+      screenY: p.y,
     })
   }
 

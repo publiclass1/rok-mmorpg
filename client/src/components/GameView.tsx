@@ -112,8 +112,7 @@ import { mapDisplayName } from '../game/world/mapDisplayName'
 import { hudEnterMotion } from './motion/motionPresets'
 import { buildItemTooltipDetail } from '../game/character/itemTooltipDetail'
 import { ItemDetailTooltip } from './ItemDetailTooltip'
-import { FloatingTooltipPortal } from './tooltip/FloatingTooltipPortal'
-import { floatingTooltipPositionFromPoint } from './tooltip/floatingTooltipPosition'
+import { AnchoredFloatingTooltip } from './tooltip/AnchoredFloatingTooltip'
 import { GameHudMenu, type GameHudMenuItem } from './GameHudMenu'
 import { AutoAttackHudButton } from './AutoAttackHudButton'
 import { AutoAttackWindow } from './AutoAttackWindow'
@@ -1661,13 +1660,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   ])
   const splashKey = mapLoading?.mapId ?? `world-${character.map_id}`
 
-  const mapDropTooltipStyle = useMemo(() => {
+  const mapDropTooltipAnchor = useMemo(() => {
     if (!mapDropHover) return null
     const rect = hostRef.current?.getBoundingClientRect()
     if (!rect) return null
-    return floatingTooltipPositionFromPoint(
-      rect.left + mapDropHover.screenX,
-      rect.top + mapDropHover.screenY,
+    const pad = 4
+    return new DOMRect(
+      rect.left + mapDropHover.screenX - pad,
+      rect.top + mapDropHover.screenY - pad,
+      pad * 2,
+      pad * 2,
     )
   }, [mapDropHover])
 
@@ -1709,10 +1711,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       </AnimatePresence>
       <div className="game-stage game-stage--fullscreen" aria-label="Game world">
         <div ref={hostRef} className="game-canvas" />
-        {mapDropTooltipDetail && mapDropTooltipStyle && (
-          <FloatingTooltipPortal style={mapDropTooltipStyle}>
+        {mapDropTooltipDetail && mapDropTooltipAnchor && (
+          <AnchoredFloatingTooltip anchor={mapDropTooltipAnchor}>
             <ItemDetailTooltip detail={mapDropTooltipDetail} />
-          </FloatingTooltipPortal>
+          </AnchoredFloatingTooltip>
         )}
         <LowHpVignette hp={sheet.hp} hpMax={sheet.hpMax} />
         {duelSync && <DuelCountdownOverlay duel={duelSync} />}
