@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ItemHoverTooltip } from './ItemHoverTooltip'
 import { ItemIcon } from './ItemIcon'
+import { SkillHoverTooltip } from './SkillHoverTooltip'
 import { SkillIcon } from './SkillIcon'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import { getItemDisplayName } from '../game/character/itemCatalog'
@@ -16,7 +18,6 @@ import {
 import { isSkillBarDragEvent, readSkillBarDrag, writeSkillBarDrag } from '../game/character/skillBarDrag'
 import { SKILL_BAR_ROW_COUNT, SKILL_BAR_ROW_KEYS } from '../game/character/skillBars'
 import { SKILLS, skillUsableByJob } from '../game/character/skillsConfig'
-import { skillTooltipTitle } from '../game/character/skillIconUrl'
 import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
 import { ModalCloseButton } from './motion/ModalCloseButton'
@@ -227,22 +228,26 @@ function SkillBarRowPanel({
           const canDrag = skillId != null && !inactive
           const keyLabel = SKILL_BAR_ROW_KEYS[bar][slot]
           const itemQty = consumable && skillId ? sessionItemQuantity(sheet, skillId) : 0
-          const slotTitle = consumable && skillId
-            ? `${getItemDisplayName(skillId)} (${itemQty}) · drag to move`
-            : skill
-              ? inactive
-                ? `${skill.name} — not available`
-                : `${skillTooltipTitle(skillId!, level)} · drag to move`
-              : 'Click to open Skills · or drop a skill or consumable here'
+          const emptySlotTitle =
+            'Click to open Skills · or drop a skill or consumable here'
 
-          return (
+          const slotNode = (
             <div
-              key={slot}
+              key={skillId ? undefined : slot}
               role="button"
               tabIndex={inactive ? -1 : 0}
               aria-disabled={inactive || undefined}
               className={`skill-slot${inactive ? ' skill-slot--inactive' : ''}${isDropTarget(slot) ? ' skill-slot--drop-target' : ''}${canDrag ? ' skill-slot--draggable' : ''}`}
-              title={slotTitle}
+              title={skillId ? undefined : emptySlotTitle}
+              aria-label={
+                skillId && inactive && skill
+                  ? `${skill.name} — not available`
+                  : skillId && consumable
+                    ? getItemDisplayName(skillId)
+                    : skill
+                      ? skill.name
+                      : undefined
+              }
               draggable={canDrag}
               onDragStart={(e) => {
                 if (!canDrag || !skillId) {
@@ -289,7 +294,7 @@ function SkillBarRowPanel({
                   {itemQty > 1 && <span className="skill-slot-item-qty">{itemQty}</span>}
                 </>
               ) : skillId && !inactive ? (
-                <SkillIcon skillId={skillId} level={level} size="xs" draggable={false} />
+                <SkillIcon skillId={skillId} level={level} size="xs" draggable={false} title="" />
               ) : (
                 <span className="skill-slot-empty" aria-hidden>
                   ·
@@ -297,6 +302,22 @@ function SkillBarRowPanel({
               )}
             </div>
           )
+
+          if (skillId && consumable) {
+            return (
+              <ItemHoverTooltip key={slot} itemId={skillId} quantity={itemQty}>
+                {slotNode}
+              </ItemHoverTooltip>
+            )
+          }
+          if (skillId && !consumable) {
+            return (
+              <SkillHoverTooltip key={slot} skillId={skillId} sheet={sheet}>
+                {slotNode}
+              </SkillHoverTooltip>
+            )
+          }
+          return slotNode
         })}
       </div>
     </div>

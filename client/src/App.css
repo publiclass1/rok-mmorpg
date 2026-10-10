@@ -2279,7 +2279,8 @@ button:disabled {
 
 .skill-detail-tooltip-level,
 .skill-detail-tooltip-desc,
-.skill-detail-tooltip-stats {
+.skill-detail-tooltip-stats,
+.skill-detail-tooltip-footer {
   margin: 0.25rem 0 0;
 }
 

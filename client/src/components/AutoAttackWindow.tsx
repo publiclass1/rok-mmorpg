@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { SkillHoverTooltip } from './SkillHoverTooltip'
 import { SkillIcon } from './SkillIcon'
 import {
   AUTO_ATTACK_PATROL_RADIUS_MAX,
@@ -18,7 +19,6 @@ import {
   autoAttackAssignableSkills,
   canPlaceOnAutoAttackRotation,
 } from '../game/character/skillsConfig'
-import { skillTooltipTitle } from '../game/character/skillIconUrl'
 import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
 import { AnimatedModal } from './motion/AnimatedModal'
@@ -213,15 +213,11 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
               const isDropTarget = dropTarget === index
               const selected = selectedSlotIndex === index
               const canDrag = Boolean(skillId && allowed)
-              return (
+              const rotationSlot = (
                 <div
-                  key={index}
+                  key={skillId && allowed ? undefined : index}
                   className={`skill-slot${!allowed ? ' skill-slot--inactive' : ''}${isDropTarget ? ' skill-slot--drop-target' : ''}${selected ? ' skill-slot--selected' : ''}${canDrag ? ' skill-slot--draggable' : ''}`}
-                  title={
-                    skillId
-                      ? `${skillTooltipTitle(skillId, level)} · drag to move or remove`
-                      : `Rotation slot ${index + 1}`
-                  }
+                  title={skillId ? undefined : `Rotation slot ${index + 1}`}
                   draggable={canDrag}
                   onDragStart={(e) => {
                     if (!canDrag || !skillId) {
@@ -269,12 +265,21 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
                 >
                   <span className="skill-key">{index + 1}</span>
                   {skillId && allowed ? (
-                    <SkillIcon skillId={skillId} level={level} size="xs" draggable={false} />
+                    <SkillIcon skillId={skillId} level={level} size="xs" draggable={false} title="" />
                   ) : (
                     <span className="skill-slot-empty" aria-hidden>·</span>
                   )}
                 </div>
               )
+
+              if (skillId && allowed) {
+                return (
+                  <SkillHoverTooltip key={index} skillId={skillId} sheet={sheet}>
+                    {rotationSlot}
+                  </SkillHoverTooltip>
+                )
+              }
+              return rotationSlot
             })}
           </div>
 
@@ -288,12 +293,10 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
                   <div className="auto-attack-palette-grid">
                     {skills.map((def) => {
                       const level = sheet.skills[def.id] ?? 0
-                      return (
+                      const paletteBtn = (
                         <button
-                          key={def.id}
                           type="button"
                           className="auto-attack-palette-btn"
-                          title={skillTooltipTitle(def.id, level)}
                           onClick={() => assignSkillToSlot(selectedSlotIndex, def.id)}
                         >
                           <SkillIcon
@@ -302,9 +305,20 @@ export function AutoAttackWindow({ mapId, sheet, config, onChange, onClose }: Pr
                             size="sm"
                             draggable
                             drag={{ source: 'list', skillId: def.id }}
+                            title=""
                           />
                           <span className="auto-attack-palette-btn__name">{def.name}</span>
                         </button>
+                      )
+                      return (
+                        <SkillHoverTooltip
+                          key={def.id}
+                          skillId={def.id}
+                          sheet={sheet}
+                          tabJobId={def.jobId}
+                        >
+                          {paletteBtn}
+                        </SkillHoverTooltip>
                       )
                     })}
                   </div>

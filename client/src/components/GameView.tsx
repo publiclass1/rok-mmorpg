@@ -1777,7 +1777,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             onClick={() => setAutoAttackOpen(true)}
           />
           <Minimap data={minimap} />
-          <BuffBar buffs={playerBuffs} />
+          <BuffBar buffs={playerBuffs} sheet={sheet} />
           <div className="game-hud-top-cluster">
             <div className="game-hud-vitals-column">
             <motion.div className="game-hud-panel game-hud-vitals" {...hudEnterMotion} transition={{ ...hudEnterMotion.transition, delay: 0.04 }}>

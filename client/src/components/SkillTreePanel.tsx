@@ -1,12 +1,9 @@
-import { useMemo, useState } from 'react'
-import { SkillDetailTooltip } from './SkillDetailTooltip'
+import { useMemo } from 'react'
 import { SkillGridCell } from './SkillGridCell'
-import { FloatingTooltipPortal } from './tooltip/FloatingTooltipPortal'
-import { floatingTooltipPosition } from './tooltip/floatingTooltipPosition'
 import { computeSkillGridLayout } from '../game/character/skillGridLayout'
-import { learnableSkillIdsForTab, skillRequirementDetail } from '../game/character/skillRequirements'
+import { learnableSkillIdsForTab } from '../game/character/skillRequirements'
 import type { SkillDefinition } from '../game/character/skillsConfig'
-import { JOB_NAMES, SKILLS } from '../game/character/skillsConfig'
+import { JOB_NAMES } from '../game/character/skillsConfig'
 import {
   isSkillSpendingTab,
   maxSkillPointsForJobTab,
@@ -31,26 +28,6 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
   const spent = skillPointsSpentInJob(sheet.skills, tabJobId)
   const maxPoints = maxSkillPointsForJobTab(tabJobId)
   const jobLabel = JOB_NAMES[tabJobId] ?? tabJobId
-
-  const [hoverAnchor, setHoverAnchor] = useState<{
-    skillId: string
-    rect: DOMRect
-  } | null>(null)
-
-  function handleHover(skillId: string, el: HTMLElement | null) {
-    if (!el) {
-      setHoverAnchor(null)
-      return
-    }
-    setHoverAnchor({
-      skillId,
-      rect: el.getBoundingClientRect(),
-    })
-  }
-
-  const hoverSkill = hoverAnchor ? SKILLS[hoverAnchor.skillId] : null
-  const hoverDetail =
-    hoverSkill != null ? skillRequirementDetail(hoverSkill, sheet, tabJobId) : null
 
   return (
     <div className="skill-job-panel">
@@ -77,10 +54,10 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
                   <SkillGridCell
                     skill={skill}
                     sheet={sheet}
+                    tabJobId={tabJobId}
                     showLearnButton={showLearnButton}
                     learnable={learnableIds.has(skill.id)}
                     maxed={level >= skill.maxLevel}
-                    onHover={(el) => handleHover(skill.id, el)}
                   />
                 </div>
               )
@@ -88,11 +65,6 @@ export function SkillTreePanel({ skills, sheet, tabJobId }: Props) {
           )}
         </div>
       </div>
-      {hoverSkill && hoverDetail && hoverAnchor && (
-        <FloatingTooltipPortal style={floatingTooltipPosition(hoverAnchor.rect, 240)}>
-          <SkillDetailTooltip skillName={hoverSkill.name} detail={hoverDetail} inline />
-        </FloatingTooltipPortal>
-      )}
     </div>
   )
 }

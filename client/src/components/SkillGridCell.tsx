@@ -1,3 +1,4 @@
+import { SkillHoverTooltip } from './SkillHoverTooltip'
 import { SkillIcon } from './SkillIcon'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import { canLearnSkill } from '../game/character/skillsConfig'
@@ -7,19 +8,19 @@ import type { CharacterSheetPayload } from '../game/events'
 type Props = {
   skill: SkillDefinition
   sheet: CharacterSheetPayload
+  tabJobId: string
   showLearnButton: boolean
   learnable: boolean
   maxed: boolean
-  onHover: (el: HTMLElement | null) => void
 }
 
 export function SkillGridCell({
   skill,
   sheet,
+  tabJobId,
   showLearnButton,
   learnable,
   maxed,
-  onHover,
 }: Props) {
   const level = sheet.skills[skill.id] ?? 0
   const learned = level >= 1
@@ -45,12 +46,8 @@ export function SkillGridCell({
 
   const showLevelArrows = showLearnButton && skill.maxLevel > 1
 
-  return (
-    <div
-      className={classNames}
-      onMouseEnter={(e) => onHover(e.currentTarget)}
-      onMouseLeave={() => onHover(null)}
-    >
+  const node = (
+    <div className={classNames}>
       <span className="skill-grid-node-name" title={skill.name}>{skill.name}</span>
       <SkillIcon
         skillId={skill.id}
@@ -92,5 +89,11 @@ export function SkillGridCell({
         ) : null}
       </div>
     </div>
+  )
+
+  return (
+    <SkillHoverTooltip skillId={skill.id} sheet={sheet} tabJobId={tabJobId} variant="full">
+      {node}
+    </SkillHoverTooltip>
   )
 }

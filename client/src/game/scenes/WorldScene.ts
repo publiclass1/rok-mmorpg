@@ -771,6 +771,7 @@ export class WorldScene extends Phaser.Scene {
         this.session = getCharacterSession()
         if (this.playerDisplay) {
           updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
+          syncPlayerMaxLevelFootAura(this.playerDisplay, this.session.progress.baseLevel)
           const nextAvatar = resolveJobAvatarKey(this.session.jobId)
           if (this.session.jobId !== prevJobId) {
             setPlayerJobAvatar(this.playerDisplay, nextAvatar)

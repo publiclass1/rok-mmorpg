@@ -6,9 +6,10 @@ type Props = {
   style?: React.CSSProperties
   /** Content only — outer shell is provided by FloatingTooltipPortal. */
   inline?: boolean
+  footerLines?: string[]
 }
 
-export function SkillDetailTooltip({ skillName, detail, style, inline }: Props) {
+export function SkillDetailTooltip({ skillName, detail, style, inline, footerLines }: Props) {
   return (
     <div
       className={inline ? 'skill-detail-tooltip--inline' : 'skill-detail-tooltip'}
@@ -41,6 +42,11 @@ export function SkillDetailTooltip({ skillName, detail, style, inline }: Props) 
       {detail.blockers.length > 0 && (
         <p className="skill-detail-tooltip-blockers small">{detail.blockers.join(' ')}</p>
       )}
+      {footerLines?.map((line) => (
+        <p key={line} className="skill-detail-tooltip-footer muted small">
+          {line}
+        </p>
+      ))}
     </div>
   )
 }

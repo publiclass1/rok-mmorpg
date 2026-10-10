@@ -22,11 +22,10 @@ export type SkillDetailView = {
   blockers: string[]
 }
 
-export function skillRequirementDetail(
+function skillDetailBase(
   skill: SkillDefinition,
   sheet: CharacterSheetPayload,
-  tabJobId: string,
-): SkillDetailView {
+): Pick<SkillDetailView, 'description' | 'levelLine' | 'statsLines'> {
   const level = sheet.skills[skill.id] ?? 0
   const statsLines: string[] = []
   statsLines.push(`${JOB_NAMES[skill.jobId] ?? skill.jobId} skill`)
@@ -48,6 +47,27 @@ export function skillRequirementDetail(
       tiles === Math.floor(tiles) ? `Range ${tiles} cells` : `Range ${skill.range}px`,
     )
   }
+
+  return {
+    description: skill.description,
+    levelLine: `Level ${level} / ${skill.maxLevel}`,
+    statsLines,
+  }
+}
+
+/** In-combat / HUD tooltip: description and stats without learn requirements. */
+export function skillUseDetail(skill: SkillDefinition, sheet: CharacterSheetPayload): SkillDetailView {
+  const base = skillDetailBase(skill, sheet)
+  return { ...base, requirements: [], blockers: [] }
+}
+
+export function skillRequirementDetail(
+  skill: SkillDefinition,
+  sheet: CharacterSheetPayload,
+  tabJobId: string,
+): SkillDetailView {
+  const level = sheet.skills[skill.id] ?? 0
+  const base = skillDetailBase(skill, sheet)
 
   const jobName = JOB_NAMES[skill.jobId] ?? skill.jobId
   const jobLevelMet = isSkillSpendingTab(sheet.jobId, tabJobId)
@@ -85,9 +105,7 @@ export function skillRequirementDetail(
   }
 
   return {
-    description: skill.description,
-    levelLine: `Level ${level} / ${skill.maxLevel}`,
-    statsLines,
+    ...base,
     requirements,
     blockers,
   }

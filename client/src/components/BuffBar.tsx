@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { PlayerBuffPayload } from '../game/events'
+import type { CharacterSheetPayload } from '../game/events'
 import { PECO_RIDE_STATUS_ID } from '../game/character/statusEffects'
+import { SkillHoverTooltip } from './SkillHoverTooltip'
 import { BuffDurationRing } from './BuffDurationRing'
 import { BuffStatusIcon } from './BuffStatusIcon'
 
 type Props = {
   buffs: PlayerBuffPayload[]
+  sheet: CharacterSheetPayload
 }
 
 function remainingProgress(buff: PlayerBuffPayload, now: number): number {
@@ -48,7 +51,7 @@ function isStatusDisplay(buff: PlayerBuffPayload): boolean {
   return buff.displayKind === 'status'
 }
 
-export function BuffBar({ buffs }: Props) {
+export function BuffBar({ buffs, sheet }: Props) {
   const [now, setNow] = useState(() => Date.now())
   const hasTimedBuff = buffs.some((b) => !isStatusDisplay(b))
   const hasRentalStatus = buffs.some((b) => isStatusDisplay(b) && b.statusId.startsWith('rental_'))
@@ -70,25 +73,33 @@ export function BuffBar({ buffs }: Props) {
   return (
     <div className="buff-bar" role="status" aria-label="Active buffs">
       {buffs.map((buff) => {
+        const footer = isStatusDisplay(buff) ? statusTitle(buff, now) : buffTitle(buff, now)
         if (isStatusDisplay(buff)) {
           return (
-            <BuffStatusIcon
+            <SkillHoverTooltip
               key={buff.statusId}
-              iconSkillId={buff.iconSkillId}
-              skillLevel={buff.skillLevel}
-              title={statusTitle(buff, now)}
-            />
+              skillId={buff.iconSkillId}
+              sheet={sheet}
+              footerLines={[footer]}
+            >
+              <BuffStatusIcon iconSkillId={buff.iconSkillId} skillLevel={buff.skillLevel} />
+            </SkillHoverTooltip>
           )
         }
         const progress = remainingProgress(buff, now)
         return (
-          <BuffDurationRing
+          <SkillHoverTooltip
             key={buff.statusId}
-            progress={progress}
-            iconSkillId={buff.iconSkillId}
-            skillLevel={buff.skillLevel}
-            title={buffTitle(buff, now)}
-          />
+            skillId={buff.iconSkillId}
+            sheet={sheet}
+            footerLines={[footer]}
+          >
+            <BuffDurationRing
+              progress={progress}
+              iconSkillId={buff.iconSkillId}
+              skillLevel={buff.skillLevel}
+            />
+          </SkillHoverTooltip>
         )
       })}
     </div>

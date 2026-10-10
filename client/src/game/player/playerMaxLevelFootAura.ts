@@ -11,8 +11,14 @@ const INNER_COLOR = 0xffffff
 const PULSE_DELAY_MIN_MS = 350
 const PULSE_DELAY_MAX_MS = 1100
 
+const RIPPLE_DELAY_MIN_MS = 450
+const RIPPLE_DELAY_MAX_MS = 1200
+const RIPPLE_FIRST_SPAWN_MS = 120
+
 export type MaxLevelFootAuraHost = {
   container: Phaser.GameObjects.Container
+  /** When set, ripples insert directly under the character rig. */
+  riderLayer?: Phaser.GameObjects.Container
   pose: { anim: string }
   maxLevelAuraBaseLevel?: number
   maxLevelAuraHalo?: Phaser.GameObjects.Ellipse
@@ -21,6 +27,7 @@ export type MaxLevelFootAuraHost = {
   maxLevelAuraPulseTimer?: Phaser.Time.TimerEvent
   maxLevelAuraPulseTween?: Phaser.Tweens.Tween
   maxLevelAuraAmbientTween?: Phaser.Tweens.Tween
+  maxLevelAuraRippleTimer?: Phaser.Time.TimerEvent
 }
 
 function auraEllipses(host: MaxLevelFootAuraHost): Phaser.GameObjects.Ellipse[] {
@@ -38,6 +45,77 @@ function stopAuraAnimation(host: MaxLevelFootAuraHost) {
   host.maxLevelAuraPulseTween = undefined
   host.maxLevelAuraAmbientTween?.stop()
   host.maxLevelAuraAmbientTween = undefined
+  host.maxLevelAuraRippleTimer?.remove(false)
+  host.maxLevelAuraRippleTimer = undefined
+}
+
+function isAuraActiveAndVisible(host: MaxLevelFootAuraHost): boolean {
+  const layers = auraEllipses(host)
+  return layers.length > 0 && layers[0].visible && host.pose.anim !== 'dead'
+}
+
+function rippleInsertIndex(host: MaxLevelFootAuraHost): number {
+  if (host.riderLayer) {
+    const idx = host.container.getIndex(host.riderLayer)
+    if (idx >= 0) return idx
+  }
+  return Math.max(0, host.container.length - 1)
+}
+
+function spawnMaxLevelFootRipple(scene: Phaser.Scene, host: MaxLevelFootAuraHost) {
+  if (!isAuraActiveAndVisible(host)) return
+
+  const startAlpha = Phaser.Math.FloatBetween(0.55, 0.75)
+  const endScale = Phaser.Math.FloatBetween(1.5, 1.9)
+  const ripple = scene.add.ellipse(0, 2, 42, 16, OUTER_COLOR, 0.28)
+  ripple.setStrokeStyle(3, INNER_COLOR, 0.85)
+  ripple.setScale(0.5)
+  ripple.setAlpha(startAlpha)
+  host.container.addAt(ripple, rippleInsertIndex(host))
+
+  scene.tweens.add({
+    targets: ripple,
+    scaleX: endScale,
+    scaleY: endScale,
+    alpha: 0,
+    duration: Phaser.Math.Between(400, 580),
+    ease: 'Sine.easeOut',
+    onComplete: () => ripple.destroy(),
+  })
+}
+
+function randomRippleDelayMs(): number {
+  return Phaser.Math.Between(RIPPLE_DELAY_MIN_MS, RIPPLE_DELAY_MAX_MS)
+}
+
+function scheduleNextRipple(scene: Phaser.Scene, host: MaxLevelFootAuraHost) {
+  host.maxLevelAuraRippleTimer?.remove(false)
+  host.maxLevelAuraRippleTimer = undefined
+
+  host.maxLevelAuraRippleTimer = scene.time.delayedCall(randomRippleDelayMs(), () => {
+    host.maxLevelAuraRippleTimer = undefined
+
+    if (isAuraActiveAndVisible(host)) {
+      spawnMaxLevelFootRipple(scene, host)
+      if (Math.random() < 0.3) {
+        scene.time.delayedCall(Phaser.Math.Between(80, 120), () => {
+          spawnMaxLevelFootRipple(scene, host)
+        })
+      }
+    }
+
+    scheduleNextRipple(scene, host)
+  })
+}
+
+function startRippleScheduler(scene: Phaser.Scene, host: MaxLevelFootAuraHost) {
+  if (host.maxLevelAuraRippleTimer) return
+  scene.time.delayedCall(RIPPLE_FIRST_SPAWN_MS, () => {
+    if (isAuraActiveAndVisible(host)) {
+      spawnMaxLevelFootRipple(scene, host)
+    }
+  })
+  scheduleNextRipple(scene, host)
 }
 
 function hideAuraGfx(host: MaxLevelFootAuraHost) {
@@ -165,6 +243,7 @@ function showAura(scene: Phaser.Scene, host: MaxLevelFootAuraHost) {
     if (!host.maxLevelAuraPulseTimer && !host.maxLevelAuraPulseTween) {
       scheduleNextPulse(scene, host)
     }
+    startRippleScheduler(scene, host)
   }
 }
 
@@ -203,6 +282,7 @@ export function refreshMaxLevelFootAuraPose(display: MaxLevelFootAuraHost) {
     if (!display.maxLevelAuraPulseTimer && !display.maxLevelAuraPulseTween) {
       scheduleNextPulse(scene, display)
     }
+    startRippleScheduler(scene, display)
   } else {
     stopAuraAnimation(display)
   }
