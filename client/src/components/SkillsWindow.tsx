@@ -89,7 +89,7 @@ export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: 
           below · Reset: {SKILL_RESET_ZENY_COST.toLocaleString()}z
         </p>
         <p className="muted small skills-modal-legend">
-          Bright border = can add a point · Lines = suggested prerequisite path
+          Green border = can add a point · Use job tabs to switch skill trees
         </p>
         <div className="skills-window-tabs" role="tablist" aria-label="Skill categories">
           {tabs.map((tab) => (
