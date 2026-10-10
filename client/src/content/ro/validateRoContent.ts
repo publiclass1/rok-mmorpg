@@ -1,5 +1,5 @@
 import type { RoAspdWeaponClass, RoContentPack, WeaponClass } from './types'
-import { PLAYER_AVATAR_KEYS } from '../../game/player/playerJobAvatar'
+import { PLAYER_AVATAR_KEYS } from '../../game/player/playerAvatarKeys'
 
 const WEAPON_CLASSES = new Set<WeaponClass>(['knife', 'sword', 'spear', 'staff', 'bow'])
 const ASPD_WEAPON_CLASSES: RoAspdWeaponClass[] = ['unarmed', 'knife', 'sword', 'spear', 'staff', 'bow']
