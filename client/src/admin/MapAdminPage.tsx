@@ -13,7 +13,7 @@ import {
   resizeTmjMap,
   type TmjMap,
 } from '../lib/tmj'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/http'
 import type { MobSpotObjectProps, NpcObjectNpcType, NpcObjectProps } from '../lib/tmj/types'
 import {
   listNpcSpriteKeys,
@@ -150,10 +150,16 @@ export function MapAdminPage() {
         loadedTmj = createEmptyMap()
       }
 
-      const { data: npcRows, error: npcError } = await supabase
-        .from('npc_definitions')
-        .select('*')
-        .eq('map_id', mapId)
+      let npcRows: import('../types/database').NpcRow[] = []
+      let npcError: Error | null = null
+      try {
+        const res = await apiFetch<{ npcs: import('../types/database').NpcRow[] }>(
+          `/api/npcs?mapId=${encodeURIComponent(mapId)}`,
+        )
+        npcRows = res.npcs ?? []
+      } catch (err) {
+        npcError = err instanceof Error ? err : new Error(String(err))
+      }
 
       if (npcError) {
         setTmj(importMobSpotsIntoMap(loadedTmj, bundle.mobSpots ?? []))
@@ -209,7 +215,7 @@ export function MapAdminPage() {
       setMeta(res.mapMeta)
       const fileList = res.filesWritten.join(', ')
       setStatus(
-        `Saved ${mapId}. Files: ${fileList}. Apply SQL via Supabase SQL Editor or supabase db push, then hard-refresh the game.`,
+        `Saved ${mapId}. Files: ${fileList}. Re-run server seed or import NPCs, then hard-refresh the game.`,
       )
       setEditingMapId(mapId)
       await refreshList()

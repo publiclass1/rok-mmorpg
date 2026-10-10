@@ -1,6 +1,11 @@
 import { loadRoContent } from '../../content/ro/loadContent'
 import { jobAncestorIds, jobCanUseSkillFromJob } from './jobLineage'
-import type { RoSkillMagic, RoSkillSelfBuff, SkillPrerequisite } from '../../content/ro/types'
+import type {
+  RoSkillMagic,
+  RoSkillPhysical,
+  RoSkillSelfBuff,
+  SkillPrerequisite,
+} from '../../content/ro/types'
 
 export type SkillDefinition = {
   id: string
@@ -18,6 +23,7 @@ export type SkillDefinition = {
   iconFile?: string | null
   selfBuff?: RoSkillSelfBuff
   magic?: RoSkillMagic
+  physical?: RoSkillPhysical
   mobDamageMultiplier?: number
 }
 
@@ -42,6 +48,7 @@ export const SKILLS: Record<string, SkillDefinition> = Object.fromEntries(
       iconFile: s.iconFile ?? null,
       selfBuff: s.selfBuff,
       magic: s.magic,
+      physical: s.physical,
       mobDamageMultiplier: s.mobDamageMultiplier,
     },
   ]),
@@ -197,6 +204,53 @@ export function isPlayerGroundMagicSkill(skillId: string): boolean {
   if (GROUND_MAGIC_STUBS.has(skillId)) return true
   const def = SKILLS[skillId]
   return def?.target === 'ground' && def.magic?.aoeRadius != null && def.magic.aoeRadius > 0
+}
+
+const ARCHER_RANGED_PHYSICAL_SKILLS = new Set(['double_strafe', 'blitz_beat'])
+
+const ARCHER_GROUND_PHYSICAL_SKILLS = new Set(['arrow_shower'])
+
+const ARCHER_SKILL_STUBS = new Set([
+  'arrow_crafting',
+  'ankle_snare',
+  'shockwave_trap',
+  'sandman_trap',
+  'flasher_trap',
+  'freezing_trap',
+  'blast_mine',
+  'claymore_trap',
+  'remove_trap',
+  'talk_with_cute_pet',
+  'detect',
+  'land_mine',
+  'spring_trap',
+])
+
+export function isPlayerRangedPhysicalSkill(skillId: string): boolean {
+  return ARCHER_RANGED_PHYSICAL_SKILLS.has(skillId)
+}
+
+export function isPlayerGroundPhysicalSkill(skillId: string): boolean {
+  return ARCHER_GROUND_PHYSICAL_SKILLS.has(skillId)
+}
+
+export function isArcherSkillStub(skillId: string): boolean {
+  return ARCHER_SKILL_STUBS.has(skillId)
+}
+
+export function physicalSkillModifier(def: SkillDefinition | undefined, skillLevel: number): number {
+  const physical = def?.physical
+  if (!physical) return 1
+  const base = physical.skillModifierBase ?? 1
+  const per = physical.skillModifierPerLevel ?? 0
+  return base + per * Math.max(0, skillLevel - 1)
+}
+
+export function physicalSkillHitCount(def: SkillDefinition | undefined, skillLevel: number): number {
+  if (def?.physical?.hitsEqualLevel) return Math.max(1, skillLevel)
+  const fixed = def?.physical?.hitCount
+  if (fixed != null && fixed > 0) return fixed
+  return 1
 }
 
 export function canLearnSkill(

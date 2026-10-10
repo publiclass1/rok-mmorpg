@@ -16,7 +16,8 @@ import {
   saveCharacterSession,
   saveCharacterWorldPosition,
 } from '../lib/characterProgress'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/http'
+import { getGameSocket } from '../lib/socket'
 import { spendCharacterZeny } from '../lib/zeny'
 import { appearanceFromCharacterRow, appearanceKey } from '../game/character/characterAppearance'
 import { JOB_NAMES } from '../game/character/skillsConfig'
@@ -385,20 +386,18 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     }
 
     const warpToProntera = (message: string) => {
-      void supabase
-        .from('characters')
-        .update({
+      void apiFetch<{ character: CharacterRow }>(`/api/characters/${character.id}/world`, {
+        method: 'PATCH',
+        body: JSON.stringify({
           map_id: 'prontera',
           x: PRONTERA_TOWN_SPAWN.x,
           y: PRONTERA_TOWN_SPAWN.y,
-        })
-        .eq('id', character.id)
-        .select('*')
-        .single()
-        .then(({ data }) => {
+        }),
+      })
+        .then(({ character: data }) => {
           if (cancelled) return
           if (data) {
-            onCharacterUpdated(data as CharacterRow)
+            onCharacterUpdated(data)
             setMessage(message)
           }
           dungeonValidatedKeyRef.current = null
@@ -430,26 +429,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     setDungeonReady(false)
 
     const queryInstance = (attempt: number) => {
-      void supabase
-        .from('dungeon_instances')
-        .select('*')
-        .eq('party_id', partyId)
-        .eq('floor_id', floor.id)
-        .maybeSingle()
-        .then(({ data, error }) => {
+      void apiFetch<{ instance: DungeonInstanceRow | null }>(
+        `/api/dungeon/instance?partyId=${encodeURIComponent(partyId)}&floorId=${encodeURIComponent(floor.id)}`,
+      )
+        .then(({ instance: data }) => {
           if (cancelled) return
-          if (error) {
-            if (attempt < 2) {
-              window.setTimeout(() => queryInstance(attempt + 1), 1500)
-              return
-            }
-            setMessage('Could not verify dungeon instance. Check your connection.')
-            const cached = bootDungeonRef.current
-            if (cached?.mapId === character.map_id) {
-              finishReady()
-            }
-            return
-          }
           if (!data) {
             const cached = bootDungeonRef.current
             if (cached?.mapId === character.map_id && cached.status === 'cleared') {
@@ -465,6 +449,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           emitGameEvent('dungeonSync', sync)
           finishReady()
         })
+        .catch(() => {
+          if (cancelled) return
+          if (attempt < 2) {
+            window.setTimeout(() => queryInstance(attempt + 1), 1500)
+            return
+          }
+          setMessage('Could not verify dungeon instance. Check your connection.')
+          const cached = bootDungeonRef.current
+          if (cached?.mapId === character.map_id) finishReady()
+        })
     }
 
     queryInstance(0)
@@ -476,31 +470,20 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
   useEffect(() => {
     if (!bootDungeon?.instanceId) return
-    const channel = supabase
-      .channel(`dungeon-instance:${bootDungeon.instanceId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'dungeon_instances',
-          filter: `id=eq.${bootDungeon.instanceId}`,
-        },
-        (payload) => {
-          const row = payload.new as DungeonInstanceRow
-          if (!row?.id) return
-          const sync = dungeonInstanceToSync(row)
-          setBootDungeon(sync)
-          emitGameEvent('dungeonSync', sync)
-          if (sync.status === 'cleared') {
-            setMessage('Dungeon cleared! Take the exit portal.')
-            emitGameEvent('status', 'Dungeon cleared! Take the exit portal.')
-          }
-        },
-      )
-      .subscribe()
+    const socket = getGameSocket()
+    const onDungeon = (row: DungeonInstanceRow) => {
+      if (!row?.id || row.id !== bootDungeon.instanceId) return
+      const sync = dungeonInstanceToSync(row)
+      setBootDungeon(sync)
+      emitGameEvent('dungeonSync', sync)
+      if (sync.status === 'cleared') {
+        setMessage('Dungeon cleared! Take the exit portal.')
+        emitGameEvent('status', 'Dungeon cleared! Take the exit portal.')
+      }
+    }
+    socket.on('dungeon_instance', onDungeon)
     return () => {
-      void supabase.removeChannel(channel)
+      socket.off('dungeon_instance', onDungeon)
     }
   }, [bootDungeon?.instanceId, onCharacterUpdated])
 
@@ -558,41 +541,30 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
   useEffect(() => {
     setNpcsReady(false)
-    void supabase
-      .from('npc_definitions')
-      .select('*')
-      .eq('map_id', character.map_id)
-      .then(({ data }) => {
+    void apiFetch<{ npcs: NpcRow[] }>(`/api/npcs?mapId=${encodeURIComponent(character.map_id)}`).then(
+      ({ npcs: data }) => {
         setNpcs(data ?? [])
         setNpcsReady(true)
-      })
+      },
+    )
   }, [character.map_id])
 
   useEffect(() => {
-    const channel = supabase
-      .channel(`incoming-trades:${character.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'trade_sessions' },
-        async (payload) => {
-          const row = payload.new as TradeSessionRow
-          if (row.partner_character_id !== character.id || row.state !== 'pending') return
-          const { data } = await supabase
-            .from('characters')
-            .select('name')
-            .eq('id', row.initiator_character_id)
-            .single()
-          setTradePartner({
-            characterId: row.initiator_character_id,
-            name: data?.name ?? 'Adventurer',
-            initialTrade: row,
-          })
-        },
-      )
-      .subscribe()
-
+    const socket = getGameSocket()
+    const onTrade = async (payload: { event?: string; trade?: TradeSessionRow }) => {
+      const row = payload.trade
+      if (!row || row.partner_character_id !== character.id || row.state !== 'pending') return
+      const session = await apiFetch<{ characters: CharacterRow[] }>('/api/characters').catch(() => null)
+      const initiator = session?.characters?.find((c) => c.id === row.initiator_character_id)
+      setTradePartner({
+        characterId: row.initiator_character_id,
+        name: initiator?.name ?? 'Adventurer',
+        initialTrade: row,
+      })
+    }
+    socket.on('trade_session', onTrade)
     return () => {
-      void supabase.removeChannel(channel)
+      socket.off('trade_session', onTrade)
     }
   }, [character.id])
 
@@ -609,17 +581,14 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         setMessage(err instanceof Error ? err.message : 'Could not load party')
       })
     refreshGuild()
-    void supabase
-      .from('vendor_stalls')
-      .select('*')
-      .eq('character_id', character.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.is_open) {
-          setVendingOpen(true)
-          setStallTitle(data.title)
-        }
-      })
+    void apiFetch<{ stall: { is_open?: boolean; title?: string } | null }>(
+      `/api/vendor/${character.id}/stall`,
+    ).then(({ stall: data }) => {
+      if (data?.is_open) {
+        setVendingOpen(true)
+        setStallTitle(data.title ?? 'Shop')
+      }
+    })
   }, [character.id])
 
   useEffect(() => {
@@ -679,37 +648,19 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   }, [vendingOpen, character.id])
 
   useEffect(() => {
-    const channel = supabase
-      .channel(`party-requests:${character.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'party_requests' },
-        async (payload) => {
-          const row = payload.new as PartyRequestRow
-          if (row.to_character_id !== character.id || row.status !== 'pending') return
-          const { data } = await supabase
-            .from('characters')
-            .select('name')
-            .eq('id', row.from_character_id)
-            .single()
-          setPartyRequest({ request: row, fromName: data?.name ?? 'Adventurer' })
-        },
-      )
-      .subscribe()
-
-    const partyMemberSub = supabase
-      .channel(`party-roster:${character.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'party_members' },
-        () => refreshParty(),
-      )
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'parties' }, () => refreshParty())
-      .subscribe()
-
+    const socket = getGameSocket()
+    const onPartyRequest = async (row: PartyRequestRow) => {
+      if (row.to_character_id !== character.id || row.status !== 'pending') return
+      setPartyRequest({ request: row, fromName: 'Adventurer' })
+    }
+    const onPartyRoster = () => {
+      void refreshParty()
+    }
+    socket.on('party_request', onPartyRequest)
+    socket.on('party_roster', onPartyRoster)
     return () => {
-      void supabase.removeChannel(channel)
-      void supabase.removeChannel(partyMemberSub)
+      socket.off('party_request', onPartyRequest)
+      socket.off('party_roster', onPartyRoster)
     }
   }, [character.id])
 
@@ -779,39 +730,21 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   )
 
   useEffect(() => {
-    void supabase
-      .from('duel_sessions')
-      .select('*')
-      .or(`challenger_character_id.eq.${character.id},opponent_character_id.eq.${character.id}`)
-      .in('state', ['pending', 'countdown', 'active'])
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) applyDuelSessionRow(data)
-      })
+    void apiFetch<{ duel: DuelSessionRow | null }>(
+      `/api/duel/active?characterId=${encodeURIComponent(character.id)}`,
+    ).then(({ duel: data }) => {
+      if (data) applyDuelSessionRow(data)
+    })
 
-    const channel = supabase
-      .channel(`duel-sessions:${character.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'duel_sessions' },
-        (payload) => {
-          applyDuelSessionRow(payload.new as DuelSessionRow)
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'duel_sessions' },
-        (payload) => {
-          applyDuelSessionRow(payload.new as DuelSessionRow)
-        },
-      )
-      .subscribe()
+    const socket = getGameSocket()
+    const onDuel = (row: DuelSessionRow) => {
+      applyDuelSessionRow(row)
+    }
+    socket.on('duel_session', onDuel)
 
     return () => {
       emitGameEvent('duelSync', null)
-      void supabase.removeChannel(channel)
+      socket.off('duel_session', onDuel)
     }
   }, [character.id, applyDuelSessionRow])
 
@@ -1063,19 +996,16 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         label: mapDisplayName(save.mapId),
       })
     }
-    const { data, error } = await supabase
-      .from('characters')
-      .update({
-        map_id: save.mapId,
-        x: save.x,
-        y: save.y,
-      })
-      .eq('id', characterRef.current.id)
-      .select('*')
-      .single()
-    if (error || !data) {
+    const { character: data } = await apiFetch<{ character: CharacterRow }>(
+      `/api/characters/${characterRef.current.id}/world`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ map_id: save.mapId, x: save.x, y: save.y }),
+      },
+    )
+    if (!data) {
       if (!sameMap) setMapLoading(null)
-      throw new Error(error?.message ?? 'Respawn failed')
+      throw new Error('Respawn failed')
     }
     setPosition({ x: save.x, y: save.y, mapId: save.mapId })
     if (!sameMap) await tearDownGameForMapChange()
@@ -1100,14 +1030,15 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         { x: coords.x, y: coords.y, mapId: ch.map_id },
         { x: ch.x, y: ch.y, mapId: ch.map_id },
       )
-      const { data, error } = await supabase
-        .from('characters')
-        .update({ x: coords.x, y: coords.y })
-        .eq('id', characterRef.current.id)
-        .select('*')
-        .single()
-      if (error || !data) throw new Error(error?.message ?? 'Respawn failed')
-      onCharacterUpdated(data as CharacterRow)
+      const { character: data } = await apiFetch<{ character: CharacterRow }>(
+        `/api/characters/${characterRef.current.id}/world`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ map_id: ch.map_id, x: coords.x, y: coords.y }),
+        },
+      )
+      if (!data) throw new Error('Respawn failed')
+      onCharacterUpdated(data)
       setPosition({ x: coords.x, y: coords.y, mapId: characterRef.current.map_id })
       setMessage('Respawned in the PVP arena with full HP and SP.')
     } catch (err) {
@@ -1360,11 +1291,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     if (!sessionReady) return
     const id = character.id
     const interval = window.setInterval(() => {
-      void upsertCharacterPresence(
-        characterRef.current.id,
-        positionRef.current.mapId,
-        characterRef.current.name,
-      )
+      void upsertCharacterPresence({
+        characterId: characterRef.current.id,
+        mapId: positionRef.current.mapId,
+        name: characterRef.current.name,
+      })
     }, 15_000)
     return () => {
       window.clearInterval(interval)
@@ -1374,7 +1305,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
 
   useEffect(() => {
     if (!sessionReady) return
-    void upsertCharacterPresence(character.id, position.mapId, character.name)
+    void upsertCharacterPresence({ characterId: character.id, mapId: position.mapId, name: character.name })
   }, [sessionReady, character.id, character.name, position.mapId])
 
   useEffect(() => {
@@ -2143,14 +2074,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             onClose={() => setGuildOpen(false)}
             onChanged={refreshGuild}
             onCharacterUpdated={() => {
-              void supabase
-                .from('characters')
-                .select('*')
-                .eq('id', character.id)
-                .single()
-                .then(({ data }) => {
+              void apiFetch<{ character: CharacterRow }>(`/api/characters/${character.id}/session`).then(
+                ({ character: data }) => {
                   if (data) onCharacterUpdated(data)
-                })
+                },
+              )
             }}
             onMessage={setMessage}
           />
@@ -2198,14 +2126,11 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
             onClose={() => setTradePartner(null)}
             onComplete={() => {
               setTradePartner(null)
-              void supabase
-                .from('characters')
-                .select('*')
-                .eq('id', character.id)
-                .single()
-                .then(({ data }) => {
+              void apiFetch<{ character: CharacterRow }>(`/api/characters/${character.id}/session`).then(
+                ({ character: data }) => {
                   if (data) onCharacterUpdated(data)
-                })
+                },
+              )
             }}
           />
         )}

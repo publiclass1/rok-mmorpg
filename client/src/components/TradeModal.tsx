@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { tradeManage } from '../lib/api'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/http'
+import { getGameSocket, joinRealtimeRoom, leaveRealtimeRoom } from '../lib/socket'
 import type { CharacterRow, ItemRow, TradeOfferRow, TradeSessionRow } from '../types/database'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
@@ -23,16 +24,18 @@ export function TradeModal({ character, partner, initialTrade, onClose, onComple
   const [zenyOffer, setZenyOffer] = useState('0')
 
   async function loadInventory() {
-    const [{ data: inv }, { data: catalog }] = await Promise.all([
-      supabase.from('character_inventory').select('item_id, quantity').eq('character_id', character.id),
-      supabase.from('items').select('*'),
+    const [{ inventory: inv }, { items: catalog }] = await Promise.all([
+      apiFetch<{ inventory: Array<{ item_id: string; quantity: number }> }>(
+        `/api/characters/${character.id}/inventory`,
+      ),
+      apiFetch<{ items: ItemRow[] }>('/api/items'),
     ])
     setInventory(inv ?? [])
     setItems(catalog ?? [])
   }
 
   async function loadOffers(sessionId: string) {
-    const { data } = await supabase.from('trade_offers').select('*').eq('trade_session_id', sessionId)
+    const { offers: data } = await apiFetch<{ offers: TradeOfferRow[] }>(`/api/trade/${sessionId}/offers`)
     setOffers(data ?? [])
   }
 
@@ -62,30 +65,24 @@ export function TradeModal({ character, partner, initialTrade, onClose, onComple
 
   useEffect(() => {
     if (!trade) return
-    const channel = supabase
-      .channel(`trade:${trade.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'trade_sessions', filter: `id=eq.${trade.id}` },
-        (payload) => {
-          const row = payload.new as TradeSessionRow
-          setTrade(row)
-          if (row.state === 'completed' || row.state === 'cancelled') {
-            onComplete()
-          }
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'trade_offers', filter: `trade_session_id=eq.${trade.id}` },
-        () => {
-          void loadOffers(trade.id)
-        },
-      )
-      .subscribe()
-
+    const room = `trade:${trade.id}`
+    joinRealtimeRoom(room)
+    const socket = getGameSocket()
+    const onTradeSession = (payload: { trade?: TradeSessionRow }) => {
+      const row = payload.trade
+      if (!row || row.id !== trade.id) return
+      setTrade(row)
+      if (row.state === 'completed' || row.state === 'cancelled') onComplete()
+    }
+    const onOffers = () => {
+      void loadOffers(trade.id)
+    }
+    socket.on('trade_session', onTradeSession)
+    socket.on('trade_offers', onOffers)
     return () => {
-      void supabase.removeChannel(channel)
+      socket.off('trade_session', onTradeSession)
+      socket.off('trade_offers', onOffers)
+      leaveRealtimeRoom(room)
     }
   }, [trade?.id])
 

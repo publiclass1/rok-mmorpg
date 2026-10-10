@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { transferStorage } from '../lib/api'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/http'
 import type { CharacterRow, ItemRow, NpcRow, StorageRow } from '../types/database'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
@@ -23,13 +23,13 @@ export function StorageModal({ character, npc, position, onClose }: Props) {
 
   async function refresh() {
     const [itemRes, invRes, storageRes] = await Promise.all([
-      supabase.from('items').select('*'),
-      supabase.from('character_inventory').select('item_id, quantity').eq('character_id', character.id),
-      supabase.from('account_storage').select('*'),
+      apiFetch<{ items: ItemRow[] }>('/api/items'),
+      apiFetch<{ inventory: InvRow[] }>(`/api/characters/${character.id}/inventory`),
+      apiFetch<{ storage: StorageRow[] }>('/api/storage'),
     ])
-    setItems(itemRes.data ?? [])
-    setInventory(invRes.data ?? [])
-    setStorage(storageRes.data ?? [])
+    setItems(itemRes.items ?? [])
+    setInventory(invRes.inventory ?? [])
+    setStorage(storageRes.storage ?? [])
   }
 
   useEffect(() => {

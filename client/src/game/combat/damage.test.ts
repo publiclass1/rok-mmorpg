@@ -6,11 +6,18 @@ import {
   calcCritDamageMultiplier,
   calcPlayerMagicSkillVsMob,
   calcPlayerMagicVsMobDamage,
+  calcPlayerSkillVsMobDamage,
   calcPlayerVsMobDamage,
   calcStatusMatkMax,
   calcStatusMatkMin,
   rollCriticalHit,
 } from './damage'
+import { effectiveStats } from '../character/effectiveStats'
+import {
+  beastBaneDamageMultiplier,
+  skillPassiveDexBonus,
+  skillPassiveHitBonus,
+} from './skillPassives'
 import type { MobDefinition } from './mobConfig'
 import { PORING } from './mobConfig'
 
@@ -89,6 +96,25 @@ function run() {
   const soulUndead = calcPlayerMagicSkillVsMob(session, undeadMob, 'soul_strike', 5, { rng: () => 0.5 })
   const soulNeutral = calcPlayerMagicSkillVsMob(session, neutralMob, 'soul_strike', 5, { rng: () => 0.5 })
   assert.ok(soulUndead.totalDamage > soulNeutral.totalDamage, 'soul strike bonus vs undead')
+
+  assert.equal(skillPassiveDexBonus({ owls_eye: 5 }), 5)
+  assert.equal(skillPassiveHitBonus({ vultures_eye: 4 }, 'bow'), 12)
+  assert.equal(skillPassiveHitBonus({ vultures_eye: 4 }, 'sword'), 0)
+  assert.equal(beastBaneDamageMultiplier({ beast_bane: 10 }), 1.5)
+
+  const archerSession = {
+    ...session,
+    jobId: 'archer',
+    skills: { ...session.skills, owls_eye: 3 },
+    equipment: { ...session.equipment, weapon: null },
+  }
+  assert.equal(effectiveStats(archerSession).dex, effectiveStats(session).dex + 3)
+
+  const baseHit = { damage: 100, hit: true, critical: false }
+  const strafeL5 = calcPlayerSkillVsMobDamage(baseHit, 'double_strafe', 5, {})
+  assert.ok(strafeL5.damage > 100, 'double strafe should scale damage')
+  const strafeBane = calcPlayerSkillVsMobDamage(baseHit, 'double_strafe', 5, { beast_bane: 10 })
+  assert.ok(strafeBane.damage > strafeL5.damage, 'beast bane should boost archer skill damage')
 
   console.log('damage.test.ts: ok')
 }

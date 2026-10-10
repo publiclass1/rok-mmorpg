@@ -1,5 +1,5 @@
 import type { GuildMemberRow, GuildRow } from '../types/database'
-import { supabase } from './supabase'
+import { apiFetch } from './http'
 
 export type GuildSnapshot = {
   guild: GuildRow
@@ -7,31 +7,20 @@ export type GuildSnapshot = {
 } | null
 
 export async function loadGuildForCharacter(characterId: string): Promise<GuildSnapshot> {
-  const { data: membership } = await supabase
-    .from('guild_members')
-    .select('guild_id, role')
-    .eq('character_id', characterId)
-    .maybeSingle()
+  const data = await apiFetch<{
+    guild: GuildRow | null
+    members: Array<{ character_id: string; role: GuildMemberRow['role'] }>
+    characters: Array<{ id: string; name: string }>
+  }>(`/api/guild/me?characterId=${encodeURIComponent(characterId)}`)
 
-  if (!membership) return null
+  if (!data.guild) return null
 
-  const { data: guild } = await supabase.from('guilds').select('*').eq('id', membership.guild_id).maybeSingle()
-  if (!guild) return null
-
-  const { data: memberRows } = await supabase
-    .from('guild_members')
-    .select('character_id, role')
-    .eq('guild_id', membership.guild_id)
-
-  const ids = (memberRows ?? []).map((m) => m.character_id)
-  const { data: chars } = await supabase.from('characters').select('id, name').in('id', ids)
-
-  const nameById = new Map((chars ?? []).map((c) => [c.id, c.name]))
-  const members = (memberRows ?? []).map((m) => ({
+  const nameById = new Map((data.characters ?? []).map((c) => [c.id, c.name]))
+  const members = (data.members ?? []).map((m) => ({
     characterId: m.character_id,
     name: nameById.get(m.character_id) ?? 'Adventurer',
     role: m.role,
   }))
 
-  return { guild, members }
+  return { guild: data.guild, members }
 }

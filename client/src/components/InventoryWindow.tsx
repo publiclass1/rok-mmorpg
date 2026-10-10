@@ -15,7 +15,7 @@ import { dispatchCharacterAction } from '../game/character/characterActionDispat
 import { writeSkillBarDrag } from '../game/character/skillBarDrag'
 import type { CharacterSheetPayload } from '../game/events'
 import { emitGameEvent } from '../game/events'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/http'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalHeader } from './motion/ModalHeader'
 import { ModalScrollBody } from './motion/ModalScrollBody'
@@ -39,11 +39,9 @@ export function InventoryWindow({ characterId, sheet, onClose }: Props) {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
 
   useEffect(() => {
-    void supabase
-      .from('character_inventory')
-      .select('item_id, quantity')
-      .eq('character_id', characterId)
-      .then(({ data }) => setDbRows(data ?? []))
+    void apiFetch<{ inventory: Array<{ item_id: string; quantity: number }> }>(
+      `/api/characters/${characterId}/inventory`,
+    ).then(({ inventory }) => setDbRows(inventory ?? []))
   }, [characterId])
 
   const cells = useMemo(() => {

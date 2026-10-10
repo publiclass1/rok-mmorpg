@@ -23,7 +23,7 @@ export type GroundAoEElementStyle = {
 }
 
 export function groundAoERadiusPx(def: SkillDefinition, _skillId?: string): number {
-  const r = def.magic?.aoeRadius
+  const r = def.magic?.aoeRadius ?? def.physical?.aoeRadius
   if (r != null && r > 0) return r
   return DEFAULT_STUB_AOE_RADIUS
 }

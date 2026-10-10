@@ -16,7 +16,7 @@ import { isValidSkillBarPayload, parseSkillBars, serializeSkillBars } from '../g
 import type { CharacterRow } from '../types/database'
 import { emitGameEvent } from '../game/events'
 import { progressSave } from './api'
-import { supabase } from './supabase'
+import { apiFetch } from './http'
 
 const EQUIP_SLOTS: EquipSlot[] = [
   'weapon',
@@ -127,24 +127,18 @@ function rowToSession(
 }
 
 export async function loadCharacterSession(characterId: string): Promise<CharacterSessionState> {
-  const [progressRes, skillsRes, equipRes] = await Promise.all([
-    supabase.from('character_progress').select('*').eq('character_id', characterId).maybeSingle(),
-    supabase.from('character_skills').select('skill_id, level').eq('character_id', characterId),
-    supabase.from('character_equipment').select('slot, item_id, instance_id').eq('character_id', characterId),
-  ])
+  const data = await apiFetch<{
+    progress: ProgressRow | null
+    skills: SkillRow[]
+    equipment: EquipRow[]
+  }>(`/api/characters/${characterId}/session`)
 
-  const loadError =
-    progressRes.error?.message ?? skillsRes.error?.message ?? equipRes.error?.message ?? null
-  if (loadError) {
-    throw new Error(`Failed to load character progress: ${loadError}`)
-  }
-
-  const progress = progressRes.data as ProgressRow | null
+  const progress = data.progress
   if (!progress) {
     return createInitialCharacterState()
   }
 
-  return rowToSession(progress, (skillsRes.data ?? []) as SkillRow[], (equipRes.data ?? []) as EquipRow[])
+  return rowToSession(progress, data.skills ?? [], data.equipment ?? [])
 }
 
 export type CharacterSelectEntry = {
@@ -164,52 +158,28 @@ type SelectProgressRow = {
 }
 
 export async function loadCharactersForSelect(
-  userId: string,
+  _userId: string,
 ): Promise<{ entries: CharacterSelectEntry[]; error: string | null }> {
-  const { data: characters, error: charError } = await supabase
-    .from('characters')
-    .select('*')
-    .eq('user_id', userId)
-    .order('slot', { ascending: true })
+  try {
+    const { entries: raw } = await apiFetch<{
+      entries: Array<{
+        character: CharacterRow
+        progress: SelectProgressRow | null
+        equipment: EquipRow[]
+      }>
+    }>('/api/characters/select-entries')
 
-  if (charError) {
-    return { entries: [], error: charError.message }
-  }
+    const list = raw.map((r) => r.character)
+    if (list.length === 0) {
+      return { entries: [], error: null }
+    }
 
-  const list = (characters ?? []) as CharacterRow[]
-  if (list.length === 0) {
-    return { entries: [], error: null }
-  }
-
-  const ids = list.map((c) => c.id)
-  const [progressRes, equipRes] = await Promise.all([
-    supabase
-      .from('character_progress')
-      .select('character_id, job_id, base_level, base_exp, job_level, job_exp')
-      .in('character_id', ids),
-    supabase.from('character_equipment').select('character_id, slot, item_id').in('character_id', ids),
-  ])
-
-  if (progressRes.error) {
-    return { entries: [], error: progressRes.error.message }
-  }
-  if (equipRes.error) {
-    return { entries: [], error: equipRes.error.message }
-  }
-
-  const progressByChar = new Map<string, SelectProgressRow>()
-  for (const row of (progressRes.data ?? []) as SelectProgressRow[]) {
-    progressByChar.set(row.character_id, row)
-  }
-
-  const equipByChar = new Map<string, EquipRow[]>()
-  for (const row of (equipRes.data ?? []) as EquipRow[]) {
-    const cid = row.character_id
-    if (!cid) continue
-    const bucket = equipByChar.get(cid) ?? []
-    bucket.push(row)
-    equipByChar.set(cid, bucket)
-  }
+    const progressByChar = new Map<string, SelectProgressRow>()
+    const equipByChar = new Map<string, EquipRow[]>()
+    for (const row of raw) {
+      if (row.progress) progressByChar.set(row.character.id, row.progress)
+      equipByChar.set(row.character.id, row.equipment ?? [])
+    }
 
   const fallbackProgress = createInitialProgress()
   const entries: CharacterSelectEntry[] = list.map((character) => {
@@ -234,6 +204,9 @@ export async function loadCharactersForSelect(
   })
 
   return { entries, error: null }
+  } catch (err) {
+    return { entries: [], error: err instanceof Error ? err.message : String(err) }
+  }
 }
 
 export type CharacterWorldPosition = {
@@ -241,8 +214,6 @@ export type CharacterWorldPosition = {
   y: number
   mapId: string
 }
-
-const POSITION_NOOP_ERROR = 'character update limited to position and map'
 
 export function normalizeCharacterWorldPosition(world: CharacterWorldPosition): CharacterWorldPosition {
   return {
@@ -268,21 +239,10 @@ export async function saveCharacterWorldPosition(
     return
   }
 
-  const { error } = await supabase
-    .from('characters')
-    .update({
-      x: normalized.x,
-      y: normalized.y,
-      map_id: normalized.mapId,
-    })
-    .eq('id', characterId)
-
-  if (error) {
-    if (error.message.includes(POSITION_NOOP_ERROR)) {
-      return
-    }
-    throw new Error(error.message)
-  }
+  await apiFetch(`/api/characters/${characterId}/world`, {
+    method: 'PATCH',
+    body: JSON.stringify({ map_id: normalized.mapId, x: normalized.x, y: normalized.y }),
+  })
 }
 
 /** M2 progress + `characters` row (position/map). Used on interval and when leaving the world. */

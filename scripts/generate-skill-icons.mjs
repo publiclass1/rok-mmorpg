@@ -401,6 +401,160 @@ function drawFalconMastery(id) {
   )
 }
 
+function drawBowArrow(id, accent = '#a16207') {
+  return wrap(
+    `
+  <path d="M8 24 Q16 8 24 24" stroke="${accent}" stroke-width="1.2" fill="none"/>
+  <path d="M22 10 L26 14 L22 18 L20 14 Z" fill="url(#${id}-steel)"/>
+  <path d="M10 20 L22 12" stroke="#78716c" stroke-width="1" stroke-linecap="round"/>
+  `,
+    id,
+    accent,
+  )
+}
+
+function drawOwlsEye(id) {
+  return wrap(
+    `
+  <ellipse cx="16" cy="16" rx="9" ry="7" fill="#f8fafc"/>
+  <circle cx="16" cy="16" r="4" fill="#1e293b"/>
+  <circle cx="17" cy="15" r="1.2" fill="#fff"/>
+  <path d="M7 14 Q16 6 25 14" stroke="#854d0e" stroke-width="1" fill="none"/>
+  `,
+    id,
+    '#ca8a04',
+  )
+}
+
+function drawVulturesEye(id) {
+  return wrap(
+    `
+  <ellipse cx="14" cy="16" rx="6" ry="5" fill="#e2e8f0"/>
+  <circle cx="14" cy="16" r="2.5" fill="#0f172a"/>
+  <ellipse cx="20" cy="15" rx="5" ry="4" fill="#cbd5e1"/>
+  <circle cx="20" cy="15" r="2" fill="#0f172a"/>
+  <path d="M8 10 L24 8" stroke="#a16207" stroke-width="1.2"/>
+  `,
+    id,
+    '#78716c',
+  )
+}
+
+function drawDoubleStrafe(id) {
+  return wrap(
+    `
+  <path d="M6 20 L20 10 L18 12 L22 8 L20 14" stroke="url(#${id}-steel)" stroke-width="1.2" fill="none"/>
+  <path d="M10 24 L24 14 L22 16 L26 12 L24 18" stroke="url(#${id}-gold)" stroke-width="1.2" fill="none"/>
+  <path d="M8 24 Q16 12 24 24" stroke="#a16207" stroke-width="1" fill="none"/>
+  `,
+    id,
+    '#b45309',
+  )
+}
+
+function drawArrowShower(id) {
+  return wrap(
+    `
+  <path d="M8 6 L10 14 M14 4 L14 12 M20 5 L18 13 M24 7 L22 15" stroke="#78716c" stroke-width="1" stroke-linecap="round"/>
+  <path d="M10 16 L12 22 M16 15 L16 24 M20 16 L18 23" stroke="url(#${id}-steel)" stroke-width="1.2" stroke-linecap="round"/>
+  <ellipse cx="16" cy="26" rx="10" ry="2" fill="#451a03" opacity="0.4"/>
+  `,
+    id,
+    '#92400e',
+  )
+}
+
+function drawArrowCrafting(id) {
+  return wrap(
+    `
+  <rect x="10" y="18" width="12" height="3" fill="url(#${id}-wood)"/>
+  <path d="M14 8 L16 20 L15 21 L13 9 Z" fill="url(#${id}-steel)"/>
+  <path d="M20 10 L22 18 L20 17 Z" fill="#64748b"/>
+  `,
+    id,
+    '#78716c',
+  )
+}
+
+function drawTrapIcon(id, accent) {
+  return wrap(
+    `
+  <circle cx="16" cy="20" r="6" fill="none" stroke="${accent}" stroke-width="1.5"/>
+  <path d="M16 14 L16 10 M13 16 L10 14 M19 16 L22 14" stroke="${accent}" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="16" cy="20" r="2" fill="${accent}" opacity="0.8"/>
+  `,
+    id,
+    accent,
+  )
+}
+
+function drawRemoveTrap(id) {
+  return drawTrapIcon(id, '#94a3b8')
+}
+
+function drawTalkWithCutePet(id) {
+  return drawFalconMastery(id)
+}
+
+function drawBeastBane(id) {
+  return wrap(
+    `
+  <path d="M10 22 L14 10 L18 22 Z" fill="url(#${id}-steel)"/>
+  <path d="M18 22 L22 12 L26 22 Z" fill="url(#${id}-gold)"/>
+  <path d="M8 24 L28 24" stroke="#451a03" stroke-width="1"/>
+  `,
+    id,
+    '#b91c1c',
+  )
+}
+
+function drawBlitzBeat(id) {
+  return wrap(
+    `
+  <path d="M6 8 L20 20 L16 18 L22 26 L14 20 Z" fill="#1e293b"/>
+  <path d="M20 20 L28 16" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="24" cy="14" r="1.5" fill="#ef4444"/>
+  `,
+    id,
+    '#0f766e',
+  )
+}
+
+function drawDetect(id) {
+  return wrap(
+    `
+  <circle cx="16" cy="18" r="8" fill="none" stroke="#22d3ee" stroke-width="1.2" opacity="0.8"/>
+  <circle cx="16" cy="18" r="4" fill="none" stroke="#22d3ee" stroke-width="1"/>
+  <path d="M16 10 L16 6 M16 26 L16 30" stroke="#64748b" stroke-width="1"/>
+  `,
+    id,
+    '#0891b2',
+  )
+}
+
+function drawLandMine(id) {
+  return wrap(
+    `
+  <circle cx="16" cy="20" r="7" fill="#374151"/>
+  <circle cx="16" cy="20" r="3" fill="#ef4444"/>
+  <path d="M16 13 L16 8" stroke="#9ca3af" stroke-width="1.2"/>
+  `,
+    id,
+    '#dc2626',
+  )
+}
+
+function drawSpringTrap(id) {
+  return wrap(
+    `
+  <path d="M10 22 Q12 14 14 22 Q16 14 18 22 Q20 14 22 22" stroke="url(#${id}-gold)" stroke-width="1.5" fill="none"/>
+  <rect x="8" y="23" width="16" height="2" fill="#57534e"/>
+  `,
+    id,
+    '#ca8a04',
+  )
+}
+
 function drawHeal(id) {
   return wrap(
     `
@@ -717,7 +871,26 @@ const builders = {
   cavalier_mastery: drawCavalierMastery,
   peco_peco_ride: drawPecoPecoRide,
   pushcart: drawPushcart,
+  owls_eye: drawOwlsEye,
+  vultures_eye: drawVulturesEye,
+  double_strafe: drawDoubleStrafe,
+  arrow_shower: drawArrowShower,
+  arrow_crafting: drawArrowCrafting,
+  ankle_snare: (id) => drawTrapIcon(id, '#84cc16'),
+  shockwave_trap: (id) => drawTrapIcon(id, '#f97316'),
+  sandman_trap: (id) => drawTrapIcon(id, '#eab308'),
+  flasher_trap: (id) => drawTrapIcon(id, '#facc15'),
+  freezing_trap: (id) => drawTrapIcon(id, '#38bdf8'),
+  blast_mine: (id) => drawTrapIcon(id, '#ef4444'),
+  claymore_trap: (id) => drawTrapIcon(id, '#b91c1c'),
+  remove_trap: drawRemoveTrap,
+  talk_with_cute_pet: drawTalkWithCutePet,
+  beast_bane: drawBeastBane,
   falcon_mastery: drawFalconMastery,
+  blitz_beat: drawBlitzBeat,
+  detect: drawDetect,
+  land_mine: drawLandMine,
+  spring_trap: drawSpringTrap,
   heal: drawHeal,
   fire_bolt: drawFireBolt,
   cold_bolt: drawColdBolt,

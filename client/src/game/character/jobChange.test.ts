@@ -44,4 +44,15 @@ const swordmanVisible = jobChangeOffersForCurrentJob(pronteraOffers, 'swordman')
 assert.equal(swordmanVisible.length, 1)
 assert.equal(swordmanVisible[0]?.jobId, 'knight')
 
+const archerWithSkills = {
+  ...base,
+  jobId: 'archer',
+  progress: { ...base.progress, jobLevel: 40, baseLevel: 40 },
+  skills: { ...base.skills, double_strafe: 5, owls_eye: 5 },
+}
+const hunterState = applyJobChange(archerWithSkills, 'hunter')
+assert.equal(hunterState.jobId, 'hunter')
+assert.equal(hunterState.skills.double_strafe, 5, 'retains archer skills')
+assert.equal(hunterState.skills.owls_eye, 5, 'retains archer passives')
+
 console.log('jobChange.test.ts: ok')

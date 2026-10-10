@@ -19,11 +19,15 @@ import {
 } from '../character/characterSessionBridge'
 import {
   SKILLS,
+  isArcherSkillStub,
   isPlayerEnemyCastSkill,
   isPlayerGroundMagicSkill,
   isPlayerGroundMagicStub,
+  isPlayerGroundPhysicalSkill,
   isPlayerMagicEnemySkill,
   isPlayerMagicEnemyStub,
+  isPlayerRangedPhysicalSkill,
+  physicalSkillHitCount,
   selfBuffDurationMs,
   skillUsableByJob,
   type SkillDefinition,
@@ -1430,7 +1434,11 @@ export class WorldScene extends Phaser.Scene {
       const cast = this.queuedGroundSkillCast
       this.clearGroundSkillChase()
       if (cast) {
-        this.executePlayerGroundSkill(cast.skillId, cast.level, cast.def, cast.wx, cast.wy)
+        if (isArcherSkillStub(cast.skillId)) {
+          this.executeArcherSkillStub(cast.skillId, cast.level, cast.def, cast.wx, cast.wy)
+        } else {
+          this.executePlayerGroundSkill(cast.skillId, cast.level, cast.def, cast.wx, cast.wy)
+        }
       }
       this.refreshCursor()
       return
@@ -1868,6 +1876,14 @@ export class WorldScene extends Phaser.Scene {
       this.trySelfBuffSkill(skillId, level, def)
       return true
     }
+    if (isArcherSkillStub(skillId)) {
+      if (def.target === 'ground' && !fromAuto) {
+        this.beginSkillTargeting(skillId, level, def)
+        return false
+      }
+      this.executeArcherSkillStub(skillId, level, def)
+      return true
+    }
     if (def.target === 'ground') {
       if (!fromAuto) this.beginSkillTargeting(skillId, level, def)
       return false
@@ -1932,7 +1948,13 @@ export class WorldScene extends Phaser.Scene {
     this.disableAutoAttackFromManualInput()
     this.queuedSkillCast = null
     this.pendingSkill = { skillId, level, def }
-    if (def.target === 'ground' && (isPlayerGroundMagicSkill(skillId) || isPlayerGroundMagicStub(skillId))) {
+    if (
+      def.target === 'ground' &&
+      (isPlayerGroundMagicSkill(skillId) ||
+        isPlayerGroundMagicStub(skillId) ||
+        isPlayerGroundPhysicalSkill(skillId) ||
+        isArcherSkillStub(skillId))
+    ) {
       this.groundAoEMarker.showPreview(skillId, def)
     }
     emitGameEvent('status', `Select target for ${def.name} (Esc or right-click to cancel).`)
@@ -2064,23 +2086,34 @@ export class WorldScene extends Phaser.Scene {
     const { skillId, level, def } = pending
 
     if (def.target === 'ground') {
-      if (isPlayerGroundMagicSkill(skillId) || isPlayerGroundMagicStub(skillId)) {
-        const px = this.playerDisplay.container.x
-        const py = this.playerDisplay.container.y
-        const skillRange = this.skillRangePx(def)
-        this.pendingSkill = null
-        if (Phaser.Math.Distance.Between(px, py, wx, wy) > skillRange) {
-          this.breakRestState()
-          this.beginChaseGroundSkill(skillId, level, def, wx, wy)
-        } else {
-          this.executePlayerGroundSkill(skillId, level, def, wx, wy)
-        }
-      } else {
-        this.pendingSkill = null
+      const px = this.playerDisplay.container.x
+      const py = this.playerDisplay.container.y
+      const skillRange = this.skillRangePx(def)
+      const groundImplemented =
+        isPlayerGroundMagicSkill(skillId) ||
+        isPlayerGroundMagicStub(skillId) ||
+        isPlayerGroundPhysicalSkill(skillId) ||
+        isArcherSkillStub(skillId)
+      this.pendingSkill = null
+      if (!groundImplemented) {
         emitGameEvent(
           'status',
           `${def.name} — ground target (${Math.round(wx)}, ${Math.round(wy)}) not implemented yet`,
         )
+        this.refreshCursor()
+        return
+      }
+      if (Phaser.Math.Distance.Between(px, py, wx, wy) > skillRange) {
+        this.breakRestState()
+        if (isArcherSkillStub(skillId)) {
+          this.beginChaseGroundSkill(skillId, level, def, wx, wy)
+        } else {
+          this.beginChaseGroundSkill(skillId, level, def, wx, wy)
+        }
+      } else if (isArcherSkillStub(skillId)) {
+        this.executeArcherSkillStub(skillId, level, def, wx, wy)
+      } else {
+        this.executePlayerGroundSkill(skillId, level, def, wx, wy)
       }
       this.refreshCursor()
       return
@@ -2314,6 +2347,243 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  private archerOffenseRequiresBow(): boolean {
+    const weaponClass = getEquippedWeaponClass(this.session.equipment)
+    if (weaponClass === 'bow') return true
+    emitGameEvent('status', 'You need a bow equipped.')
+    return false
+  }
+
+  private applyPhysicalSkillHitToMob(
+    mob: MobInstance,
+    skillId: string,
+    skillLevel: number,
+    skillLabel: string,
+  ) {
+    const mobDef = MOB_DEFS[mob.defId]
+    if (!mobDef || !mob.alive) return
+    const base = this.calcPlayerVsMobDamageForSession(mobDef)
+    const { damage, hit, critical } = calcPlayerSkillVsMobDamage(
+      base,
+      skillId,
+      skillLevel,
+      this.session.skills,
+    )
+    if (!hit || damage <= 0) {
+      showFloatingText(this, mob.sprite.x, mob.sprite.y - 40, 'MISS', 'miss')
+      this.sfx.playMiss()
+      this.broadcastMobMissAt(mob.spawnIndex, mob.sprite.x, mob.sprite.y - 40)
+      logActivity('combat', `${skillLabel} missed Lv ${mob.level} ${mob.name}.`)
+      return
+    }
+    this.applyDamageToMob(mob, damage, mobDef, skillLabel, { critical })
+  }
+
+  private executeArcherSkillStub(
+    skillId: string,
+    skillLevel: number,
+    def: SkillDefinition,
+    wx?: number,
+    wy?: number,
+  ) {
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
+    const now = this.time.now
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) {
+      return
+    }
+    if (!this.spendMp(def.mpCost)) return
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (def.target === 'ground' && wx != null && wy != null) {
+      if (Phaser.Math.Distance.Between(px, py, wx, wy) > this.skillRangePx(def)) {
+        emitGameEvent('status', 'Target out of range.')
+        return
+      }
+      this.faceToward(wx, wy)
+      this.groundAoEMarker.lockCast(wx, wy)
+      playGroundAoEImpact(
+        this,
+        this.groundAoEMarker,
+        wx,
+        wy,
+        skillId,
+        groundAoERadiusPx(def, skillId),
+      )
+    }
+
+    this.lastAttackAt = now
+    this.showSkillCallout(def.name)
+    emitGameEvent('status', `${def.name} (Lv ${skillLevel}) — not implemented yet.`)
+    logActivity('combat', `${def.name} Lv ${skillLevel} (stub).`)
+    this.emitCharacterSheet()
+  }
+
+  private runPlayerRangedPhysicalSkill(
+    skillId: string,
+    skillLevel: number,
+    def: SkillDefinition,
+    primaryMob: MobInstance,
+  ) {
+    if (!this.archerOffenseRequiresBow()) return
+    if (skillId === 'blitz_beat') {
+      const rental = activeRentalAt(this.session, Date.now())
+      if (rental?.kind !== 'falcon') {
+        emitGameEvent('status', 'Rent a falcon first (Falcon Mastery).')
+        return
+      }
+    }
+
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
+    const now = this.time.now
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
+    if (!this.spendMp(def.mpCost)) return
+    if (!primaryMob.alive) return
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (
+      Phaser.Math.Distance.Between(px, py, primaryMob.sprite.x, primaryMob.sprite.y) >
+      this.skillRangePx(def)
+    ) {
+      emitGameEvent('status', 'Target out of range.')
+      return
+    }
+
+    this.lastAttackAt = now
+    this.isAttacking = true
+    this.stopPlayerMotion()
+    clearMoveTarget(this.moveTarget)
+    this.faceToward(primaryMob.sprite.x, primaryMob.sprite.y)
+    this.showSkillCallout(def.name)
+
+    const skillLabel = def.name
+    const depth = this.playerDisplay.container.depth + 0.1
+    playSkillCastFx(this, skillId, {
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      depth,
+      targetX: primaryMob.sprite.x,
+      targetY: primaryMob.sprite.y,
+    })
+
+    this.sfx.playAttack()
+    this.broadcastPlayerAction('basic_attack')
+
+    const hitCount = physicalSkillHitCount(def, skillLevel)
+    const useBowAnim = skillId !== 'blitz_beat'
+    const attackStyle = useBowAnim ? 'bow' : 'cast'
+
+    startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
+      variant: 'basic',
+      attackStyle,
+      getAimTarget: () => toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y),
+      rangedHitCount: useBowAnim ? hitCount : undefined,
+      magicSkillId: useBowAnim ? undefined : skillId,
+      magicHitCount: useBowAnim ? undefined : hitCount,
+      onRangedHit: useBowAnim
+        ? () => {
+            if (!primaryMob.alive) return
+            this.applyPhysicalSkillHitToMob(primaryMob, skillId, skillLevel, skillLabel)
+          }
+        : undefined,
+      onMagicHit: !useBowAnim
+        ? () => {
+            if (!primaryMob.alive) return
+            const aim = toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y)
+            playSkillImpactFx(this, skillId, aim.x, aim.y, depth)
+            this.applyPhysicalSkillHitToMob(primaryMob, skillId, skillLevel, skillLabel)
+          }
+        : undefined,
+      onStrike: () => {
+        if (useBowAnim && hitCount <= 1) {
+          if (!primaryMob.alive) {
+            const pos = missTextPosition(px, py, this.facing)
+            showFloatingText(this, pos.x, pos.y, 'MISS', 'miss')
+            this.sfx.playMiss()
+            logActivity('combat', `${skillLabel} missed.`)
+          } else {
+            this.applyPhysicalSkillHitToMob(primaryMob, skillId, skillLevel, skillLabel)
+          }
+        }
+        this.emitCharacterSheet()
+      },
+      onMagicVolleyComplete: !useBowAnim ? () => this.emitCharacterSheet() : undefined,
+      onComplete: () => {
+        this.isAttacking = false
+      },
+    })
+  }
+
+  private runPlayerGroundPhysicalSkill(
+    skillId: string,
+    skillLevel: number,
+    def: SkillDefinition,
+    wx: number,
+    wy: number,
+  ) {
+    if (!this.archerOffenseRequiresBow()) return
+    if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
+    const now = this.time.now
+    if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
+    if (!this.spendMp(def.mpCost)) return
+
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    if (Phaser.Math.Distance.Between(px, py, wx, wy) > this.skillRangePx(def)) {
+      emitGameEvent('status', 'Target out of range.')
+      return
+    }
+
+    this.lastAttackAt = now
+    this.breakRestState()
+    this.stopPlayerMotion()
+    clearMoveTarget(this.moveTarget)
+    this.faceToward(wx, wy)
+    this.groundAoEMarker.lockCast(wx, wy)
+    this.showSkillCallout(def.name)
+
+    const skillLabel = def.name
+    const depth = this.playerDisplay.container.depth + 0.1
+    const aoeRadius = groundAoERadiusPx(def, skillId)
+    const aim = toCombatAimPoint(wx, wy)
+    const radius = def.physical?.aoeRadius ?? aoeRadius
+
+    this.isAttacking = true
+    this.sfx.playAttack()
+    this.broadcastPlayerAction('basic_attack')
+    playSkillCastFx(this, skillId, {
+      playerX: px,
+      playerY: py,
+      facing: this.facing,
+      depth,
+      targetX: wx,
+      targetY: wy,
+    })
+
+    startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
+      variant: 'basic',
+      attackStyle: 'bow',
+      getAimTarget: () => aim,
+      onStrike: () => {
+        playGroundAoEImpact(this, this.groundAoEMarker, wx, wy, skillId, aoeRadius)
+        const victims = this.mobsInAoERadius(wx, wy, radius)
+        if (victims.length === 0) {
+          emitGameEvent('status', `${skillLabel} — no targets in area.`)
+        } else {
+          for (const mob of victims) {
+            this.applyPhysicalSkillHitToMob(mob, skillId, skillLevel, skillLabel)
+          }
+        }
+        this.emitCharacterSheet()
+      },
+      onComplete: () => {
+        this.isAttacking = false
+      },
+    })
+  }
+
   private executePlayerSkill(
     skillId: string,
     skillLevel: number,
@@ -2326,6 +2596,10 @@ export class WorldScene extends Phaser.Scene {
     }
     if (isPlayerMagicEnemyStub(skillId)) {
       this.executeDispellStub(skillLevel, def, primaryMob)
+      return
+    }
+    if (isPlayerRangedPhysicalSkill(skillId)) {
+      this.runPlayerRangedPhysicalSkill(skillId, skillLevel, def, primaryMob)
       return
     }
     if (!isPlayerEnemyCastSkill(skillId)) {
@@ -2518,6 +2792,14 @@ export class WorldScene extends Phaser.Scene {
     wx: number,
     wy: number,
   ) {
+    if (isPlayerGroundPhysicalSkill(skillId)) {
+      this.runPlayerGroundPhysicalSkill(skillId, skillLevel, def, wx, wy)
+      return
+    }
+    if (isArcherSkillStub(skillId)) {
+      this.executeArcherSkillStub(skillId, skillLevel, def, wx, wy)
+      return
+    }
     if (this.isPlayerDead || this.isSitting || this.isPlayingDead) return
     const now = this.time.now
     if (now - this.lastAttackAt < this.playerAttackCooldownMs() || this.isAttacking || this.isJumping) return
@@ -2664,7 +2946,12 @@ export class WorldScene extends Phaser.Scene {
           const mobDef = MOB_DEFS[mob.defId]
           if (!mobDef) return
           const base = this.calcPlayerVsMobDamageForSession(mobDef)
-          const { damage, hit, critical } = calcPlayerSkillVsMobDamage(base, skillId, skillLevel)
+          const { damage, hit, critical } = calcPlayerSkillVsMobDamage(
+            base,
+            skillId,
+            skillLevel,
+            this.session.skills,
+          )
           if (!hit || damage <= 0) {
             showFloatingText(this, mob.sprite.x, mob.sprite.y - 40, 'MISS', 'miss')
             this.sfx.playMiss()

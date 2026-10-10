@@ -1,46 +1,5 @@
-import {
-  FunctionsFetchError,
-  FunctionsHttpError,
-  FunctionsRelayError,
-} from '@supabase/supabase-js'
-import { supabase } from './supabase'
-
-async function formatInvokeError(name: string, error: unknown): Promise<string> {
-  if (error instanceof FunctionsHttpError) {
-    try {
-      const body = (await error.context.clone().json()) as { error?: string }
-      if (body?.error) return body.error
-    } catch {
-      /* ignore parse errors */
-    }
-    return `Request to ${name} failed (${error.context.status}).`
-  }
-  if (error instanceof FunctionsFetchError) {
-    const url = import.meta.env.VITE_SUPABASE_URL ?? ''
-    if (!url || url.includes('placeholder')) {
-      return 'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in client/.env and restart the dev server (or set them in your host build settings).'
-    }
-    const cause = error.context
-    const detail = cause instanceof Error ? cause.message : String(cause)
-    return `Could not reach ${name} (${detail}). If other game features work, check ad blockers or try another browser. For hosted builds, confirm env vars were set before deploy.`
-  }
-  if (error instanceof FunctionsRelayError) {
-    return `Supabase relay error calling ${name}. Try again in a moment.`
-  }
-  if (error instanceof Error) return error.message
-  return String(error)
-}
-
-async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(name, { body })
-  if (error) {
-    throw new Error(await formatInvokeError(name, error))
-  }
-  if (data?.error) {
-    throw new Error(String(data.error))
-  }
-  return data as T
-}
+import { apiFetch } from './http'
+import type { CharacterRow } from '../types/database'
 
 export function transferStorage(payload: {
   characterId: string
@@ -52,7 +11,7 @@ export function transferStorage(payload: {
   y: number
   npcId: string
 }) {
-  return invoke<{ ok: boolean }>('storage-transfer', payload)
+  return apiFetch<{ ok: boolean }>('/api/storage/transfer', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export function savePoint(payload: {
@@ -62,7 +21,7 @@ export function savePoint(payload: {
   y: number
   npcId: string
 }) {
-  return invoke<{ ok: boolean }>('save-point', payload)
+  return apiFetch<{ ok: boolean }>('/api/save-point', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export function teleport(payload: {
@@ -73,7 +32,7 @@ export function teleport(payload: {
   npcId: string
   destinationMapId: string
 }) {
-  return invoke<{ character: import('../types/database').CharacterRow }>('teleport', payload)
+  return apiFetch<{ character: CharacterRow }>('/api/teleport', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export function portalWarp(payload: {
@@ -83,27 +42,27 @@ export function portalWarp(payload: {
   y: number
   portalId: string
 }) {
-  return invoke<{ character: import('../types/database').CharacterRow }>('portal-warp', payload)
+  return apiFetch<{ character: CharacterRow }>('/api/portal-warp', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export function tradeManage(payload: Record<string, unknown>) {
-  return invoke<{ ok?: boolean; trade?: import('../types/database').TradeSessionRow }>(
-    'trade-manage',
-    payload,
-  )
+  return apiFetch<{ ok?: boolean; trade?: import('../types/database').TradeSessionRow }>('/api/trade', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }
 
 export function partyManage(payload: Record<string, unknown>) {
-  return invoke<{
+  return apiFetch<{
     ok?: boolean
     request?: import('../types/database').PartyRequestRow
     party?: import('../types/database').PartyRow
     partyId?: string
-  }>('party-manage', payload)
+  }>('/api/party', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export function duelManage(payload: Record<string, unknown>) {
-  return invoke<{
+  return apiFetch<{
     ok?: boolean
     hit?: boolean
     damage?: number
@@ -113,38 +72,41 @@ export function duelManage(payload: Record<string, unknown>) {
     duel?: import('../types/database').DuelSessionRow
     opponentCharacterId?: string
     opponentSnapshot?: import('../game/duel/duelCombatSnapshot').DuelCombatSnapshot
-  }>('duel-manage', payload)
+  }>('/api/duel', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export function guildManage(payload: Record<string, unknown>) {
-  return invoke<{ ok?: boolean; guild?: import('../types/database').GuildRow }>('guild-manage', payload)
+  return apiFetch<{ ok?: boolean; guild?: import('../types/database').GuildRow }>('/api/guild', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }
 
 export function dungeonManage(payload: Record<string, unknown>) {
-  return invoke<{
+  return apiFetch<{
     character?: import('../types/database').CharacterRow
     instance?: import('../types/database').DungeonInstanceRow
     recovered?: boolean
     reward?: { zeny: number; baseExp: number; jobExp: number }
     claims?: Array<{ characterId: string; zeny: number; baseExp: number; jobExp: number }>
-  }>('dungeon-manage', payload)
+  }>('/api/dungeon', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export function vendorManage(payload: Record<string, unknown>) {
-  return invoke<{ ok?: boolean; stall?: import('../types/database').VendorStallRow; zenySpent?: number }>(
-    'vendor-manage',
-    payload,
+  return apiFetch<{ ok?: boolean; stall?: import('../types/database').VendorStallRow; zenySpent?: number }>(
+    '/api/vendor',
+    { method: 'POST', body: JSON.stringify(payload) },
   )
 }
 
 export function gmCommand(payload: { characterId: string; command: string }) {
-  return invoke<{
+  return apiFetch<{
     ok: boolean
     message: string
     targetId?: string
     targetName?: string
     newZeny?: number
-  }>('gm-command', payload)
+  }>('/api/gm/command', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export function progressSave(payload: {
@@ -153,7 +115,10 @@ export function progressSave(payload: {
   skills: { skill_id: string; level: number }[]
   equipment: { slot: string; item_id: string; instance_id?: string | null }[]
 }) {
-  return invoke<{ ok: boolean }>('progress-save', payload)
+  return apiFetch<{ ok: boolean }>(`/api/characters/${payload.characterId}/progress`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }
 
 export function combatReport(payload: {
@@ -164,7 +129,7 @@ export function combatReport(payload: {
   x: number
   y: number
 }) {
-  return invoke<{
+  return apiFetch<{
     ok: boolean
     baseExp: number
     jobExp: number
@@ -183,7 +148,7 @@ export function combatReport(payload: {
       available_at: string
       expires_at: string
     }>
-  }>('combat-report', payload)
+  }>('/api/combat/report', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 export type FieldMapDrop = {
@@ -198,16 +163,22 @@ export type FieldMapDrop = {
 }
 
 export function lootManage(payload: { action: 'list' | 'pickup'; characterId: string; dropId?: string }) {
-  return invoke<{ drops?: FieldMapDrop[]; ok?: boolean; itemId?: string; sessionInventory?: unknown }>('loot-manage', payload)
+  return apiFetch<{ drops?: FieldMapDrop[]; ok?: boolean; itemId?: string; sessionInventory?: unknown }>(
+    '/api/loot',
+    { method: 'POST', body: JSON.stringify(payload) },
+  )
 }
 
 export function characterEconomyAdjust(payload: { characterId: string; delta: number; reason?: string }) {
   const action = payload.delta < 0 ? 'spend' : 'credit'
-  return invoke<{ ok: boolean; zeny: number }>('character-economy', {
-    action,
-    characterId: payload.characterId,
-    delta: payload.delta,
-    reason: payload.reason,
+  return apiFetch<{ ok: boolean; zeny: number }>(`/api/characters/${payload.characterId}/economy`, {
+    method: 'POST',
+    body: JSON.stringify({
+      action,
+      characterId: payload.characterId,
+      delta: payload.delta,
+      reason: payload.reason,
+    }),
   })
 }
 

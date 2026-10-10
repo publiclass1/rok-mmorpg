@@ -2,17 +2,20 @@
   "name": "rok-mmorpg",
   "version": "0.1.0",
   "private": true,
-  "description": "ROK-MMORPG — browser MMORPG (Vite + Phaser + Supabase)",
+  "description": "ROK-MMORPG — browser MMORPG (Vite + Phaser + Express + MySQL)",
   "workspaces": [
-    "client"
+    "client",
+    "server"
   ],
   "scripts": {
     "dev": "npm run dev -w client",
-    "build": "npm run build -w client",
+    "dev:server": "npm run dev -w server",
+    "dev:all": "concurrently -n client,server -c blue,green \"npm run dev -w client\" \"npm run dev -w server\"",
+    "build": "npm run build -w client && npm run build -w server",
     "lint": "npm run lint -w client",
     "preview": "npm run preview -w client",
     "content:validate": "npm run content:validate -w client",
-    "content:sync-mob-spots": "node scripts/sync-mob-spots-to-supabase.mjs",
+    "content:sync-mob-spots": "node scripts/sync-mob-spots-to-server.mjs",
     "icons:weapons": "node scripts/generate-weapon-icons.mjs",
     "icons:weapons:check": "node scripts/generate-weapon-icons.mjs --check",
     "icons:gear": "node scripts/generate-gear-icons.mjs",
@@ -24,14 +27,10 @@
     "maps:culvert": "node scripts/generate-culvert-map.mjs",
     "maps:prt-fild01": "node scripts/generate-prt-fild01-map.mjs",
     "maps:dungeons": "node scripts/generate-dungeon-maps.mjs",
-    "supabase:login": "supabase login",
-    "supabase:link": "supabase link",
-    "supabase:push": "supabase db push --include-all",
-    "supabase:functions": "supabase functions deploy storage-transfer && supabase functions deploy save-point && supabase functions deploy teleport && supabase functions deploy portal-warp && supabase functions deploy trade-manage && supabase functions deploy party-manage && supabase functions deploy duel-manage && supabase functions deploy guild-manage && supabase functions deploy vendor-manage && supabase functions deploy dungeon-manage && supabase functions deploy gm-command && supabase functions deploy admin-panel && supabase functions deploy progress-save && supabase functions deploy combat-report && supabase functions deploy loot-manage && supabase functions deploy character-economy",
-    "supabase:setup": "npm run supabase:push && npm run supabase:functions",
-    "supabase:cloud-setup": "bash scripts/supabase-cloud-setup.sh"
+    "db:migrate": "npm run db:migrate -w server",
+    "db:seed": "npm run db:seed -w server"
   },
   "devDependencies": {
-    "supabase": "^2.119.0"
+    "concurrently": "^9.2.1"
   }
 }

@@ -2,134 +2,44 @@
 
 A simple browser MMORPG inspired by Ragnarok Online — for fun and game-dev learning. Shared 2D tile maps, account/characters, Kafra-style storage, NPC warps, and player trading.
 
-**Design reference:** [iRO Wiki](https://irowiki.org/) (Pre-Renewal / Classic). See [docs/IRO_REFERENCE.md](docs/IRO_REFERENCE.md) for system status, [docs/MILESTONES.md](docs/MILESTONES.md) for the step-by-step roadmap, [docs/PERSISTENCE_AND_REALTIME.md](docs/PERSISTENCE_AND_REALTIME.md) for save vs multiplayer realtime (Netlify + Supabase), and [content/ro/](content/ro/) for curated game data. Validate content with `npm run content:validate`. Regenerate icons with `npm run icons` or `icons:skills` / `icons:weapons` ([`docs/ASSET_ICONS.md`](docs/ASSET_ICONS.md)).
+**Design reference:** [iRO Wiki](https://irowiki.org/) (Pre-Renewal / Classic). See [docs/IRO_REFERENCE.md](docs/IRO_REFERENCE.md) for system status, [docs/MILESTONES.md](docs/MILESTONES.md) for the step-by-step roadmap, [docs/SERVER_SETUP.md](docs/SERVER_SETUP.md) for the Express + MySQL backend, and [content/ro/](content/ro/) for curated game data. Validate content with `npm run content:validate`. Regenerate icons with `npm run icons` or `icons:skills` / `icons:weapons` ([`docs/ASSET_ICONS.md`](docs/ASSET_ICONS.md)).
 
 ## Features
 
-- Username + password accounts (Supabase Auth; no email verification)
+- Username + password accounts (JWT; no email)
 - Up to 3 characters per account (globally unique names)
 - Account storage shared across characters
 - NPCs: storage, save point, teleport
-- Player trading with lock + dual confirm (Edge Functions)
-- Shared maps with realtime position broadcast
-- Character progression (levels, stats, skills, equipment, session gear bag, HP/MP) persisted to Supabase
+- Player trading with lock + dual confirm
+- Shared maps with realtime position broadcast (Socket.io)
+- Character progression persisted via REST API
 
 ## Tech stack
 
 - **Client:** Vite, React, TypeScript, Phaser 4
 - **Maps:** Tiled (`.tmj` in `client/public/maps/`)
-- **Backend:** Supabase (Postgres, Auth, Realtime, Edge Functions) — progression saves over HTTP; map/trade use Supabase Realtime (no separate socket host on Netlify)
-- **Hosting:** Netlify (static SPA)
-- **Repo:** GitHub
+- **Server:** Node.js, Express, Prisma, MySQL, Socket.io
+- **Hosting:** Netlify (static SPA) + separate API host for the game server
 
 See [docs/DECISIONS.md](docs/DECISIONS.md) for v1 choices (React + Phaser, WASD movement).
 
 ## Local development
 
-### 1. Supabase
+1. Run **MySQL** locally (or point at an existing server) and create a database; set `DATABASE_URL` in `server/.env` (see `server/.env.example`).
+2. Migrate and seed: `npm run db:migrate && npm run db:seed`
+3. Run client + API: `npm run dev:all`
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Install [Supabase CLI](https://supabase.com/docs/guides/cli) and link the project, or paste SQL from `supabase/migrations/` in the SQL editor (include `20260323140000_character_progress.sql` for progression save).
-3. Deploy Edge Functions:
+Details: [docs/SERVER_SETUP.md](docs/SERVER_SETUP.md).
 
-```bash
-supabase functions deploy storage-transfer
-supabase functions deploy save-point
-supabase functions deploy teleport
-supabase functions deploy trade-manage
-supabase functions deploy party-manage
-supabase functions deploy guild-manage
-supabase functions deploy vendor-manage
-supabase functions deploy dungeon-manage
-```
+The Vite dev server proxies `/api` and `/socket.io` to port `3001`.
 
-4. Apply migrations through `20260324100000_m6_social.sql`. Enable **Realtime** for trade/party/guild/vendor tables if not applied by migration.
+## Scripts
 
-### 2. Client
+| Script | Description |
+|--------|-------------|
+| `npm run dev:all` | Client + server |
+| `npm run dev:server` | API only |
+| `npm run content:sync-mob-spots` | Sync mob spots JSON into server combat validation |
+| `npm run build` | Build client and server |
 
-```bash
-npm install
-cd client
-cp .env.example .env
-# Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-cd ..
-npm run dev
-```
-
-### 3. Controls in-world
-
-- **Click** — walk to point (RO-style); **click mob** to chase and attack
-- **Space** — jump
-- **1**–**9** — skill bar (`1` = Basic Attack)
-- **Alt+S** / **Stats** — STR/AGI/VIT/INT/DEX/LUK (stat points from base level)
-- **Alt+I** / **Inventory** — session gear + DB stacks; double-click to equip
-- **Alt+E** / **Equip** — equipment slots; unequip per slot
-- **Alt+K** / **Skills** — job skills (skill points from job level)
-- **E** — interact with nearby NPC (storage / save / warp)
-- On `field_01`, mobs roam, aggro, and fight back; kill for Base/Job EXP (saved to your character)
-- **Trade / party** — click another player on the map; use Target actions (Trade, Join Party, Apply Party)
-- **Chat** — map and party tabs above the skill bar
-- **Guild / vending** — Guild and Vend buttons on the HUD
-
-## Project layout
-
-- `client/` — React UI + Phaser world
-- `supabase/migrations/` — schema, RLS, seeds
-- `supabase/functions/` — server-validated storage, save, warp, trade
-
-## Maps
-
-- `prontera` — 40×28 hub town (plaza, roads, buildings, trees, south gate warps; layout in `content/ro/maps/prontera.layout.json`)
-- `prt_fild01` — Prontera field with Kafra, return warp to Prontera south gate
-- `field_01` — dev field with return warp, rock obstacles, roaming Porings
-- `dun_f1` … `dun_f5` — party dungeons (Dungeon Guide in Prontera; regenerate with `npm run maps:dungeons`)
-
-Regenerate Prontera from the layout file:
-
-```bash
-npm run maps:prontera
-npm run icons:weapons   # inventory weapon SVGs from content/ro/items.json
-```
-
-Preview: `docs/maps/prontera-preview.svg`. Tile art source: `client/public/tiles/city-tileset.svg` (runtime procedural strip in `client/src/game/textures.ts`). Edit maps in [Tiled](https://www.mapeditor.org/) using exported JSON in `client/public/maps/`.
-
-### Game admin and GM commands
-
-1. Set `ADMIN_PANEL_PASSWORD` in Supabase secrets and in `client/.env` (same value for local map API).
-2. Apply migrations and deploy `gm-command` / `admin-panel` (see [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)).
-3. Open `/admin` (password) → toggle **GM** on a character.
-4. In-game map chat as that character: `/zeny <player> <amount>`.
-
-### Map admin (dev only)
-
-1. Run `npm run dev` and open `http://localhost:5173/admin/maps` (same admin password as `/admin`).
-2. **New blank map** → set a unique **id** (lowercase, underscores) and **display name**.
-3. Paint tiles, drag decor onto the canvas, place portals/NPCs. Tools are in the **icon bar above the map**.
-4. Under **Warp wiring**, enable **Add to Prontera Warp Agent** and set arrival X/Y on your map.
-5. Click **Save map & Supabase SQL** (writes `.tmj`, `content/ro/maps.json`, `mapPortals.json`, `supabase/migrations/*.sql`, and `supabase/seed/custom_maps/{id}.sql`).
-6. Run that SQL in the Supabase SQL Editor (or `supabase db push`), then **Copy all SQL** if you need a backup.
-7. **Hard-refresh** the game tab so `maps.json` reloads. Custom maps appear under **Custom maps** on Warp Agent.
-
-Walk-through portals use the `portal-warp` edge function (`supabase functions deploy portal-warp`).
-
-## Deploy on Netlify
-
-1. Push the repo to GitHub (or GitLab/Bitbucket).
-2. In [Netlify](https://app.netlify.com): **Add new site** → **Import from Git** → select the repo.
-3. Netlify reads [netlify.toml](netlify.toml) automatically:
-   - **Build command:** `npm run build`
-   - **Publish directory:** `client/dist`
-4. **Site settings → Environment variables** (required for production):
-
-   | Key | Value |
-   |-----|--------|
-   | `VITE_SUPABASE_URL` | Project URL from Supabase → Settings → API |
-   | `VITE_SUPABASE_ANON_KEY` | `anon` public key (same place) |
-
-5. Deploy. After each push to your production branch, Netlify rebuilds the client.
-
-Build uses **Node 22** and **Vite 6** (see `netlify.toml`) so Netlify installs native bundler deps reliably.
-
-Supabase (database, auth, Realtime, Edge Functions) stays on [supabase.com](https://supabase.com) — Netlify only hosts the browser app.
-
-**Local vs Netlify:** use `client/.env` for `npm run dev`; use Netlify env vars for live builds (Vite bakes `VITE_*` in at build time).
+Legacy Postgres migration SQL under `supabase/migrations/` is still used by the map admin tool and NPC seed extraction (`server/scripts/build-npc-seed.mjs`).

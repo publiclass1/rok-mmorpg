@@ -1,5 +1,4 @@
-import type { RealtimeChannel } from '@supabase/supabase-js'
-import { supabase } from '../../lib/supabase'
+import { broadcastToRoom, getGameSocket, joinRealtimeRoom, leaveRealtimeRoom } from '../../lib/socket'
 import { DEFAULT_CHARACTER_APPEARANCE, type CharacterAppearance } from '../character/characterAppearance'
 import { createDefaultEquipment } from '../character/characterState'
 import type { PlayerPresencePayload } from '../events'
@@ -53,35 +52,29 @@ type RemoteEntry = {
   at: number
 }
 
-async function sendLeaveBroadcast(channel: RealtimeChannel, payload: { characterId: string; mapId: string }) {
+async function sendLeaveBroadcast(room: string, payload: { characterId: string; mapId: string }) {
   await Promise.race([
-    channel.send({
-      type: 'broadcast',
-      event: 'leave',
-      payload,
-    }),
-    new Promise<void>((resolve) => {
-      window.setTimeout(resolve, LEAVE_SEND_TIMEOUT_MS)
-    }),
+    Promise.resolve(broadcastToRoom(room, 'leave', payload)),
+    new Promise((resolve) => window.setTimeout(resolve, LEAVE_SEND_TIMEOUT_MS)),
   ])
 }
 
 export class MapPresenceChannel {
-  private channel: RealtimeChannel | null = null
-  private readonly remotes = new Map<string, RemoteEntry>()
+  private readonly channelKey: string
+  private readonly mapId: string
+  private local: PlayerPresencePayload
+  private readonly onUpdate: (players: PlayerPresencePayload[]) => void
+  private onCombat: ((payload: MapCombatPayload) => void) | null = null
+  private remotes = new Map<string, RemoteEntry>()
   private broadcastTimer: number | null = null
   private pruneTimer: number | null = null
-  private readonly mapId: string
-  private channelKey: string
-  private local: PlayerPresencePayload
-  private onUpdate: (remotes: PlayerPresencePayload[]) => void
-  private onCombat: ((payload: MapCombatPayload) => void) | null = null
   private leaving = false
+  private socketBound = false
 
   constructor(
     mapId: string,
     local: PlayerPresencePayload,
-    onUpdate: (remotes: PlayerPresencePayload[]) => void,
+    onUpdate: (players: PlayerPresencePayload[]) => void,
     channelKey?: string,
   ) {
     this.mapId = mapId
@@ -95,12 +88,7 @@ export class MapPresenceChannel {
   }
 
   sendCombat(payload: MapCombatPayload) {
-    if (!this.channel) return
-    void this.channel.send({
-      type: 'broadcast',
-      event: 'combat',
-      payload,
-    })
+    broadcastToRoom(this.channelKey, 'combat', payload)
   }
 
   private emitRemotes() {
@@ -116,13 +104,13 @@ export class MapPresenceChannel {
     if (changed) this.emitRemotes()
   }
 
-  async join() {
-    this.channel = supabase.channel(this.channelKey, {
-      config: { broadcast: { self: false } },
-    })
+  private bindSocket() {
+    if (this.socketBound) return
+    this.socketBound = true
+    const socket = getGameSocket()
 
-    this.channel.on('broadcast', { event: 'pos' }, ({ payload }) => {
-      const p = normalizePresence(payload as Partial<PlayerPresencePayload>, this.mapId)
+    socket.on('pos', (payload: Partial<PlayerPresencePayload>) => {
+      const p = normalizePresence(payload, this.mapId)
       if (!p || p.characterId === this.local.characterId) return
       if (p.mapId !== this.mapId) {
         if (this.removeRemote(p.characterId)) this.emitRemotes()
@@ -132,33 +120,31 @@ export class MapPresenceChannel {
       this.emitRemotes()
     })
 
-    this.channel.on('broadcast', { event: 'leave' }, ({ payload }) => {
+    socket.on('leave', (payload: unknown) => {
       const characterId = parsePresenceLeaveCharacterId(payload)
       if (!characterId || characterId === this.local.characterId) return
       if (this.removeRemote(characterId)) this.emitRemotes()
     })
 
-    this.channel.on('broadcast', { event: 'combat' }, ({ payload }) => {
+    socket.on('combat', (payload: unknown) => {
       const p = normalizeMapCombatPayload(payload)
       if (!p) return
       if ('characterId' in p && p.characterId === this.local.characterId) return
-      this.onCombat?.(p)
+      if (this.onCombat) this.onCombat(p)
     })
+  }
 
-    await this.channel.subscribe()
+  async join() {
+    joinRealtimeRoom(this.channelKey)
+    this.bindSocket()
     this.pruneTimer = window.setInterval(() => this.pruneStale(), PRUNE_MS)
   }
 
   startBroadcast(getPosition: () => PlayerPresencePayload) {
     this.stopBroadcast()
     this.broadcastTimer = window.setInterval(() => {
-      if (!this.channel) return
       const pos = getPosition()
-      void this.channel.send({
-        type: 'broadcast',
-        event: 'pos',
-        payload: pos,
-      })
+      broadcastToRoom(this.channelKey, 'pos', pos)
     }, BROADCAST_MS)
   }
 
@@ -180,15 +166,11 @@ export class MapPresenceChannel {
       this.pruneTimer = null
     }
 
-    const channel = this.channel
-    if (channel) {
-      await sendLeaveBroadcast(channel, {
-        characterId: this.local.characterId,
-        mapId: this.mapId,
-      })
-      await supabase.removeChannel(channel)
-      this.channel = null
-    }
+    await sendLeaveBroadcast(this.channelKey, {
+      characterId: this.local.characterId,
+      mapId: this.mapId,
+    })
+    leaveRealtimeRoom(this.channelKey)
     this.remotes.clear()
   }
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert'
-import { calcDuelStrike } from '../../../../supabase/functions/_shared/duelCombat'
-import type { DuelSnapshot } from '../../../../supabase/functions/_shared/duelCombat'
+import { calcDuelStrike } from '../../../../server/src/shared/duelCombat'
+import type { DuelSnapshot } from '../../../../server/src/shared/duelCombat'
 
 function duelSnapshot(overrides: Partial<DuelSnapshot>): DuelSnapshot {
   return {

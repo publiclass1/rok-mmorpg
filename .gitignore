@@ -4,6 +4,8 @@ dist/
 .env.local
 client/.env
 client/dist/
+server/.env
+server/dist/
 supabase/.temp/
 .supabase/
 .DS_Store

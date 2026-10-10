@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { supabase } from './lib/supabase'
+import { apiFetch } from './lib/http'
+import { clearAuthToken, loadStoredToken } from './lib/authStore'
+import { disconnectGameSocket } from './lib/socket'
 import { AuthScreen } from './components/AuthScreen'
 import { CharacterSelect } from './components/CharacterSelect'
 import { GameView } from './components/GameView'
@@ -10,26 +11,31 @@ import './App.css'
 
 type Screen = 'auth' | 'characters' | 'game'
 
+type AuthUser = { id: string; username: string }
+
 function App() {
-  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [screen, setScreen] = useState<Screen>('auth')
   const [activeCharacter, setActiveCharacter] = useState<CharacterRow | null>(null)
   const [booting, setBooting] = useState(true)
 
   useEffect(() => {
-    void supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setScreen(data.session ? 'characters' : 'auth')
+    const token = loadStoredToken()
+    if (!token) {
       setBooting(false)
-    })
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next)
-      setScreen(next ? 'characters' : 'auth')
-      if (!next) setActiveCharacter(null)
-    })
-
-    return () => sub.subscription.unsubscribe()
+      return
+    }
+    void apiFetch<{ user: AuthUser }>('/api/auth/me')
+      .then(({ user: me }) => {
+        setUser(me)
+        setScreen('characters')
+      })
+      .catch(() => {
+        clearAuthToken()
+        setUser(null)
+        setScreen('auth')
+      })
+      .finally(() => setBooting(false))
   }, [])
 
   if (booting) {
@@ -46,19 +52,25 @@ function App() {
     >
       {screen === 'auth' && (
         <AuthScreen
-          onAuthed={() => {
+          onAuthed={(next) => {
+            setUser(next)
             setScreen('characters')
           }}
         />
       )}
 
-      {screen === 'characters' && session && (
+      {screen === 'characters' && user && (
         <CharacterSelect
           onSelect={(c) => {
             setActiveCharacter(c)
             setScreen('game')
           }}
-          onLogout={() => setScreen('auth')}
+          onLogout={() => {
+            clearAuthToken()
+            disconnectGameSocket()
+            setUser(null)
+            setScreen('auth')
+          }}
         />
       )}
 

@@ -146,6 +146,13 @@ export function playSkillCastFx(scene: Phaser.Scene, skillId: string, ctx: Skill
     case 'bowling_bash':
       expandingRing(scene, tx, ty - 12, depth, 0xfde68a, 2, 320)
       break
+    case 'double_strafe':
+    case 'arrow_shower':
+      playSkillCastWindup(scene, playerX, playerY - 12, depth, 'fire_bolt')
+      break
+    case 'blitz_beat':
+      expandingRing(scene, tx, ty - 20, depth, 0x334155, 1.2, 280)
+      break
     case 'peco_peco_ride':
       expandingRing(scene, playerX, playerY, depth, 0xa3a3a3, 1.5, 260)
       break

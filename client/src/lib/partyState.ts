@@ -1,5 +1,6 @@
 import type { PartyRequestRow, PartyRow } from '../types/database'
-import { supabase } from './supabase'
+import { apiFetch } from './http'
+import { partyManage } from './api'
 
 export type PartyMemberInfo = {
   characterId: string
@@ -12,70 +13,34 @@ export type PartySnapshot = {
 } | null
 
 export async function loadPartyForCharacter(characterId: string): Promise<PartySnapshot> {
-  const { data: membership, error: membershipError } = await supabase
-    .from('party_members')
-    .select('party_id')
-    .eq('character_id', characterId)
-    .maybeSingle()
+  const data = await apiFetch<{
+    party: PartyRow | null
+    characters: Array<{ id: string; name: string }>
+    members: Array<{ character_id: string }>
+  }>(`/api/party/me?characterId=${encodeURIComponent(characterId)}`)
 
-  if (membershipError) {
-    throw new Error(membershipError.message)
-  }
-  if (!membership) return null
+  if (!data.party) return null
 
-  const { data: party, error: partyError } = await supabase
-    .from('parties')
-    .select('*')
-    .eq('id', membership.party_id)
-    .maybeSingle()
-  if (partyError) {
-    throw new Error(partyError.message)
-  }
-  if (!party) return null
-
-  const { data: memberRows, error: membersError } = await supabase
-    .from('party_members')
-    .select('character_id')
-    .eq('party_id', membership.party_id)
-  if (membersError) {
-    throw new Error(membersError.message)
-  }
-
-  const ids = (memberRows ?? []).map((m) => m.character_id)
-  if (ids.length === 0) return { party, members: [] }
-
-  const { data: chars, error: charsError } = await supabase.from('characters').select('id, name').in('id', ids)
-  if (charsError) {
-    throw new Error(charsError.message)
-  }
-  const members: PartyMemberInfo[] = (chars ?? []).map((c) => ({
-    characterId: c.id,
-    name: c.name,
+  const nameById = new Map((data.characters ?? []).map((c) => [c.id, c.name]))
+  const members: PartyMemberInfo[] = (data.members ?? []).map((m) => ({
+    characterId: m.character_id,
+    name: nameById.get(m.character_id) ?? 'Adventurer',
   }))
 
-  return { party, members }
+  return { party: data.party, members }
 }
 
 export async function loadPendingPartyRequests(characterId: string): Promise<PartyRequestRow[]> {
-  const { data } = await supabase
-    .from('party_requests')
-    .select('*')
-    .eq('to_character_id', characterId)
-    .eq('status', 'pending')
-  return data ?? []
+  const data = await apiFetch<{ requests: PartyRequestRow[] }>(
+    `/api/party/requests?characterId=${encodeURIComponent(characterId)}`,
+  )
+  return data.requests ?? []
 }
 
 export function partyMemberIds(snapshot: PartySnapshot): string[] {
   return snapshot?.members.map((m) => m.characterId) ?? []
 }
 
-/** Creates a party via Postgres RPC (same API host as character save; no Edge Function). */
 export async function createParty(characterId: string, name: string): Promise<void> {
-  const { error } = await supabase.rpc('create_party', {
-    p_character_id: characterId,
-    p_name: name.trim(),
-  })
-  if (error) {
-    throw new Error(error.message)
-  }
+  await partyManage({ action: 'create', characterId, name: name.trim() })
 }

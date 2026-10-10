@@ -1,10 +1,5 @@
-import {
-  FunctionsFetchError,
-  FunctionsHttpError,
-  FunctionsRelayError,
-} from '@supabase/supabase-js'
 import { getAdminPassword } from './adminAuth'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/http'
 
 export type AdminStats = {
   totalCharacters: number
@@ -29,49 +24,16 @@ export type AdminCharacterRow = {
 
 export type GameSettings = { expRate: number; dropRate: number }
 
-async function formatInvokeError(name: string, error: unknown): Promise<string> {
-  if (error instanceof FunctionsHttpError) {
-    try {
-      const body = (await error.context.clone().json()) as { error?: string }
-      if (body?.error) return body.error
-    } catch {
-      /* ignore */
-    }
-    return `Request to ${name} failed (${error.context.status}).`
-  }
-  if (error instanceof FunctionsFetchError) {
-    const url = import.meta.env.VITE_SUPABASE_URL ?? ''
-    if (!url || url.includes('placeholder')) {
-      return 'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in client/.env.'
-    }
-    return (
-      `Could not reach ${name}. Deploy it with: npx supabase functions deploy admin-panel ` +
-      `(and set ADMIN_PANEL_PASSWORD in Supabase secrets).`
-    )
-  }
-  if (error instanceof FunctionsRelayError) {
-    return `Supabase relay error calling ${name}. Try again in a moment.`
-  }
-  if (error instanceof Error) return error.message
-  return String(error)
-}
-
 async function invokeAdmin<T>(body: Record<string, unknown>): Promise<T> {
   const password = getAdminPassword()
   if (!password) {
     throw new Error('Admin password required')
   }
-  const { data, error } = await supabase.functions.invoke('admin-panel', {
-    body: { ...body, adminPassword: password },
+  return apiFetch<T>('/api/admin', {
+    method: 'POST',
     headers: { 'X-Admin-Password': password },
+    body: JSON.stringify({ ...body, adminPassword: password }),
   })
-  if (error) {
-    throw new Error(await formatInvokeError('admin-panel', error))
-  }
-  if (data && typeof data === 'object' && 'error' in data && data.error) {
-    throw new Error(String(data.error))
-  }
-  return data as T
 }
 
 export function fetchAdminStats(): Promise<AdminStats> {

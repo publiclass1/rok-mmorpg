@@ -8,7 +8,8 @@ import { getItemWeaponClass } from '../character/itemCatalog'
 import { sumEquippedCritChancePercent } from './critBonuses'
 import { sumEquippedRolledDamagePercent } from '../items/rolledItemCombat'
 import type { MobDefinition } from './mobConfig'
-import { SKILLS, type SkillDefinition } from '../character/skillsConfig'
+import { physicalSkillModifier, SKILLS, type SkillDefinition } from '../character/skillsConfig'
+import { beastBaneDamageMultiplier, skillPassiveHitBonus } from './skillPassives'
 
 /** Base Pre-Renewal crit damage before LUK bonus (iRO 140%). */
 export const CRITICAL_DAMAGE_BASE = 1.4
@@ -157,10 +158,15 @@ export function calcPlayerVsMobDamage(
   const weaponElement = options?.attackElementOverride ?? weapon?.attackElement ?? 'neutral'
   const weaponSize = weapon?.weaponSize ?? 'medium'
 
+  const weaponClass = state.equipment.weapon ? getItemWeaponClass(state.equipment.weapon) : null
+  const hitStat =
+    calcHit(state.progress.baseLevel, stats.dex, stats.luk) +
+    skillPassiveHitBonus(state.skills, weaponClass ?? 'unarmed')
+
   const critical = rollPlayerCritVsMob(equipCrit, stats.luk, defenderLuk, rng)
   let hit = critical
   if (!hit) {
-    hit = rollHitSuccess(calcHit(state.progress.baseLevel, stats.dex, stats.luk), mob.flee, rng)
+    hit = rollHitSuccess(hitStat, mob.flee, rng)
   }
   if (!hit) return { damage: 0, hit: false, critical: false }
 
@@ -170,11 +176,13 @@ export function calcPlayerVsMobDamage(
   damage = applyCriticalDamageMultiplier(damage, critical, stats.luk)
   damage = Math.floor(damage * elementMultiplier(weaponElement, mob.element))
   damage = Math.floor(damage * sizeMultiplier(weaponSize, mob.size))
-  const weaponClass = state.equipment.weapon ? getItemWeaponClass(state.equipment.weapon) : null
   const dmgKind = weaponClass === 'bow' ? 'range' : 'melee'
   const bonusPct = sumEquippedRolledDamagePercent(state.equipment, dmgKind)
   if (bonusPct > 0) {
     damage = Math.floor(damage * (1 + bonusPct / 100))
+  }
+  if (weaponClass === 'bow') {
+    damage = Math.floor(damage * beastBaneDamageMultiplier(state.skills))
   }
   return { damage: Math.max(1, damage), hit: true, critical }
 }
@@ -233,13 +241,20 @@ export function calcPlayerVsPlayerDamage(
 }
 
 /** Scale basic attack result for active player skills (pre-renewal placeholders). */
+const ARCHER_PHYSICAL_SKILL_IDS = new Set(['double_strafe', 'arrow_shower', 'blitz_beat'])
+
 export function calcPlayerSkillVsMobDamage(
   base: { damage: number; hit: boolean; critical: boolean },
   skillId: string,
   skillLevel: number,
+  skills?: Record<string, number>,
 ): { damage: number; hit: boolean; critical: boolean } {
   if (!base.hit || base.damage <= 0) return base
   let damage = base.damage
+  const def = SKILLS[skillId]
+  if (def?.physical) {
+    damage = Math.max(1, Math.floor(base.damage * physicalSkillModifier(def, skillLevel)))
+  }
   switch (skillId) {
     case 'bash':
     case 'mob_bash':
@@ -262,6 +277,9 @@ export function calcPlayerSkillVsMobDamage(
       break
     default:
       break
+  }
+  if (skills && ARCHER_PHYSICAL_SKILL_IDS.has(skillId)) {
+    damage = Math.max(1, Math.floor(damage * beastBaneDamageMultiplier(skills)))
   }
   return { ...base, damage }
 }

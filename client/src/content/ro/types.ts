@@ -46,6 +46,17 @@ export type RoSkillMagic = {
   skillModifierPerLevel?: number
 }
 
+/** Bow / ranged physical skills (not magic MATK). */
+export type RoSkillPhysical = {
+  /** Fixed projectile hits (e.g. Double Strafe = 2). */
+  hitCount?: number
+  /** One hit per skill level when true. */
+  hitsEqualLevel?: boolean
+  aoeRadius?: number
+  skillModifierBase?: number
+  skillModifierPerLevel?: number
+}
+
 export type RoSkill = {
   id: string
   name: string
@@ -64,6 +75,7 @@ export type RoSkill = {
   iconFile?: string | null
   selfBuff?: RoSkillSelfBuff
   magic?: RoSkillMagic
+  physical?: RoSkillPhysical
   /** Mob-only skill damage scale vs normal hit. */
   mobDamageMultiplier?: number
 }

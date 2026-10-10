@@ -1,5 +1,4 @@
-import type { RealtimeChannel } from '@supabase/supabase-js'
-import { supabase } from '../../lib/supabase'
+import { broadcastToRoom, getGameSocket, joinRealtimeRoom, leaveRealtimeRoom } from '../../lib/socket'
 
 export type ChatMessage = {
   characterId: string
@@ -11,53 +10,47 @@ export type ChatMessage = {
 const MIN_SEND_MS = 800
 
 export class MapChatChannel {
-  private channel: RealtimeChannel | null = null
   private lastSend = 0
-  private mapId: string
+  private room: string
   private onMessage: (msg: ChatMessage) => void
+  private onChatHandler = (payload: Partial<ChatMessage>) => {
+    const p = payload
+    if (!p.characterId || !p.name || !p.text) return
+    this.onMessage({
+      characterId: p.characterId,
+      name: p.name,
+      text: p.text.slice(0, 200),
+      at: p.at ?? Date.now(),
+    })
+  }
 
   constructor(mapId: string, onMessage: (msg: ChatMessage) => void) {
-    this.mapId = mapId
+    this.room = `map:${mapId}`
     this.onMessage = onMessage
   }
 
   async join() {
-    this.channel = supabase.channel(`map:${this.mapId}`, {
-      config: { broadcast: { self: true } },
-    })
-
-    this.channel.on('broadcast', { event: 'chat' }, ({ payload }) => {
-      const p = payload as Partial<ChatMessage>
-      if (!p.characterId || !p.name || !p.text) return
-      this.onMessage({
-        characterId: p.characterId,
-        name: p.name,
-        text: p.text.slice(0, 200),
-        at: p.at ?? Date.now(),
-      })
-    })
-
-    await this.channel.subscribe()
+    joinRealtimeRoom(this.room)
+    getGameSocket().on('chat', this.onChatHandler)
   }
 
   send(local: { characterId: string; name: string }, text: string) {
     const trimmed = text.trim().slice(0, 200)
-    if (!trimmed || !this.channel) return false
+    if (!trimmed) return false
     const now = Date.now()
     if (now - this.lastSend < MIN_SEND_MS) return false
     this.lastSend = now
-    void this.channel.send({
-      type: 'broadcast',
-      event: 'chat',
-      payload: { characterId: local.characterId, name: local.name, text: trimmed, at: now },
+    broadcastToRoom(this.room, 'chat', {
+      characterId: local.characterId,
+      name: local.name,
+      text: trimmed,
+      at: now,
     })
     return true
   }
 
   async leave() {
-    if (this.channel) {
-      await supabase.removeChannel(this.channel)
-      this.channel = null
-    }
+    getGameSocket().off('chat', this.onChatHandler)
+    leaveRealtimeRoom(this.room)
   }
 }

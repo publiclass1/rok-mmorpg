@@ -12,7 +12,7 @@ import {
   loadCharactersForSelect,
   type CharacterSelectEntry,
 } from '../lib/characterProgress'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/http'
 import type { CharacterRow } from '../types/database'
 import { CharacterDesigner } from './CharacterDesigner'
 import { CharacterEquipReadOnly } from './CharacterEquipReadOnly'
@@ -44,16 +44,7 @@ export function CharacterSelect({ onSelect, onLogout }: Props) {
 
   async function loadCharacters() {
     setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      setLoading(false)
-      setEntries([])
-      return
-    }
-
-    const { entries: loaded, error: loadError } = await loadCharactersForSelect(user.id)
+    const { entries: loaded, error: loadError } = await loadCharactersForSelect('')
     setLoading(false)
     if (loadError) {
       setError(loadError)
@@ -91,37 +82,30 @@ export function CharacterSelect({ onSelect, onLogout }: Props) {
       return
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data, error: err } = await supabase
-      .from('characters')
-      .insert({
-        name: trimmed,
-        slot: selectedSlot,
-        user_id: user.id,
-        ...appearanceToRowFields(draftAppearance),
+    try {
+      const { character: data } = await apiFetch<{ character: CharacterRow }>('/api/characters', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: trimmed,
+          slot: selectedSlot,
+          ...appearanceToRowFields(draftAppearance),
+        }),
       })
-      .select('*')
-      .single()
-
-    if (err) {
-      if (err.code === '23505' && err.message.includes('characters_name_unique')) {
+    setName('')
+    setDraftAppearance(DEFAULT_CHARACTER_APPEARANCE)
+    await loadCharacters()
+    setSelectedSlot(data.slot)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.toLowerCase().includes('taken')) {
         setError(
           'That name is already taken (names are unique across all players). Pick another or check your list below.',
         )
         void loadCharacters()
         return
       }
-      setError(err.message)
-      return
+      setError(msg)
     }
-    setName('')
-    setDraftAppearance(DEFAULT_CHARACTER_APPEARANCE)
-    await loadCharacters()
-    setSelectedSlot(data.slot)
   }
 
   async function deleteCharacter(id: string, charName: string) {
@@ -129,9 +113,10 @@ export function CharacterSelect({ onSelect, onLogout }: Props) {
       return
     }
     setError(null)
-    const { error: err } = await supabase.from('characters').delete().eq('id', id)
-    if (err) {
-      setError(err.message)
+    try {
+      await apiFetch(`/api/characters/${id}`, { method: 'DELETE' })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
       return
     }
     await loadCharacters()
@@ -146,7 +131,7 @@ export function CharacterSelect({ onSelect, onLogout }: Props) {
           <button
             type="button"
             className="secondary char-select-btn"
-            onClick={() => void supabase.auth.signOut().then(onLogout)}
+            onClick={() => onLogout()}
           >
             Log out
           </button>

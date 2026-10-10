@@ -12,6 +12,8 @@ import { calcDexVariableCastReducePercent } from '../combat/castTime'
 import { playerAttackTiming } from '../combat/preRenewalAspd'
 import { getItemCombatStats } from './itemCatalog'
 import { effectiveStats } from './effectiveStats'
+import { getEquippedWeaponClass } from '../combat/playerAttackRange'
+import { skillPassiveHitBonus } from '../combat/skillPassives'
 import { rentalSpeedMultiplier } from './rental'
 import { derivedMaxHp, derivedMaxMp, moveSpeedFromAgi } from './statFormulas'
 
@@ -64,7 +66,9 @@ export function buildCombatStatPreview(state: CharacterSessionState): CombatStat
     matkMax: calcStatusMatkMax(stats.int),
     def: stats.vit,
     mdef: stats.int,
-    hit: calcHit(baseLevel, stats.dex, stats.luk),
+    hit:
+      calcHit(baseLevel, stats.dex, stats.luk) +
+      skillPassiveHitBonus(state.skills, getEquippedWeaponClass(state.equipment)),
     flee: calcFlee(baseLevel, stats.agi, stats.luk),
     critChancePercent: calcCritChancePercent(sumEquippedCritChancePercent(state.equipment), {
       attackerLuk: stats.luk,

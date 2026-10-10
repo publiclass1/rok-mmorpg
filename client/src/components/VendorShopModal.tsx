@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { vendorManage } from '../lib/api'
 import { getItemDisplayName } from '../game/character/itemCatalog'
 import { loadCharacterSession } from '../lib/characterProgress'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/http'
+import { getGameSocket } from '../lib/socket'
 import type { CharacterRow, VendorListingRow } from '../types/database'
 import { toCharacterSheetPayload } from '../game/character/characterSheet'
 import { emitGameEvent, sessionSyncPayload } from '../game/events'
@@ -33,30 +34,22 @@ export function VendorShopModal({
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
+  async function refreshListings() {
+    const res = await apiFetch<{ listings: VendorListingRow[] }>(
+      `/api/vendor/${sellerCharacterId}/listings`,
+    )
+    setListings(res.listings ?? [])
+  }
+
   useEffect(() => {
-    void supabase
-      .from('vendor_listings')
-      .select('*')
-      .eq('character_id', sellerCharacterId)
-      .then(({ data }) => setListings(data ?? []))
-
-    const channel = supabase
-      .channel(`vendor-shop:${sellerCharacterId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'vendor_listings', filter: `character_id=eq.${sellerCharacterId}` },
-        () => {
-          void supabase
-            .from('vendor_listings')
-            .select('*')
-            .eq('character_id', sellerCharacterId)
-            .then(({ data }) => setListings(data ?? []))
-        },
-      )
-      .subscribe()
-
+    void refreshListings()
+    const socket = getGameSocket()
+    const onListings = () => {
+      void refreshListings()
+    }
+    socket.on('vendor_listings', onListings)
     return () => {
-      void supabase.removeChannel(channel)
+      socket.off('vendor_listings', onListings)
     }
   }, [sellerCharacterId])
 
@@ -71,8 +64,8 @@ export function VendorShopModal({
         listingId: listing.id,
         quantity: qty,
       })
-      const { data } = await supabase.from('characters').select('*').eq('id', buyer.id).single()
-      if (data) onCharacterUpdated(data as CharacterRow)
+      const session = await apiFetch<{ character: CharacterRow }>(`/api/characters/${buyer.id}/session`)
+      if (session.character) onCharacterUpdated(session.character)
       const loaded = await loadCharacterSession(buyer.id)
       emitGameEvent('sessionSync', sessionSyncPayload(loaded, { persist: false }))
       emitGameEvent('characterSheet', toCharacterSheetPayload(loaded))

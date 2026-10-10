@@ -2,16 +2,16 @@ import { useState, type FormEvent } from 'react'
 import { motion } from 'motion/react'
 import { panelMotion } from './motion/motionPresets'
 import { PreGameBackdrop } from './PreGameBackdrop'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/http'
+import { setAuthToken } from '../lib/authStore'
 import {
   friendlyAuthError,
   normalizeUsername,
-  usernameToAuthEmail,
   validateUsername,
 } from '../lib/accountAuth'
 
 type Props = {
-  onAuthed: () => void
+  onAuthed: (user: { id: string; username: string }) => void
 }
 
 export function AuthScreen({ onAuthed }: Props) {
@@ -34,37 +34,20 @@ export function AuthScreen({ onAuthed }: Props) {
       return
     }
 
-    const email = usernameToAuthEmail(normalized)
-
-    const result =
-      mode === 'login'
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({
-            email,
-            password,
-            options: { data: { display_name: normalized } },
-          })
-
-    setLoading(false)
-    if (result.error) {
-      setError(friendlyAuthError(result.error.message, normalized))
-      return
+    try {
+      const path = mode === 'login' ? '/api/auth/login' : '/api/auth/register'
+      const result = await apiFetch<{ token: string; user: { id: string; username: string } }>(path, {
+        method: 'POST',
+        body: JSON.stringify({ username: normalized, password }),
+      })
+      setAuthToken(result.token)
+      onAuthed(result.user)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setError(friendlyAuthError(msg, normalized))
+    } finally {
+      setLoading(false)
     }
-
-    if (mode === 'signup' && result.data.session) {
-      onAuthed()
-      return
-    }
-
-    if (mode === 'signup' && !result.data.session) {
-      setError(
-        'Account created but not signed in. Turn off “Confirm email” in Supabase → Authentication → Email, then log in.',
-      )
-      setMode('login')
-      return
-    }
-
-    onAuthed()
   }
 
   return (
@@ -79,15 +62,10 @@ export function AuthScreen({ onAuthed }: Props) {
           <label>
             Username
             <input
-              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              required
-              minLength={3}
-              maxLength={20}
               autoComplete="username"
-              autoCapitalize="off"
-              spellCheck={false}
+              disabled={loading}
             />
           </label>
           <label>
@@ -96,19 +74,32 @@ export function AuthScreen({ onAuthed }: Props) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              disabled={loading}
             />
           </label>
           {error && <p className="error">{error}</p>}
           <button type="submit" disabled={loading}>
-            {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
+            {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Create account'}
           </button>
         </form>
-        <button type="button" className="linkish" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
-          {mode === 'login' ? 'Need an account? Sign up' : 'Already have an account? Log in'}
-        </button>
+        <p className="muted small">
+          {mode === 'login' ? (
+            <>
+              New here?{' '}
+              <button type="button" className="link-button" onClick={() => setMode('signup')}>
+                Create an account
+              </button>
+            </>
+          ) : (
+            <>
+              Already have an account?{' '}
+              <button type="button" className="link-button" onClick={() => setMode('login')}>
+                Log in
+              </button>
+            </>
+          )}
+        </p>
       </motion.div>
     </div>
   )

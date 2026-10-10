@@ -41,6 +41,8 @@ export function startPlayerAttackAnim(
     magicHitCount?: number
     onMagicHit?: (hitIndex: number) => void
     onMagicVolleyComplete?: () => void
+    rangedHitCount?: number
+    onRangedHit?: (hitIndex: number) => void
     onStrike?: () => void
     onComplete?: () => void
   },
@@ -60,9 +62,12 @@ export function startPlayerAttackAnim(
 
   const strikeDelay = options.strikeDelayMs ?? WINDUP_MS
   const hitCount = options.magicHitCount ?? 1
+  const rangedHits = options.rangedHitCount ?? 1
   const boltStagger =
     options.magicSkillId?.endsWith('_bolt') && hitCount > 1 ? (hitCount - 1) * 90 : 0
-  const animEndMs = Math.max(END_MS, strikeDelay + POST_STRIKE_PROJECTILE_MS + boltStagger)
+  const bowStagger =
+    options.attackStyle === 'bow' && rangedHits > 1 ? (rangedHits - 1) * 90 : 0
+  const animEndMs = Math.max(END_MS, strikeDelay + POST_STRIKE_PROJECTILE_MS + boltStagger + bowStagger)
   const strikePhaseMs = strikeDelay + Math.max(0, STRIKE_MS - WINDUP_MS)
 
   scene.time.delayedCall(strikeDelay, () => {
@@ -94,6 +99,19 @@ export function startPlayerAttackAnim(
             options.onStrike?.()
           },
         )
+      } else if (options.attackStyle === 'bow' && rangedHits > 1) {
+        const origin = rangedProjectileOrigin(container.x, container.y, facing)
+        let completed = 0
+        for (let i = 0; i < rangedHits; i++) {
+          scene.time.delayedCall(i * 90, () => {
+            if (display.pose.anim !== 'attack') return
+            playBowArrowProjectile(scene, origin.x, origin.y, aim.x, aim.y, depth, () => {
+              options.onRangedHit?.(i)
+              completed += 1
+              if (completed >= rangedHits) options.onStrike?.()
+            })
+          })
+        }
       } else {
         const origin = rangedProjectileOrigin(container.x, container.y, facing)
         const onArrive = () => options.onStrike?.()

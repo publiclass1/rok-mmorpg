@@ -1,0 +1,790 @@
+[
+  {
+    "id": "prontera_kafra",
+    "map_id": "prontera",
+    "x": 1945,
+    "y": 1336,
+    "npc_type": "storage",
+    "label": "Kafra",
+    "config": {
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_save",
+    "map_id": "prontera",
+    "x": 1371,
+    "y": 1299,
+    "npc_type": "save",
+    "label": "Save Point",
+    "config": {
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_warp",
+    "map_id": "prontera",
+    "x": 1513,
+    "y": 1491,
+    "npc_type": "teleport",
+    "label": "Warp Agent",
+    "config": {
+      "destinations": [
+        {
+          "x": 480,
+          "y": 320,
+          "label": "Prontera Field 01",
+          "map_id": "prt_fild01"
+        },
+        {
+          "x": 160,
+          "y": 160,
+          "label": "Field (dev)",
+          "map_id": "field_01"
+        },
+        {
+          "x": 768,
+          "y": 112,
+          "label": "Prontera Culvert",
+          "map_id": "prt_sewb1"
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "field_kafra",
+    "map_id": "field_01",
+    "x": 160,
+    "y": 120,
+    "npc_type": "storage",
+    "label": "Field Kafra",
+    "config": {}
+  },
+  {
+    "id": "field_warp",
+    "map_id": "field_01",
+    "x": 480,
+    "y": 320,
+    "npc_type": "teleport",
+    "label": "Return Warp",
+    "config": {
+      "destinations": [
+        {
+          "map_id": "prontera",
+          "label": "Prontera",
+          "x": 640,
+          "y": 360
+        }
+      ]
+    }
+  },
+  {
+    "id": "prontera_job_master",
+    "map_id": "prontera",
+    "x": 446,
+    "y": 73,
+    "npc_type": "job_master",
+    "label": "Job Master",
+    "config": {
+      "offers": [
+        {
+          "jobId": "swordman",
+          "zenyCost": 0,
+          "fromJobId": "novice",
+          "requiredJobLevel": 10,
+          "requiredBaseLevel": 1
+        },
+        {
+          "jobId": "mage",
+          "zenyCost": 0,
+          "fromJobId": "novice",
+          "requiredJobLevel": 10,
+          "requiredBaseLevel": 1
+        },
+        {
+          "jobId": "archer",
+          "zenyCost": 0,
+          "fromJobId": "novice",
+          "requiredJobLevel": 10,
+          "requiredBaseLevel": 1
+        },
+        {
+          "jobId": "acolyte",
+          "zenyCost": 0,
+          "fromJobId": "novice",
+          "requiredJobLevel": 10,
+          "requiredBaseLevel": 1
+        },
+        {
+          "jobId": "merchant",
+          "zenyCost": 0,
+          "fromJobId": "novice",
+          "requiredJobLevel": 10,
+          "requiredBaseLevel": 1
+        },
+        {
+          "jobId": "thief",
+          "zenyCost": 0,
+          "fromJobId": "novice",
+          "requiredJobLevel": 10,
+          "requiredBaseLevel": 1
+        },
+        {
+          "jobId": "knight",
+          "zenyCost": 0,
+          "fromJobId": "swordman",
+          "requiredJobLevel": 40,
+          "requiredBaseLevel": 40
+        },
+        {
+          "jobId": "hunter",
+          "zenyCost": 0,
+          "fromJobId": "archer",
+          "requiredJobLevel": 40,
+          "requiredBaseLevel": 40
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_tool_dealer",
+    "map_id": "prontera",
+    "x": 1353,
+    "y": 1173,
+    "npc_type": "shop",
+    "label": "Tool Dealer",
+    "config": {
+      "buys": [
+        {
+          "price": 2,
+          "itemId": "jellopy"
+        },
+        {
+          "price": 3,
+          "itemId": "fluff"
+        },
+        {
+          "price": 8,
+          "itemId": "chrysalis"
+        },
+        {
+          "price": 26,
+          "itemId": "worm_peeling"
+        },
+        {
+          "price": 4,
+          "itemId": "sticky_mucus"
+        },
+        {
+          "price": 200,
+          "itemId": "phracon"
+        },
+        {
+          "price": 9,
+          "itemId": "red_herb"
+        },
+        {
+          "price": 25,
+          "itemId": "iron_ore"
+        },
+        {
+          "price": 39,
+          "itemId": "rat_tail"
+        },
+        {
+          "price": 27,
+          "itemId": "animal_skin"
+        },
+        {
+          "price": 15,
+          "itemId": "feather"
+        },
+        {
+          "price": 60,
+          "itemId": "monsters_feed"
+        },
+        {
+          "price": 8,
+          "itemId": "tooth_of_bat"
+        },
+        {
+          "price": 200,
+          "itemId": "grape"
+        }
+      ],
+      "stock": [
+        {
+          "price": 50,
+          "itemId": "red_potion"
+        },
+        {
+          "price": 120,
+          "itemId": "blue_potion"
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_healer",
+    "map_id": "prontera",
+    "x": 1739,
+    "y": 1490,
+    "npc_type": "healer",
+    "label": "Healer",
+    "config": {
+      "zenyCost": 0,
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prt_fild01_kafra",
+    "map_id": "prt_fild01",
+    "x": 200,
+    "y": 140,
+    "npc_type": "storage",
+    "label": "Kafra",
+    "config": {}
+  },
+  {
+    "id": "prt_fild01_warp",
+    "map_id": "prt_fild01",
+    "x": 43,
+    "y": 56,
+    "npc_type": "teleport",
+    "label": "Return Warp",
+    "config": {
+      "destinations": [
+        {
+          "x": 1600,
+          "y": 1400,
+          "label": "Prontera",
+          "map_id": "prontera"
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_weapon_dealer",
+    "map_id": "prontera",
+    "x": 1490,
+    "y": 998,
+    "npc_type": "shop",
+    "label": "Weapon Dealer",
+    "config": {
+      "stock": [
+        {
+          "price": 1200,
+          "itemId": "knife"
+        },
+        {
+          "price": 1600,
+          "itemId": "sword"
+        },
+        {
+          "price": 1500,
+          "itemId": "spear"
+        },
+        {
+          "price": 2400,
+          "itemId": "falchion"
+        },
+        {
+          "price": 2900,
+          "itemId": "blade"
+        },
+        {
+          "price": 3200,
+          "itemId": "rapier"
+        },
+        {
+          "price": 3500,
+          "itemId": "saber"
+        },
+        {
+          "price": 1000,
+          "itemId": "rod"
+        },
+        {
+          "price": 2000,
+          "itemId": "wand"
+        },
+        {
+          "price": 5000,
+          "itemId": "staff"
+        },
+        {
+          "price": 2500,
+          "itemId": "bow"
+        },
+        {
+          "price": 8000,
+          "itemId": "great_bow"
+        },
+        {
+          "price": 15000,
+          "itemId": "composite_bow"
+        },
+        {
+          "price": 2400,
+          "itemId": "mace"
+        },
+        {
+          "price": 2900,
+          "itemId": "club"
+        },
+        {
+          "price": 4500,
+          "itemId": "smasher"
+        },
+        {
+          "price": 2800,
+          "itemId": "axe"
+        },
+        {
+          "price": 5500,
+          "itemId": "battle_axe"
+        },
+        {
+          "price": 2000,
+          "itemId": "main_gauche"
+        },
+        {
+          "price": 2400,
+          "itemId": "dagger"
+        },
+        {
+          "price": 3200,
+          "itemId": "stiletto"
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_armor_dealer",
+    "map_id": "prontera",
+    "x": 1407,
+    "y": 1074,
+    "npc_type": "shop",
+    "label": "Armor Dealer",
+    "config": {
+      "stock": [
+        {
+          "price": 10,
+          "itemId": "cotton_shirt"
+        },
+        {
+          "price": 500,
+          "itemId": "adventurers_suit"
+        },
+        {
+          "price": 500,
+          "itemId": "silk_robe"
+        },
+        {
+          "price": 1200,
+          "itemId": "wooden_mail"
+        },
+        {
+          "price": 2500,
+          "itemId": "coat"
+        },
+        {
+          "price": 120,
+          "itemId": "cap"
+        },
+        {
+          "price": 150,
+          "itemId": "goggles"
+        },
+        {
+          "price": 100,
+          "itemId": "flu_mask"
+        },
+        {
+          "price": 12000,
+          "itemId": "helm"
+        },
+        {
+          "price": 800,
+          "itemId": "wooden_shield"
+        },
+        {
+          "price": 600,
+          "itemId": "buckler"
+        },
+        {
+          "price": 300,
+          "itemId": "hooded_mantle"
+        },
+        {
+          "price": 800,
+          "itemId": "mantle"
+        },
+        {
+          "price": 150,
+          "itemId": "sandals"
+        },
+        {
+          "price": 400,
+          "itemId": "shoes"
+        },
+        {
+          "price": 200,
+          "itemId": "clip"
+        },
+        {
+          "price": 180,
+          "itemId": "glove"
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_dungeon_guide",
+    "map_id": "prontera",
+    "x": 1797,
+    "y": 1162,
+    "npc_type": "dungeon",
+    "label": "Dungeon Guide",
+    "config": {
+      "floors": [
+        "dun_f1",
+        "dun_f2",
+        "dun_f3",
+        "dun_f4",
+        "dun_f5"
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_return_warp",
+    "map_id": "prontera",
+    "x": 320,
+    "y": 320,
+    "npc_type": "teleport",
+    "label": "Return to Prontera",
+    "config": {
+      "destinations": [
+        {
+          "map_id": "prontera",
+          "label": "Prontera",
+          "x": 640,
+          "y": 360,
+          "category": "standard"
+        }
+      ]
+    }
+  },
+  {
+    "id": "prontera_rental",
+    "map_id": "prontera",
+    "x": 1464,
+    "y": 1360,
+    "npc_type": "rental",
+    "label": "Rental Shop",
+    "config": {
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_rarity_armor_dealer",
+    "map_id": "prontera",
+    "x": 1344,
+    "y": 1856,
+    "npc_type": "shop",
+    "label": "Rarity Armor Dealer",
+    "config": {
+      "facing": "down",
+      "shopLayout": "rarityTabs",
+      "stock": [
+        {
+          "itemId": "padded_vest",
+          "price": 100
+        },
+        {
+          "itemId": "scout_mail",
+          "price": 500
+        },
+        {
+          "itemId": "knight_plate",
+          "price": 2000
+        },
+        {
+          "itemId": "violet_cuirass",
+          "price": 8000
+        },
+        {
+          "itemId": "dragon_scale_mail",
+          "price": 25000
+        },
+        {
+          "itemId": "skyweave_robe",
+          "price": 80000
+        },
+        {
+          "itemId": "relic_guardplate",
+          "price": 250000
+        }
+      ]
+    }
+  },
+  {
+    "id": "prontera_pvp_master",
+    "map_id": "prontera",
+    "x": 1552,
+    "y": 1648,
+    "npc_type": "teleport",
+    "label": "PVP Master",
+    "config": {
+      "spriteKey": "job_master",
+      "facing": "down",
+      "destinations": [
+        {
+          "map_id": "pvp_room",
+          "label": "PVP Room",
+          "x": 640,
+          "y": 480
+        }
+      ]
+    }
+  },
+  {
+    "id": "prt_fild01_return_warp",
+    "map_id": "prt_fild01",
+    "x": 320,
+    "y": 320,
+    "npc_type": "teleport",
+    "label": "Return to Prontera",
+    "config": {
+      "destinations": [
+        {
+          "map_id": "prontera",
+          "label": "Prontera",
+          "x": 640,
+          "y": 360,
+          "category": "standard"
+        }
+      ]
+    }
+  },
+  {
+    "id": "pvp_room_exit",
+    "map_id": "pvp_room",
+    "x": 656,
+    "y": 1152,
+    "npc_type": "teleport",
+    "label": "PVP Master",
+    "config": {
+      "spriteKey": "job_master",
+      "facing": "down",
+      "destinations": [
+        {
+          "map_id": "prontera",
+          "label": "Prontera",
+          "x": 1584,
+          "y": 1616
+        }
+      ]
+    }
+  },
+  {
+    "id": "dun_f1_dun_f1_exit",
+    "map_id": "dun_f1",
+    "x": 528,
+    "y": 1232,
+    "npc_type": "teleport",
+    "label": "Exit to Prontera",
+    "config": {
+      "destinations": [
+        {
+          "map_id": "prontera",
+          "label": "Prontera",
+          "x": 1600,
+          "y": 1400
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "dun_f2_dun_f2_exit",
+    "map_id": "dun_f2",
+    "x": 528,
+    "y": 1232,
+    "npc_type": "teleport",
+    "label": "Exit to Prontera",
+    "config": {
+      "destinations": [
+        {
+          "map_id": "prontera",
+          "label": "Prontera",
+          "x": 1600,
+          "y": 1400
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "dun_f3_dun_f3_exit",
+    "map_id": "dun_f3",
+    "x": 528,
+    "y": 1232,
+    "npc_type": "teleport",
+    "label": "Exit to Prontera",
+    "config": {
+      "destinations": [
+        {
+          "map_id": "prontera",
+          "label": "Prontera",
+          "x": 1600,
+          "y": 1400
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "dun_f4_dun_f4_exit",
+    "map_id": "dun_f4",
+    "x": 528,
+    "y": 1232,
+    "npc_type": "teleport",
+    "label": "Exit to Prontera",
+    "config": {
+      "destinations": [
+        {
+          "map_id": "prontera",
+          "label": "Prontera",
+          "x": 1600,
+          "y": 1400
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "dun_f5_dun_f5_exit",
+    "map_id": "dun_f5",
+    "x": 528,
+    "y": 1232,
+    "npc_type": "teleport",
+    "label": "Exit to Prontera",
+    "config": {
+      "destinations": [
+        {
+          "map_id": "prontera",
+          "label": "Prontera",
+          "x": 1600,
+          "y": 1400
+        }
+      ],
+      "facing": "down"
+    }
+  },
+  {
+    "id": "prontera_rarity_weapon_dealer",
+    "map_id": "prontera",
+    "x": 1470,
+    "y": 1030,
+    "npc_type": "shop",
+    "label": "Rarity Weapon Dealer",
+    "config": {
+      "facing": "down",
+      "shopLayout": "rarityTabs",
+      "stock": [
+        {
+          "itemId": "rarity_cos_knife",
+          "price": 1200
+        },
+        {
+          "itemId": "rarity_cos_sword",
+          "price": 1600
+        },
+        {
+          "itemId": "rarity_cos_spear",
+          "price": 1500
+        },
+        {
+          "itemId": "rarity_cos_falchion",
+          "price": 2400
+        },
+        {
+          "itemId": "rarity_cos_blade",
+          "price": 2900
+        },
+        {
+          "itemId": "rarity_cos_rapier",
+          "price": 3200
+        },
+        {
+          "itemId": "rarity_cos_saber",
+          "price": 3500
+        },
+        {
+          "itemId": "rarity_cos_rod",
+          "price": 1000
+        },
+        {
+          "itemId": "rarity_cos_wand",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_cos_staff",
+          "price": 5000
+        },
+        {
+          "itemId": "rarity_cos_bow",
+          "price": 2500
+        },
+        {
+          "itemId": "rarity_cos_great_bow",
+          "price": 8000
+        },
+        {
+          "itemId": "rarity_cos_composite_bow",
+          "price": 15000
+        },
+        {
+          "itemId": "rarity_cos_mace",
+          "price": 2400
+        },
+        {
+          "itemId": "rarity_cos_club",
+          "price": 2900
+        },
+        {
+          "itemId": "rarity_cos_smasher",
+          "price": 4500
+        },
+        {
+          "itemId": "rarity_cos_axe",
+          "price": 2800
+        },
+        {
+          "itemId": "rarity_cos_battle_axe",
+          "price": 5500
+        },
+        {
+          "itemId": "rarity_cos_main_gauche",
+          "price": 2000
+        },
+        {
+          "itemId": "rarity_cos_dagger",
+          "price": 2400
+        },
+        {
+          "itemId": "rarity_cos_stiletto",
+          "price": 3200
+        }
+      ]
+    }
+  }
+]

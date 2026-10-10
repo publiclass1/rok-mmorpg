@@ -10,6 +10,12 @@ const repoRoot = path.resolve(clientDir, '..')
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), mapAdminApiPlugin(repoRoot)],
+  server: {
+    proxy: {
+      '/api': { target: 'http://localhost:3001', changeOrigin: true },
+      '/socket.io': { target: 'http://localhost:3001', changeOrigin: true, ws: true },
+    },
+  },
   resolve: {
     alias: {
       '@ro-content': path.resolve(clientDir, '../content/ro'),

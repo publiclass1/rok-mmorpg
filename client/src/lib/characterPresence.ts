@@ -1,24 +1,16 @@
-import { supabase } from './supabase'
+import { apiFetch } from './http'
 
-export async function upsertCharacterPresence(
-  characterId: string,
-  mapId: string,
-  name: string,
-): Promise<void> {
-  const { error } = await supabase.from('character_presence').upsert({
-    character_id: characterId,
-    map_id: mapId,
-    name,
-    last_seen: new Date().toISOString(),
+export async function upsertCharacterPresence(payload: {
+  characterId: string
+  mapId: string
+  name: string
+}): Promise<void> {
+  await apiFetch(`/api/presence/${payload.characterId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ map_id: payload.mapId, name: payload.name }),
   })
-  if (error) {
-    console.warn('Presence upsert failed', error.message)
-  }
 }
 
 export async function clearCharacterPresence(characterId: string): Promise<void> {
-  const { error } = await supabase.from('character_presence').delete().eq('character_id', characterId)
-  if (error) {
-    console.warn('Presence clear failed', error.message)
-  }
+  await apiFetch(`/api/presence/${characterId}`, { method: 'DELETE' })
 }

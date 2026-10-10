@@ -329,8 +329,8 @@ export function mapAdminApiPlugin(repoRoot: string): Plugin {
   let adminPassword = ''
   const mapsJsonPath = path.join(repoRoot, 'content/ro/maps.json')
   const mapsDir = path.join(repoRoot, 'client/public/maps')
-  const sharedPortalsPath = path.join(repoRoot, 'supabase/functions/_shared/mapPortals.json')
-  const sharedMobSpotsPath = path.join(repoRoot, 'supabase/functions/_shared/ro/mobSpots.json')
+  const sharedPortalsPath = path.join(repoRoot, 'server/src/shared/mapPortals.json')
+  const sharedMobSpotsPath = path.join(repoRoot, 'server/src/shared/ro/mobSpots.json')
   const migrationsDir = path.join(repoRoot, 'supabase/migrations')
   const customMapsSeedDir = path.join(repoRoot, 'supabase/seed/custom_maps')
 

@@ -1,0 +1,443 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique @db.VarChar(20)
+  passwordHash String   @map("password_hash")
+  displayName  String?  @map("display_name")
+  saveMapId    String   @default("prontera") @map("save_map_id")
+  saveX        Float    @default(480) @map("save_x")
+  saveY        Float    @default(360) @map("save_y")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  characters     Character[]
+  accountStorage AccountStorage[]
+
+  @@map("users")
+}
+
+model Character {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  name         String   @unique
+  slot         Int      @db.SmallInt
+  mapId        String   @default("prontera") @map("map_id")
+  x            Float    @default(480)
+  y            Float    @default(360)
+  zeny         Int      @default(1000)
+  isGm         Boolean  @default(false) @map("is_gm")
+  gender       String   @default("male")
+  bodyColor    Int      @default(2) @map("body_color") @db.SmallInt
+  hairColor    Int      @default(1) @map("hair_color") @db.SmallInt
+  eyeColor     Int      @default(0) @map("eye_color") @db.SmallInt
+  clothesColor Int      @default(0) @map("clothes_color") @db.SmallInt
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  progress           CharacterProgress?
+  skills             CharacterSkill[]
+  equipment          CharacterEquipment[]
+  inventory          CharacterInventory[]
+  presence           CharacterPresence?
+  auditLogs          CharacterAuditLog[]
+  partyMembership    PartyMember?
+  guildMembership    GuildMember?
+  vendorStall        VendorStall?
+  vendorListings     VendorListing[]
+  initiatedTrades    TradeSession[]       @relation("TradeInitiator")
+  partnerTrades      TradeSession[]       @relation("TradePartner")
+  tradeOffers        TradeOffer[]
+  duelAsChallenger   DuelSession[]        @relation("DuelChallenger")
+  duelAsOpponent     DuelSession[]        @relation("DuelOpponent")
+  duelWins           DuelSession[]        @relation("DuelWinner")
+  fieldDropsOwned    FieldMapDrop[]       @relation("DropOwner")
+  fieldDropsCollected FieldMapDrop[]      @relation("DropCollector")
+  spawnKills         FieldSpawnKillLock[] @relation("SpawnKiller")
+  dungeonClaims      DungeonRewardClaim[]
+  partyRequestsFrom  PartyRequest[]       @relation("RequestFrom")
+  partyRequestsTo    PartyRequest[]       @relation("RequestTo")
+  ledParties         Party[]              @relation("PartyLeader")
+  ledGuilds          Guild[]              @relation("GuildLeader")
+
+  @@unique([userId, slot])
+  @@map("characters")
+}
+
+model Item {
+  id        String  @id
+  name      String
+  stackMax  Int     @map("stack_max")
+  itemType  String? @map("item_type")
+  weight    Int?
+  equipSlot String? @map("equip_slot")
+  metadata  Json    @default("{}")
+
+  inventoryRows CharacterInventory[]
+  storageRows   AccountStorage[]
+  tradeOffers   TradeOffer[]
+  vendorListings VendorListing[]
+  fieldDrops    FieldMapDrop[]
+  equipmentRows CharacterEquipment[]
+
+  @@map("items")
+}
+
+model AccountStorage {
+  id       String @id @default(uuid())
+  userId   String @map("user_id")
+  itemId   String @map("item_id")
+  quantity Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item Item @relation(fields: [itemId], references: [id])
+
+  @@unique([userId, itemId])
+  @@map("account_storage")
+}
+
+model CharacterInventory {
+  id          String @id @default(uuid())
+  characterId String @map("character_id")
+  itemId      String @map("item_id")
+  quantity    Int
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item      Item      @relation(fields: [itemId], references: [id])
+
+  @@unique([characterId, itemId])
+  @@map("character_inventory")
+}
+
+model NpcDefinition {
+  id      String @id
+  mapId   String @map("map_id")
+  x       Float
+  y       Float
+  npcType String @map("npc_type")
+  label   String
+  config  Json   @default("{}")
+
+  @@map("npc_definitions")
+}
+
+model CharacterProgress {
+  characterId         String   @id @map("character_id")
+  jobId               String   @default("novice") @map("job_id")
+  baseLevel           Int      @default(1) @map("base_level") @db.SmallInt
+  baseExp             Int      @default(0) @map("base_exp")
+  jobLevel            Int      @default(1) @map("job_level") @db.SmallInt
+  jobExp              Int      @default(0) @map("job_exp")
+  str                 Int      @default(1) @db.SmallInt
+  agi                 Int      @default(1) @db.SmallInt
+  vit                 Int      @default(1) @db.SmallInt
+  statInt             Int      @default(1) @map("stat_int") @db.SmallInt
+  dex                 Int      @default(1) @db.SmallInt
+  luk                 Int      @default(1) @db.SmallInt
+  statPointsUnspent   Int      @default(0) @map("stat_points_unspent")
+  skillPointsUnspent  Int      @default(0) @map("skill_points_unspent")
+  hp                  Int?
+  mp                  Int?
+  skillBar            Json     @default("[\"basic_attack\",null,null,null,null,null,null,null,null]") @map("skill_bar")
+  sessionInventory    Json     @default("[]") @map("session_inventory")
+  rolledItems         Json     @default("{}") @map("rolled_items")
+  activeRental        Json?    @map("active_rental")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@map("character_progress")
+}
+
+model CharacterSkill {
+  characterId String @map("character_id")
+  skillId     String @map("skill_id")
+  level       Int    @db.SmallInt
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@id([characterId, skillId])
+  @@map("character_skills")
+}
+
+model CharacterEquipment {
+  characterId  String  @map("character_id")
+  slot         String
+  itemId       String  @map("item_id")
+  instanceId   String? @map("instance_id")
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item      Item      @relation(fields: [itemId], references: [id])
+
+  @@id([characterId, slot])
+  @@map("character_equipment")
+}
+
+model TradeSession {
+  id                   String   @id @default(uuid())
+  initiatorCharacterId String   @map("initiator_character_id")
+  partnerCharacterId   String   @map("partner_character_id")
+  state                String
+  initiatorConfirmed   Boolean  @default(false) @map("initiator_confirmed")
+  partnerConfirmed     Boolean  @default(false) @map("partner_confirmed")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+
+  initiator Character    @relation("TradeInitiator", fields: [initiatorCharacterId], references: [id], onDelete: Cascade)
+  partner   Character    @relation("TradePartner", fields: [partnerCharacterId], references: [id], onDelete: Cascade)
+  offers    TradeOffer[]
+
+  @@map("trade_sessions")
+}
+
+model TradeOffer {
+  id             String  @id @default(uuid())
+  tradeSessionId String  @map("trade_session_id")
+  characterId    String  @map("character_id")
+  itemId         String? @map("item_id")
+  quantity       Int     @default(0)
+  zeny           Int     @default(0)
+
+  tradeSession TradeSession @relation(fields: [tradeSessionId], references: [id], onDelete: Cascade)
+  character    Character    @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item         Item?        @relation(fields: [itemId], references: [id])
+
+  @@map("trade_offers")
+}
+
+model Party {
+  id                String   @id @default(uuid())
+  leaderCharacterId String   @map("leader_character_id")
+  name              String   @default("Party")
+  expShare          Boolean  @default(false) @map("exp_share")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+
+  leader   Character      @relation("PartyLeader", fields: [leaderCharacterId], references: [id], onDelete: Cascade)
+  members  PartyMember[]
+  requests PartyRequest[]
+  dungeons DungeonInstance[]
+
+  @@map("parties")
+}
+
+model PartyMember {
+  partyId     String   @map("party_id")
+  characterId String   @id @map("character_id")
+  joinedAt    DateTime @default(now()) @map("joined_at")
+
+  party     Party     @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([partyId])
+  @@map("party_members")
+}
+
+model PartyRequest {
+  id              String   @id @default(uuid())
+  partyId         String   @map("party_id")
+  fromCharacterId String   @map("from_character_id")
+  toCharacterId   String   @map("to_character_id")
+  kind            String
+  status          String   @default("pending")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  party Party     @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  from  Character @relation("RequestFrom", fields: [fromCharacterId], references: [id], onDelete: Cascade)
+  to    Character @relation("RequestTo", fields: [toCharacterId], references: [id], onDelete: Cascade)
+
+  @@index([toCharacterId, status])
+  @@map("party_requests")
+}
+
+model Guild {
+  id                String   @id @default(uuid())
+  name              String   @unique
+  tag               String   @unique @db.VarChar(4)
+  leaderCharacterId String   @map("leader_character_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  leader  Character     @relation("GuildLeader", fields: [leaderCharacterId], references: [id], onDelete: Cascade)
+  members GuildMember[]
+
+  @@map("guilds")
+}
+
+model GuildMember {
+  guildId     String   @map("guild_id")
+  characterId String   @id @map("character_id")
+  role        String   @default("member")
+  joinedAt    DateTime @default(now()) @map("joined_at")
+
+  guild     Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+  @@map("guild_members")
+}
+
+model VendorStall {
+  characterId String   @id @map("character_id")
+  title       String   @default("Shop")
+  mapId       String   @map("map_id")
+  x           Float    @default(0)
+  y           Float    @default(0)
+  isOpen      Boolean  @default(false) @map("is_open")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([mapId, isOpen])
+  @@map("vendor_stalls")
+}
+
+model VendorListing {
+  id          String @id @default(uuid())
+  characterId String @map("character_id")
+  itemId      String @map("item_id")
+  price       Int
+  quantity    Int
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item      Item      @relation(fields: [itemId], references: [id])
+
+  @@index([characterId])
+  @@map("vendor_listings")
+}
+
+model DuelSession {
+  id                    String    @id @default(uuid())
+  challengerCharacterId String    @map("challenger_character_id")
+  opponentCharacterId   String    @map("opponent_character_id")
+  state                 String    @default("pending")
+  mapId                 String    @map("map_id")
+  fightStartsAt         DateTime? @map("fight_starts_at")
+  challengerName        String    @map("challenger_name")
+  challengerJobId       String    @map("challenger_job_id")
+  challengerBaseLevel   Int       @map("challenger_base_level") @db.SmallInt
+  challengerSnapshot    Json?     @map("challenger_snapshot")
+  opponentSnapshot      Json?     @map("opponent_snapshot")
+  challengerHp          Int?      @map("challenger_hp")
+  opponentHp            Int?      @map("opponent_hp")
+  challengerHpMax       Int?      @map("challenger_hp_max")
+  opponentHpMax         Int?      @map("opponent_hp_max")
+  lastAttackAt          DateTime? @map("last_attack_at")
+  winnerCharacterId     String?   @map("winner_character_id")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  challenger Character  @relation("DuelChallenger", fields: [challengerCharacterId], references: [id], onDelete: Cascade)
+  opponent   Character  @relation("DuelOpponent", fields: [opponentCharacterId], references: [id], onDelete: Cascade)
+  winner     Character? @relation("DuelWinner", fields: [winnerCharacterId], references: [id], onDelete: SetNull)
+
+  @@map("duel_sessions")
+}
+
+model DungeonInstance {
+  id           String   @id @default(uuid())
+  partyId      String   @map("party_id")
+  floorId      String   @map("floor_id")
+  mapId        String   @map("map_id")
+  status       String   @default("active")
+  killedSpawns Json     @default("[]") @map("killed_spawns")
+  totalSpawns  Int      @default(0) @map("total_spawns")
+  mvpAlive     Boolean  @default(false) @map("mvp_alive")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  party  Party                @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  claims DungeonRewardClaim[]
+
+  @@index([partyId])
+  @@map("dungeon_instances")
+}
+
+model DungeonRewardClaim {
+  instanceId  String @map("instance_id")
+  characterId String @map("character_id")
+  zeny        Int
+  baseExp     Int    @map("base_exp")
+  jobExp      Int    @map("job_exp")
+
+  instance  DungeonInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  character Character       @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@id([instanceId, characterId])
+  @@map("dungeon_reward_claims")
+}
+
+model CharacterPresence {
+  characterId String   @id @map("character_id")
+  mapId       String   @map("map_id")
+  name        String
+  lastSeen    DateTime @default(now()) @map("last_seen")
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([mapId, lastSeen])
+  @@map("character_presence")
+}
+
+model CharacterAuditLog {
+  id          String   @id @default(uuid())
+  characterId String   @map("character_id")
+  eventType   String   @map("event_type")
+  detail      Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([characterId, createdAt])
+  @@map("character_audit_log")
+}
+
+model FieldSpawnKillLock {
+  mapId                 String
+  spawnIndex            Int       @map("spawn_index")
+  lockedUntil           DateTime  @map("locked_until")
+  lastKillerCharacterId String?   @map("last_killer_character_id")
+  mobDefId              String    @map("mob_def_id")
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  lastKiller Character? @relation("SpawnKiller", fields: [lastKillerCharacterId], references: [id], onDelete: SetNull)
+
+  @@id([mapId, spawnIndex])
+  @@map("field_spawn_kill_locks")
+}
+
+model FieldMapDrop {
+  id                      String    @id @default(uuid())
+  mapId                   String    @map("map_id")
+  itemId                  String    @map("item_id")
+  x                       Float
+  y                       Float
+  ownerCharacterId        String    @map("owner_character_id")
+  availableAt             DateTime  @map("available_at")
+  expiresAt               DateTime  @map("expires_at")
+  collectedAt             DateTime? @map("collected_at")
+  collectedByCharacterId  String?   @map("collected_by_character_id")
+  createdAt               DateTime  @default(now()) @map("created_at")
+
+  item       Item       @relation(fields: [itemId], references: [id])
+  owner      Character  @relation("DropOwner", fields: [ownerCharacterId], references: [id], onDelete: Cascade)
+  collectedBy Character? @relation("DropCollector", fields: [collectedByCharacterId], references: [id], onDelete: SetNull)
+
+  @@index([mapId, expiresAt])
+  @@map("field_map_drops")
+}
+
+model GameSetting {
+  key       String   @id
+  value     Decimal  @db.Decimal(12, 4)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("game_settings")
+}
