@@ -178,6 +178,7 @@ import {
 } from '../player/pecoMountVisual'
 import {
   createPlayerDisplay,
+  syncPlayerMaxLevelFootAura,
   playPlayerAnim,
   setPlayerToIdle,
   setPlayerDeadFrame,
@@ -589,6 +590,7 @@ export class WorldScene extends Phaser.Scene {
       this.killedSpawnSet = new Set(this.dungeonBoot.killedSpawns)
     }
     updatePlayerEquipmentLayers(this.playerDisplay, this.session.equipment)
+    syncPlayerMaxLevelFootAura(this.playerDisplay, this.session.progress.baseLevel)
 
     this.playerLabel = this.add.text(spawn.x, spawn.y, this.character.name)
     styleWorldNameLabel(this.playerLabel)
@@ -856,6 +858,10 @@ export class WorldScene extends Phaser.Scene {
       }),
       onGameEvent('partyExpGrant', (payload) => {
         this.applyPartyExpGrant(payload)
+      }),
+      onGameEvent('adminLevelUp', ({ baseGained, jobGained, beforeBase, beforeJob }) => {
+        this.enqueueLevelUps(baseGained, jobGained, beforeBase, beforeJob)
+        this.emitCharacterSheet()
       }),
       onGameEvent('playerRevived', ({ x, y }) => {
         this.isPlayerDead = false
@@ -1758,6 +1764,7 @@ export class WorldScene extends Phaser.Scene {
         guildTag: this.socialPresence.guildTag ?? null,
         isVending: Boolean(this.socialPresence.isVending),
         stallTitle: this.socialPresence.stallTitle ?? null,
+        baseLevel: this.session.progress.baseLevel,
       }
     }
 
@@ -1796,6 +1803,7 @@ export class WorldScene extends Phaser.Scene {
       isVending: Boolean(this.socialPresence.isVending),
       stallTitle: this.socialPresence.stallTitle ?? null,
       pvpSnapshot: this.isPvpActive() ? combatSnapshotFromSession(this.session) : undefined,
+      baseLevel: this.session.progress.baseLevel,
     }
   }
 
@@ -5430,6 +5438,9 @@ export class WorldScene extends Phaser.Scene {
 
   private emitCharacterSheet() {
     const sheet = toCharacterSheetPayload(getCharacterSession())
+    if (this.playerDisplay) {
+      syncPlayerMaxLevelFootAura(this.playerDisplay, sheet.baseLevel)
+    }
     emitGameEvent('characterSheet', sheet)
     emitGameEvent('playerStats', {
       hp: sheet.hp,

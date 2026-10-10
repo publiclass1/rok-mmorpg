@@ -19,6 +19,7 @@ import {
   applyPlayerEquipmentLayers,
   syncEquipmentTransforms,
 } from './playerEquipmentVisual'
+import { refreshMaxLevelFootAuraPose, type MaxLevelFootAuraHost } from './playerMaxLevelFootAura'
 import { syncPlayerRarityGlow, type RarityGlowHost } from './playerRarityGlow'
 import type { PlayerAvatarKey } from './playerJobAvatar'
 import { playPlayerWalkStepFx } from './playerWalkStepFx'
@@ -28,7 +29,8 @@ export { defaultCharacterPose } from '../character/characterPose'
 export { MOUNT_BODY_Y_OFFSET } from './playerDisplayLayers'
 export type { PlayerVisualLayer } from './playerDisplayLayers'
 
-export type PlayerDisplay = RarityGlowHost & {
+export type PlayerDisplay = RarityGlowHost &
+  MaxLevelFootAuraHost & {
   container: Phaser.GameObjects.Container
   /** Rider rig (lifted when mounted on peco). */
   riderLayer: Phaser.GameObjects.Container
@@ -62,8 +64,11 @@ function syncSpritePose(display: PlayerDisplay) {
   }
   syncEquipmentTransforms(display)
   syncPlayerRarityGlow(display, display.equipment)
+  refreshMaxLevelFootAuraPose(display)
   syncPlayerIdleRigMotion(display.body.scene, display)
 }
+
+export { syncPlayerMaxLevelFootAura } from './playerMaxLevelFootAura'
 
 function bindPlayerTexture(
   scene: Phaser.Scene,

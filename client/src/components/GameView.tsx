@@ -16,6 +16,7 @@ import {
   saveCharacterSession,
   saveCharacterWorldPosition,
 } from '../lib/characterProgress'
+import { applyAdminCharacterSync, type AdminCharacterSyncPayload } from '../lib/adminCharacterSync'
 import { apiFetch } from '../lib/http'
 import { getGameSocket } from '../lib/socket'
 import { spendCharacterZeny } from '../lib/zeny'
@@ -569,6 +570,18 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
       socket.off('trade_session', onTrade)
     }
   }, [character.id])
+
+  useEffect(() => {
+    const socket = getGameSocket()
+    const onAdminSync = (payload: AdminCharacterSyncPayload) => {
+      if (!payload?.characterId) return
+      applyAdminCharacterSync(characterRef.current.id, payload)
+    }
+    socket.on('admin_character_sync', onAdminSync)
+    return () => {
+      socket.off('admin_character_sync', onAdminSync)
+    }
+  }, [])
 
   useEffect(() => {
     setPartyLoadState('loading')

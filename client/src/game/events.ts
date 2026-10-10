@@ -44,6 +44,7 @@ export type PlayerPresencePayload = PositionPayload & {
   stallTitle?: string | null
   /** Present on PVP maps for damage calculation against this player. */
   pvpSnapshot?: DuelCombatSnapshot | null
+  baseLevel: number
 }
 
 export type SelectedPlayerPayload = {
@@ -241,6 +242,7 @@ export type GameEvents = {
   vendorPosSync: { mapId: string; x: number; y: number }
   zenyGain: { amount: number }
   characterZenySync: { zeny: number }
+  adminLevelUp: { baseGained: number; jobGained: number; beforeBase: number; beforeJob: number }
   duelHpSync: { hp: number }
   playerDeath: Record<string, never>
   pvpDeath: { mapId: string }

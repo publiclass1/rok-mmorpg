@@ -4,6 +4,7 @@ import { statPointsForReachingBaseLevel } from '../shared/combatRewards.js'
 import { corsHeaders } from '../shared/cors.js'
 import jobsJson from '../shared/ro/jobs.json'
 import expTablesJson from '../shared/ro/expTables.json'
+import { notifyCharacterOwner } from '../realtime/emitGameEvent.js'
 import { createServiceClient } from '../shared/supabase.js'
 
 const ONLINE_WINDOW_SECONDS = 45
@@ -20,6 +21,7 @@ type Action =
   | 'unset_gm'
   | 'grant_zeny'
   | 'grant_levels'
+  | 'get_character'
   | 'audit_summary'
   | 'get_settings'
   | 'update_settings'
@@ -247,6 +249,48 @@ export async function handle(req: Request): Promise<Response> {
       })
     }
 
+    if (body.action === 'get_character') {
+      const id = await resolveCharacterId(service, body.characterId, body.name)
+      const { data: character, error: charErr } = await service
+        .from('characters')
+        .select('id, name')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (charErr || !character) {
+        return new Response(JSON.stringify({ error: 'Character not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { data: progress, error: progErr } = await service
+        .from('character_progress')
+        .select('base_level, job_level, job_id')
+        .eq('character_id', id)
+        .maybeSingle()
+
+      if (progErr || !progress) {
+        return new Response(JSON.stringify({ error: 'Progress not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      return new Response(
+        JSON.stringify({
+          character: {
+            id: character.id,
+            name: character.name,
+            baseLevel: progress.base_level,
+            jobLevel: progress.job_level,
+            jobId: progress.job_id,
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
     if (body.action === 'grant_levels') {
       const baseDelta = parseLevelDelta(body.baseDelta, 'baseDelta')
       const jobDelta = parseLevelDelta(body.jobDelta, 'jobDelta')
@@ -324,6 +368,20 @@ export async function handle(req: Request): Promise<Response> {
       if (baseGained === 0 && baseDelta > 0) parts.push(`base already at cap (${newBase})`)
       if (jobGained === 0 && jobDelta > 0) parts.push(`job already at cap (${newJob})`)
 
+      if (baseGained > 0 || jobGained > 0) {
+        void notifyCharacterOwner(id, 'admin_character_sync', {
+          characterId: id,
+          progress: {
+            baseLevel: newBase,
+            baseExp,
+            jobLevel: newJob,
+            jobExp,
+            statPointsUnspent,
+            skillPointsUnspent,
+          },
+        })
+      }
+
       return new Response(
         JSON.stringify({
           ok: true,
@@ -357,6 +415,11 @@ export async function handle(req: Request): Promise<Response> {
       if (updateErr) {
         return new Response(JSON.stringify({ error: updateErr.message }), { status: 400 })
       }
+
+      void notifyCharacterOwner(id, 'admin_character_sync', {
+        characterId: id,
+        zeny: newZeny,
+      })
 
       return new Response(
         JSON.stringify({

@@ -31,6 +31,14 @@ export type AdminGrantLevelsProgress = {
   skillPointsUnspent: number
 }
 
+export type AdminCharacterDetails = {
+  id: string
+  name: string
+  baseLevel: number
+  jobLevel: number
+  jobId: string
+}
+
 async function invokeAdmin<T>(body: Record<string, unknown>): Promise<T> {
   const password = getAdminPassword()
   if (!password) {
@@ -66,6 +74,12 @@ export function grantZenyByName(
   amount: number,
 ): Promise<{ ok: boolean; message: string; character: { id: string; name: string; zeny: number } }> {
   return invokeAdmin({ action: 'grant_zeny', name: name.trim(), amount })
+}
+
+export function fetchAdminCharacterById(
+  characterId: string,
+): Promise<{ character: AdminCharacterDetails }> {
+  return invokeAdmin({ action: 'get_character', characterId: characterId.trim() })
 }
 
 export function grantLevelsById(

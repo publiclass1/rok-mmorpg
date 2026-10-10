@@ -8,6 +8,11 @@ export function getExpTables(): RoExpTables {
   return cached
 }
 
+export function isMaxBaseLevel(level: number): boolean {
+  const cap = getExpTables().baseLevelCap
+  return Math.floor(level) >= cap
+}
+
 export function baseExpRequiredForLevel(level: number): number {
   const tables = getExpTables()
   const idx = Math.min(Math.max(level, 1), tables.baseLevelCap) - 1

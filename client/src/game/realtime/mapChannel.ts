@@ -1,5 +1,6 @@
 import { broadcastToRoom, getGameSocket, joinRealtimeRoom, leaveRealtimeRoom } from '../../lib/socket'
 import { DEFAULT_CHARACTER_APPEARANCE, type CharacterAppearance } from '../character/characterAppearance'
+import { getExpTables } from '../../content/ro/expTables'
 import { createDefaultEquipment } from '../character/characterState'
 import type { PlayerPresencePayload } from '../events'
 import { parseDuelCombatSnapshot } from '../duel/duelCombatSnapshot'
@@ -23,6 +24,12 @@ function normalizeAppearance(raw: Partial<CharacterAppearance> | undefined): Cha
   }
 }
 
+function normalizeBaseLevel(raw: unknown): number {
+  const cap = getExpTables().baseLevelCap
+  const n = typeof raw === 'number' && Number.isFinite(raw) ? Math.floor(raw) : 1
+  return Math.min(Math.max(n, 1), cap)
+}
+
 function normalizePresence(raw: Partial<PlayerPresencePayload>, channelMapId: string): PlayerPresencePayload | null {
   if (!raw.characterId || !raw.name) return null
   const mapId =
@@ -44,6 +51,7 @@ function normalizePresence(raw: Partial<PlayerPresencePayload>, channelMapId: st
     isVending: Boolean(raw.isVending),
     stallTitle: raw.stallTitle ?? null,
     pvpSnapshot: raw.pvpSnapshot != null ? parseDuelCombatSnapshot(raw.pvpSnapshot) : undefined,
+    baseLevel: normalizeBaseLevel(raw.baseLevel),
   }
 }
 

@@ -11,6 +11,7 @@ import {
 import { resolveJobAvatarKey, type PlayerAvatarKey } from '../player/playerJobAvatar'
 import {
   createPlayerDisplay,
+  syncPlayerMaxLevelFootAura,
   playPlayerAnim,
   setPlayerDeadFrame,
   setPlayerAppearance,
@@ -60,6 +61,7 @@ export type RemotePlayerEntity = {
   appearanceKey: string
   jobAvatarKey: PlayerAvatarKey
   inViewport: boolean
+  syncedBaseLevel: number
 }
 
 function equipmentKey(equipment: Record<EquipSlot, string | null>): string {
@@ -124,8 +126,10 @@ export function spawnRemotePlayer(scene: Phaser.Scene, payload: PlayerPresencePa
     appearanceKey: appearanceKey(payload.appearance),
     jobAvatarKey,
     inViewport: true,
+    syncedBaseLevel: payload.baseLevel,
   }
   syncRemotePecoMount(entity, payload, payload.walkFrame)
+  syncPlayerMaxLevelFootAura(display, payload.baseLevel)
   return entity
 }
 
@@ -151,6 +155,11 @@ export function applyRemotePresence(entity: RemotePlayerEntity, payload: PlayerP
   if (nextJobAvatarKey !== entity.jobAvatarKey) {
     entity.jobAvatarKey = nextJobAvatarKey
     setPlayerJobAvatar(entity.display, nextJobAvatarKey)
+  }
+
+  if (payload.baseLevel !== entity.syncedBaseLevel) {
+    entity.syncedBaseLevel = payload.baseLevel
+    syncPlayerMaxLevelFootAura(entity.display, payload.baseLevel)
   }
 }
 
