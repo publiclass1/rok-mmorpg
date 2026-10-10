@@ -49,6 +49,17 @@ function sheetHasRaisedStats(sheet: CharacterSheetPayload): boolean {
 export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: Props) {
   const cs = sheet.combatStats
   const [busy, setBusy] = useState(false)
+  const [idCopied, setIdCopied] = useState(false)
+
+  async function copyCharacterId() {
+    try {
+      await navigator.clipboard.writeText(character.id)
+      setIdCopied(true)
+      window.setTimeout(() => setIdCopied(false), 2000)
+    } catch {
+      emitGameEvent('status', 'Could not copy character ID.')
+    }
+  }
   const canReset = sheetHasRaisedStats(sheet)
   const resetTitle = `Reset stats (${STAT_RESET_ZENY_COST.toLocaleString()} zeny)`
 
@@ -99,6 +110,14 @@ export function StatsWindow({ character, sheet, onClose, onCharacterUpdated }: P
       />
       <ModalScrollBody>
       <p className="muted small stats-window__meta">
+        <span className="stats-window__char-id">
+          ID:{' '}
+          <code className="stats-window__char-id-value" title={character.id}>{character.id}</code>
+          <button type="button" className="stats-window__copy-id-btn" onClick={() => void copyCharacterId()}>
+            {idCopied ? 'Copied' : 'Copy'}
+          </button>
+        </span>
+        <span className="stats-window__meta-sep">·</span>
         Points: <strong>{sheet.statPointsUnspent}</strong>
         <span className="stats-window__meta-sep">·</span>
         Raise: 2 + floor((stat − 1) / 10)

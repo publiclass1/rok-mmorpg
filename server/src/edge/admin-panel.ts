@@ -1,12 +1,28 @@
 // @ts-nocheck
 import { adminPasswordFromRequest, assertAdminPassword } from '../shared/adminAuth.js'
+import { statPointsForReachingBaseLevel } from '../shared/combatRewards.js'
 import { corsHeaders } from '../shared/cors.js'
+import jobsJson from '../shared/ro/jobs.json'
+import expTablesJson from '../shared/ro/expTables.json'
 import { createServiceClient } from '../shared/supabase.js'
 
 const ONLINE_WINDOW_SECONDS = 45
 const MAX_ZENY_GRANT = 1_000_000_000
+const MAX_LEVEL_DELTA_PER_REQUEST = 50
+const SKILL_POINTS_PER_JOB_LEVEL = 1
 
-type Action = 'stats' | 'search_characters' | 'set_gm' | 'unset_gm' | 'grant_zeny' | 'audit_summary' | 'get_settings' | 'update_settings'
+const BASE_LEVEL_CAP = (expTablesJson as { baseLevelCap: number }).baseLevelCap
+
+type Action =
+  | 'stats'
+  | 'search_characters'
+  | 'set_gm'
+  | 'unset_gm'
+  | 'grant_zeny'
+  | 'grant_levels'
+  | 'audit_summary'
+  | 'get_settings'
+  | 'update_settings'
 
 type Body = {
   action: Action
@@ -16,6 +32,8 @@ type Body = {
   characterId?: string
   name?: string
   amount?: number
+  baseDelta?: number
+  jobDelta?: number
   settings?: { expRate?: number; dropRate?: number }
 }
 
@@ -51,6 +69,24 @@ function parseGrantAmount(raw: number | undefined): number {
     })
   }
   return amount
+}
+
+function jobCap(jobId: string): number {
+  const job = (jobsJson as { jobs: { id: string; maxJobLevel?: number }[] }).jobs.find((j) => j.id === jobId)
+  return job?.maxJobLevel ?? 50
+}
+
+function parseLevelDelta(raw: number | undefined, label: string): number {
+  const value = typeof raw === 'number' ? raw : Number.parseInt(String(raw ?? ''), 10)
+  if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
+    throw new Response(JSON.stringify({ error: `${label} must be a non-negative integer` }), { status: 400 })
+  }
+  if (value > MAX_LEVEL_DELTA_PER_REQUEST) {
+    throw new Response(JSON.stringify({ error: `${label} cannot exceed ${MAX_LEVEL_DELTA_PER_REQUEST}` }), {
+      status: 400,
+    })
+  }
+  return value
 }
 
 export async function handle(req: Request): Promise<Response> {
@@ -209,6 +245,98 @@ export async function handle(req: Request): Promise<Response> {
       return new Response(JSON.stringify({ character: data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    if (body.action === 'grant_levels') {
+      const baseDelta = parseLevelDelta(body.baseDelta, 'baseDelta')
+      const jobDelta = parseLevelDelta(body.jobDelta, 'jobDelta')
+      if (baseDelta === 0 && jobDelta === 0) {
+        return new Response(JSON.stringify({ error: 'At least one of baseDelta or jobDelta must be greater than 0' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const id = await resolveCharacterId(service, body.characterId, body.name)
+      const { data: progress, error: progErr } = await service
+        .from('character_progress')
+        .select(
+          'character_id, job_id, base_level, base_exp, job_level, job_exp, stat_points_unspent, skill_points_unspent, hp, mp',
+        )
+        .eq('character_id', id)
+        .maybeSingle()
+
+      if (progErr || !progress) {
+        return new Response(JSON.stringify({ error: 'Progress not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const oldBase = progress.base_level
+      const oldJob = progress.job_level
+      const jobLevelCap = jobCap(progress.job_id)
+      const newBase = Math.min(BASE_LEVEL_CAP, oldBase + baseDelta)
+      const newJob = Math.min(jobLevelCap, oldJob + jobDelta)
+
+      let statPointsUnspent = progress.stat_points_unspent
+      for (let lv = oldBase + 1; lv <= newBase; lv++) {
+        statPointsUnspent += statPointsForReachingBaseLevel(lv)
+      }
+
+      const jobLevelsGained = newJob - oldJob
+      const skillPointsUnspent = progress.skill_points_unspent + jobLevelsGained * SKILL_POINTS_PER_JOB_LEVEL
+
+      let baseExp = progress.base_exp
+      let jobExp = progress.job_exp
+      if (newBase >= BASE_LEVEL_CAP) baseExp = 0
+      if (newJob >= jobLevelCap) jobExp = 0
+
+      const updatePayload: Record<string, unknown> = {
+        base_level: newBase,
+        base_exp: baseExp,
+        job_level: newJob,
+        job_exp: jobExp,
+        stat_points_unspent: statPointsUnspent,
+        skill_points_unspent: skillPointsUnspent,
+        updated_at: new Date().toISOString(),
+      }
+      if (newBase > oldBase) {
+        updatePayload.hp = null
+        updatePayload.mp = null
+      }
+
+      const { error: updateErr } = await service.from('character_progress').update(updatePayload).eq('character_id', id)
+      if (updateErr) {
+        return new Response(JSON.stringify({ error: updateErr.message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { data: character } = await service.from('characters').select('name').eq('id', id).maybeSingle()
+      const name = character?.name ?? id
+      const baseGained = newBase - oldBase
+      const jobGained = newJob - oldJob
+      const parts: string[] = []
+      if (baseGained > 0) parts.push(`+${baseGained} base (now ${newBase})`)
+      if (jobGained > 0) parts.push(`+${jobGained} job (now ${newJob})`)
+      if (baseGained === 0 && baseDelta > 0) parts.push(`base already at cap (${newBase})`)
+      if (jobGained === 0 && jobDelta > 0) parts.push(`job already at cap (${newJob})`)
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          message: `Granted levels to ${name}: ${parts.join(', ')}.`,
+          progress: {
+            baseLevel: newBase,
+            jobLevel: newJob,
+            statPointsUnspent,
+            skillPointsUnspent,
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     if (body.action === 'grant_zeny') {
