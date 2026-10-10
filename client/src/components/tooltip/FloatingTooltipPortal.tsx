@@ -9,7 +9,7 @@ type Props = {
 
 export function FloatingTooltipPortal({ children, style, className = 'floating-detail-tooltip' }: Props) {
   return createPortal(
-    <div className={className} style={{ position: 'fixed', zIndex: 100, pointerEvents: 'none', ...style }} role="tooltip">
+    <div className={className} style={{ position: 'fixed', zIndex: 10000, pointerEvents: 'none', ...style }} role="tooltip">
       {children}
     </div>,
     document.body,

@@ -2242,6 +2242,7 @@ button:disabled {
 .floating-detail-tooltip,
 .skill-detail-tooltip {
   pointer-events: none;
+  z-index: 10000;
   padding: 0.5rem 0.65rem;
   border: 1px solid var(--glass-border);
   border-radius: var(--glass-radius-hud);
@@ -3188,7 +3189,7 @@ body.chat-strip-resizing {
 
 .modal-layer .panel {
   pointer-events: auto;
-  padding: 0.5rem 0.65rem;
+  padding: 0.4rem 0.65rem 0.5rem;
   transition:
     background-color 0.12s ease,
     border-color 0.12s ease,
@@ -3205,19 +3206,14 @@ body.chat-strip-resizing {
 
 .modal-header {
   align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.35rem;
+  gap: 0.35rem;
+  margin-bottom: 0.2rem;
   flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  backdrop-filter: blur(var(--glass-blur));
-  margin-left: -0.65rem;
-  margin-right: -0.65rem;
-  padding: 0.5rem 0.65rem 0.35rem;
-  margin-top: -0.5rem;
+  background: transparent;
+  padding: 0.1rem 0 0.25rem;
 }
 
 .modal-scroll-body {
@@ -3745,6 +3741,14 @@ body.chat-strip-resizing {
   justify-content: center;
   padding: 0;
   overflow: hidden;
+}
+
+button.inv-slot {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  border-radius: 4px;
 }
 
 .inv-slot--empty {

@@ -1,8 +1,7 @@
 import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react'
 import { buildItemTooltipDetail } from '../game/character/itemTooltipDetail'
 import { ItemDetailTooltip } from './ItemDetailTooltip'
-import { FloatingTooltipPortal } from './tooltip/FloatingTooltipPortal'
-import { floatingTooltipPosition } from './tooltip/floatingTooltipPosition'
+import { AnchoredFloatingTooltip } from './tooltip/AnchoredFloatingTooltip'
 import { useHoverAnchor } from './tooltip/useHoverAnchor'
 
 type Props = {
@@ -37,9 +36,9 @@ export function ItemHoverTooltip({ itemId, quantity, children }: Props) {
         },
       })}
       {anchor && (
-        <FloatingTooltipPortal style={floatingTooltipPosition(anchor)}>
+        <AnchoredFloatingTooltip anchor={anchor}>
           <ItemDetailTooltip detail={detail} />
-        </FloatingTooltipPortal>
+        </AnchoredFloatingTooltip>
       )}
     </>
   )

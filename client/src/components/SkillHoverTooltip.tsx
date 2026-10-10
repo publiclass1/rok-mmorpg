@@ -3,8 +3,7 @@ import { skillRequirementDetail, skillUseDetail } from '../game/character/skillR
 import { SKILLS } from '../game/character/skillsConfig'
 import type { CharacterSheetPayload } from '../game/events'
 import { SkillDetailTooltip } from './SkillDetailTooltip'
-import { FloatingTooltipPortal } from './tooltip/FloatingTooltipPortal'
-import { floatingTooltipPosition } from './tooltip/floatingTooltipPosition'
+import { AnchoredFloatingTooltip } from './tooltip/AnchoredFloatingTooltip'
 import { useHoverAnchor } from './tooltip/useHoverAnchor'
 
 type Props = {
@@ -58,14 +57,14 @@ export function SkillHoverTooltip({
         },
       })}
       {anchor && skill && detail && (
-        <FloatingTooltipPortal style={floatingTooltipPosition(anchor, 240)}>
+        <AnchoredFloatingTooltip anchor={anchor} preferredWidth={240}>
           <SkillDetailTooltip
             skillName={skill.name}
             detail={detail}
             inline
             footerLines={footerLines}
           />
-        </FloatingTooltipPortal>
+        </AnchoredFloatingTooltip>
       )}
     </>
   )
