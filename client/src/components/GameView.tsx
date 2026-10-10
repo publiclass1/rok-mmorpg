@@ -72,8 +72,10 @@ import { VendorSetupModal } from './VendorSetupModal'
 import { VendorShopModal } from './VendorShopModal'
 import { BuffBar } from './BuffBar'
 import { SkillBar, useSkillBarRowsVisible } from './SkillBar'
-import { SKILL_BAR_ROW_LABELS } from '../game/character/skillBarRowVisibility'
-import { SKILL_BAR_ROW_COUNT } from '../game/character/skillBars'
+import {
+  revealNextSkillBarRow,
+  skillBarRevealMenuLabel,
+} from '../game/character/skillBarRowVisibility'
 import { ExperienceHud } from './ExperienceHud'
 import { SkillsWindow } from './SkillsWindow'
 import { EquipmentWindow } from './EquipmentWindow'
@@ -1620,22 +1622,23 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
     [mapDropHover],
   )
 
+  const skillBarRevealLabel = skillBarRevealMenuLabel(skillBarRowsVisible)
+
   const hudMenuItems: GameHudMenuItem[] = [
     { id: 'stats', label: 'Stats', title: 'Stats (Alt+S)', onClick: () => setStatsOpen(true) },
     { id: 'inventory', label: 'Inventory', title: 'Inventory (Alt+I)', onClick: () => setInventoryOpen(true) },
     { id: 'equipment', label: 'Equipment', title: 'Equipment (Alt+E)', onClick: () => setEquipmentOpen(true) },
     { id: 'skills', label: 'Skills', title: 'Skills (Alt+K)', onClick: () => setSkillsOpen(true) },
-    ...Array.from({ length: SKILL_BAR_ROW_COUNT }, (_, bar) => ({
-      id: `skillbar-${bar}`,
-      label: skillBarRowsVisible[bar]
-        ? `Hide bar ${SKILL_BAR_ROW_LABELS[bar]}`
-        : `Show bar ${SKILL_BAR_ROW_LABELS[bar]}`,
-      onClick: () => {
-        const next = [...skillBarRowsVisible]
-        next[bar] = !next[bar]
-        setSkillBarRowsVisible(next)
-      },
-    })),
+    ...(skillBarRevealLabel
+      ? [
+          {
+            id: 'skillbar',
+            label: skillBarRevealLabel,
+            title: skillBarRevealLabel,
+            onClick: () => setSkillBarRowsVisible(revealNextSkillBarRow(skillBarRowsVisible)),
+          },
+        ]
+      : []),
     { id: 'party', label: 'Party', onClick: () => setPartyOpen(true) },
     { id: 'guild', label: 'Guild', onClick: () => setGuildOpen(true) },
     { id: 'vendor', label: 'Vending', onClick: () => setVendorSetupOpen(true) },

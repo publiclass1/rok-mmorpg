@@ -5,7 +5,30 @@ const STORAGE_KEY = 'skill-bar-rows-visible'
 export const SKILL_BAR_ROW_LABELS = ['1–9', 'Q–O', 'A–L', 'Z–.'] as const
 
 export function defaultSkillBarRowsVisible(): boolean[] {
-  return Array.from({ length: SKILL_BAR_ROW_COUNT }, () => true)
+  return Array.from({ length: SKILL_BAR_ROW_COUNT }, (_, i) => i === 0)
+}
+
+export function visibleSkillBarRowCount(visible: boolean[]): number {
+  return visible.filter(Boolean).length
+}
+
+export function nextHiddenSkillBarRowIndex(visible: boolean[]): number | null {
+  const idx = visible.findIndex((v) => !v)
+  return idx === -1 ? null : idx
+}
+
+export function revealNextSkillBarRow(visible: boolean[]): boolean[] {
+  const idx = nextHiddenSkillBarRowIndex(visible)
+  if (idx === null) return [...visible]
+  const next = [...visible]
+  next[idx] = true
+  return next
+}
+
+export function skillBarRevealMenuLabel(visible: boolean[]): string | null {
+  const idx = nextHiddenSkillBarRowIndex(visible)
+  if (idx === null) return null
+  return `Show bar ${SKILL_BAR_ROW_LABELS[idx]}`
 }
 
 export function readSkillBarRowsVisible(): boolean[] {

@@ -49,6 +49,13 @@ function HudMenuIcon({ id }: { id: string }) {
         <path d="M10 2.5 11.8 7h4.7l-3.8 2.8 1.5 4.7L10 12.8 5.8 14.5l1.5-4.7L3.5 7h4.7L10 2.5Z" />
       </svg>
     ),
+    skillbar: (
+      <svg {...common}>
+        <rect x="3" y="5" width="14" height="3" rx="0.75" />
+        <rect x="3" y="9.5" width="14" height="3" rx="0.75" />
+        <rect x="3" y="14" width="14" height="3" rx="0.75" />
+      </svg>
+    ),
     party: (
       <svg {...common}>
         <circle cx="7" cy="8" r="2.25" />
