@@ -7,6 +7,7 @@ import {
   getOwnedCharacter,
   requireUser,
 } from '../shared/supabase.js'
+import { normalizeRolledItemsPayload } from '../shared/rolledGear/validateRolledProgress.js'
 import {
   type EquipRow,
   type ProgressPayload,
@@ -46,6 +47,10 @@ export async function handle(req: Request): Promise<Response> {
     const service = createServiceClient()
 
     await getOwnedCharacter(client, user.id, body.characterId)
+
+    if (body.progress.rolled_items != null) {
+      body.progress.rolled_items = normalizeRolledItemsPayload(body.progress.rolled_items)
+    }
 
     const validation = validateCharacterProgress(body.progress, body.skills ?? [], body.equipment ?? [])
     if (!validation.ok) {

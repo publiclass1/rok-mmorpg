@@ -1,7 +1,12 @@
 import { loadRoContent } from '../../content/ro/loadContent'
 import type { GearRarityId, RoDungeonFloor, RoItem } from '../../content/ro/types'
 import type { PrimaryStat } from '../character/characterState'
-import { rollGearAffixes } from './rollGearAffixes'
+import {
+  affixCapPercentForRarity,
+  ceilingFromCapPercent,
+  primaryStatsFromAffixes,
+  rollGearAffixes,
+} from './rollGearAffixes'
 import type { CombatAffixKind } from './rollGearAffixes'
 
 export type RolledDamageEffectKind = 'melee' | 'range' | 'magic'
@@ -178,6 +183,94 @@ function normalizeLegacyEffect(raw: unknown): RolledItemEffect | null {
   return o
 }
 
+const AFFIX_RANGE: Record<string, { min: number; max: number }> = {
+  primary: { min: 1, max: 20 },
+  def: { min: 5, max: 35 },
+  mdef: { min: 5, max: 35 },
+  critRate: { min: 1, max: 15 },
+  critResist: { min: 5, max: 35 },
+  hpPercent: { min: 5, max: 20 },
+  spPercent: { min: 5, max: 20 },
+  aspd: { min: 1, max: 5 },
+}
+
+const ALLOWED_EFFECT_PERCENTS = new Set([2.5, 5, 7.5, 10])
+
+function maxAffixValueForRarity(kind: 'primary' | CombatAffixKind, rarity: GearRarityId): number {
+  const range = AFFIX_RANGE[kind === 'primary' ? 'primary' : kind]
+  const cap = affixCapPercentForRarity(rarity)
+  return ceilingFromCapPercent(range.min, range.max, cap)
+}
+
+function clampAffixValue(affix: RolledGearAffix, rarity: GearRarityId): RolledGearAffix {
+  if (affix.pool === 'primary') {
+    const max = maxAffixValueForRarity('primary', rarity)
+    const min = AFFIX_RANGE.primary.min
+    return { ...affix, value: Math.max(min, Math.min(max, Math.floor(affix.value))) }
+  }
+  const max = maxAffixValueForRarity(affix.kind, rarity)
+  const min = AFFIX_RANGE[affix.kind].min
+  return { ...affix, value: Math.max(min, Math.min(max, Math.floor(affix.value))) }
+}
+
+function pickPrimaryAffix(
+  affixes: RolledGearAffix[],
+  stats: Partial<Record<PrimaryStat, number>>,
+): Extract<RolledGearAffix, { pool: 'primary' }> {
+  const primaries = affixes.filter((a): a is Extract<RolledGearAffix, { pool: 'primary' }> => a.pool === 'primary')
+  if (primaries.length > 0) {
+    return primaries.reduce((best, a) => (a.value > best.value ? a : best))
+  }
+  for (const [stat, value] of Object.entries(stats)) {
+    if (value != null && value > 0) {
+      return { pool: 'primary', stat: stat as PrimaryStat, value }
+    }
+  }
+  return { pool: 'primary', stat: 'str', value: AFFIX_RANGE.primary.min }
+}
+
+function pickCombatAffix(affixes: RolledGearAffix[]): Extract<RolledGearAffix, { pool: 'combat' }> {
+  const combat = affixes.find((a): a is Extract<RolledGearAffix, { pool: 'combat' }> => a.pool === 'combat')
+  if (combat) return combat
+  return { pool: 'combat', kind: 'def', value: AFFIX_RANGE.def.min }
+}
+
+function normalizeEffect(effect: RolledItemEffect | null | undefined): RolledItemEffect | null {
+  if (!effect) return null
+  if (effect.kind === 'critChance') {
+    if (effect.percent >= 1 && effect.percent <= 25) return effect
+    return null
+  }
+  const level = effect.level ?? 1
+  if (level < 1 || level > 4) return null
+  if (!ALLOWED_EFFECT_PERCENTS.has(effect.percent)) return null
+  return { ...effect, level: level as 1 | 2 | 3 | 4 }
+}
+
+/** Coerce legacy multi-primary rolled gear into the current two-affix schema. */
+export function normalizeRolledItem(item: RolledItem): RolledItem {
+  const affixes = item.affixes ?? []
+  const primary = clampAffixValue(pickPrimaryAffix(affixes, item.stats ?? {}), item.rarity)
+  const combat = clampAffixValue(pickCombatAffix(affixes), item.rarity)
+  const normalizedAffixes: RolledGearAffix[] = [primary, combat]
+  return {
+    ...item,
+    affixes: normalizedAffixes,
+    stats: primaryStatsFromAffixes(normalizedAffixes),
+    effect: normalizeEffect(item.effect),
+    slots: 2,
+    cards: item.cards ?? [null, null],
+  }
+}
+
+export function normalizeRolledItemsRecord(rolled: Record<string, RolledItem>): Record<string, RolledItem> {
+  const out: Record<string, RolledItem> = {}
+  for (const [key, item] of Object.entries(rolled)) {
+    out[key] = normalizeRolledItem({ ...item, id: item.id ?? key })
+  }
+  return out
+}
+
 function legacyStatsToAffixes(stats: Partial<Record<PrimaryStat, number>>): RolledGearAffix[] {
   const affixes: RolledGearAffix[] = []
   for (const [stat, value] of Object.entries(stats)) {
@@ -198,7 +291,7 @@ export function parseRolledItemsRecord(raw: unknown): Record<string, RolledItem>
     const affixes =
       Array.isArray(o.affixes) && o.affixes.length > 0 ? o.affixes : legacyStatsToAffixes(stats)
     const effect = o.effect === undefined ? normalizeLegacyEffect((val as { effect?: unknown }).effect) : o.effect
-    out[key] = {
+    out[key] = normalizeRolledItem({
       id: typeof o.id === 'string' ? o.id : key,
       baseItemId: o.baseItemId,
       rarity: o.rarity,
@@ -208,7 +301,7 @@ export function parseRolledItemsRecord(raw: unknown): Record<string, RolledItem>
       effect,
       slots: 2,
       cards: o.cards ?? [null, null],
-    }
+    })
   }
   return out
 }

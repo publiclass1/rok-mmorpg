@@ -1,6 +1,6 @@
 import { createInitialProgress, progressFromLevels, type PlayerProgressState } from '../game/combat/exp'
 import { syncDerivedVitals, toCharacterSheetPayload } from '../game/character/characterSheet'
-import { parseRolledItemsRecord } from '../game/items/rolledItem'
+import { normalizeRolledItemsRecord, parseRolledItemsRecord } from '../game/items/rolledItem'
 import { isRolledItemId, parseRolledBaseItemId } from '../game/items/rolledItem'
 import {
   createDefaultEquipment,
@@ -310,7 +310,7 @@ async function writeCharacterSession(characterId: string, state: CharacterSessio
     mp: synced.mp,
     skill_bar: skillBar,
     session_inventory: synced.sessionInventory,
-    rolled_items: synced.rolledItems,
+    rolled_items: normalizeRolledItemsRecord(synced.rolledItems),
     active_rental: synced.activeRental,
     updated_at: new Date().toISOString(),
   }
