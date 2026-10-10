@@ -6,6 +6,7 @@ import {
   isPlayerGroundMagicSkill,
   isPlayerGroundPhysicalSkill,
 } from '../character/skillsConfig'
+import { archerGroundStyle, playArrowShowerRain } from './archerHunterSkillFx'
 import { setDepthByFeet } from '../world/depthSort'
 
 export const GROUND_AOE_DEPTH_EPSILON = -0.14
@@ -42,6 +43,8 @@ const ELEMENT_GROUND_STYLES: Record<RoSkillMagicElement, GroundAoEElementStyle> 
 }
 
 export function groundAoEElementStyle(skillId: string): GroundAoEElementStyle {
+  const archerStyle = archerGroundStyle(skillId)
+  if (archerStyle) return archerStyle
   const element = SKILLS[skillId]?.magic?.element
   if (element) return ELEMENT_GROUND_STYLES[element]
   if (skillId === 'safety_wall' || skillId === 'ice_wall') return ELEMENT_GROUND_STYLES.neutral
@@ -210,6 +213,16 @@ function playGroundAoESkillExtras(
           })
         })
       }
+      break
+    case 'arrow_shower':
+      playArrowShowerRain(
+        scene,
+        x,
+        y,
+        radiusPx,
+        depthEps,
+        GROUND_AOE_IMPACT_DURATION_MS,
+      )
       break
     default:
       break

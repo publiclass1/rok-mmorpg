@@ -54,6 +54,19 @@ function run() {
   })
   assert.equal(spearHit?.id, 'c')
 
+  const selectedInRange: MockMob = { id: 'focus', alive: true, x: MAP_TILE_SIZE, y: 0 }
+  const selectedWinsBasic = resolvePlayerAttackTarget({
+    playerX: px,
+    playerY: py,
+    facing: 'right',
+    rangeCells: 2,
+    weaponClass: 'spear',
+    mobs,
+    chaseMob: chaseInRange,
+    selectedMob: selectedInRange,
+  })
+  assert.equal(selectedWinsBasic?.id, 'focus')
+
   const spearMissRange = resolvePlayerAttackTarget({
     playerX: px,
     playerY: py,

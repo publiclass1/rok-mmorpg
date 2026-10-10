@@ -1848,7 +1848,7 @@ export class WorldScene extends Phaser.Scene {
         this.tryBasicAttack()
         return true
       }
-      const mob = this.findNearestMobInView()
+      const mob = this.resolveFocusedMobInView()
       if (!mob) {
         emitGameEvent('status', 'No monsters in view.')
         return false
@@ -2479,21 +2479,24 @@ export class WorldScene extends Phaser.Scene {
     startPlayerAttackAnim(this, this.playerDisplay, this.facing, {
       variant: 'basic',
       attackStyle,
+      projectileSkillId: skillId,
       getAimTarget: () => toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y),
       rangedHitCount: useBowAnim ? hitCount : undefined,
       magicSkillId: useBowAnim ? undefined : skillId,
       magicHitCount: useBowAnim ? undefined : hitCount,
       onRangedHit: useBowAnim
-        ? () => {
+        ? (hitIndex) => {
             if (!primaryMob.alive) return
+            const aim = toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y)
+            playSkillImpactFx(this, skillId, aim.x, aim.y, depth, hitIndex)
             this.applyPhysicalSkillHitToMob(primaryMob, skillId, skillLevel, skillLabel)
           }
         : undefined,
       onMagicHit: !useBowAnim
-        ? () => {
+        ? (hitIndex) => {
             if (!primaryMob.alive) return
             const aim = toCombatAimPoint(primaryMob.sprite.x, primaryMob.sprite.y)
-            playSkillImpactFx(this, skillId, aim.x, aim.y, depth)
+            playSkillImpactFx(this, skillId, aim.x, aim.y, depth, hitIndex)
             this.applyPhysicalSkillHitToMob(primaryMob, skillId, skillLevel, skillLabel)
           }
         : undefined,
@@ -4586,7 +4589,7 @@ export class WorldScene extends Phaser.Scene {
     const weaponClass = getEquippedWeaponClass(this.session.equipment)
     const duelPre = this.getDuelStrikeTarget()
     const pvpPre = pvpMode ? this.getPvpStrikeTarget() : null
-    const preTarget = this.chaseMob ?? this.selectedMob
+    const preTarget = this.selectedMob ?? this.chaseMob
     if (duelPre) {
       this.faceToward(duelPre.display.container.x, duelPre.display.container.y)
     } else if (pvpPre) {
@@ -4743,6 +4746,11 @@ export class WorldScene extends Phaser.Scene {
       selectedMob: selected,
     })
     if (hit) return hit.mob
+    return this.resolveFocusedMobInView()
+  }
+
+  /** Click-to-focus mob, then chase target, then nearest visible (basic attack + skill fallback). */
+  private resolveFocusedMobInView(): MobInstance | null {
     if (this.selectedMob?.alive) return this.selectedMob
     if (this.chaseMob?.alive) return this.chaseMob
     return this.findNearestMobInView()

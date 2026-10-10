@@ -17,6 +17,10 @@ function run() {
   assert.ok(quag)
   assert.equal(groundAoERadiusPx(quag, 'quagmire'), 48)
 
+  const showerStyle = groundAoEElementStyle('arrow_shower')
+  assert.equal(showerStyle.fill, 0x4d7c0f)
+  assert.notEqual(showerStyle.fill, 0xa78bfa)
+
   const fireStyle = groundAoEElementStyle('meteor_storm')
   assert.equal(fireStyle.fill, 0xef4444)
   const waterStyle = groundAoEElementStyle('storm_gust')

@@ -3,6 +3,7 @@ import { playPlayerAttackSlash } from '../combat/combatFx'
 import { usesGroundAoECastMarker } from '../combat/groundAoECastMarker'
 import {
   playBowArrowProjectile,
+  playDoubleStrafeVolley,
   playMagicSkillProjectileVolley,
   playRangedAttackRecoil,
   playStaffMagicProjectile,
@@ -39,6 +40,8 @@ export function startPlayerAttackAnim(
     getAimTarget?: () => { x: number; y: number } | null
     /** When set, fires element-specific projectiles instead of the default staff orb. */
     magicSkillId?: string
+    /** Physical ranged skill id for custom projectiles (e.g. double_strafe). */
+    projectileSkillId?: string
     magicHitCount?: number
     onMagicHit?: (hitIndex: number) => void
     onMagicVolleyComplete?: () => void
@@ -103,6 +106,22 @@ export function startPlayerAttackAnim(
             options.onMagicVolleyComplete?.()
             options.onStrike?.()
           },
+        )
+      } else if (
+        options.projectileSkillId === 'double_strafe' &&
+        options.attackStyle === 'bow' &&
+        rangedHits > 1
+      ) {
+        const origin = rangedProjectileOrigin(container.x, container.y, facing)
+        playDoubleStrafeVolley(
+          scene,
+          origin.x,
+          origin.y,
+          aim.x,
+          aim.y,
+          depth,
+          (hitIndex) => options.onRangedHit?.(hitIndex),
+          () => options.onStrike?.(),
         )
       } else if (options.attackStyle === 'bow' && rangedHits > 1) {
         const origin = rangedProjectileOrigin(container.x, container.y, facing)

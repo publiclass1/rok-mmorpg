@@ -1,5 +1,13 @@
 import Phaser from 'phaser'
 import type { Facing } from '../movement/clickToMove'
+import {
+  playArrowShowerCastWindup,
+  playBlitzBeatAoEImpact,
+  playBlitzBeatCastWindup,
+  playDoubleStrafeCastWindup,
+  playDoubleStrafeImpactSpark,
+  BLITZ_AOE_VISUAL_RADIUS_PX,
+} from './archerHunterSkillFx'
 import { usesGroundAoECastMarker } from './groundAoECastMarker'
 
 export type SkillFxContext = {
@@ -147,11 +155,13 @@ export function playSkillCastFx(scene: Phaser.Scene, skillId: string, ctx: Skill
       expandingRing(scene, tx, ty - 12, depth, 0xfde68a, 2, 320)
       break
     case 'double_strafe':
+      playDoubleStrafeCastWindup(scene, playerX, playerY - 12, depth)
+      break
     case 'arrow_shower':
-      playSkillCastWindup(scene, playerX, playerY - 12, depth, 'fire_bolt')
+      playArrowShowerCastWindup(scene, playerX, playerY - 12, depth)
       break
     case 'blitz_beat':
-      expandingRing(scene, tx, ty - 20, depth, 0x334155, 1.2, 280)
+      playBlitzBeatCastWindup(scene, playerX, playerY, depth)
       break
     case 'peco_peco_ride':
       expandingRing(scene, playerX, playerY, depth, 0xa3a3a3, 1.5, 260)
@@ -230,6 +240,7 @@ export function playSkillImpactFx(
   x: number,
   y: number,
   depth: number,
+  hitIndex = 0,
 ) {
   if (usesGroundAoECastMarker(skillId)) return
   const ty = y
@@ -263,6 +274,12 @@ export function playSkillImpactFx(
       break
     case 'dispell':
       expandingRing(scene, x, ty, depth, 0x6366f1, 1.6, 280)
+      break
+    case 'double_strafe':
+      playDoubleStrafeImpactSpark(scene, x, ty, depth, hitIndex)
+      break
+    case 'blitz_beat':
+      playBlitzBeatAoEImpact(scene, x, ty, depth, BLITZ_AOE_VISUAL_RADIUS_PX)
       break
     default:
       expandingRing(scene, x, ty, depth, 0x7dd3fc, 1.4, 260)

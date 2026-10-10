@@ -156,17 +156,17 @@ export function resolvePlayerAttackTarget<T extends AttackTargetCandidate>(ctx: 
   const { playerX, playerY, facing, rangeCells, weaponClass, mobs, chaseMob, selectedMob } = ctx
 
   if (usesTargetedAttack(weaponClass)) {
-    const fromChase = mobInRange(chaseMob, playerX, playerY, rangeCells)
-    if (fromChase) return fromChase
     const fromSelected = mobInRange(selectedMob, playerX, playerY, rangeCells)
     if (fromSelected) return fromSelected
+    const fromChase = mobInRange(chaseMob, playerX, playerY, rangeCells)
+    if (fromChase) return fromChase
     return null
   }
 
-  const fromChase = mobInConeAndRange(chaseMob, playerX, playerY, facing, rangeCells)
-  if (fromChase) return fromChase
   const fromSelected = mobInConeAndRange(selectedMob, playerX, playerY, facing, rangeCells)
   if (fromSelected) return fromSelected
+  const fromChase = mobInConeAndRange(chaseMob, playerX, playerY, facing, rangeCells)
+  if (fromChase) return fromChase
 
   return findMobInAttackCone(playerX, playerY, facing, rangeCells, mobs)
 }

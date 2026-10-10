@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { playBlitzBeatFalconStrike } from './archerHunterSkillFx'
 import { usesGroundAoECastMarker } from './groundAoECastMarker'
 import type { Facing } from '../movement/clickToMove'
 
@@ -125,6 +126,51 @@ export function playBowArrowProjectile(
   })
 }
 
+const DOUBLE_STRAFE_STAGGER_MS = 40
+
+/** Two offset arrows with a quick stagger (Double Strafe). */
+export function playDoubleStrafeVolley(
+  scene: Phaser.Scene,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  depth: number,
+  onHit: (hitIndex: number) => void,
+  onComplete?: () => void,
+) {
+  let finished = 0
+  for (let i = 0; i < 2; i++) {
+    scene.time.delayedCall(i * DOUBLE_STRAFE_STAGGER_MS, () => {
+      const lateral = i === 0 ? -6 : 6
+      const dist = Math.hypot(toX - fromX, toY - fromY)
+      const duration = Math.max(90, Math.floor(projectileTravelMs(dist) * 0.85))
+
+      const container = scene.add.container(fromX + lateral, fromY)
+      const arrow = scene.add.graphics()
+      drawArrowGraphic(arrow)
+      container.add(arrow)
+      container.setDepth(depth)
+
+      tweenProjectile(
+        scene,
+        container,
+        fromX + lateral,
+        fromY,
+        toX + lateral * 0.3,
+        toY,
+        depth,
+        duration,
+        () => {
+          onHit(i)
+          finished += 1
+          if (finished >= 2) onComplete?.()
+        },
+      )
+    })
+  }
+}
+
 export function playStaffMagicProjectile(
   scene: Phaser.Scene,
   fromX: number,
@@ -145,9 +191,12 @@ type MagicProjectileKind =
   | 'ghost'
   | 'earth'
   | 'earth_rise'
+  | 'falcon'
 
 export function magicProjectileKindForSkill(skillId: string): MagicProjectileKind {
   switch (skillId) {
+    case 'blitz_beat':
+      return 'falcon'
     case 'fire_bolt':
     case 'fire_ball':
     case 'meteor_storm':
@@ -232,6 +281,16 @@ function buildMagicProjectileGraphic(
       container.add(g)
       break
     }
+    case 'falcon': {
+      g.fillStyle(0x1e293b, 1)
+      g.fillEllipse(0, 0, 12, 5)
+      g.fillTriangle(-5, 0, -12, -6, -8, 2)
+      g.fillTriangle(-5, 0, -12, 6, -8, -2)
+      g.fillStyle(0xfbbf24, 1)
+      g.fillTriangle(7, 0, 12, -2, 12, 2)
+      container.add(g)
+      break
+    }
     case 'earth_rise':
     case 'staff_basic':
     default: {
@@ -260,6 +319,10 @@ export function playMagicSkillProjectile(
 ) {
   if (usesGroundAoECastMarker(skillId)) {
     onArrive?.()
+    return
+  }
+  if (skillId === 'blitz_beat') {
+    playBlitzBeatFalconStrike(scene, fromX, fromY, toX, toY, depth, onArrive)
     return
   }
   const kind = magicProjectileKindForSkill(skillId)
@@ -356,7 +419,8 @@ export function playMagicSkillProjectileVolley(
 
   const origin = rangedProjectileOrigin(playerX, playerY, facing)
   const count = Math.max(1, hitCount)
-  const stagger = skillId.endsWith('_bolt') ? BOLT_STAGGER_MS : 0
+  const stagger =
+    skillId.endsWith('_bolt') ? BOLT_STAGGER_MS : skillId === 'blitz_beat' ? 100 : 0
 
   if (count === 1) {
     playMagicSkillProjectile(scene, skillId, origin.x, origin.y, aimX, aimY, depth, () => {
