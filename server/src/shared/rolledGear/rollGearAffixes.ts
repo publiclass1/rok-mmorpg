@@ -13,22 +13,23 @@ import type {
 
 export type { CombatAffixKind } from './types.js'
 
-const GEAR_RARITIES = (gearJson as { rarities: Record<GearRarityId, { statMin: number }> }).rarities
+const GEAR_RARITIES = (
+  gearJson as { rarities: Record<GearRarityId, { affixCapPercent?: number }> }
+).rarities
 const JOBS = (jobsJson as { jobs: Array<{ id: string; parentJobId?: string | null }> }).jobs
 
-const GEAR_RARITY_ORDER: GearRarityId[] = [
-  'common',
-  'uncommon',
-  'rare',
-  'epic',
-  'legendary',
-  'mythic',
-  'artifact',
-]
+const OPTION3_MYTHIC_PROC = 0.25
+const OPTION3_LEVEL = 1 as const
+const OPTION3_PERCENT = 2.5
 
-function rarityTier(rarity: GearRarityId): number {
-  const i = GEAR_RARITY_ORDER.indexOf(rarity)
-  return i >= 0 ? i : 0
+const DEFAULT_AFFIX_CAP_PERCENT: Record<GearRarityId, number> = {
+  common: 20,
+  uncommon: 25,
+  rare: 30,
+  epic: 35,
+  legendary: 40,
+  mythic: 45,
+  artifact: 50,
 }
 
 const PRIMARY_STATS: PrimaryStat[] = ['str', 'agi', 'vit', 'int', 'dex', 'luk']
@@ -54,19 +55,35 @@ const AFFIX_RANGE: Record<string, { min: number; max: number }> = {
   aspd: { min: 1, max: 5 },
 }
 
-const SPECIAL_PROC_CHANCE = 0.03
-const SPECIAL_LEVEL_PERCENT: Record<1 | 2 | 3 | 4, number> = {
-  1: 2.5,
-  2: 5,
-  3: 7.5,
-  4: 10,
-}
-
 type JobRollProfile = {
-  option1Weight: number
   primaryWeights: Partial<Record<PrimaryStat, number>>
   combatWeights: Partial<Record<CombatAffixKind, number>>
   specialKindWeights: Partial<Record<RolledDamageEffectKind | 'critDamage', number>>
+}
+
+export function affixCapPercentForRarity(rarity: GearRarityId): number {
+  const row = GEAR_RARITIES[rarity]
+  return row?.affixCapPercent ?? DEFAULT_AFFIX_CAP_PERCENT[rarity] ?? 20
+}
+
+export function ceilingFromCapPercent(statMin: number, statMax: number, capPercent: number): number {
+  return Math.max(statMin, Math.min(statMax, Math.floor((statMax * capPercent) / 100)))
+}
+
+function rollIntInclusive(min: number, max: number, rng: () => number): number {
+  if (max <= min) return min
+  return min + Math.floor(rng() * (max - min + 1))
+}
+
+function rollCappedStatValue(
+  statMin: number,
+  statMax: number,
+  rarity: GearRarityId,
+  rng: () => number,
+): number {
+  const cap = affixCapPercentForRarity(rarity)
+  const ceiling = ceilingFromCapPercent(statMin, statMax, cap)
+  return rollIntInclusive(statMin, ceiling, rng)
 }
 
 function firstClassJobId(jobId: string): string {
@@ -85,64 +102,47 @@ function jobRollProfile(jobId: string): JobRollProfile {
   switch (base) {
     case 'swordman':
       return {
-        option1Weight: 0.55,
         primaryWeights: { str: 3, vit: 2 },
         combatWeights: { def: 3, critResist: 2 },
         specialKindWeights: { melee: 4 },
       }
     case 'mage':
       return {
-        option1Weight: 0.6,
         primaryWeights: { int: 4 },
         combatWeights: { mdef: 3, spPercent: 2 },
         specialKindWeights: { magic: 4 },
       }
     case 'archer':
       return {
-        option1Weight: 0.55,
         primaryWeights: { dex: 3, agi: 2 },
         combatWeights: { critRate: 3, aspd: 2 },
         specialKindWeights: { range: 4 },
       }
     case 'acolyte':
       return {
-        option1Weight: 0.5,
         primaryWeights: { int: 2, vit: 2 },
         combatWeights: { hpPercent: 3, mdef: 2 },
         specialKindWeights: { magic: 4 },
       }
     case 'merchant':
       return {
-        option1Weight: 0.5,
         primaryWeights: { str: 2, vit: 2 },
         combatWeights: { def: 3, hpPercent: 2 },
         specialKindWeights: { melee: 4 },
       }
     case 'thief':
       return {
-        option1Weight: 0.5,
         primaryWeights: { agi: 3, luk: 2 },
         combatWeights: { critRate: 3, aspd: 2 },
         specialKindWeights: { melee: 2, critDamage: 3 },
       }
     default:
       return {
-        option1Weight: 0.5,
         primaryWeights: {},
         combatWeights: {},
         specialKindWeights: { melee: 1, range: 1, magic: 1, critDamage: 1 },
       }
   }
-}
-
-function rollScaledInt(minSpec: number, maxSpec: number, rarity: GearRarityId, rng: () => number): number {
-  const tier = rarityTier(rarity)
-  const maxTier = GEAR_RARITY_ORDER.length - 1
-  const statMin = GEAR_RARITIES[rarity].statMin
-  const lo = Math.min(maxSpec, Math.max(minSpec, statMin))
-  const hi = Math.min(maxSpec, minSpec + Math.floor(((maxSpec - minSpec) * tier) / maxTier))
-  const ceiling = Math.max(lo, hi)
-  return lo + Math.floor(rng() * (ceiling - lo + 1))
 }
 
 function pickWeighted<T extends string | number>(
@@ -166,30 +166,17 @@ function weaponSpecialKind(weaponClass: WeaponClass | undefined): RolledDamageEf
   return 'melee'
 }
 
-function rollSpecialLevel(rarity: GearRarityId, rng: () => number): 1 | 2 | 3 | 4 {
-  const tier = rarityTier(rarity)
-  const weights: Array<{ key: 1 | 2 | 3 | 4; weight: number }> = [
-    { key: 1, weight: Math.max(1, 8 - tier) },
-    { key: 2, weight: Math.max(1, 6 - Math.floor(tier / 2)) },
-    { key: 3, weight: Math.max(0, tier - 1) },
-    { key: 4, weight: Math.max(0, tier - 3) },
-  ]
-  const picked = pickWeighted(weights, rng)
-  return picked ?? 1
+function shouldRollOption3(rarity: GearRarityId, rng: () => number): boolean {
+  if (rarity === 'artifact') return true
+  if (rarity === 'mythic') return rng() < OPTION3_MYTHIC_PROC
+  return false
 }
 
-function rollSpecialEffect(
-  rarity: GearRarityId,
-  jobId: string,
-  baseItem: RoItem,
-  rng: () => number,
-): RolledItemEffect | null {
-  if (rng() >= SPECIAL_PROC_CHANCE) return null
+function rollOption3Effect(jobId: string, baseItem: RoItem, rng: () => number): RolledItemEffect {
   const profile = jobRollProfile(jobId)
   let kind: RolledDamageEffectKind | 'critDamage'
   if (baseItem.type === 'weapon' && baseItem.weaponClass) {
-    const forced = weaponSpecialKind(baseItem.weaponClass)
-    kind = forced
+    kind = weaponSpecialKind(baseItem.weaponClass)
     if (profile.specialKindWeights.critDamage && rng() < 0.15) {
       kind = 'critDamage'
     }
@@ -203,46 +190,40 @@ function rollSpecialEffect(
         rng,
       ) ?? 'melee'
   }
-  const level = rollSpecialLevel(rarity, rng)
-  const percent = SPECIAL_LEVEL_PERCENT[level]
   if (kind === 'critDamage') {
-    return { kind: 'critDamage', level, percent }
+    return { kind: 'critDamage', level: OPTION3_LEVEL, percent: OPTION3_PERCENT }
   }
-  return { kind, level, percent }
+  return { kind, level: OPTION3_LEVEL, percent: OPTION3_PERCENT }
 }
 
-function affixKey(affix: RolledGearAffix): string {
-  return affix.pool === 'primary' ? `p:${affix.stat}` : `c:${affix.kind}`
-}
-
-function rollOneRegularAffix(
-  rarity: GearRarityId,
-  jobId: string,
-  used: Set<string>,
-  rng: () => number,
-): RolledGearAffix | null {
+function rollPrimaryAffix(rarity: GearRarityId, jobId: string, rng: () => number): RolledGearAffix {
   const profile = jobRollProfile(jobId)
-  const usePrimary = rng() < profile.option1Weight
-  if (usePrimary) {
-    const candidates = PRIMARY_STATS.filter((s) => !used.has(`p:${s}`))
-    if (candidates.length === 0) return null
-    const stat =
-      pickWeighted(
-        candidates.map((s) => ({ key: s, weight: profile.primaryWeights[s] ?? 1 })),
-        rng,
-      ) ?? candidates[0]
-    const range = AFFIX_RANGE.primary
-    return { pool: 'primary', stat, value: rollScaledInt(range.min, range.max, rarity, rng) }
+  const stat =
+    pickWeighted(
+      PRIMARY_STATS.map((s) => ({ key: s, weight: profile.primaryWeights[s] ?? 1 })),
+      rng,
+    ) ?? 'str'
+  const range = AFFIX_RANGE.primary
+  return {
+    pool: 'primary',
+    stat,
+    value: rollCappedStatValue(range.min, range.max, rarity, rng),
   }
-  const candidates = COMBAT_AFFIX_KINDS.filter((k) => !used.has(`c:${k}`))
-  if (candidates.length === 0) return null
+}
+
+function rollCombatAffix(rarity: GearRarityId, jobId: string, rng: () => number): RolledGearAffix {
+  const profile = jobRollProfile(jobId)
   const kind =
     pickWeighted(
-      candidates.map((k) => ({ key: k, weight: profile.combatWeights[k] ?? 1 })),
+      COMBAT_AFFIX_KINDS.map((k) => ({ key: k, weight: profile.combatWeights[k] ?? 1 })),
       rng,
-    ) ?? candidates[0]
+    ) ?? 'def'
   const range = AFFIX_RANGE[kind]
-  return { pool: 'combat', kind, value: rollScaledInt(range.min, range.max, rarity, rng) }
+  return {
+    pool: 'combat',
+    kind,
+    value: rollCappedStatValue(range.min, range.max, rarity, rng),
+  }
 }
 
 export function primaryStatsFromAffixes(affixes: RolledGearAffix[]): Partial<Record<PrimaryStat, number>> {
@@ -266,15 +247,8 @@ export function rollGearAffixes(
   baseItem: RoItem,
   rng: () => number,
 ): RolledGearRollResult {
-  const affixes: RolledGearAffix[] = []
-  const used = new Set<string>()
-  for (let i = 0; i < 2; i++) {
-    const affix = rollOneRegularAffix(rarity, jobId, used, rng)
-    if (!affix) continue
-    affixes.push(affix)
-    used.add(affixKey(affix))
-  }
-  const effect = rollSpecialEffect(rarity, jobId, baseItem, rng)
+  const affixes: RolledGearAffix[] = [rollPrimaryAffix(rarity, jobId, rng), rollCombatAffix(rarity, jobId, rng)]
+  const effect = shouldRollOption3(rarity, rng) ? rollOption3Effect(jobId, baseItem, rng) : null
   const stats = primaryStatsFromAffixes(affixes)
   return { affixes, stats, effect }
 }
@@ -301,4 +275,3 @@ export function combatAffixTotalsFromAffixes(affixes: RolledGearAffix[]): Equipp
   }
   return totals
 }
-

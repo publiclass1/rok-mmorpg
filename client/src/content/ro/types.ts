@@ -318,6 +318,7 @@ export type RoGearRarity = {
   label: string
   color: string
   statMin: number
+  affixCapPercent: number
   effectMin: number
 }
 

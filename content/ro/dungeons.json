@@ -12,13 +12,13 @@
       "accRight"
     ],
     "rarities": {
-      "common": { "label": "Common", "color": "#9ca3af", "statMin": 1, "effectMin": 1 },
-      "uncommon": { "label": "Uncommon", "color": "#22c55e", "statMin": 2, "effectMin": 4 },
-      "rare": { "label": "Rare", "color": "#3b82f6", "statMin": 4, "effectMin": 8 },
-      "epic": { "label": "Epic", "color": "#d946ef", "statMin": 6, "effectMin": 12 },
-      "legendary": { "label": "Legendary", "color": "#f59e0b", "statMin": 8, "effectMin": 16 },
-      "mythic": { "label": "Mythic", "color": "#7dd3fc", "statMin": 10, "effectMin": 20 },
-      "artifact": { "label": "Artifact", "color": "#c2410c", "statMin": 12, "effectMin": 24 }
+      "common": { "label": "Common", "color": "#9ca3af", "statMin": 1, "effectMin": 1, "affixCapPercent": 20 },
+      "uncommon": { "label": "Uncommon", "color": "#22c55e", "statMin": 2, "effectMin": 4, "affixCapPercent": 25 },
+      "rare": { "label": "Rare", "color": "#3b82f6", "statMin": 4, "effectMin": 8, "affixCapPercent": 30 },
+      "epic": { "label": "Epic", "color": "#d946ef", "statMin": 6, "effectMin": 12, "affixCapPercent": 35 },
+      "legendary": { "label": "Legendary", "color": "#f59e0b", "statMin": 8, "effectMin": 16, "affixCapPercent": 40 },
+      "mythic": { "label": "Mythic", "color": "#7dd3fc", "statMin": 10, "effectMin": 20, "affixCapPercent": 45 },
+      "artifact": { "label": "Artifact", "color": "#c2410c", "statMin": 12, "effectMin": 24, "affixCapPercent": 50 }
     },
     "effectKinds": ["melee", "range", "magic", "critChance"]
   },

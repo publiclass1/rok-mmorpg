@@ -2,19 +2,9 @@
 import gearJson from '../ro/dungeonsGear.json' with { type: 'json' }
 import itemsJson from '../ro/items.json' with { type: 'json' }
 import type { CombatAffixKind, GearRarityId, RolledGearAffix, RolledItem } from './types.js'
+import { affixCapPercentForRarity, ceilingFromCapPercent } from './rollGearAffixes.js'
 
-const GEAR_RARITIES = gearJson.rarities as Record<GearRarityId, { statMin: number }>
 const ITEM_IDS = new Set((itemsJson as { items: { id: string }[] }).items.map((i) => i.id))
-
-const GEAR_RARITY_ORDER: GearRarityId[] = [
-  'common',
-  'uncommon',
-  'rare',
-  'epic',
-  'legendary',
-  'mythic',
-  'artifact',
-]
 
 const AFFIX_RANGE: Record<string, { min: number; max: number }> = {
   primary: { min: 1, max: 20 },
@@ -29,19 +19,13 @@ const AFFIX_RANGE: Record<string, { min: number; max: number }> = {
 
 const ALLOWED_EFFECT_PERCENTS = new Set([2.5, 5, 7.5, 10])
 
-function rarityTier(rarity: GearRarityId): number {
-  const i = GEAR_RARITY_ORDER.indexOf(rarity)
-  return i >= 0 ? i : 0
-}
-
-function maxAffixValue(kind: keyof typeof AFFIX_RANGE | CombatAffixKind, rarity: GearRarityId): number {
+function maxAffixValueForRarity(
+  kind: 'primary' | CombatAffixKind,
+  rarity: GearRarityId,
+): number {
   const range = AFFIX_RANGE[kind === 'primary' ? 'primary' : kind]
-  const tier = rarityTier(rarity)
-  const maxTier = GEAR_RARITY_ORDER.length - 1
-  const statMin = GEAR_RARITIES[rarity]?.statMin ?? range.min
-  const lo = Math.min(range.max, Math.max(range.min, statMin))
-  const hi = Math.min(range.max, range.min + Math.floor(((range.max - range.min) * tier) / maxTier))
-  return Math.max(lo, hi)
+  const cap = affixCapPercentForRarity(rarity)
+  return ceilingFromCapPercent(range.min, range.max, cap)
 }
 
 function parseRolledBaseItemId(itemId: string): string | null {
@@ -54,11 +38,11 @@ function parseRolledBaseItemId(itemId: string): string | null {
 
 function validateAffix(affix: RolledGearAffix, rarity: GearRarityId): string | null {
   if (affix.pool === 'primary') {
-    const max = maxAffixValue('primary', rarity)
-    if (affix.value < 1 || affix.value > max) return 'primary affix out of range'
+    const max = maxAffixValueForRarity('primary', rarity)
+    if (affix.value < AFFIX_RANGE.primary.min || affix.value > max) return 'primary affix out of range'
     return null
   }
-  const max = maxAffixValue(affix.kind, rarity)
+  const max = maxAffixValueForRarity(affix.kind, rarity)
   if (affix.value < AFFIX_RANGE[affix.kind].min || affix.value > max) return `${affix.kind} affix out of range`
   return null
 }
@@ -66,9 +50,12 @@ function validateAffix(affix: RolledGearAffix, rarity: GearRarityId): string | n
 export function validateRolledItemRecord(item: RolledItem): string | null {
   if (!item.id.startsWith('ri:')) return 'invalid rolled id'
   if (!ITEM_IDS.has(item.baseItemId)) return `unknown base ${item.baseItemId}`
-  if (!GEAR_RARITIES[item.rarity]) return 'invalid rarity'
+  const rarities = (gearJson as { rarities: Record<string, unknown> }).rarities
+  if (!rarities[item.rarity]) return 'invalid rarity'
   const affixes = item.affixes ?? []
   if (affixes.length !== 2) return 'rolled affix count must be 2'
+  if (affixes[0]?.pool !== 'primary') return 'first affix must be option 1 primary'
+  if (affixes[1]?.pool !== 'combat') return 'second affix must be option 2 combat'
   for (const affix of affixes) {
     const err = validateAffix(affix, item.rarity)
     if (err) return err
