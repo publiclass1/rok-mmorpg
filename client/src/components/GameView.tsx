@@ -40,7 +40,7 @@ import { createInitialCharacterState } from '../game/character/characterState'
 import { addExperience } from '../game/character/characterState'
 import { skillBarSlotFromKey } from '../game/character/skillBars'
 import { isChatStripInputFocused } from '../game/chatInputFocus'
-import { createPhaserGame } from '../game/createGame'
+import { createPhaserGame, teardownWorldScene } from '../game/createGame'
 import {
   emitGameEvent,
   onGameEvent,
@@ -170,6 +170,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
   const destroyActiveGame = useCallback(() => {
     const game = gameRef.current
     if (!game) return
+    teardownWorldScene(game)
     game.destroy(true)
     gameRef.current = null
     hostRef.current?.replaceChildren()
@@ -477,6 +478,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               return
             }
             const sync = dungeonInstanceToSync(data as DungeonInstanceRow)
+            bootDungeonRef.current = sync
             setBootDungeon(sync)
             dungeonValidatedKeyRef.current = `${gateBaseKey}:${sync.instanceId}`
             emitGameEvent('dungeonSync', sync)
@@ -1276,7 +1278,10 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
         sessionRef.current,
         reconnectSafePosition({ x: ch.x, y: ch.y, mapId: ch.map_id }),
       ).catch((err) => console.warn('Unmount progress save failed', err))
-      game?.destroy(true)
+      if (game) {
+        teardownWorldScene(game)
+        game.destroy(true)
+      }
       host.replaceChildren()
       gameRef.current = null
     }

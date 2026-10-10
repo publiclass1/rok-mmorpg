@@ -292,5 +292,13 @@ export function onGameEvent<K extends keyof GameEvents>(event: K, fn: (payload: 
 }
 
 export function emitGameEvent<K extends keyof GameEvents>(event: K, payload: GameEvents[K]) {
-  listeners[event]?.forEach((fn) => fn(payload))
+  const set = listeners[event]
+  if (!set) return
+  for (const fn of set) {
+    try {
+      fn(payload)
+    } catch (err) {
+      console.warn(`[game event] ${event} listener failed`, err)
+    }
+  }
 }

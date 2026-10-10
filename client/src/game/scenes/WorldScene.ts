@@ -1929,6 +1929,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private useSkillSlot(bar: number, slot: number) {
+    if (!this.sys?.isActive() || !this.playerDisplay?.container?.active) return
     if (this.isPlayerDead) return
     if (bar < 0 || bar > 3 || slot < 0 || slot > 8) return
     const skillId = this.session.skillBars[bar]?.[slot]

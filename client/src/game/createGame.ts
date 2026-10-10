@@ -47,3 +47,23 @@ export function createPhaserGame(
 export function startWorldScene(game: Phaser.Game, character: CharacterRow, npcs: NpcRow[]) {
   game.scene.start('WorldScene', { character, npcs })
 }
+
+/** Unsubscribe WorldScene game-event handlers before destroy (dungeon remounts). */
+export function teardownWorldScene(game: Phaser.Game): void {
+  const world = game.scene.getScene('WorldScene') as WorldScene | null
+  if (!world) return
+  try {
+    if (world.sys?.isActive()) {
+      game.scene.stop('WorldScene')
+      return
+    }
+    world.shutdown()
+  } catch (err) {
+    console.warn('teardownWorldScene', err)
+    try {
+      world.shutdown()
+    } catch {
+      /* ignore double teardown */
+    }
+  }
+}
