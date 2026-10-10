@@ -144,9 +144,6 @@ function ChoiceButton({
 
 export function NpcOptionsModal({ npc, baseLevel, partyEnabled, onChoose, onClose }: Props) {
   if (npc.npc_type === 'shop') {
-    const config = npc.config as { buys?: unknown }
-    const canSell = Array.isArray(config?.buys) && config.buys.length > 0
-
     return (
       <AnimatedModal onClose={onClose} panelClassName="panel modal npc-options-modal">
         <ModalHeader title={npc.label} onClose={onClose} />
@@ -168,7 +165,6 @@ export function NpcOptionsModal({ npc, baseLevel, partyEnabled, onChoose, onClos
             <button
               type="button"
               className="secondary"
-              disabled={!canSell}
               onClick={() =>
                 onChoose({
                   kind: 'shop',

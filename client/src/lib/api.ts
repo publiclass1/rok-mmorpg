@@ -162,6 +162,19 @@ export type FieldMapDrop = {
   expires_at: string
 }
 
+export function npcShopSell(payload: {
+  characterId: string
+  npcId: string
+  lines: Array<{ itemId: string; quantity: number }>
+}) {
+  return apiFetch<{
+    ok: boolean
+    zeny: number
+    sessionInventory: unknown
+    rolledItemsRecord: unknown
+  }>('/api/shop/sell', { method: 'POST', body: JSON.stringify(payload) })
+}
+
 export function rarityShopBuy(payload: {
   characterId: string
   npcId: string

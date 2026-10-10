@@ -2032,13 +2032,22 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
           />
         )}
         {shopNpc &&
-          (isRarityTabShop(shopNpc.config) ? (
-            <RarityTabShopModal
-              key={`shop-${shopNpc.id}-${shopInitialTab}`}
+          (shopInitialTab === 'sell' ? (
+            <ShopModal
+              key={`shop-${shopNpc.id}-sell`}
               character={character}
               npc={shopNpc}
               sheet={sheet}
-              initialTab={shopInitialTab}
+              initialTab="sell"
+              onClose={() => setShopNpc(null)}
+              onCharacterUpdated={onCharacterUpdated}
+            />
+          ) : isRarityTabShop(shopNpc.config) ? (
+            <RarityTabShopModal
+              key={`shop-${shopNpc.id}-buy`}
+              character={character}
+              npc={shopNpc}
+              sheet={sheet}
               onClose={() => setShopNpc(null)}
               onCharacterUpdated={onCharacterUpdated}
             />
@@ -2048,6 +2057,7 @@ export function GameView({ character, onCharacterUpdated, onExit }: Props) {
               character={character}
               npc={shopNpc}
               sheet={sheet}
+              initialTab={shopInitialTab}
               onClose={() => setShopNpc(null)}
               onCharacterUpdated={onCharacterUpdated}
             />

@@ -17,6 +17,7 @@ import { handle as gmCommand } from '../edge/gm-command.js'
 import { handle as combatReport } from '../edge/combat-report.js'
 import { handle as lootManage } from '../edge/loot-manage.js'
 import { handle as npcShopBuy } from '../edge/npc-shop-buy.js'
+import { handle as npcShopSell } from '../edge/npc-shop-sell.js'
 import { handle as adminPanel } from '../edge/admin-panel.js'
 
 export const gameRoutes = Router()
@@ -65,4 +66,5 @@ post('/gm/command', gmCommand)
 post('/combat/report', combatReport)
 post('/loot', lootManage)
 post('/shop/buy-rolled', npcShopBuy)
+post('/shop/sell', npcShopSell)
 post('/admin', adminPanel)

@@ -20,7 +20,6 @@ import {
 import { checkCanEquipItem } from './equipRequirements'
 import { getItemDisplayName } from './itemCatalog'
 import { getEquipmentDefinition } from './equipmentConfig'
-import { isRolledGearItemId } from './itemCatalog'
 import { applyJobChange } from './jobChange'
 import { applyRental, clearActiveRental, rentalCatalogEntry } from './rental'
 import { isSkillBarIndexInRange, skillBarsEqual } from './skillBars'
@@ -205,9 +204,6 @@ export function applyCharacterAction(
   }
 
   if (action.type === 'shopRemoveItem') {
-    if (isRolledGearItemId(action.itemId)) {
-      return { state, changed: false, message: 'Dungeon gear cannot be sold to NPCs yet.' }
-    }
     const qty = Math.floor(action.quantity)
     if (qty <= 0) return { state, changed: false, message: 'Invalid quantity.' }
     const nextInv = removeItemFromSessionByItemId(state.sessionInventory, action.itemId, qty)

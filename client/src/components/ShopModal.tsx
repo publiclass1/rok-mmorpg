@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { toCharacterSheetPayload } from '../game/character/characterSheet'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import { formatEquipRequirements, meetsEquipRequirements } from '../game/character/equipRequirements'
 import { getItemDisplayName, isEquippable } from '../game/character/itemCatalog'
@@ -13,10 +14,14 @@ import {
   removeFromCart,
   type ShopCart,
 } from '../game/character/shopCart'
-import { shopBuysFromNpcConfig, shopStockFromNpcConfig } from '../game/character/npcServices'
-import { emitGameEvent } from '../game/events'
+import { resolveNpcSellUnitPrice } from '../game/character/npcSellPrice'
+import { shopStockFromNpcConfig } from '../game/character/npcServices'
+import { emitGameEvent, sessionSyncPayload } from '../game/events'
 import type { CharacterSheetPayload } from '../game/events'
 import type { CharacterRow, NpcRow } from '../types/database'
+import { loadCharacterSession } from '../lib/characterProgress'
+import { npcShopSell } from '../lib/api'
+import { apiFetch } from '../lib/http'
 import { spendCharacterZeny } from '../lib/zeny'
 import { AnimatedModal } from './motion/AnimatedModal'
 import { ModalCloseButton } from './motion/ModalCloseButton'
@@ -38,8 +43,8 @@ function formatRowLabel(name: string, qtyLabel: string, price: number): string {
   return `${name} (${qtyLabel}) — ${price} z`
 }
 
-function formatSellInventoryRowLabel(name: string, ownedQty: number, unitPrice: number | undefined): string {
-  if (unitPrice == null) return `${name} (${ownedQty}) — Not bought by this dealer`
+function formatSellInventoryRowLabel(name: string, ownedQty: number, unitPrice: number): string {
+  if (unitPrice <= 0) return `${name} (${ownedQty}) — No sell value`
   return `${name} (${ownedQty}) — ${unitPrice} z`
 }
 
@@ -154,12 +159,10 @@ export function ShopModal({
   onCharacterUpdated,
 }: Props) {
   const stock = shopStockFromNpcConfig(npc.config)
-  const buys = shopBuysFromNpcConfig(npc.config)
   const buyPrices = useMemo(() => pricesFromStock(stock), [stock])
-  const sellPrices = useMemo(() => pricesFromStock(buys), [buys])
 
   const hasBuy = stock.length > 0
-  const hasSell = buys.length > 0
+  const hasSell = true
   const [activeTab, setActiveTab] = useState<ShopTab>(() => {
     const desired = initialTab ?? (hasBuy ? 'buy' : 'sell')
     if (desired === 'buy' && !hasBuy) return 'sell'
@@ -171,7 +174,6 @@ export function ShopModal({
   const [busy, setBusy] = useState(false)
 
   const buyTotal = cartTotal(buyCart, buyPrices)
-  const sellTotal = cartTotal(sellCart, sellPrices)
 
   const equipContext = useMemo(
     () => ({ baseLevel: sheet.baseLevel, jobId: sheet.jobId }),
@@ -192,19 +194,46 @@ export function ShopModal({
     }
   })
 
+  const [dbInventory, setDbInventory] = useState<Array<{ item_id: string; quantity: number }>>([])
+
+  useEffect(() => {
+    void apiFetch<{ inventory: Array<{ item_id: string; quantity: number }> }>(
+      `/api/characters/${character.id}/inventory`,
+    ).then(({ inventory }) => setDbInventory(inventory ?? []))
+  }, [character.id])
+
   const ownedByItemId = useMemo(() => {
     const map: Record<string, number> = {}
     for (const slot of sheet.sessionInventory) {
       if (!slot.itemId || slot.quantity <= 0) continue
       map[slot.itemId] = (map[slot.itemId] ?? 0) + slot.quantity
     }
+    for (const row of dbInventory) {
+      if (!row.item_id || row.quantity <= 0) continue
+      map[row.item_id] = (map[row.item_id] ?? 0) + row.quantity
+    }
     return map
-  }, [sheet.sessionInventory])
+  }, [sheet.sessionInventory, dbInventory])
+
+  const sellUnitPrice = (itemId: string) => resolveNpcSellUnitPrice(itemId)
+
+  const sellPriceByItemId = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const itemId of Object.keys(ownedByItemId)) {
+      map[itemId] = sellUnitPrice(itemId)
+    }
+    for (const { itemId } of cartEntries(sellCart)) {
+      map[itemId] = sellUnitPrice(itemId)
+    }
+    return map
+  }, [ownedByItemId, sellCart])
+
+  const sellTotal = cartTotal(sellCart, sellPriceByItemId)
 
   const sellInventoryRows = Object.entries(ownedByItemId)
     .filter(([, ownedQty]) => ownedQty > 0)
     .map(([itemId, ownedQty]) => {
-      const unitPrice = sellPrices[itemId]
+      const unitPrice = sellUnitPrice(itemId)
       const inCartQty = sellCart[itemId] ?? 0
       return {
         itemId,
@@ -216,9 +245,10 @@ export function ShopModal({
     })
     .sort((a, b) => a.itemId.localeCompare(b.itemId))
 
-  const sellCartValid = cartEntries(sellCart).every(
-    ({ itemId, quantity }) => quantity <= (ownedByItemId[itemId] ?? 0),
-  )
+  const sellCartValid = cartEntries(sellCart).every(({ itemId, quantity }) => {
+    if (quantity > (ownedByItemId[itemId] ?? 0)) return false
+    return sellUnitPrice(itemId) > 0
+  })
 
   async function adjustZeny(delta: number): Promise<boolean> {
     const nextZeny = await spendCharacterZeny(character.id, delta)
@@ -259,15 +289,23 @@ export function ShopModal({
     }
     setBusy(true)
     try {
-      for (const { itemId, quantity } of entries) {
-        dispatchCharacterAction({ type: 'shopRemoveItem', itemId, quantity })
-      }
-      const ok = await adjustZeny(sellTotal)
-      if (!ok) {
-        emitGameEvent('status', 'Could not credit zeny.')
-        return
-      }
+      const result = await npcShopSell({
+        characterId: character.id,
+        npcId: npc.id,
+        lines: entries,
+      })
+      onCharacterUpdated({ ...character, zeny: result.zeny })
+      const loaded = await loadCharacterSession(character.id)
+      emitGameEvent('sessionSync', sessionSyncPayload(loaded, { persist: false }))
+      emitGameEvent('characterSheet', toCharacterSheetPayload(loaded))
       setSellCart(clearCart())
+      const { inventory } = await apiFetch<{ inventory: Array<{ item_id: string; quantity: number }> }>(
+        `/api/characters/${character.id}/inventory`,
+      )
+      setDbInventory(inventory ?? [])
+      emitGameEvent('status', 'Sale complete.')
+    } catch (err) {
+      emitGameEvent('status', err instanceof Error ? err.message : 'Sale failed.')
     } finally {
       setBusy(false)
     }
@@ -311,8 +349,7 @@ export function ShopModal({
   }
 
   function handleSellAddSingle(itemId: string) {
-    const unitPrice = sellPrices[itemId]
-    if (unitPrice == null) return
+    if (sellUnitPrice(itemId) <= 0) return
     const ownedQty = ownedByItemId[itemId] ?? 0
     if (ownedQty <= 0) return
     const inCartQty = sellCart[itemId] ?? 0
@@ -322,8 +359,7 @@ export function ShopModal({
   }
 
   function handleSellAddAll(itemId: string) {
-    const unitPrice = sellPrices[itemId]
-    if (unitPrice == null) return
+    if (sellUnitPrice(itemId) <= 0) return
     const ownedQty = ownedByItemId[itemId] ?? 0
     if (ownedQty <= 0) return
     setSellCart((c) => ({ ...c, [itemId]: ownedQty }))
@@ -382,7 +418,7 @@ export function ShopModal({
           </p>
         </div>
         <div className="modal-header__end shop-modal__header-end">
-          {(hasBuy && hasSell) && (
+          {hasBuy && (
             <div className="shop-tabs" role="tablist">
               <button
                 type="button"
@@ -447,7 +483,7 @@ export function ShopModal({
                   <p className="muted small shop-pane__empty">Nothing to sell.</p>
                 ) : (
                   sellInventoryRows.map(({ itemId, ownedQty, unitPrice, maxAdd }) => {
-                    const disabled = unitPrice == null || maxAdd <= 0
+                    const disabled = unitPrice <= 0 || maxAdd <= 0
                     return (
                       <ItemHoverTooltip key={itemId} itemId={itemId} quantity={ownedQty}>
                         <button
@@ -496,7 +532,7 @@ export function ShopModal({
                   <p className="muted small shop-pane__empty">Drag items here or click inventory items to add.</p>
                 ) : (
                   cartEntries(sellCart).map(({ itemId, quantity }) => {
-                    const unit = sellPrices[itemId] ?? 0
+                    const unit = sellPriceByItemId[itemId] ?? 0
                     return (
                       <ItemHoverTooltip key={itemId} itemId={itemId} quantity={quantity}>
                         <button
