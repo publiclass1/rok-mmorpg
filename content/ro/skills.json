@@ -12,7 +12,7 @@
       "castTimeMs": 0,
       "range": 56,
       "prerequisites": [],
-      "description": "Melee strike toward facing direction.",
+      "description": "Attack the nearest monster on screen; chase and strike until it is defeated.",
       "sourceUrl": null
     },
     {
@@ -378,7 +378,7 @@
       "target": "enemy",
       "mpCost": 12,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [
         { "skillId": "owls_eye", "level": 1 },
         { "skillId": "vultures_eye", "level": 1 }
@@ -401,7 +401,7 @@
       "target": "ground",
       "mpCost": 15,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "double_strafe", "level": 5 }],
       "description": "Rain arrows on an area.",
       "sourceUrl": "https://irowiki.org/wiki/Arrow_Shower",
@@ -436,7 +436,7 @@
       "target": "ground",
       "mpCost": 12,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [
         { "skillId": "owls_eye", "level": 5 },
         { "skillId": "vultures_eye", "level": 5 },
@@ -455,7 +455,7 @@
       "target": "ground",
       "mpCost": 12,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "ankle_snare", "level": 1 }],
       "description": "Set a shockwave trap (placeholder).",
       "sourceUrl": "https://irowiki.org/wiki/Shockwave_Trap"
@@ -470,7 +470,7 @@
       "target": "ground",
       "mpCost": 12,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "shockwave_trap", "level": 1 }],
       "description": "Set a sandman trap (placeholder).",
       "sourceUrl": "https://irowiki.org/wiki/Sandman_Trap"
@@ -485,7 +485,7 @@
       "target": "ground",
       "mpCost": 12,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "sandman_trap", "level": 1 }],
       "description": "Set a flasher trap (placeholder).",
       "sourceUrl": "https://irowiki.org/wiki/Flasher_Trap"
@@ -500,7 +500,7 @@
       "target": "ground",
       "mpCost": 12,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "flasher_trap", "level": 1 }],
       "description": "Set a freezing trap (placeholder).",
       "sourceUrl": "https://irowiki.org/wiki/Freezing_Trap"
@@ -515,7 +515,7 @@
       "target": "ground",
       "mpCost": 12,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "freezing_trap", "level": 1 }],
       "description": "Set a blast mine trap (placeholder).",
       "sourceUrl": "https://irowiki.org/wiki/Blast_Mine"
@@ -530,7 +530,7 @@
       "target": "ground",
       "mpCost": 12,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "blast_mine", "level": 1 }],
       "description": "Set a claymore trap (placeholder).",
       "sourceUrl": "https://irowiki.org/wiki/Claymore_Trap"
@@ -545,25 +545,10 @@
       "target": "ground",
       "mpCost": 5,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "ankle_snare", "level": 1 }],
       "description": "Remove a placed trap (placeholder).",
       "sourceUrl": "https://irowiki.org/wiki/Remove_Trap"
-    },
-    {
-      "id": "talk_with_cute_pet",
-      "name": "Talk With Cute Pet",
-      "jobId": "archer",
-      "maxLevel": 1,
-      "requiredJobLevel": 1,
-      "type": "active",
-      "target": "self",
-      "mpCost": 0,
-      "castTimeMs": 0,
-      "range": 0,
-      "prerequisites": [],
-      "description": "Speak with a rented falcon or pet (placeholder).",
-      "sourceUrl": "https://irowiki.org/wiki/Talk_with_Cute_Pet"
     },
     {
       "id": "beast_bane",
@@ -605,7 +590,7 @@
       "target": "enemy",
       "mpCost": 10,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "falcon_mastery", "level": 1 }],
       "description": "Command your falcon to strike a target.",
       "sourceUrl": "https://irowiki.org/wiki/Blitz_Beat",
@@ -643,7 +628,7 @@
       "target": "ground",
       "mpCost": 10,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [
         { "skillId": "shockwave_trap", "level": 5 },
         { "skillId": "beast_bane", "level": 5 }
@@ -661,10 +646,25 @@
       "target": "ground",
       "mpCost": 10,
       "castTimeMs": 0,
-      "range": 320,
+      "range": 224,
       "prerequisites": [{ "skillId": "land_mine", "level": 5 }],
       "description": "Set a spring trap (placeholder).",
       "sourceUrl": "https://irowiki.org/wiki/Spring_Trap"
+    },
+    {
+      "id": "talk_with_cute_pet",
+      "name": "Talk With Cute Pet",
+      "jobId": "hunter",
+      "maxLevel": 1,
+      "requiredJobLevel": 1,
+      "type": "active",
+      "target": "self",
+      "mpCost": 0,
+      "castTimeMs": 0,
+      "range": 0,
+      "prerequisites": [{ "skillId": "falcon_mastery", "level": 1 }],
+      "description": "Speak with a rented falcon or pet (placeholder).",
+      "sourceUrl": "https://irowiki.org/wiki/Talk_with_Cute_Pet"
     },
     {
       "id": "heal",

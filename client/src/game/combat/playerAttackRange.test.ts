@@ -18,6 +18,7 @@ function run() {
   assert.equal(getEquippedWeaponClass(emptyEquip), 'unarmed')
   assert.equal(getPlayerAttackRangePx(emptyEquip), MAP_TILE_SIZE)
   assert.equal(ATTACK_RANGE_CELLS_BY_CLASS.spear, 2)
+  assert.equal(ATTACK_RANGE_CELLS_BY_CLASS.bow, 7)
 
   const withKnife = { ...emptyEquip, weapon: 'knife' }
   assert.equal(getEquippedWeaponClass(withKnife), 'knife')

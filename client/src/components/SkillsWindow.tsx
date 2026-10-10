@@ -3,7 +3,7 @@ import { hasAllocatedSkillPoints } from '../game/character/characterState'
 import { dispatchCharacterAction } from '../game/character/characterActionDispatch'
 import {
   JOB_NAMES,
-  skillsForJob,
+  skillsForSkillWindowTab,
   SKILL_WINDOW_GENERAL_TAB_ID,
   skillWindowTabEntries,
 } from '../game/character/skillsConfig'
@@ -36,7 +36,7 @@ export function SkillsWindow({ character, sheet, onClose, onCharacterUpdated }: 
   const [busy, setBusy] = useState(false)
 
   const isGeneralTab = activeTab === SKILL_WINDOW_GENERAL_TAB_ID
-  const tabSkills = isGeneralTab ? [] : skillsForJob(activeTab)
+  const tabSkills = isGeneralTab ? [] : skillsForSkillWindowTab(activeTab)
   const canReset = hasAllocatedSkillPoints(sheet.skills)
   const resetTitle = `Reset skills (${SKILL_RESET_ZENY_COST.toLocaleString()} zeny)`
 

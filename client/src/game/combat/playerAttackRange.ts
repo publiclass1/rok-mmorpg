@@ -11,7 +11,7 @@ export const ATTACK_RANGE_CELLS_BY_CLASS: Record<WeaponClass, number> = {
   sword: 2,
   spear: 2,
   staff: 10,
-  bow: 10,
+  bow: 7,
 }
 
 export function usesTargetedAttack(weaponClass: WeaponClass): boolean {

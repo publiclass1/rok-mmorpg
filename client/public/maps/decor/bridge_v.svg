@@ -4,5 +4,5 @@
   <path fill="#a8a29e" d="M72 0 Q40 96 72 192 L96 192 Q64 96 96 0z"/>
   <rect x="72" y="0" width="56" height="12" fill="#78716c"/>
   <rect x="72" y="180" width="56" height="12" fill="#78716c"/>
-  <path d="M88 24 Q72 96 88 168" stroke="#57534e" stroke-width="3" fill="none"/>
+  <path d="M88 24 Q72 96 88 168" stroke="#57534e" stroke-width="2" fill="none"/>
 </svg>

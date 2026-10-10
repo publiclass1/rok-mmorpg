@@ -77,14 +77,22 @@ export const SKILL_WINDOW_GENERAL_TAB_ID = 'general'
 
 export type SkillWindowTabEntry = { id: string; label: string }
 
+/** Job tabs for the skills window: only ancestors of the current job (no 2nd-job tab on 1st job). */
 export function skillWindowTabs(jobId: string): string[] {
+  const lineage = new Set(jobAncestorIds(jobId))
   const tabs = jobAncestorIds(jobId)
     .filter((id) => id !== 'novice')
+    .filter((id) => lineage.has(id))
     .filter((id) => skillsForJob(id).length > 0)
     .reverse()
   if (tabs.length > 0) return tabs
   if (skillsForJob(jobId).length > 0) return [jobId]
   return [jobId]
+}
+
+/** Skills shown on a job tab (strict jobId match — never mix Hunter into Archer). */
+export function skillsForSkillWindowTab(tabJobId: string): SkillDefinition[] {
+  return skillsForJob(tabJobId)
 }
 
 export function skillWindowTabEntries(jobId: string): SkillWindowTabEntry[] {

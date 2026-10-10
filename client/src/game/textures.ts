@@ -1,47 +1,45 @@
 import Phaser from 'phaser'
 
-/** Full-bleed 32×32 classic RO-style flat tiles (no inset gutters). */
+/** Full-bleed 32×32 tiles — soft painted grass, minimal grid noise. */
 
-function drawGrassTile(g: Phaser.GameObjects.Graphics, x: number, base: number, accent: number) {
+function drawGrassTile(
+  g: Phaser.GameObjects.Graphics,
+  x: number,
+  base: number,
+  accent: number,
+  highlight: number,
+  withFlowers: boolean,
+) {
   g.fillStyle(base, 1)
   g.fillRect(x, 0, 32, 32)
-  g.lineStyle(1, 0x174b27, 0.5)
-  g.strokeRect(x + 0.5, 0.5, 31, 31)
-  g.fillStyle(accent, 1)
-  g.fillRect(x + 2, 2, 14, 14)
-  g.fillRect(x + 16, 16, 14, 14)
+  g.fillStyle(accent, 0.55)
+  g.fillEllipse(x + 10, 12, 22, 18)
+  g.fillStyle(highlight, 0.4)
+  g.fillEllipse(x + 22, 22, 18, 16)
   g.fillStyle(0xffffff, 0.06)
-  g.fillRect(x + 4, 4, 6, 6)
-  g.fillRect(x + 18, 18, 6, 6)
-  g.fillStyle(0xb7e4a8, 0.3)
-  g.fillRect(x + 6, 22, 1, 4)
-  g.fillRect(x + 25, 5, 1, 4)
-  g.fillRect(x + 11, 11, 1, 3)
+  g.fillEllipse(x + 6, 8, 12, 10)
+  if (withFlowers) {
+    g.fillStyle(0xfffbeb, 0.75)
+    g.fillCircle(x + 8, 20, 1.2)
+    g.fillCircle(x + 24, 9, 1)
+    g.fillStyle(0xfef08a, 0.7)
+    g.fillCircle(x + 18, 26, 1)
+  }
 }
 
 function drawPathTile(g: Phaser.GameObjects.Graphics, x: number) {
-  g.fillStyle(0x9a7b4f, 1)
+  g.fillStyle(0xa88458, 1)
   g.fillRect(x, 0, 32, 32)
-  g.fillStyle(0xb8956a, 1)
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 4; col++) {
-      const ox = col * 8 + (row % 2 === 0 ? 0 : 4)
-      const oy = row * 8
-      g.fillRect(x + ox, oy, 7, 7)
-    }
+  g.fillStyle(0xb8956a, 0.45)
+  g.fillEllipse(x + 16, 16, 28, 26)
+  g.fillStyle(0xc9a87a, 0.35)
+  for (let i = 0; i < 6; i++) {
+    const px = x + 4 + (i % 3) * 9 + (i % 2) * 3
+    const py = 5 + Math.floor(i / 3) * 11
+    g.fillEllipse(px, py, 7, 5)
   }
-  g.fillStyle(0x7d6342, 1)
-  g.fillRect(x + 7, 0, 1, 32)
-  g.fillRect(x + 15, 0, 1, 32)
-  g.fillRect(x + 23, 0, 1, 32)
-  g.fillRect(x, 7, 32, 1)
-  g.fillRect(x, 15, 32, 1)
-  g.fillRect(x, 23, 32, 1)
-  g.lineStyle(1, 0x5c452f, 0.7)
-  g.strokeRect(x + 0.5, 0.5, 31, 31)
-  g.fillStyle(0xd6b486, 0.55)
-  g.fillCircle(x + 5, 5, 1)
-  g.fillCircle(x + 26, 20, 1)
+  g.fillStyle(0x8f7048, 0.25)
+  g.fillEllipse(x + 8, 24, 10, 6)
 }
 
 function drawWallTile(g: Phaser.GameObjects.Graphics, x: number) {
@@ -56,8 +54,6 @@ function drawWallTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillStyle(0x4b5563, 1)
   g.fillRect(x, 0, 32, 2)
   g.fillRect(x, 30, 32, 2)
-  g.lineStyle(1, 0x374151, 0.9)
-  g.strokeRect(x + 0.5, 0.5, 31, 31)
 }
 
 function drawBuildingTile(g: Phaser.GameObjects.Graphics, x: number) {
@@ -69,54 +65,49 @@ function drawBuildingTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillRect(x + 4, 14, 24, 18)
   g.fillStyle(0x44403c, 1)
   g.fillRect(x + 12, 20, 8, 12)
-  g.lineStyle(1, 0x431407, 0.8)
-  g.strokeRect(x + 0.5, 0.5, 31, 31)
-  g.fillStyle(0x7dd3fc, 0.9)
+  g.fillStyle(0x7dd3fc, 0.85)
   g.fillRect(x + 6, 18, 4, 4)
   g.fillRect(x + 22, 18, 4, 4)
 }
 
 function drawTreeTile(g: Phaser.GameObjects.Graphics, x: number) {
-  g.fillStyle(0x1a5c28, 1)
+  g.fillStyle(0x3d9e4f, 1)
   g.fillRect(x, 0, 32, 32)
+  g.fillStyle(0x172216, 0.25)
+  g.fillEllipse(x + 16, 29, 14, 4)
   g.fillStyle(0x78350f, 1)
-  g.fillRect(x + 14, 20, 4, 12)
-  g.fillStyle(0x166534, 1)
-  g.fillCircle(x + 16, x + 12, 11)
+  g.fillRect(x + 14, 20, 4, 10)
   g.fillStyle(0x22c55e, 1)
-  g.fillCircle(x + 12, x + 10, 6)
+  g.fillTriangle(x + 16, 4, x + 28, 18, x + 4, 18)
   g.fillStyle(0x16a34a, 1)
-  g.fillCircle(x + 20, x + 11, 5)
-  g.lineStyle(1, 0x14532d, 0.9)
-  g.strokeCircle(x + 16, 12, 11)
-  g.fillStyle(0xbbf7d0, 0.6)
-  g.fillCircle(x + 10, 8, 2)
+  g.fillTriangle(x + 16, 10, x + 26, 22, x + 6, 22)
+  g.fillStyle(0x86efac, 0.5)
+  g.fillTriangle(x + 16, 14, x + 22, 20, x + 10, 20)
 }
 
 function drawFountainTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillStyle(0x94a3b8, 1)
   g.fillRect(x, 0, 32, 32)
-  g.fillStyle(0xcbd5e1, 0.6)
+  g.fillStyle(0xcbd5e1, 0.5)
   g.fillRect(x + 2, 2, 28, 28)
-  g.fillStyle(0x38bdf8, 0.9)
-  g.fillCircle(x + 16, x + 16, 9)
+  g.fillStyle(0x22d3ee, 0.85)
+  g.fillCircle(x + 16, 16, 9)
   g.fillStyle(0x0ea5e9, 1)
-  g.fillCircle(x + 16, x + 16, 4)
-  g.lineStyle(1, 0x475569, 0.9)
-  g.strokeRect(x + 0.5, 0.5, 31, 31)
-  g.lineStyle(1, 0xe0f2fe, 0.6)
-  g.lineBetween(x + 9, 10, x + 23, 10)
+  g.fillCircle(x + 16, 16, 4)
+  g.lineStyle(1, 0xe0f2fe, 0.55)
+  g.lineBetween(x + 8, 11, x + 24, 11)
+  g.lineBetween(x + 10, 20, x + 22, 20)
 }
 
 function drawPortalTile(g: Phaser.GameObjects.Graphics, x: number) {
   g.fillStyle(0x312e81, 1)
   g.fillRect(x, 0, 32, 32)
   g.fillStyle(0x6366f1, 0.55)
-  g.fillEllipse(x + 16, x + 18, 24, 12)
+  g.fillEllipse(x + 16, 18, 24, 12)
   g.fillStyle(0x818cf8, 0.95)
-  g.fillCircle(x + 16, x + 16, 8)
+  g.fillCircle(x + 16, 16, 8)
   g.fillStyle(0xc4b5fd, 1)
-  g.fillCircle(x + 16, x + 16, 4)
+  g.fillCircle(x + 16, 16, 4)
 }
 
 /** Tile strip width in px (8 tiles × 32). Gids 1–8: wall, grass A/B, path, building, tree, fountain, portal */
@@ -129,8 +120,8 @@ export function ensureTilesTexture(scene: Phaser.Scene) {
 
   const g = scene.add.graphics()
   drawWallTile(g, 0)
-  drawGrassTile(g, 32, 0x2d8a3e, 0x267a35)
-  drawGrassTile(g, 64, 0x267a35, 0x1f6b2d)
+  drawGrassTile(g, 32, 0x3d9e4f, 0x4aae5c, 0x2d7a42, false)
+  drawGrassTile(g, 64, 0x38a052, 0x45b863, 0x2a7340, true)
   drawPathTile(g, 96)
   drawBuildingTile(g, 128)
   drawTreeTile(g, 160)
@@ -140,7 +131,7 @@ export function ensureTilesTexture(scene: Phaser.Scene) {
   g.destroy()
 
   const tex = scene.textures.get('tiles')
-  tex.setFilter(Phaser.Textures.FilterMode.NEAREST)
+  tex.setFilter(Phaser.Textures.FilterMode.LINEAR)
 }
 
 export function ensurePlayerTexture(scene: Phaser.Scene) {
@@ -165,7 +156,6 @@ function drawMobFrame(g: Phaser.GameObjects.Graphics, ox: number, oy: number, fr
   g.fillEllipse(cx, oy + 26, frame >= 3 ? 22 : 20, frame >= 3 ? 4 : 6)
 
   if (frame === 0) {
-    // Readable classic-RPG silhouette: rim, volume highlight, eyes and feet.
     g.fillStyle(0x831843, 1)
     g.fillCircle(cx, baseY + 1, 13)
     g.fillStyle(0xf472b6, 1)

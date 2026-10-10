@@ -1,12 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 144" width="96" height="144" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 144" width="96" height="144" shape-rendering="geometricPrecision">
   <defs>
-    <linearGradient id="leaf" x2="0" y2="1"><stop stop-color="#bbf7d0"/><stop offset=".35" stop-color="#4ade80"/><stop offset="1" stop-color="#166534"/></linearGradient>
-    <linearGradient id="bark" x2="1"><stop stop-color="#451a03"/><stop offset=".45" stop-color="#a16207"/><stop offset="1" stop-color="#422006"/></linearGradient>
+    <linearGradient id="n" x2="0" y2="1"><stop stop-color="#86efac"/><stop offset="1" stop-color="#16a34a"/></linearGradient>
   </defs>
-  <ellipse cx="48" cy="138" rx="31" ry="6" fill="#172216" opacity=".3"/>
-  <path d="M41 140c2-21 2-31 7-47h7c4 15 5 27 3 47z" fill="url(#bark)" stroke="#3f2412" stroke-width="2"/>
-  <path d="M47 104c-7-12-13-18-20-24M53 106c7-13 13-19 21-25" fill="none" stroke="#5b3216" stroke-width="4" stroke-linecap="round"/>
-  <path d="M48 95C29 96 13 84 12 67c-1-15 10-28 24-31 4-13 22-20 35-9 13 2 22 14 20 27 8 14 0 32-14 38-8 5-19 5-29 3z" fill="url(#leaf)" stroke="#14532d" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M22 61c8-8 17-10 26-7M56 42c9 1 16 6 20 13M31 80c8-4 16-4 24-1M61 72c7-2 12-1 17 3" fill="none" stroke="#dcfce7" stroke-width="2.5" opacity=".55" stroke-linecap="round"/>
-  <circle cx="31" cy="48" r="3" fill="#f0fdf4" opacity=".7"/><circle cx="68" cy="57" r="3" fill="#bbf7d0" opacity=".7"/>
+  <ellipse cx="48" cy="138" rx="26" ry="5" fill="#172216" opacity=".26"/>
+  <rect x="42" y="108" width="12" height="34" rx="2" fill="#78350f"/>
+  <polygon points="48,6 82,48 66,45 78,68 62,65 72,92 58,88 64,118 48,112 32,118 38,88 24,92 34,65 18,68 30,45 14,48" fill="url(#n)" stroke="#15803d" stroke-width="1.5" stroke-linejoin="round"/>
 </svg>

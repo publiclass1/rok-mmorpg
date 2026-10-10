@@ -2,8 +2,8 @@
   <defs><linearGradient id="stone" x2="0" y2="1"><stop stop-color="#f5f5f4"/><stop offset="1" stop-color="#78716c"/></linearGradient></defs>
   <ellipse cx="96" cy="180" rx="76" ry="12" fill="#172216" opacity=".28"/>
   <ellipse cx="96" cy="148" rx="80" ry="28" fill="url(#stone)" stroke="#44403c" stroke-width="3"/>
-  <ellipse cx="96" cy="140" rx="68" ry="22" fill="#38bdf8" stroke="#075985" stroke-width="3"/>
-  <path d="M38 142q58-18 116 0M49 151q47-14 94 0" fill="none" stroke="#e0f2fe" stroke-width="3" opacity=".6"/>
+  <ellipse cx="96" cy="140" rx="68" ry="22" fill="#22d3ee" stroke="#0891b2" stroke-width="2"/>
+  <path d="M38 142q58-18 116 0M49 151q47-14 94 0" fill="none" stroke="#ecfeff" stroke-width="2.5" opacity=".6"/>
   <path d="M80 72h32v76H80z" fill="url(#stone)" stroke="#57534e" stroke-width="3"/><path d="M87 77v65M105 77v65" stroke="#fff" stroke-width="2" opacity=".35"/>
   <circle cx="96" cy="56" r="20" fill="url(#stone)" stroke="#57534e" stroke-width="3"/>
   <path d="M96 36V20M86 40 76 28M106 40l10-12" stroke="#a8a29e" stroke-width="4" stroke-linecap="round"/>

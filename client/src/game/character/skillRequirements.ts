@@ -41,7 +41,12 @@ export function skillRequirementDetail(
       statsLines.push(`Cast ${baseSec.toFixed(1)}s`)
     }
   }
-  if (skill.type === 'active' && skill.range > 0) statsLines.push(`Range ${skill.range}`)
+  if (skill.type === 'active' && skill.range > 0) {
+    const tiles = skill.range / 32
+    statsLines.push(
+      tiles === Math.floor(tiles) ? `Range ${tiles} cells` : `Range ${skill.range}px`,
+    )
+  }
 
   const jobName = JOB_NAMES[skill.jobId] ?? skill.jobId
   const jobLevelMet = isSkillSpendingTab(sheet.jobId, tabJobId)

@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 144" width="160" height="144">
   <defs><linearGradient id="wall" x2="0" y2="1"><stop stop-color="#fff7ed"/><stop offset="1" stop-color="#d6d3d1"/></linearGradient><linearGradient id="roof" x2="0" y2="1"><stop stop-color="#c2410c"/><stop offset="1" stop-color="#7c2d12"/></linearGradient></defs>
   <path d="M3 122h154v20H3z" fill="#1c1917" opacity=".2"/>
-  <path fill="url(#roof)" stroke="#431407" stroke-width="3" d="M80 10 151 55v79H9V55z"/>
-  <path fill="#ea580c" stroke="#7c2d12" stroke-width="3" d="M80 10 9 55h142z"/>
+  <path fill="url(#roof)" stroke="#431407" stroke-width="2" d="M80 10 151 55v79H9V55z"/>
+  <path fill="#ea580c" stroke="#7c2d12" stroke-width="2" d="M80 10 9 55h142z"/>
   <path d="M22 54 80 18l58 36M27 62h106" fill="none" stroke="#fdba74" stroke-width="3" opacity=".6"/>
   <rect x="24" y="68" width="112" height="66" fill="url(#wall)" stroke="#78716c" stroke-width="2"/>
   <path d="M28 72h104M28 116h104" stroke="#a8a29e" stroke-width="2" opacity=".5"/>

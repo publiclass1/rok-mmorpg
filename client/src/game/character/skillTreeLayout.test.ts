@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { SKILLS, skillsForJob } from './skillsConfig'
+import { SKILLS, skillsForJob, skillWindowTabs } from './skillsConfig'
 import { computeSkillTreeLayout, hasIntraJobPrereqEdges } from './skillTreeLayout'
 
 const swordman = skillsForJob('swordman')
@@ -34,5 +34,15 @@ assert.equal(acolyteLayout.mode, 'tree')
 assert.equal(acolyteLayout.rows, 1, 'single-row tree for lone skill')
 
 assert.ok(SKILLS.heal, 'fixture skill heal exists')
+
+assert.deepEqual(skillWindowTabs('archer'), ['archer'], 'archer sees only archer tab')
+assert.deepEqual(skillWindowTabs('hunter'), ['archer', 'hunter'], 'hunter sees archer + hunter tabs')
+const archerIds = new Set(skillsForJob('archer').map((s) => s.id))
+const hunterOnly = skillsForJob('hunter').filter((s) => !archerIds.has(s.id))
+assert.ok(
+  !hunterOnly.some((s) => s.id === 'talk_with_cute_pet' && s.jobId === 'archer'),
+  'Talk With Cute Pet is Hunter-only',
+)
+assert.equal(SKILLS.talk_with_cute_pet?.jobId, 'hunter')
 
 console.log('skillTreeLayout.test.ts: ok')

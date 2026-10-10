@@ -5,6 +5,6 @@
   <circle cx="240" cy="64" r="28" fill="#a8a29e"/>
   <rect x="228" y="48" width="24" height="8" fill="#78716c"/>
   <circle cx="120" cy="160" r="36" fill="#7dd3fc" opacity="0.4"/>
-  <path d="M160 8 L160 24 M152 12 L168 12" stroke="#fbbf24" stroke-width="4"/>
+  <path d="M160 8 L160 24 M152 12 L168 12" stroke="#fbbf24" stroke-width="2.5"/>
   <rect x="136" y="248" width="48" height="72" fill="#44403c"/>
 </svg>

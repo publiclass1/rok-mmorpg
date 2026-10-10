@@ -36,32 +36,23 @@
   min-height: 100dvh;
 }
 
+.glass-surface {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
+}
+
 .pregame-tiles {
   position: absolute;
   inset: -20%;
-  background-color: #1a2e1a;
+  background-color: #2a5c38;
   background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 15px,
-      rgba(0, 0, 0, 0.15) 15px,
-      rgba(0, 0, 0, 0.15) 16px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 15px,
-      rgba(0, 0, 0, 0.15) 15px,
-      rgba(0, 0, 0, 0.15) 16px
-    ),
-    repeating-linear-gradient(
-      45deg,
-      #2d4a2d 0,
-      #2d4a2d 8px,
-      #3a5c3a 8px,
-      #3a5c3a 16px
-    );
+    radial-gradient(ellipse 45% 35% at 20% 30%, rgba(74, 174, 92, 0.45), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 75% 60%, rgba(45, 120, 62, 0.5), transparent 72%),
+    radial-gradient(ellipse 40% 35% at 50% 85%, rgba(61, 158, 79, 0.35), transparent 68%),
+    linear-gradient(165deg, #3d9e4f 0%, #2d7a42 45%, #256b38 100%);
   z-index: 0;
   pointer-events: none;
 }
@@ -108,9 +99,11 @@
 .auth-panel--glass {
   position: relative;
   z-index: 1;
-  background: rgba(17, 24, 39, 0.88);
-  border-color: rgba(55, 65, 81, 0.9);
-  backdrop-filter: blur(8px);
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur-pregame));
+  backdrop-filter: blur(var(--glass-blur-pregame));
+  box-shadow: var(--glass-shadow);
 }
 
 .auth-screen__brand {
@@ -250,12 +243,12 @@
 }
 
 .char-select-frame {
-  border: 2px solid #c9a227;
-  border-radius: 4px;
-  background: linear-gradient(180deg, #2a1f14 0%, #1f160e 100%);
-  box-shadow:
-    inset 0 0 0 1px #5c4528,
-    0 8px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur-pregame));
+  backdrop-filter: blur(var(--glass-blur-pregame));
+  box-shadow: var(--glass-shadow);
 }
 
 .char-select-header {
@@ -267,13 +260,13 @@
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: #f5e6c8;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  color: #f3f4f6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .char-select-loading {
   text-align: center;
-  color: #d4c4a8;
+  color: #9ca3af;
 }
 
 .char-select-detail {
@@ -287,13 +280,13 @@
   gap: 1rem;
   margin-bottom: 0.75rem;
   padding-bottom: 0.65rem;
-  border-bottom: 1px solid #5c4528;
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .char-select-name {
   margin: 0;
   font-size: 1.25rem;
-  color: #fef3c7;
+  color: #f3f4f6;
 }
 
 .char-select-sub {
@@ -625,15 +618,15 @@
 }
 
 .char-select-preview-bg {
-  background: rgba(0, 0, 0, 0.25);
-  border-color: #5c4528;
+  background: rgba(0, 0, 0, 0.2);
+  border-color: var(--glass-border);
 }
 
 .char-select-exp {
   margin-top: 0.85rem;
-  border-radius: 4px;
-  border: 1px solid #5c4528;
-  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--glass-radius-hud);
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .char-select-slots {
@@ -650,8 +643,13 @@
   padding: 0.65rem 0.75rem;
   text-align: left;
   cursor: pointer;
-  color: #e8dcc8;
+  color: #e5e7eb;
   font: inherit;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-hud);
+  background: rgba(15, 23, 42, 0.35);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .char-select-slot-tab--empty {
@@ -660,17 +658,18 @@
 }
 
 .char-select-slot-tab--active {
+  border-color: rgba(252, 211, 77, 0.65);
   box-shadow:
-    inset 0 0 0 1px #5c4528,
-    0 0 0 2px #fbbf24,
-    0 8px 24px rgba(0, 0, 0, 0.45);
+    0 0 0 1px rgba(252, 211, 77, 0.35),
+    var(--glass-shadow);
+  background: var(--glass-bg-strong);
 }
 
 .char-select-slot-num {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #c9a227;
+  color: #9ca3af;
 }
 
 .char-select-slot-name {
@@ -697,12 +696,12 @@
 .char-select-create-title {
   margin: 0;
   font-size: 1rem;
-  color: #f5e6c8;
+  color: #f3f4f6;
 }
 
 .char-select-btn {
-  border-radius: 4px;
-  border: 1px solid #5c4528;
+  border-radius: var(--glass-radius-hud);
+  border: 1px solid var(--glass-border);
 }
 
 .char-select-btn--primary {
@@ -712,9 +711,9 @@
 }
 
 .char-select-input {
-  border-radius: 4px;
-  border-color: #5c4528;
-  background: #120d08;
+  border-radius: var(--glass-radius-hud);
+  border-color: rgba(75, 85, 99, 0.85);
+  background: rgba(11, 18, 32, 0.75);
 }
 
 .char-select-error {
@@ -773,12 +772,14 @@ body.game-active #root {
 }
 
 .panel {
-  background: #111827;
-  border: 1px solid #374151;
-  border-radius: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
   padding: 1.25rem 1.5rem;
   width: min(560px, 100%);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
 }
 
 .auth-panel h1 {
@@ -995,11 +996,13 @@ button:disabled {
 
 .game-hud-panel {
   position: absolute;
-  background: rgba(15, 23, 42, 0.82);
-  border: 1px solid rgba(55, 65, 81, 0.9);
-  border-radius: 8px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-hud);
   padding: 0.5rem 0.65rem;
-  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
   max-width: min(240px, 42vw);
 }
 
@@ -1111,11 +1114,13 @@ button:disabled {
 
 .game-hud-minimap {
   z-index: 12;
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid rgba(55, 65, 81, 0.9);
-  border-radius: 8px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-hud);
   padding: 0.35rem 0.4rem 0.45rem;
-  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
 }
 
 .game-hud-minimap--expanded,
@@ -1183,10 +1188,12 @@ button:disabled {
   align-items: center;
   gap: 0.35rem;
   padding: 0.25rem 0.4rem;
-  background: rgba(15, 23, 42, 0.82);
-  border: 1px solid rgba(55, 65, 81, 0.9);
-  border-radius: 8px;
-  backdrop-filter: blur(4px);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-hud);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
   pointer-events: none;
 }
 
@@ -1316,9 +1323,11 @@ button:disabled {
   width: 2.35rem;
   height: 2.35rem;
   padding: 0;
-  border-radius: 8px;
-  border: 1px solid rgba(75, 85, 99, 0.75);
-  background: rgba(15, 23, 42, 0.72);
+  border-radius: var(--glass-radius-hud);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
   color: #e5e7eb;
   cursor: pointer;
   transition:
@@ -1696,9 +1705,10 @@ button:disabled {
 }
 
 .game-stage--fullscreen .game-bottom-dock {
-  border-top: 1px solid rgba(55, 65, 81, 0.9);
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(4px);
+  border-top: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
   pointer-events: auto;
 }
 
@@ -1739,10 +1749,12 @@ button:disabled {
 
 .skill-bar-panel {
   z-index: 11;
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid rgba(55, 65, 81, 0.9);
-  border-radius: 8px;
-  backdrop-filter: blur(4px);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-hud);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
 }
 
@@ -2083,8 +2095,8 @@ button:disabled {
   position: relative;
   overflow: auto;
   flex: 1;
-  min-height: 200px;
-  max-height: min(56vh, 520px);
+  min-height: 280px;
+  max-height: min(72vh, 680px);
   border: 1px solid #374151;
   border-radius: 6px;
   background: #0f1419;
@@ -2204,10 +2216,12 @@ button:disabled {
 .skill-detail-tooltip {
   pointer-events: none;
   padding: 0.5rem 0.65rem;
-  border: 1px solid #4b5563;
-  border-radius: 8px;
-  background: #1f2937;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-hud);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
 }
 
 .skill-detail-tooltip {
@@ -2600,9 +2614,12 @@ button:disabled {
   pointer-events: auto;
   margin: 0 0.65rem 0.35rem;
   padding: 0.35rem 0.5rem;
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid #374151;
-  border-radius: 8px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-hud);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
   max-width: min(520px, 96vw);
 }
 
@@ -2882,8 +2899,8 @@ body.chat-strip-resizing {
 .modal-layer .panel.modal-panel--dragging,
 .modal-panel--dragging.game-hud-minimap,
 .modal-panel--dragging.skill-bar-panel {
-  background: rgba(17, 24, 39, 0.38);
-  border-color: rgba(55, 65, 81, 0.55);
+  background: var(--glass-bg-drag);
+  border-color: rgba(255, 255, 255, 0.08);
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
 }
 
@@ -2895,7 +2912,9 @@ body.chat-strip-resizing {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #111827;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
   margin-left: -0.65rem;
   margin-right: -0.65rem;
   padding: 0.5rem 0.65rem 0.35rem;
@@ -2996,9 +3015,9 @@ body.chat-strip-resizing {
 
 /* Skills modal: panel height cap when assigning to skill bar */
 .modal.skills-modal {
-  max-height: min(82vh, 640px);
-  min-width: min(94vw, 720px);
-  max-width: min(94vw, 800px);
+  max-height: min(90vh, 820px);
+  min-width: min(96vw, 920px);
+  max-width: min(96vw, 1024px);
   display: flex;
   flex-direction: column;
 }

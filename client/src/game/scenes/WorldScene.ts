@@ -103,6 +103,7 @@ import {
   pickPatrolChaseTarget,
   type AutoAttackMobCandidate,
 } from '../combat/autoAttackTargeting'
+import { pickNearestMobInView } from '../combat/nearestMobInView'
 import { playerAttackTiming } from '../combat/preRenewalAspd'
 import {
   getEquippedWeaponClass,
@@ -457,10 +458,10 @@ export class WorldScene extends Phaser.Scene {
     // Keep one tileset/data format, but give each RO environment its own palette.
     const mapId = this.character.map_id
     if (ground && 'setTint' in ground) {
-      if (mapId.startsWith('dun_') || mapId === 'prt_sewb1') ground.setTint(0x8fa3a8)
-      else if (mapId.startsWith('prt_fild') || mapId.startsWith('field_')) ground.setTint(0xb6d38f)
-      else if (mapId === 'pvp_room') ground.setTint(0xc7c9d9)
-      else ground.setTint(0xffe0b0)
+      if (mapId.startsWith('dun_') || mapId === 'prt_sewb1') ground.setTint(0xd8e4e8)
+      else if (mapId.startsWith('prt_fild') || mapId.startsWith('field_')) ground.setTint(0xdaf0d4)
+      else if (mapId === 'pvp_room') ground.setTint(0xe4e6f0)
+      else ground.setTint(0xfff4e6)
     }
     const decorTiles = map.createLayer('decor', tileset, 0, 0)
     decorTiles?.setDepth(2)
@@ -1839,11 +1840,20 @@ export class WorldScene extends Phaser.Scene {
       return this.tryUseConsumableItemId(skillId)
     }
     if (skillId === 'basic_attack') {
-      if (targetMob?.alive) {
-        this.chaseMob = targetMob
-        this.setSelectedMob(targetMob)
+      if (fromAuto) {
+        if (targetMob?.alive) {
+          this.chaseMob = targetMob
+          this.setSelectedMob(targetMob)
+        }
+        this.tryBasicAttack()
+        return true
       }
-      this.tryBasicAttack()
+      const mob = this.findNearestMobInView()
+      if (!mob) {
+        emitGameEvent('status', 'No monsters in view.')
+        return false
+      }
+      this.beginChaseMob(mob)
       return true
     }
     const def = SKILLS[skillId]
@@ -4683,6 +4693,30 @@ export class WorldScene extends Phaser.Scene {
       onComplete: () => {
         this.isAttacking = false
       },
+    })
+  }
+
+  private findNearestMobInView(): MobInstance | null {
+    if (!this.playerDisplay) return null
+    const rect = cameraWorldViewRect(this.cameras.main)
+    const view = {
+      left: rect.x,
+      right: rect.x + rect.width,
+      top: rect.y,
+      bottom: rect.y + rect.height,
+    }
+    const px = this.playerDisplay.container.x
+    const py = this.playerDisplay.container.y
+    return pickNearestMobInView({
+      playerX: px,
+      playerY: py,
+      view,
+      candidates: this.mobs.map((mob) => ({
+        mob,
+        alive: mob.alive,
+        x: mob.sprite.x,
+        y: mob.sprite.y,
+      })),
     })
   }
 

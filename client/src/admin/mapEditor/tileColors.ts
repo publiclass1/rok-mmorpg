@@ -5,13 +5,13 @@ export function gidFillColor(gid: number): string {
     case GID_WALL:
       return '#6b7280'
     case GID_GRASS_A:
-      return '#2d8a3e'
+      return '#3d9e4f'
     case GID_GRASS_B:
-      return '#267a35'
+      return '#38a052'
     case GID_PATH:
-      return '#9a7b4f'
+      return '#a88458'
     default:
-      return '#1a5c28'
+      return '#2d7a42'
   }
 }
 

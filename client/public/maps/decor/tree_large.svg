@@ -1,9 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 224" width="160" height="224" shape-rendering="crispEdges">
-  <defs><linearGradient id="leaf" x2="0" y2="1"><stop stop-color="#bbf7d0"/><stop offset=".3" stop-color="#4ade80"/><stop offset="1" stop-color="#14532d"/></linearGradient><linearGradient id="bark" x2="1"><stop stop-color="#422006"/><stop offset=".45" stop-color="#a16207"/><stop offset="1" stop-color="#451a03"/></linearGradient></defs>
-  <ellipse cx="80" cy="214" rx="53" ry="10" fill="#172216" opacity=".32"/>
-  <path d="M68 218c4-28 3-48 10-70h12c7 23 9 43 6 70z" fill="url(#bark)" stroke="#3f2412" stroke-width="3"/>
-  <path d="M78 164c-15-24-28-34-43-43M87 164c14-26 28-37 45-46M84 151c-1-25 3-40 12-55" fill="none" stroke="#5b3216" stroke-width="7" stroke-linecap="round"/>
-  <path d="M80 152C53 159 24 144 18 117c-5-22 7-45 29-53 8-25 38-39 61-22 24 3 40 25 37 49 15 24 1 55-26 65-12 5-27 4-39-4z" fill="url(#leaf)" stroke="#14532d" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M29 102c14-13 29-17 45-12M82 62c17 2 30 11 38 24M38 128c15-7 29-7 43-2M100 111c13-4 23-2 31 5M59 82c8-11 17-16 27-18" fill="none" stroke="#dcfce7" stroke-width="4" opacity=".55" stroke-linecap="round"/>
-  <circle cx="49" cy="76" r="5" fill="#f0fdf4" opacity=".75"/><circle cx="110" cy="82" r="4" fill="#bbf7d0" opacity=".7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 224" width="160" height="224" shape-rendering="geometricPrecision">
+  <defs>
+    <linearGradient id="lgPine" x2="0" y2="1"><stop stop-color="#86efac"/><stop offset=".35" stop-color="#22c55e"/><stop offset="1" stop-color="#14532d"/></linearGradient>
+  </defs>
+  <ellipse cx="80" cy="216" rx="44" ry="8" fill="#172216" opacity=".3"/>
+  <rect x="70" y="162" width="20" height="58" rx="4" fill="#78350f"/>
+  <polygon points="80,6 132,78 108,72 126,112 102,106 118,152 96,144 108,188 80,178 52,188 64,144 42,152 58,106 34,112 52,72 28,78" fill="url(#lgPine)" stroke="#166534" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M80 28v148" stroke="#bbf7d0" stroke-width="2" opacity=".35" fill="none"/>
+  <circle cx="52" cy="88" r="3.5" fill="#dcfce7" opacity=".55"/>
+  <circle cx="108" cy="118" r="3" fill="#bbf7d0" opacity=".5"/>
 </svg>

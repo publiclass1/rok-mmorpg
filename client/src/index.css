@@ -7,6 +7,25 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+
+  --glass-bg: rgba(22, 28, 38, 0.68);
+  --glass-bg-strong: rgba(22, 28, 38, 0.82);
+  --glass-bg-drag: rgba(22, 28, 38, 0.42);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-blur: 8px;
+  --glass-blur-pregame: 10px;
+  --glass-radius: 12px;
+  --glass-radius-hud: 10px;
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-blur: 0px;
+    --glass-blur-pregame: 0px;
+    --glass-bg: rgba(22, 28, 38, 0.92);
+    --glass-bg-strong: rgba(22, 28, 38, 0.96);
+  }
 }
 
 * {
