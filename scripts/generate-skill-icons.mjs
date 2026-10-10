@@ -17,11 +17,6 @@ const outDir = path.join(REPO_ROOT, 'client/public/skills')
 
 const defs = (id) => `
   <defs>
-    <linearGradient id="${id}-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3d3258"/>
-      <stop offset="55%" stop-color="#2a2240"/>
-      <stop offset="100%" stop-color="#12101c"/>
-    </linearGradient>
     <linearGradient id="${id}-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="40%" stop-color="#cbd5e1"/>
@@ -57,14 +52,8 @@ const defs = (id) => `
     </filter>
   </defs>`
 
-function frame(id, accent) {
-  return `
-  ${defs(id)}
-  <rect width="32" height="32" rx="2" fill="#0a0812"/>
-  <rect x="1" y="1" width="30" height="30" rx="1" fill="url(#${id}-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="1" fill="none" stroke="#6b5a8f" stroke-opacity="0.55" stroke-width="0.5"/>
-  <rect x="1.5" y="1.5" width="29" height="29" rx="1" fill="none" stroke="${accent}" stroke-opacity="0.35" stroke-width="0.4"/>
-  <path d="M2 29 L30 29" stroke="#000" stroke-opacity="0.35" stroke-width="0.8"/>`
+function frame(id) {
+  return defs(id)
 }
 
 function wrap(body, id, accent = '#64748b') {

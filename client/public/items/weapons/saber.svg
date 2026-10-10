@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  
   <defs>
-    <linearGradient id="saber-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="saber-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -43,9 +38,6 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#saber-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#b45309" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M20 5 C23 9 24 15 20 21 C17 24 12 24 11 21 L13 7 C14 5 17 4 20 5 Z" fill="url(#saber-steel)"/>
   <path d="M19 6 C21 9 22 14 19 19 C17 22 13 22 12.5 20 L14 8 C14.5 6 16 5 19 6 Z" fill="#e2e8f0" opacity="0.4"/>
   <path d="M18 7 L16 20" stroke="#b45309" stroke-width="0.5" opacity="0.4"/>

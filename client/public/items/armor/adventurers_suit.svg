@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  
   <defs>
-    <linearGradient id="adventurerssuit-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="adventurerssuit-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -43,9 +38,6 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#adventurerssuit-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#65a30d" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M9 10 L16 8 L23 10 L25 15 L23 26 H9 L7 15 Z" fill="#65a30d"/>
   <path d="M9 14 H23" stroke="#3f6212" stroke-width="0.5"/>
   <rect x="14" y="14" width="4" height="6" rx="0.5" fill="#4d7c0f" opacity="0.5"/>

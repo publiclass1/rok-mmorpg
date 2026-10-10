@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  
   <defs>
-    <linearGradient id="woodenmail-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="woodenmail-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -43,9 +38,6 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#woodenmail-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#92400e" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M10 9 L16 7 L22 9 L23 26 H9 L10 9 Z" fill="url(#woodenmail-wood)"/>
   <path d="M10 12 H22 M10 16 H22 M10 20 H22" stroke="#292524" stroke-width="0.5" opacity="0.4"/>
   <path d="M12 9 L12 26 M16 7 L16 26 M20 9 L20 26" stroke="#92400e" stroke-width="0.35" opacity="0.5"/>

@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  
   <defs>
-    <linearGradient id="shoes-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="shoes-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -43,9 +38,6 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#shoes-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#1f2937" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M8 21 H24 V26 H8 Z" fill="#1f2937"/>
   <path d="M10 21 Q12 17 16 17 Q20 17 22 21" fill="#111827" opacity="0.35"/>
   <rect x="9" y="23" width="14" height="1" fill="#4b5563" opacity="0.5"/>

@@ -337,6 +337,11 @@ const consumableBuilders = {
   blue_potion: (id) => drawBluePotion(id),
 }
 
+function baseGearIconId(itemId) {
+  if (itemId.startsWith('rarity_cos_')) return itemId.slice('rarity_cos_'.length)
+  return itemId
+}
+
 function loadGearItems() {
   const pack = JSON.parse(fs.readFileSync(ITEMS_PATH, 'utf8'))
   const items = pack.items ?? []
@@ -387,14 +392,14 @@ function runGenerate() {
     const gid = safeGradientId(item.id)
     let svg
     if (item.type === 'armor') {
-      const build = armorBuilders[item.id]
+      const build = armorBuilders[item.id] ?? armorBuilders[baseGearIconId(item.id)]
       if (!build) {
         console.error(`[icons:gear] no armor builder for "${item.id}"`)
         process.exit(1)
       }
       svg = build(gid, item)
     } else {
-      const build = consumableBuilders[item.id]
+      const build = consumableBuilders[item.id] ?? consumableBuilders[baseGearIconId(item.id)]
       if (!build) {
         console.error(`[icons:gear] no consumable builder for "${item.id}"`)
         process.exit(1)

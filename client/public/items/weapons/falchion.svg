@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  
   <defs>
-    <linearGradient id="falchion-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="falchion-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -43,9 +38,6 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#falchion-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#78716c" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M11 7 C13 5 19 5 21 8 L22.5 19 C23 21.5 18 24 14 22.5 L10 11 Z" fill="url(#falchion-steel)"/>
   <path d="M12 8 C14 6.5 18 7 20 9 L21 18 C21.5 20 18 21.5 15.5 20.5 L11.5 12 Z" fill="#f8fafc" opacity="0.35"/>
   <path d="M14 9 Q18 10 19 14 Q17 18 15 17" stroke="#94a3b8" stroke-width="0.6" fill="none" opacity="0.5"/>

@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  
   <defs>
-    <linearGradient id="mantle-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="mantle-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -43,9 +38,6 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#mantle-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#1e3a8a" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M7 14 L16 10 L25 14 L24 26 H8 L7 14 Z" fill="#1e3a8a"/>
   <path d="M16 10 L16 26" stroke="#1e3a8a" stroke-width="0.4" opacity="0.5"/>
   <path d="M9 14 L16 17 L23 14" stroke="#3b82f6" stroke-width="0.4" fill="none" opacity="0.4"/>

@@ -1,14 +1,10 @@
 /**
- * Shared 32×32 RO-style inventory icon frame and gradients.
+ * Shared 32×32 inventory icon gradients and filters (transparent canvas).
  */
 
 export function defs(id) {
   return `
   <defs>
-    <linearGradient id="${id}-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="${id}-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -49,12 +45,8 @@ export function defs(id) {
   </defs>`
 }
 
-export function frame(id, accent) {
-  return `
-  ${defs(id)}
-  <rect width="32" height="32" rx="5" fill="url(#${id}-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="${accent}" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>`
+export function frame(id) {
+  return defs(id)
 }
 
 export function wrap(svgBody, id, accent = '#64748b') {

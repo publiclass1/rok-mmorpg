@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  
   <defs>
-    <linearGradient id="stiletto-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="stiletto-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -43,9 +38,6 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#stiletto-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#d1d5db" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M16 4 L17.5 4 L17 21 L15.5 21 Z" fill="url(#stiletto-steel-dark)"/>
   <path d="M16.2 5 L16.8 5 L16.5 19" stroke="#f1f5f9" stroke-width="0.5"/>
   <circle cx="16" cy="21.5" r="2" fill="url(#stiletto-gold)"/>

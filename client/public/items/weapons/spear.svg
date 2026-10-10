@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  
   <defs>
-    <linearGradient id="spear-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="spear-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -43,9 +38,6 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#spear-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#38bdf8" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M8 26 L24 10" stroke="url(#spear-wood)" stroke-width="2.8" stroke-linecap="round"/>
   <path d="M8.5 25.5 L23.5 10.5" stroke="#d6d3d1" stroke-width="0.6" opacity="0.35"/>
   <path d="M9 24 L11 22 M11 21 L13 19" stroke="#292524" stroke-width="0.5" opacity="0.5"/>

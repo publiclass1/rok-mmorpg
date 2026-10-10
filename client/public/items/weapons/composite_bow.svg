@@ -1,10 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  
   <defs>
-    <linearGradient id="compositebow-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
     <linearGradient id="compositebow-steel" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#f8fafc"/>
       <stop offset="35%" stop-color="#cbd5e1"/>
@@ -43,9 +38,6 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-  <rect width="32" height="32" rx="5" fill="url(#compositebow-bg)"/>
-  <rect x="1" y="1" width="30" height="30" rx="4" fill="none" stroke="#713f12" stroke-opacity="0.35" stroke-width="0.5"/>
-  <path d="M4 28 Q16 24 28 28" stroke="#000" stroke-opacity="0.25" stroke-width="1" fill="none"/>
   <path d="M10 24 Q16 3 22 24" stroke="url(#compositebow-wood)" stroke-width="2" fill="none" stroke-linecap="round"/>
   <path d="M10.5 23.5 Q16 4 21.5 23.5" stroke="#fde68a" stroke-width="0.4" fill="none" opacity="0.35"/>
   <path d="M11 23 Q16 6 21 23" stroke="#78716c" stroke-width="1.1" fill="none" opacity="0.55"/>

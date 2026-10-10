@@ -1,6 +1,6 @@
 # Generated asset icons
 
-Shared frame helpers live in [`scripts/lib/roItemIconFrame.mjs`](../scripts/lib/roItemIconFrame.mjs) (`wrap`, gradients, slot border).
+Shared helpers live in [`scripts/lib/roItemIconFrame.mjs`](../scripts/lib/roItemIconFrame.mjs) (`wrap`, shared gradients/filters). Icons use a **transparent** 32×32 canvas; slot borders and fills come from UI CSS (`.inv-slot`, `.skill-slot`, `.skill-icon`).
 
 ## Weapon inventory SVGs
 
@@ -49,7 +49,7 @@ Icons are **original vector art** (gradients + paths) in a 32×32 `viewBox`, sty
 
 | Rule | Detail |
 |------|--------|
-| Canvas | 32×32; plum slot background + thin metallic border (shared `frame()` in generator) |
+| Canvas | 32×32 transparent `viewBox`; motif only (no baked-in slot fill or frame strokes in SVG) |
 | Art | Per-skill `draw*` functions with shared steel / gold / fire / holy gradients |
 | Mob skills | `mob_*` ids use purple-tinted variants of player motifs |
 | Regen | Always edit `scripts/generate-skill-icons.mjs`, then `npm run icons:skills` — do not hand-edit `client/public/skills/*.svg` |
